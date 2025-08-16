@@ -17,6 +17,8 @@ import {
   CheckCircle2
 } from "lucide-react";
 import FleetMap from "@/components/FleetMap";
+import MapboxMap from "@/components/MapboxMap";
+import SettingsDialog from "@/components/SettingsDialog";
 import VehicleCard from "@/components/VehicleCard";
 import DepotCard from "@/components/DepotCard";
 import MetricsCard from "@/components/MetricsCard";
@@ -97,9 +99,11 @@ const Index = () => {
                 <Activity className="h-3 w-3 mr-1" />
                 All Systems Operational
               </Badge>
-              <Button variant="outline" size="sm">
-                <Settings className="h-4 w-4" />
-              </Button>
+              <SettingsDialog>
+                <Button variant="outline" size="sm">
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </SettingsDialog>
             </div>
           </div>
         </div>
@@ -158,7 +162,9 @@ const Index = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
-                <FleetMap vehicles={vehicles} />
+                <div className="p-4">
+                  <MapboxMap vehicles={vehicles} />
+                </div>
               </CardContent>
             </Card>
 
