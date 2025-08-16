@@ -83,21 +83,22 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center">
-                <Truck className="h-6 w-6 text-white" />
+        <div className="container mx-auto px-4 py-4 sm:py-6">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-primary rounded-lg flex items-center justify-center flex-shrink-0">
+                <Truck className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-foreground">OTTOYARD</h1>
-                <p className="text-sm text-muted-foreground">Fleet Management</p>
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-2xl font-bold text-foreground truncate">OTTOYARD</h1>
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">Fleet Management</p>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <Badge variant="outline" className="bg-success/10 text-success border-success/20">
+            <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+              <Badge variant="outline" className="bg-success/10 text-success border-success/20 hidden sm:flex">
                 <Activity className="h-3 w-3 mr-1" />
-                All Systems Operational
+                <span className="hidden md:inline">All Systems Operational</span>
+                <span className="md:hidden">Online</span>
               </Badge>
               <SettingsDialog>
                 <Button variant="outline" size="sm">
@@ -112,12 +113,21 @@ const Index = () => {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="fleet">Fleet</TabsTrigger>
-            <TabsTrigger value="depots">Depots</TabsTrigger>
-            <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1">
+            <TabsTrigger value="overview" className="text-xs sm:text-sm px-2 sm:px-4">
+              <span className="hidden sm:inline">Overview</span>
+              <span className="sm:hidden">Home</span>
+            </TabsTrigger>
+            <TabsTrigger value="fleet" className="text-xs sm:text-sm px-2 sm:px-4">Fleet</TabsTrigger>
+            <TabsTrigger value="depots" className="text-xs sm:text-sm px-2 sm:px-4">
+              <span className="hidden sm:inline">Depots</span>
+              <span className="sm:hidden">Energy</span>
+            </TabsTrigger>
+            <TabsTrigger value="maintenance" className="text-xs sm:text-sm px-2 sm:px-4 col-span-2 sm:col-span-1">
+              <span className="hidden sm:inline">Maintenance</span>
+              <span className="sm:hidden">Maint.</span>
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="text-xs sm:text-sm px-2 sm:px-4 hidden lg:block">Analytics</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
