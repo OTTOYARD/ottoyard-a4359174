@@ -113,22 +113,15 @@ const Index = () => {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1">
-            <TabsTrigger value="overview" className="text-xs sm:text-sm px-2 sm:px-4">
-              <span className="hidden sm:inline">Overview</span>
-              <span className="sm:hidden">Home</span>
-            </TabsTrigger>
-            <TabsTrigger value="fleet" className="text-xs sm:text-sm px-2 sm:px-4">Fleet</TabsTrigger>
-            <TabsTrigger value="depots" className="text-xs sm:text-sm px-2 sm:px-4">
-              <span className="hidden sm:inline">Depots</span>
-              <span className="sm:hidden">Energy</span>
-            </TabsTrigger>
-            <TabsTrigger value="maintenance" className="text-xs sm:text-sm px-2 sm:px-4 col-span-2 sm:col-span-1">
-              <span className="hidden sm:inline">Maintenance</span>
-              <span className="sm:hidden">Maint.</span>
-            </TabsTrigger>
-            <TabsTrigger value="analytics" className="text-xs sm:text-sm px-2 sm:px-4 hidden lg:block">Analytics</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto">
+            <TabsList className="inline-flex w-max min-w-full h-10">
+              <TabsTrigger value="overview" className="whitespace-nowrap px-4">Overview</TabsTrigger>
+              <TabsTrigger value="fleet" className="whitespace-nowrap px-4">Fleet</TabsTrigger>
+              <TabsTrigger value="depots" className="whitespace-nowrap px-4">Depots</TabsTrigger>
+              <TabsTrigger value="maintenance" className="whitespace-nowrap px-4">Maintenance</TabsTrigger>
+              <TabsTrigger value="analytics" className="whitespace-nowrap px-4">Analytics</TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="overview" className="space-y-6">
             {/* Key Metrics */}
