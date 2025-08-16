@@ -23,39 +23,48 @@ import VehicleCard from "@/components/VehicleCard";
 import DepotCard from "@/components/DepotCard";
 import MetricsCard from "@/components/MetricsCard";
 
-// Mock data for demonstration
-const vehicles = [
-  {
-    id: "OY-001",
-    name: "OTTOYARD Alpha",
-    status: "active",
-    battery: 87,
-    location: { lat: 37.7749, lng: -122.4194 },
-    route: "Downtown Delivery",
-    chargingTime: "2h 15m",
-    nextMaintenance: "2024-08-20"
-  },
-  {
-    id: "OY-002", 
-    name: "OTTOYARD Beta",
-    status: "charging",
-    battery: 34,
-    location: { lat: 37.7849, lng: -122.4094 },
-    route: "Warehouse Route A",
-    chargingTime: "45m",
-    nextMaintenance: "2024-08-25"
-  },
-  {
-    id: "OY-003",
-    name: "OTTOYARD Gamma", 
-    status: "maintenance",
-    battery: 92,
-    location: { lat: 37.7649, lng: -122.4294 },
-    route: "Port Transfer",
-    chargingTime: "N/A",
-    nextMaintenance: "In Progress"
+// Generate 45 vehicles with unique 5-digit alphanumeric IDs
+const generateVehicles = () => {
+  const statuses = ['active', 'charging', 'maintenance', 'idle'];
+  const routes = [
+    'Downtown Delivery', 'Warehouse Route A', 'Port Transfer', 'Industrial Zone B',
+    'Airport Cargo', 'Highway Distribution', 'City Center Loop', 'Suburban Route',
+    'Cross-town Express', 'Harbor District', 'Tech Park Circuit', 'Mall Complex',
+    'University Campus', 'Hospital Route', 'Financial District'
+  ];
+  
+  const vehicles = [];
+  for (let i = 0; i < 45; i++) {
+    // Generate unique 5-digit alphanumeric ID
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let id = '';
+    for (let j = 0; j < 5; j++) {
+      id += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    
+    const status = statuses[Math.floor(Math.random() * statuses.length)];
+    const battery = Math.floor(Math.random() * 100);
+    const route = routes[Math.floor(Math.random() * routes.length)];
+    
+    // Generate random SF Bay Area coordinates
+    const lat = 37.7749 + (Math.random() - 0.5) * 0.2;
+    const lng = -122.4194 + (Math.random() - 0.5) * 0.3;
+    
+    vehicles.push({
+      id,
+      name: `OTTOYARD ${id}`,
+      status,
+      battery,
+      location: { lat, lng },
+      route,
+      chargingTime: status === 'charging' ? `${Math.floor(Math.random() * 3) + 1}h ${Math.floor(Math.random() * 60)}m` : 'N/A',
+      nextMaintenance: status === 'maintenance' ? 'In Progress' : `2024-08-${Math.floor(Math.random() * 30) + 1}`
+    });
   }
-];
+  return vehicles;
+};
+
+const vehicles = generateVehicles();
 
 const depots = [
   {
@@ -78,6 +87,7 @@ const depots = [
 
 const Index = () => {
   const [selectedTab, setSelectedTab] = useState("overview");
+  const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null);
 
   return (
     <div className="min-h-screen bg-background">
@@ -224,7 +234,27 @@ const Index = () => {
             
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
               {vehicles.map((vehicle) => (
-                <VehicleCard key={vehicle.id} vehicle={vehicle} />
+                <div key={vehicle.id} 
+                     className={`cursor-pointer transition-all duration-200 ${
+                       selectedVehicle === vehicle.id ? 'ring-2 ring-primary' : ''
+                     }`}
+                     onClick={() => setSelectedVehicle(selectedVehicle === vehicle.id ? null : vehicle.id)}>
+                  <VehicleCard vehicle={vehicle} />
+                  {selectedVehicle === vehicle.id && (
+                    <div className="mt-2 p-3 bg-card border border-border rounded-lg">
+                      <h4 className="font-semibold mb-2">Vehicle Details</h4>
+                      <div className="space-y-2 text-sm">
+                        <p><span className="font-medium">Location:</span> {vehicle.location.lat.toFixed(4)}, {vehicle.location.lng.toFixed(4)}</p>
+                        <p><span className="font-medium">Last Service:</span> 2024-07-15</p>
+                        <p><span className="font-medium">Total Miles:</span> {Math.floor(Math.random() * 50000 + 10000)} mi</p>
+                        <div className="flex gap-2 mt-3">
+                          <Button size="sm" variant="outline">Schedule Maintenance</Button>
+                          <Button size="sm" variant="outline">Schedule Detailing</Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           </TabsContent>
@@ -247,47 +277,72 @@ const Index = () => {
 
           <TabsContent value="maintenance" className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-3xl font-bold text-foreground">Maintenance Schedule</h2>
-              <Button variant="outline">
-                <Calendar className="h-4 w-4 mr-2" />
-                Schedule Maintenance
-              </Button>
+              <h2 className="text-3xl font-bold text-foreground">Maintenance & Detailing</h2>
+              <div className="flex gap-2">
+                <Button variant="outline">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Schedule Maintenance
+                </Button>
+                <Button variant="outline">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Schedule Detailing
+                </Button>
+              </div>
             </div>
             
-            <Card className="shadow-fleet-md">
-              <CardHeader>
-                <CardTitle>Upcoming Maintenance</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 border border-border rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <AlertTriangle className="h-5 w-5 text-warning" />
-                      <div>
-                        <p className="font-medium">OTTOYARD Alpha - Routine Service</p>
-                        <p className="text-sm text-muted-foreground">Due: August 20, 2024</p>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card className="shadow-fleet-md">
+                <CardHeader>
+                  <CardTitle>Upcoming Maintenance</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {vehicles.slice(0, 8).map((vehicle, index) => (
+                      <div key={vehicle.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <AlertTriangle className="h-5 w-5 text-warning" />
+                          <div>
+                            <p className="font-medium">{vehicle.name} - Routine Service</p>
+                            <p className="text-sm text-muted-foreground">Due: {vehicle.nextMaintenance}</p>
+                          </div>
+                        </div>
+                        <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">
+                          {index < 3 ? 'Due Soon' : 'Scheduled'}
+                        </Badge>
                       </div>
-                    </div>
-                    <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">
-                      Due Soon
-                    </Badge>
+                    ))}
                   </div>
-                  
-                  <div className="flex items-center justify-between p-4 border border-border rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <CheckCircle2 className="h-5 w-5 text-success" />
-                      <div>
-                        <p className="font-medium">OTTOYARD Gamma - Battery Check</p>
-                        <p className="text-sm text-muted-foreground">Completed: August 15, 2024</p>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-fleet-md">
+                <CardHeader>
+                  <CardTitle>Detailing Schedule</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {vehicles.slice(8, 16).map((vehicle, index) => (
+                      <div key={vehicle.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <CheckCircle2 className="h-5 w-5 text-accent" />
+                          <div>
+                            <p className="font-medium">{vehicle.name} - Interior/Exterior Clean</p>
+                            <p className="text-sm text-muted-foreground">
+                              {index < 4 ? `Completed: 2024-08-${15 + index}` : `Scheduled: 2024-08-${25 + index}`}
+                            </p>
+                          </div>
+                        </div>
+                        <Badge variant="outline" className={index < 4 
+                          ? "bg-success/10 text-success border-success/20" 
+                          : "bg-accent/10 text-accent border-accent/20"}>
+                          {index < 4 ? 'Complete' : 'Scheduled'}
+                        </Badge>
                       </div>
-                    </div>
-                    <Badge variant="outline" className="bg-success/10 text-success border-success/20">
-                      Complete
-                    </Badge>
+                    ))}
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">

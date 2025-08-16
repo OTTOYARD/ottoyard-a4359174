@@ -22,8 +22,8 @@ interface MapboxMapProps {
 const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
-  const [mapboxToken, setMapboxToken] = useState('');
-  const [isTokenSet, setIsTokenSet] = useState(false);
+  const [mapboxToken, setMapboxToken] = useState('pk.eyJ1Ijoib3R0b3lhcmQiLCJhIjoiY21lZWY5cjduMGtsdzJpb2wxNWpweGg4NCJ9.NfsLzQ2-o8wEHOfRrPO5WQ');
+  const [isTokenSet, setIsTokenSet] = useState(true);
 
   const handleTokenSubmit = () => {
     if (mapboxToken.trim()) {
