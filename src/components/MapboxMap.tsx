@@ -92,10 +92,13 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles }) => {
   };
 
   useEffect(() => {
+    if (isTokenSet && mapboxToken) {
+      initializeMap();
+    }
     return () => {
       map.current?.remove();
     };
-  }, []);
+  }, [isTokenSet, mapboxToken, vehicles]);
 
   if (!isTokenSet) {
     return (
