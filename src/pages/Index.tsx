@@ -17,6 +17,7 @@ import {
   AlertTriangle,
   CheckCircle2
 } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, AreaChart, Area } from 'recharts';
 import FleetMap from "@/components/FleetMap";
 import MapboxMap from "@/components/MapboxMap";
 import SettingsDialog from "@/components/SettingsDialog";
@@ -538,19 +539,110 @@ const Index = () => {
                   <CardTitle>Energy Efficiency Trends</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-64 flex items-center justify-center text-muted-foreground">
-                    Analytics Chart Placeholder
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={[
+                        { month: 'Jan', efficiency: 88 },
+                        { month: 'Feb', efficiency: 89 },
+                        { month: 'Mar', efficiency: 91 },
+                        { month: 'Apr', efficiency: 93 },
+                        { month: 'May', efficiency: 92 },
+                        { month: 'Jun', efficiency: 94 },
+                        { month: 'Jul', efficiency: 95 },
+                        { month: 'Aug', efficiency: 94 }
+                      ]}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" />
+                        <YAxis domain={[85, 100]} />
+                        <Tooltip />
+                        <Legend />
+                        <Line type="monotone" dataKey="efficiency" stroke="hsl(var(--primary))" strokeWidth={2} />
+                      </LineChart>
+                    </ResponsiveContainer>
                   </div>
                 </CardContent>
               </Card>
               
               <Card className="shadow-fleet-md">
                 <CardHeader>
-                  <CardTitle>Fleet Utilization</CardTitle>
+                  <CardTitle>Fleet Status Distribution</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-64 flex items-center justify-center text-muted-foreground">
-                    Utilization Chart Placeholder
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={[
+                            { name: 'Active', value: vehicles.filter(v => v.status === 'active').length, fill: 'hsl(var(--success))' },
+                            { name: 'Charging', value: vehicles.filter(v => v.status === 'charging').length, fill: 'hsl(var(--primary))' },
+                            { name: 'Maintenance', value: vehicles.filter(v => v.status === 'maintenance').length, fill: 'hsl(var(--warning))' },
+                            { name: 'Idle', value: vehicles.filter(v => v.status === 'idle').length, fill: 'hsl(var(--muted-foreground))' }
+                          ]}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                        />
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-fleet-md">
+                <CardHeader>
+                  <CardTitle>Daily Energy Generation</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={[
+                        { day: 'Mon', generated: 2.8, returned: 1.2 },
+                        { day: 'Tue', generated: 3.2, returned: 1.4 },
+                        { day: 'Wed', generated: 2.9, returned: 1.1 },
+                        { day: 'Thu', generated: 3.5, returned: 1.6 },
+                        { day: 'Fri', generated: 3.1, returned: 1.3 },
+                        { day: 'Sat', generated: 2.6, returned: 1.0 },
+                        { day: 'Sun', generated: 2.4, returned: 0.9 }
+                      ]}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="day" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Area type="monotone" dataKey="generated" stackId="1" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.6} />
+                        <Area type="monotone" dataKey="returned" stackId="2" stroke="hsl(var(--accent))" fill="hsl(var(--accent))" fillOpacity={0.6} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-fleet-md">
+                <CardHeader>
+                  <CardTitle>Vehicle Battery Levels</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={[
+                        { range: '0-20%', count: vehicles.filter(v => v.battery <= 20).length },
+                        { range: '21-40%', count: vehicles.filter(v => v.battery > 20 && v.battery <= 40).length },
+                        { range: '41-60%', count: vehicles.filter(v => v.battery > 40 && v.battery <= 60).length },
+                        { range: '61-80%', count: vehicles.filter(v => v.battery > 60 && v.battery <= 80).length },
+                        { range: '81-100%', count: vehicles.filter(v => v.battery > 80).length }
+                      ]}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="range" />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="count" fill="hsl(var(--primary))" />
+                      </BarChart>
+                    </ResponsiveContainer>
                   </div>
                 </CardContent>
               </Card>
