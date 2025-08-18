@@ -75,6 +75,8 @@ const depots = [
     energyGenerated: 2400,
     energyReturned: 1200,
     vehiclesCharging: 3,
+    totalStalls: 12,
+    availableStalls: 9,
     status: "optimal"
   },
   {
@@ -83,6 +85,58 @@ const depots = [
     energyGenerated: 1800,
     energyReturned: 950,
     vehiclesCharging: 2,
+    totalStalls: 8,
+    availableStalls: 6,
+    status: "optimal"
+  },
+  {
+    id: "depot-3",
+    name: "OTTOYARD East",
+    energyGenerated: 2100,
+    energyReturned: 1100,
+    vehiclesCharging: 4,
+    totalStalls: 10,
+    availableStalls: 6,
+    status: "optimal"
+  },
+  {
+    id: "depot-4",
+    name: "OTTOYARD West", 
+    energyGenerated: 1900,
+    energyReturned: 850,
+    vehiclesCharging: 1,
+    totalStalls: 8,
+    availableStalls: 7,
+    status: "maintenance"
+  },
+  {
+    id: "depot-5",
+    name: "OTTOYARD South",
+    energyGenerated: 2200,
+    energyReturned: 1150,
+    vehiclesCharging: 3,
+    totalStalls: 10,
+    availableStalls: 7,
+    status: "optimal"
+  },
+  {
+    id: "depot-6",
+    name: "OTTOYARD Harbor",
+    energyGenerated: 1600,
+    energyReturned: 780,
+    vehiclesCharging: 2,
+    totalStalls: 6,
+    availableStalls: 4,
+    status: "optimal"
+  },
+  {
+    id: "depot-7",
+    name: "OTTOYARD Airport",
+    energyGenerated: 2500,
+    energyReturned: 1300,
+    vehiclesCharging: 5,
+    totalStalls: 14,
+    availableStalls: 9,
     status: "optimal"
   }
 ];
@@ -90,6 +144,7 @@ const depots = [
 const Index = () => {
   const [selectedTab, setSelectedTab] = useState("overview");
   const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null);
+  const [selectedDepot, setSelectedDepot] = useState<string | null>(null);
   const [overviewView, setOverviewView] = useState<'main' | 'vehicles' | 'energy' | 'grid' | 'efficiency'>('main');
 
   return (
@@ -240,16 +295,38 @@ const Index = () => {
                       <CardTitle className="flex items-center justify-between">
                         <span className="flex items-center">
                           <Zap className="h-5 w-5 mr-2 text-energy-grid" />
-                          Depot Energy
+                          Available Depots
                         </span>
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" onClick={() => setSelectedTab('depots')}>
                           View All <ChevronRight className="h-4 w-4 ml-1" />
                         </Button>
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                      {depots.map((depot) => (
-                        <DepotCard key={depot.id} depot={depot} compact />
+                      {depots.slice(0, 3).map((depot) => (
+                        <div key={depot.id}>
+                          <div className={`cursor-pointer transition-all duration-200 ${
+                              selectedDepot === depot.id ? 'ring-2 ring-primary rounded-lg' : ''
+                            }`}
+                            onClick={() => setSelectedDepot(selectedDepot === depot.id ? null : depot.id)}>
+                            <DepotCard depot={depot} compact />
+                          </div>
+                          {selectedDepot === depot.id && (
+                            <div className="mt-2 p-3 bg-card border border-border rounded-lg">
+                              <h4 className="font-semibold mb-2">Quick Depot Info</h4>
+                              <div className="space-y-2 text-sm">
+                                <p><span className="font-medium">Available Stalls:</span> {depot.availableStalls}/{depot.totalStalls}</p>
+                                <p><span className="font-medium">Current Charging:</span> {depot.vehiclesCharging} vehicles</p>
+                                <p><span className="font-medium">Status:</span> {depot.status}</p>
+                                <div className="flex gap-2 mt-3">
+                                  <Button size="sm" variant="outline" onClick={() => setSelectedTab('depots')}>
+                                    View Details in Depots
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       ))}
                     </CardContent>
                   </Card>
@@ -471,7 +548,27 @@ const Index = () => {
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {depots.map((depot) => (
-                <DepotCard key={depot.id} depot={depot} />
+                <div key={depot.id} 
+                     className={`cursor-pointer transition-all duration-200 ${
+                       selectedDepot === depot.id ? 'ring-2 ring-primary' : ''
+                     }`}
+                     onClick={() => setSelectedDepot(selectedDepot === depot.id ? null : depot.id)}>
+                  <DepotCard depot={depot} />
+                  {selectedDepot === depot.id && (
+                    <div className="mt-2 p-3 bg-card border border-border rounded-lg">
+                      <h4 className="font-semibold mb-2">Depot Actions</h4>
+                      <div className="space-y-2 text-sm">
+                        <p><span className="font-medium">Available Stalls:</span> {depot.availableStalls}/{depot.totalStalls}</p>
+                        <p><span className="font-medium">Current Charging:</span> {depot.vehiclesCharging} vehicles</p>
+                        <p><span className="font-medium">Daily Revenue:</span> ${Math.floor(depot.energyReturned * 0.12 * 100)}</p>
+                        <div className="flex gap-2 mt-3">
+                          <Button size="sm" variant="outline">Reserve Stall</Button>
+                          <Button size="sm" variant="outline">Schedule Maintenance</Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           </TabsContent>

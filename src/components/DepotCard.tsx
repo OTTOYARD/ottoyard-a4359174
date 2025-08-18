@@ -16,6 +16,8 @@ interface Depot {
   energyGenerated: number;
   energyReturned: number;
   vehiclesCharging: number;
+  totalStalls?: number;
+  availableStalls?: number;
   status: string;
 }
 
