@@ -13,6 +13,7 @@ import {
   Activity,
   Settings,
   ChevronRight,
+  ChevronLeft,
   AlertTriangle,
   CheckCircle2
 } from "lucide-react";
@@ -88,6 +89,7 @@ const depots = [
 const Index = () => {
   const [selectedTab, setSelectedTab] = useState("overview");
   const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null);
+  const [overviewView, setOverviewView] = useState<'main' | 'vehicles' | 'energy' | 'grid' | 'efficiency'>('main');
 
   return (
     <div className="min-h-screen bg-background">
@@ -143,84 +145,260 @@ const Index = () => {
                 trend="up"
                 icon={Truck}
               />
-              <MetricsCard 
-                title="Energy Generated"
-                value="4.2 MWh"
-                change="+15%"
-                trend="up"
-                icon={Zap}
-              />
-              <MetricsCard 
-                title="Grid Return"
-                value="2.1 MWh"
-                change="+8%"
-                trend="up"
-                icon={TrendingUp}
-              />
-              <MetricsCard 
-                title="Fleet Efficiency"
-                value="94.2%"
-                change="+3.1%"
-                trend="up"
-                icon={Activity}
-              />
+              <div onClick={() => setOverviewView('energy')} className="cursor-pointer">
+                <MetricsCard 
+                  title="Energy Generated"
+                  value="4.2 MWh"
+                  change="+15%"
+                  trend="up"
+                  icon={Zap}
+                />
+              </div>
+              <div onClick={() => setOverviewView('grid')} className="cursor-pointer">
+                <MetricsCard 
+                  title="Grid Return"
+                  value="2.1 MWh"
+                  change="+8%"
+                  trend="up"
+                  icon={TrendingUp}
+                />
+              </div>
+              <div onClick={() => setOverviewView('efficiency')} className="cursor-pointer">
+                <MetricsCard 
+                  title="Fleet Efficiency"
+                  value="94.2%"
+                  change="+3.1%"
+                  trend="up"
+                  icon={Activity}
+                />
+              </div>
             </div>
 
-            {/* Fleet Map */}
-            <Card className="shadow-fleet-md">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <MapPin className="h-5 w-5 mr-2 text-primary" />
-                  Live Fleet Tracking
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="p-4">
-                  <MapboxMap vehicles={vehicles} />
-                </div>
-              </CardContent>
-            </Card>
+            {overviewView === 'main' && (
+              <>
+                {/* Fleet Map */}
+                <Card className="shadow-fleet-md">
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <MapPin className="h-5 w-5 mr-2 text-primary" />
+                      Live Fleet Tracking
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div className="p-4">
+                      <MapboxMap vehicles={vehicles} />
+                    </div>
+                  </CardContent>
+                </Card>
 
-            {/* Quick Status */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Quick Status */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <Card className="shadow-fleet-md">
+                    <CardHeader>
+                      <CardTitle className="flex items-center justify-between">
+                        <span className="flex items-center">
+                          <Battery className="h-5 w-5 mr-2 text-accent" />
+                          Active Vehicles
+                        </span>
+                        <Button variant="ghost" size="sm" onClick={() => setOverviewView('vehicles')}>
+                          View All <ChevronRight className="h-4 w-4 ml-1" />
+                        </Button>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {vehicles.slice(0, 3).map((vehicle) => (
+                        <VehicleCard key={vehicle.id} vehicle={vehicle} compact />
+                      ))}
+                    </CardContent>
+                  </Card>
+
+                  <Card className="shadow-fleet-md">
+                    <CardHeader>
+                      <CardTitle className="flex items-center justify-between">
+                        <span className="flex items-center">
+                          <Zap className="h-5 w-5 mr-2 text-energy-grid" />
+                          Depot Energy
+                        </span>
+                        <Button variant="ghost" size="sm">
+                          View All <ChevronRight className="h-4 w-4 ml-1" />
+                        </Button>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {depots.map((depot) => (
+                        <DepotCard key={depot.id} depot={depot} compact />
+                      ))}
+                    </CardContent>
+                  </Card>
+                </div>
+              </>
+            )}
+
+            {overviewView === 'vehicles' && (
               <Card className="shadow-fleet-md">
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     <span className="flex items-center">
                       <Battery className="h-5 w-5 mr-2 text-accent" />
-                      Fleet Status
+                      All Active Vehicles
                     </span>
-                    <Button variant="ghost" size="sm">
-                      View All <ChevronRight className="h-4 w-4 ml-1" />
+                    <Button variant="ghost" size="sm" onClick={() => setOverviewView('main')}>
+                      <ChevronLeft className="h-4 w-4 mr-1" /> Back
                     </Button>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  {vehicles.slice(0, 3).map((vehicle) => (
-                    <VehicleCard key={vehicle.id} vehicle={vehicle} compact />
-                  ))}
+                <CardContent>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {vehicles.map((vehicle) => (
+                      <div key={vehicle.id} 
+                           className={`cursor-pointer transition-all duration-200 ${
+                             selectedVehicle === vehicle.id ? 'ring-2 ring-primary' : ''
+                           }`}
+                           onClick={() => setSelectedVehicle(selectedVehicle === vehicle.id ? null : vehicle.id)}>
+                        <VehicleCard vehicle={vehicle} />
+                        {selectedVehicle === vehicle.id && (
+                          <div className="mt-2 p-3 bg-card border border-border rounded-lg">
+                            <h4 className="font-semibold mb-2">Vehicle Details</h4>
+                            <div className="space-y-2 text-sm">
+                              <p><span className="font-medium">Location:</span> {vehicle.location.lat.toFixed(4)}, {vehicle.location.lng.toFixed(4)}</p>
+                              <p><span className="font-medium">Last Service:</span> 2024-07-15</p>
+                              <p><span className="font-medium">Total Miles:</span> {Math.floor(Math.random() * 50000 + 10000)} mi</p>
+                              <div className="flex gap-2 mt-3">
+                                <Button size="sm" variant="outline">Schedule Maintenance</Button>
+                                <Button size="sm" variant="outline">Schedule Detailing</Button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </CardContent>
               </Card>
+            )}
 
+            {overviewView === 'energy' && (
               <Card className="shadow-fleet-md">
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     <span className="flex items-center">
-                      <Zap className="h-5 w-5 mr-2 text-energy-grid" />
-                      Depot Energy
+                      <Zap className="h-5 w-5 mr-2 text-primary" />
+                      Energy Generation Analytics
                     </span>
-                    <Button variant="ghost" size="sm">
-                      View All <ChevronRight className="h-4 w-4 ml-1" />
+                    <Button variant="ghost" size="sm" onClick={() => setOverviewView('main')}>
+                      <ChevronLeft className="h-4 w-4 mr-1" /> Back
                     </Button>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  {depots.map((depot) => (
-                    <DepotCard key={depot.id} depot={depot} compact />
-                  ))}
+                <CardContent>
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div className="bg-card border rounded-lg p-4">
+                        <p className="text-sm text-muted-foreground">Daily Generation</p>
+                        <p className="text-2xl font-bold text-primary">2.8 MWh</p>
+                      </div>
+                      <div className="bg-card border rounded-lg p-4">
+                        <p className="text-sm text-muted-foreground">Weekly Generation</p>
+                        <p className="text-2xl font-bold text-primary">18.4 MWh</p>
+                      </div>
+                      <div className="bg-card border rounded-lg p-4">
+                        <p className="text-sm text-muted-foreground">Peak Output</p>
+                        <p className="text-2xl font-bold text-primary">3.2 MW</p>
+                      </div>
+                      <div className="bg-card border rounded-lg p-4">
+                        <p className="text-sm text-muted-foreground">Efficiency</p>
+                        <p className="text-2xl font-bold text-primary">96.8%</p>
+                      </div>
+                    </div>
+                    <div className="h-64 bg-muted rounded-lg flex items-center justify-center">
+                      <p className="text-muted-foreground">Energy Generation Chart Placeholder</p>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
-            </div>
+            )}
+
+            {overviewView === 'grid' && (
+              <Card className="shadow-fleet-md">
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <span className="flex items-center">
+                      <TrendingUp className="h-5 w-5 mr-2 text-primary" />
+                      Grid Return Analytics
+                    </span>
+                    <Button variant="ghost" size="sm" onClick={() => setOverviewView('main')}>
+                      <ChevronLeft className="h-4 w-4 mr-1" /> Back
+                    </Button>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div className="bg-card border rounded-lg p-4">
+                        <p className="text-sm text-muted-foreground">Today Return</p>
+                        <p className="text-2xl font-bold text-accent">0.6 MWh</p>
+                      </div>
+                      <div className="bg-card border rounded-lg p-4">
+                        <p className="text-sm text-muted-foreground">Return Rate</p>
+                        <p className="text-2xl font-bold text-accent">22.4%</p>
+                      </div>
+                      <div className="bg-card border rounded-lg p-4">
+                        <p className="text-sm text-muted-foreground">Revenue</p>
+                        <p className="text-2xl font-bold text-accent">$1,247</p>
+                      </div>
+                      <div className="bg-card border rounded-lg p-4">
+                        <p className="text-sm text-muted-foreground">Grid Score</p>
+                        <p className="text-2xl font-bold text-accent">A+</p>
+                      </div>
+                    </div>
+                    <div className="h-64 bg-muted rounded-lg flex items-center justify-center">
+                      <p className="text-muted-foreground">Grid Return Chart Placeholder</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {overviewView === 'efficiency' && (
+              <Card className="shadow-fleet-md">
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <span className="flex items-center">
+                      <Activity className="h-5 w-5 mr-2 text-primary" />
+                      Fleet Efficiency Analytics
+                    </span>
+                    <Button variant="ghost" size="sm" onClick={() => setOverviewView('main')}>
+                      <ChevronLeft className="h-4 w-4 mr-1" /> Back
+                    </Button>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div className="bg-card border rounded-lg p-4">
+                        <p className="text-sm text-muted-foreground">Operational</p>
+                        <p className="text-2xl font-bold text-success">{vehicles.filter(v => v.status === 'operational').length}/45</p>
+                      </div>
+                      <div className="bg-card border rounded-lg p-4">
+                        <p className="text-sm text-muted-foreground">Avg Efficiency</p>
+                        <p className="text-2xl font-bold text-success">94.2%</p>
+                      </div>
+                      <div className="bg-card border rounded-lg p-4">
+                        <p className="text-sm text-muted-foreground">Uptime</p>
+                        <p className="text-2xl font-bold text-success">98.7%</p>
+                      </div>
+                      <div className="bg-card border rounded-lg p-4">
+                        <p className="text-sm text-muted-foreground">Distance/Day</p>
+                        <p className="text-2xl font-bold text-success">1,247 mi</p>
+                      </div>
+                    </div>
+                    <div className="h-64 bg-muted rounded-lg flex items-center justify-center">
+                      <p className="text-muted-foreground">Fleet Efficiency Chart Placeholder</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           <TabsContent value="fleet" className="space-y-6">
