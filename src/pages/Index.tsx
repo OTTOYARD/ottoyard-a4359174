@@ -100,7 +100,7 @@ const Index = () => {
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
               <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center flex-shrink-0">
-                <img src="/lovable-uploads/671ac6c5-ce65-432f-ad2a-d562f456d6a7.png" alt="OTTOYARD Logo" className="h-6 w-6 sm:h-8 sm:w-8" />
+                <img src="/lovable-uploads/28eaaca9-b235-45e8-8e35-5ddc069f02f8.png" alt="OTTOYARD Logo" className="h-6 w-6 sm:h-8 sm:w-8" />
               </div>
               <div className="min-w-0">
                 <h1 className="text-lg sm:text-2xl font-bold text-foreground truncate">OTTOYARD</h1>
