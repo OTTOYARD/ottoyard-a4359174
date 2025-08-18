@@ -208,7 +208,29 @@ const Index = () => {
                     </CardHeader>
                     <CardContent className="space-y-3">
                       {vehicles.slice(0, 3).map((vehicle) => (
-                        <VehicleCard key={vehicle.id} vehicle={vehicle} compact />
+                        <div key={vehicle.id}>
+                          <div className={`cursor-pointer transition-all duration-200 ${
+                              selectedVehicle === vehicle.id ? 'ring-2 ring-primary rounded-lg' : ''
+                            }`}
+                            onClick={() => setSelectedVehicle(selectedVehicle === vehicle.id ? null : vehicle.id)}>
+                            <VehicleCard vehicle={vehicle} compact />
+                          </div>
+                          {selectedVehicle === vehicle.id && (
+                            <div className="mt-2 p-3 bg-card border border-border rounded-lg">
+                              <h4 className="font-semibold mb-2">Quick Vehicle Info</h4>
+                              <div className="space-y-2 text-sm">
+                                <p><span className="font-medium">Location:</span> {vehicle.location.lat.toFixed(4)}, {vehicle.location.lng.toFixed(4)}</p>
+                                <p><span className="font-medium">Last Service:</span> 2024-07-15</p>
+                                <p><span className="font-medium">Total Miles:</span> {Math.floor(Math.random() * 50000 + 10000)} mi</p>
+                                <div className="flex gap-2 mt-3">
+                                  <Button size="sm" variant="outline" onClick={() => setSelectedTab('fleet')}>
+                                    View Details in Fleet
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       ))}
                     </CardContent>
                   </Card>
