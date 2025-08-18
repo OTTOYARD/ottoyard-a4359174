@@ -59,7 +59,7 @@ const generateVehicles = () => {
       location: { lat, lng },
       route,
       chargingTime: status === 'charging' ? `${Math.floor(Math.random() * 3) + 1}h ${Math.floor(Math.random() * 60)}m` : 'N/A',
-      nextMaintenance: status === 'maintenance' ? 'In Progress' : `2024-08-${Math.floor(Math.random() * 30) + 1}`
+      nextMaintenance: status === 'maintenance' ? 'In Progress' : `2025-${Math.random() < 0.5 ? '10' : '12'}-${Math.floor(Math.random() * 28) + 1}`
     });
   }
   return vehicles;
