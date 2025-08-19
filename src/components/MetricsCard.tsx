@@ -27,8 +27,8 @@ const MetricsCard = ({
   
   return (
     <Card 
-      className={`shadow-fleet-sm hover:shadow-fleet-md transition-shadow duration-200 ${
-        onClick ? 'cursor-pointer hover:ring-2 hover:ring-primary/20' : ''
+      className={`shadow-fleet-sm hover:shadow-fleet-md transition-all duration-300 ease-out hover-scale ${
+        onClick ? 'cursor-pointer hover:ring-2 hover:ring-primary/30 hover:bg-gradient-to-br hover:from-card hover:to-primary/5 active:scale-95 hover:shadow-glow active:shadow-fleet-lg' : ''
       }`}
       onClick={onClick}
     >
