@@ -15,7 +15,8 @@ import {
   ChevronRight,
   ChevronLeft,
   AlertTriangle,
-  CheckCircle2
+  CheckCircle2,
+  Wrench
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, AreaChart, Area } from 'recharts';
 import FleetMap from "@/components/FleetMap";
@@ -24,6 +25,12 @@ import SettingsDialog from "@/components/SettingsDialog";
 import VehicleCard from "@/components/VehicleCard";
 import DepotCard from "@/components/DepotCard";
 import MetricsCard from "@/components/MetricsCard";
+import { 
+  AddVehiclePopup, 
+  TrackVehiclePopup, 
+  VehicleDetailsPopup, 
+  MaintenancePopup 
+} from "@/components/VehiclePopups";
 
 // Generate 45 vehicles with unique 5-digit alphanumeric IDs
 const generateVehicles = () => {
@@ -146,6 +153,28 @@ const Index = () => {
   const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null);
   const [selectedDepot, setSelectedDepot] = useState<string | null>(null);
   const [overviewView, setOverviewView] = useState<'main' | 'vehicles' | 'energy' | 'grid' | 'efficiency'>('main');
+  
+  // Popup states
+  const [addVehicleOpen, setAddVehicleOpen] = useState(false);
+  const [trackVehicleOpen, setTrackVehicleOpen] = useState(false);
+  const [vehicleDetailsOpen, setVehicleDetailsOpen] = useState(false);
+  const [maintenanceOpen, setMaintenanceOpen] = useState(false);
+  const [popupVehicle, setPopupVehicle] = useState<typeof vehicles[0] | null>(null);
+  
+  const handleTrackVehicle = (vehicle: typeof vehicles[0]) => {
+    setPopupVehicle(vehicle);
+    setTrackVehicleOpen(true);
+  };
+  
+  const handleVehicleDetails = (vehicle: typeof vehicles[0]) => {
+    setPopupVehicle(vehicle);
+    setVehicleDetailsOpen(true);
+  };
+  
+  const handleMaintenanceSchedule = (vehicle: typeof vehicles[0]) => {
+    setPopupVehicle(vehicle);
+    setMaintenanceOpen(true);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -268,7 +297,12 @@ const Index = () => {
                               selectedVehicle === vehicle.id ? 'ring-2 ring-primary rounded-lg' : ''
                             }`}
                             onClick={() => setSelectedVehicle(selectedVehicle === vehicle.id ? null : vehicle.id)}>
-                            <VehicleCard vehicle={vehicle} compact />
+                             <VehicleCard 
+                              vehicle={vehicle} 
+                              compact 
+                              onTrack={handleTrackVehicle}
+                              onDetails={handleVehicleDetails}
+                            />
                           </div>
                           {selectedVehicle === vehicle.id && (
                             <div className="mt-2 p-3 bg-card border border-border rounded-lg">
@@ -355,7 +389,11 @@ const Index = () => {
                              selectedVehicle === vehicle.id ? 'ring-2 ring-primary' : ''
                            }`}
                            onClick={() => setSelectedVehicle(selectedVehicle === vehicle.id ? null : vehicle.id)}>
-                        <VehicleCard vehicle={vehicle} />
+                        <VehicleCard 
+                          vehicle={vehicle}
+                          onTrack={handleTrackVehicle}
+                          onDetails={handleVehicleDetails}
+                        />
                         {selectedVehicle === vehicle.id && (
                           <div className="mt-2 p-3 bg-card border border-border rounded-lg">
                             <h4 className="font-semibold mb-2">Vehicle Details</h4>
@@ -504,7 +542,10 @@ const Index = () => {
           <TabsContent value="fleet" className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-3xl font-bold text-foreground">Fleet Management</h2>
-              <Button className="bg-gradient-primary hover:bg-primary-hover">
+              <Button 
+                className="bg-gradient-primary hover:bg-primary-hover"
+                onClick={() => setAddVehicleOpen(true)}
+              >
                 <Truck className="h-4 w-4 mr-2" />
                 Add Vehicle
               </Button>
@@ -517,7 +558,11 @@ const Index = () => {
                        selectedVehicle === vehicle.id ? 'ring-2 ring-primary' : ''
                      }`}
                      onClick={() => setSelectedVehicle(selectedVehicle === vehicle.id ? null : vehicle.id)}>
-                  <VehicleCard vehicle={vehicle} />
+                  <VehicleCard 
+                    vehicle={vehicle}
+                    onTrack={handleTrackVehicle}
+                    onDetails={handleVehicleDetails}
+                  />
                   {selectedVehicle === vehicle.id && (
                     <div className="mt-2 p-3 bg-card border border-border rounded-lg">
                       <h4 className="font-semibold mb-2">Vehicle Details</h4>
@@ -526,7 +571,13 @@ const Index = () => {
                         <p><span className="font-medium">Last Service:</span> 2024-07-15</p>
                         <p><span className="font-medium">Total Miles:</span> {Math.floor(Math.random() * 50000 + 10000)} mi</p>
                         <div className="flex gap-2 mt-3">
-                          <Button size="sm" variant="outline">Schedule Maintenance</Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleMaintenanceSchedule(vehicle)}
+                          >
+                            Schedule Maintenance
+                          </Button>
                           <Button size="sm" variant="outline">Schedule Detailing</Button>
                         </div>
                       </div>
@@ -576,16 +627,6 @@ const Index = () => {
           <TabsContent value="maintenance" className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-3xl font-bold text-foreground">Maintenance & Detailing</h2>
-              <div className="flex gap-2">
-                <Button variant="outline">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Schedule Maintenance
-                </Button>
-                <Button variant="outline">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Schedule Detailing
-                </Button>
-              </div>
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -604,9 +645,19 @@ const Index = () => {
                             <p className="text-sm text-muted-foreground">Due: {vehicle.nextMaintenance}</p>
                           </div>
                         </div>
-                        <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">
-                          {index < 3 ? 'Due Soon' : 'Scheduled'}
-                        </Badge>
+                        <div className="flex items-center space-x-2">
+                          <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">
+                            {index < 3 ? 'Due Soon' : 'Scheduled'}
+                          </Badge>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleMaintenanceSchedule(vehicle)}
+                          >
+                            <Wrench className="h-4 w-4 mr-1" />
+                            Schedule
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -630,11 +681,21 @@ const Index = () => {
                             </p>
                           </div>
                         </div>
-                        <Badge variant="outline" className={index < 4 
-                          ? "bg-success/10 text-success border-success/20" 
-                          : "bg-accent/10 text-accent border-accent/20"}>
-                          {index < 4 ? 'Complete' : 'Scheduled'}
-                        </Badge>
+                        <div className="flex items-center space-x-2">
+                          <Badge variant="outline" className={index < 4 
+                            ? "bg-success/10 text-success border-success/20" 
+                            : "bg-accent/10 text-accent border-accent/20"}>
+                            {index < 4 ? 'Complete' : 'Scheduled'}
+                          </Badge>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleMaintenanceSchedule(vehicle)}
+                          >
+                            <Calendar className="h-4 w-4 mr-1" />
+                            Schedule
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -684,7 +745,7 @@ const Index = () => {
               
               <Card className="shadow-fleet-md">
                 <CardHeader>
-                  <CardTitle>Fleet Status Distribution</CardTitle>
+                  <CardTitle>Fleet Status Distribution (Total: 45 vehicles)</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="h-64">
@@ -700,12 +761,12 @@ const Index = () => {
                           cx="50%"
                           cy="50%"
                           labelLine={false}
-                          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                          label={({ name, percent, value }) => `${name}: ${value} (${(percent * 100).toFixed(0)}%)`}
                           outerRadius={80}
                           fill="#8884d8"
                           dataKey="value"
                         />
-                        <Tooltip />
+                        <Tooltip formatter={(value, name) => [`${value} vehicles`, name]} />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
@@ -734,7 +795,7 @@ const Index = () => {
                         <Tooltip />
                         <Legend />
                         <Area type="monotone" dataKey="generated" stackId="1" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.6} />
-                        <Area type="monotone" dataKey="returned" stackId="2" stroke="hsl(var(--accent))" fill="hsl(var(--accent))" fillOpacity={0.6} />
+                        <Area type="monotone" dataKey="returned" stackId="2" stroke="hsl(var(--success))" fill="hsl(var(--success))" fillOpacity={0.6} />
                       </AreaChart>
                     </ResponsiveContainer>
                   </div>
@@ -768,6 +829,28 @@ const Index = () => {
             </div>
           </TabsContent>
         </Tabs>
+        
+        {/* Popup Components */}
+        <AddVehiclePopup 
+          open={addVehicleOpen} 
+          onOpenChange={setAddVehicleOpen} 
+        />
+        <TrackVehiclePopup 
+          open={trackVehicleOpen} 
+          onOpenChange={setTrackVehicleOpen}
+          vehicle={popupVehicle}
+        />
+        <VehicleDetailsPopup 
+          open={vehicleDetailsOpen} 
+          onOpenChange={setVehicleDetailsOpen}
+          vehicle={popupVehicle}
+        />
+        <MaintenancePopup 
+          open={maintenanceOpen} 
+          onOpenChange={setMaintenanceOpen}
+          vehicle={popupVehicle}
+          depots={depots}
+        />
       </main>
     </div>
   );

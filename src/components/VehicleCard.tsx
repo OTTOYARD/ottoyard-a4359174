@@ -26,9 +26,11 @@ interface Vehicle {
 interface VehicleCardProps {
   vehicle: Vehicle;
   compact?: boolean;
+  onTrack?: (vehicle: Vehicle) => void;
+  onDetails?: (vehicle: Vehicle) => void;
 }
 
-const VehicleCard = ({ vehicle, compact = false }: VehicleCardProps) => {
+const VehicleCard = ({ vehicle, compact = false, onTrack, onDetails }: VehicleCardProps) => {
   const getStatusVariant = (status: string) => {
     switch (status) {
       case "active":
@@ -151,11 +153,21 @@ const VehicleCard = ({ vehicle, compact = false }: VehicleCardProps) => {
 
         {/* Actions */}
         <div className="flex space-x-2 pt-2">
-          <Button variant="outline" size="sm" className="flex-1">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex-1"
+            onClick={() => onTrack?.(vehicle)}
+          >
             <MapPin className="h-4 w-4 mr-2" />
             Track
           </Button>
-          <Button variant="outline" size="sm" className="flex-1">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex-1"
+            onClick={() => onDetails?.(vehicle)}
+          >
             Details
           </Button>
         </div>
