@@ -16,7 +16,8 @@ import {
   ChevronLeft,
   AlertTriangle,
   CheckCircle2,
-  Wrench
+  Wrench,
+  Bot
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, AreaChart, Area } from 'recharts';
 import FleetMap from "@/components/FleetMap";
@@ -31,6 +32,7 @@ import {
   VehicleDetailsPopup, 
   MaintenancePopup 
 } from "@/components/VehiclePopups";
+import { AIAgentPopup } from "@/components/AIAgentPopup";
 
 // Generate 45 vehicles with unique 5-digit alphanumeric IDs
 const generateVehicles = () => {
@@ -81,9 +83,9 @@ const depots = [
     name: "OTTOYARD Central",
     energyGenerated: 2400,
     energyReturned: 1200,
-    vehiclesCharging: 3,
-    totalStalls: 12,
-    availableStalls: 9,
+    vehiclesCharging: 8,
+    totalStalls: 42,
+    availableStalls: 34,
     status: "optimal"
   },
   {
@@ -91,9 +93,9 @@ const depots = [
     name: "OTTOYARD North",
     energyGenerated: 1800,
     energyReturned: 950,
-    vehiclesCharging: 2,
-    totalStalls: 8,
-    availableStalls: 6,
+    vehiclesCharging: 6,
+    totalStalls: 35,
+    availableStalls: 29,
     status: "optimal"
   },
   {
@@ -101,9 +103,9 @@ const depots = [
     name: "OTTOYARD East",
     energyGenerated: 2100,
     energyReturned: 1100,
-    vehiclesCharging: 4,
-    totalStalls: 10,
-    availableStalls: 6,
+    vehiclesCharging: 12,
+    totalStalls: 38,
+    availableStalls: 26,
     status: "optimal"
   },
   {
@@ -111,9 +113,9 @@ const depots = [
     name: "OTTOYARD West", 
     energyGenerated: 1900,
     energyReturned: 850,
-    vehiclesCharging: 1,
-    totalStalls: 8,
-    availableStalls: 7,
+    vehiclesCharging: 4,
+    totalStalls: 30,
+    availableStalls: 26,
     status: "maintenance"
   },
   {
@@ -121,9 +123,9 @@ const depots = [
     name: "OTTOYARD South",
     energyGenerated: 2200,
     energyReturned: 1150,
-    vehiclesCharging: 3,
-    totalStalls: 10,
-    availableStalls: 7,
+    vehiclesCharging: 9,
+    totalStalls: 45,
+    availableStalls: 36,
     status: "optimal"
   },
   {
@@ -131,9 +133,9 @@ const depots = [
     name: "OTTOYARD Harbor",
     energyGenerated: 1600,
     energyReturned: 780,
-    vehiclesCharging: 2,
-    totalStalls: 6,
-    availableStalls: 4,
+    vehiclesCharging: 7,
+    totalStalls: 32,
+    availableStalls: 25,
     status: "optimal"
   },
   {
@@ -141,9 +143,9 @@ const depots = [
     name: "OTTOYARD Airport",
     energyGenerated: 2500,
     energyReturned: 1300,
-    vehiclesCharging: 5,
-    totalStalls: 14,
-    availableStalls: 9,
+    vehiclesCharging: 15,
+    totalStalls: 50,
+    availableStalls: 35,
     status: "optimal"
   }
 ];
@@ -153,12 +155,14 @@ const Index = () => {
   const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null);
   const [selectedDepot, setSelectedDepot] = useState<string | null>(null);
   const [overviewView, setOverviewView] = useState<'main' | 'vehicles' | 'energy' | 'grid' | 'efficiency'>('main');
+  const [chartPeriod, setChartPeriod] = useState<'week' | 'month' | 'year'>('week');
   
   // Popup states
   const [addVehicleOpen, setAddVehicleOpen] = useState(false);
   const [trackVehicleOpen, setTrackVehicleOpen] = useState(false);
   const [vehicleDetailsOpen, setVehicleDetailsOpen] = useState(false);
   const [maintenanceOpen, setMaintenanceOpen] = useState(false);
+  const [aiAgentOpen, setAiAgentOpen] = useState(false);
   const [popupVehicle, setPopupVehicle] = useState<typeof vehicles[0] | null>(null);
   
   const handleTrackVehicle = (vehicle: typeof vehicles[0]) => {
@@ -192,6 +196,15 @@ const Index = () => {
               </div>
             </div>
             <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setAiAgentOpen(true)}
+                className="bg-gradient-primary text-white border-0 hover:bg-gradient-primary/90"
+              >
+                <Bot className="h-4 w-4 mr-1" />
+                <span className="hidden sm:inline">AI Agent</span>
+              </Button>
               <Badge variant="outline" className="bg-success/10 text-success border-success/20 hidden sm:flex">
                 <Activity className="h-3 w-3 mr-1" />
                 <span className="hidden md:inline">All Systems Operational</span>
@@ -716,27 +729,88 @@ const Index = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card className="shadow-fleet-md">
                 <CardHeader>
-                  <CardTitle>Energy Efficiency Trends</CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle>Energy Efficiency Trends</CardTitle>
+                    <div className="flex space-x-1">
+                      <Button 
+                        size="sm" 
+                        variant={chartPeriod === 'week' ? 'default' : 'outline'}
+                        onClick={() => setChartPeriod('week')}
+                      >
+                        Week
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant={chartPeriod === 'month' ? 'default' : 'outline'}
+                        onClick={() => setChartPeriod('month')}
+                      >
+                        Month
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant={chartPeriod === 'year' ? 'default' : 'outline'}
+                        onClick={() => setChartPeriod('year')}
+                      >
+                        Year
+                      </Button>
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={[
-                        { month: 'Jan', efficiency: 88 },
-                        { month: 'Feb', efficiency: 89 },
-                        { month: 'Mar', efficiency: 91 },
-                        { month: 'Apr', efficiency: 93 },
-                        { month: 'May', efficiency: 92 },
-                        { month: 'Jun', efficiency: 94 },
-                        { month: 'Jul', efficiency: 95 },
-                        { month: 'Aug', efficiency: 94 }
-                      ]}>
+                      <LineChart data={
+                        chartPeriod === 'week' ? [
+                          { period: 'Mon', efficiency: 93 },
+                          { period: 'Tue', efficiency: 94 },
+                          { period: 'Wed', efficiency: 92 },
+                          { period: 'Thu', efficiency: 95 },
+                          { period: 'Fri', efficiency: 94 },
+                          { period: 'Sat', efficiency: 93 },
+                          { period: 'Sun', efficiency: 91 }
+                        ] : chartPeriod === 'month' ? [
+                          { period: 'Jan', efficiency: 88 },
+                          { period: 'Feb', efficiency: 89 },
+                          { period: 'Mar', efficiency: 91 },
+                          { period: 'Apr', efficiency: 93 },
+                          { period: 'May', efficiency: 92 },
+                          { period: 'Jun', efficiency: 94 },
+                          { period: 'Jul', efficiency: 95 },
+                          { period: 'Aug', efficiency: 94 }
+                        ] : [
+                          { period: '2020', efficiency: 82 },
+                          { period: '2021', efficiency: 85 },
+                          { period: '2022', efficiency: 89 },
+                          { period: '2023', efficiency: 92 },
+                          { period: '2024', efficiency: 94 }
+                        ]
+                      }>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" />
-                        <YAxis domain={[85, 100]} />
-                        <Tooltip />
+                        <XAxis 
+                          dataKey="period" 
+                          axisLine={true}
+                          tickLine={true}
+                          tick={{ fontSize: 12 }}
+                        />
+                        <YAxis 
+                          domain={[80, 100]} 
+                          label={{ value: 'Efficiency (%)', angle: -90, position: 'insideLeft' }}
+                          axisLine={true}
+                          tickLine={true}
+                          tick={{ fontSize: 12 }}
+                        />
+                        <Tooltip 
+                          formatter={(value) => [`${value}%`, 'Efficiency']}
+                          labelFormatter={(label) => `Period: ${label}`}
+                        />
                         <Legend />
-                        <Line type="monotone" dataKey="efficiency" stroke="hsl(var(--primary))" strokeWidth={2} />
+                        <Line 
+                          type="monotone" 
+                          dataKey="efficiency" 
+                          stroke="hsl(var(--primary))" 
+                          strokeWidth={2}
+                          name="Fleet Efficiency"
+                        />
                       </LineChart>
                     </ResponsiveContainer>
                   </div>
@@ -775,27 +849,93 @@ const Index = () => {
 
               <Card className="shadow-fleet-md">
                 <CardHeader>
-                  <CardTitle>Daily Energy Generation</CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle>Daily Energy Generation</CardTitle>
+                    <div className="flex space-x-1">
+                      <Button 
+                        size="sm" 
+                        variant={chartPeriod === 'week' ? 'default' : 'outline'}
+                        onClick={() => setChartPeriod('week')}
+                      >
+                        Week
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant={chartPeriod === 'month' ? 'default' : 'outline'}
+                        onClick={() => setChartPeriod('month')}
+                      >
+                        Month
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant={chartPeriod === 'year' ? 'default' : 'outline'}
+                        onClick={() => setChartPeriod('year')}
+                      >
+                        Year
+                      </Button>
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={[
-                        { day: 'Mon', generated: 2.8, returned: 1.2 },
-                        { day: 'Tue', generated: 3.2, returned: 1.4 },
-                        { day: 'Wed', generated: 2.9, returned: 1.1 },
-                        { day: 'Thu', generated: 3.5, returned: 1.6 },
-                        { day: 'Fri', generated: 3.1, returned: 1.3 },
-                        { day: 'Sat', generated: 2.6, returned: 1.0 },
-                        { day: 'Sun', generated: 2.4, returned: 0.9 }
-                      ]}>
+                      <AreaChart data={
+                        chartPeriod === 'week' ? [
+                          { period: 'Mon', generated: 2.8, returned: 1.2 },
+                          { period: 'Tue', generated: 3.2, returned: 1.4 },
+                          { period: 'Wed', generated: 2.9, returned: 1.1 },
+                          { period: 'Thu', generated: 3.5, returned: 1.6 },
+                          { period: 'Fri', generated: 3.1, returned: 1.3 },
+                          { period: 'Sat', generated: 2.6, returned: 1.0 },
+                          { period: 'Sun', generated: 2.4, returned: 0.9 }
+                        ] : chartPeriod === 'month' ? [
+                          { period: 'W1', generated: 20.2, returned: 8.7 },
+                          { period: 'W2', generated: 22.1, returned: 9.4 },
+                          { period: 'W3', generated: 21.8, returned: 9.1 },
+                          { period: 'W4', generated: 23.5, returned: 10.2 }
+                        ] : [
+                          { period: 'Q1', generated: 265, returned: 115 },
+                          { period: 'Q2', generated: 278, returned: 122 },
+                          { period: 'Q3', generated: 295, returned: 131 },
+                          { period: 'Q4', generated: 312, returned: 140 }
+                        ]
+                      }>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="day" />
-                        <YAxis />
-                        <Tooltip />
+                        <XAxis 
+                          dataKey="period"
+                          axisLine={true}
+                          tickLine={true}
+                          tick={{ fontSize: 12 }}
+                        />
+                        <YAxis 
+                          label={{ value: 'Energy (MWh)', angle: -90, position: 'insideLeft' }}
+                          axisLine={true}
+                          tickLine={true}
+                          tick={{ fontSize: 12 }}
+                        />
+                        <Tooltip 
+                          formatter={(value, name) => [`${value} MWh`, name === 'generated' ? 'Generated' : 'Returned to Grid']}
+                          labelFormatter={(label) => `Period: ${label}`}
+                        />
                         <Legend />
-                        <Area type="monotone" dataKey="generated" stackId="1" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.6} />
-                        <Area type="monotone" dataKey="returned" stackId="2" stroke="hsl(var(--success))" fill="hsl(var(--success))" fillOpacity={0.6} />
+                        <Area 
+                          type="monotone" 
+                          dataKey="generated" 
+                          stackId="1" 
+                          stroke="hsl(var(--primary))" 
+                          fill="hsl(var(--primary))" 
+                          fillOpacity={0.6}
+                          name="Energy Generated"
+                        />
+                        <Area 
+                          type="monotone" 
+                          dataKey="returned" 
+                          stackId="2" 
+                          stroke="hsl(var(--success))" 
+                          fill="hsl(var(--success))" 
+                          fillOpacity={0.6}
+                          name="Returned to Grid"
+                        />
                       </AreaChart>
                     </ResponsiveContainer>
                   </div>
@@ -817,10 +957,23 @@ const Index = () => {
                         { range: '81-100%', count: vehicles.filter(v => v.battery > 80).length }
                       ]}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="range" />
-                        <YAxis />
-                        <Tooltip />
-                        <Bar dataKey="count" fill="hsl(var(--primary))" />
+                        <XAxis 
+                          dataKey="range"
+                          axisLine={true}
+                          tickLine={true}
+                          tick={{ fontSize: 12 }}
+                        />
+                        <YAxis 
+                          label={{ value: 'Number of Vehicles', angle: -90, position: 'insideLeft' }}
+                          axisLine={true}
+                          tickLine={true}
+                          tick={{ fontSize: 12 }}
+                        />
+                        <Tooltip 
+                          formatter={(value) => [`${value} vehicles`, 'Count']}
+                          labelFormatter={(label) => `Battery Range: ${label}`}
+                        />
+                        <Bar dataKey="count" fill="hsl(var(--primary))" name="Vehicles" />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -850,6 +1003,10 @@ const Index = () => {
           onOpenChange={setMaintenanceOpen}
           vehicle={popupVehicle}
           depots={depots}
+        />
+        <AIAgentPopup 
+          open={aiAgentOpen} 
+          onOpenChange={setAiAgentOpen}
         />
       </main>
     </div>

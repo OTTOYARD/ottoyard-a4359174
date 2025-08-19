@@ -102,9 +102,16 @@ export const AddVehiclePopup = ({ open, onOpenChange }: AddVehiclePopupProps) =>
                 <SelectValue placeholder="Select model" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ottoyard-pro">OTTOYARD Pro</SelectItem>
-                <SelectItem value="ottoyard-elite">OTTOYARD Elite</SelectItem>
-                <SelectItem value="ottoyard-cargo">OTTOYARD Cargo</SelectItem>
+                <SelectItem value="waymo-one">Waymo One</SelectItem>
+                <SelectItem value="tesla-model-y">Tesla Model Y</SelectItem>
+                <SelectItem value="cruise-origin">Cruise Origin</SelectItem>
+                <SelectItem value="zoox-robotaxi">Zoox Robotaxi</SelectItem>
+                <SelectItem value="argo-ford">Argo AI Ford Fusion</SelectItem>
+                <SelectItem value="motional-ioniq">Motional IONIQ 5</SelectItem>
+                <SelectItem value="aurora-pacifica">Aurora Pacifica</SelectItem>
+                <SelectItem value="nuro-r2">Nuro R2</SelectItem>
+                <SelectItem value="aptiv-bmw">Aptiv BMW X5</SelectItem>
+                <SelectItem value="baidu-apollo">Baidu Apollo RT6</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -134,6 +141,7 @@ export const AddVehiclePopup = ({ open, onOpenChange }: AddVehiclePopupProps) =>
                 <SelectItem value="warehouse-a">Warehouse Route A</SelectItem>
                 <SelectItem value="port">Port Transfer</SelectItem>
                 <SelectItem value="industrial-b">Industrial Zone B</SelectItem>
+                <SelectItem value="ride-hail">General Ride-Hail Route</SelectItem>
               </SelectContent>
             </Select>
           </div>
