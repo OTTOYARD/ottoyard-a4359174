@@ -242,34 +242,36 @@ const Index = () => {
                 change="+2"
                 trend="up"
                 icon={Truck}
+                onClick={() => setOverviewView('vehicles')}
               />
-              <div onClick={() => setOverviewView('energy')} className="cursor-pointer">
-                <MetricsCard 
-                  title="Energy Generated"
-                  value="4.2 MWh"
-                  change="+15%"
-                  trend="up"
-                  icon={Zap}
-                />
-              </div>
-              <div onClick={() => setOverviewView('grid')} className="cursor-pointer">
-                <MetricsCard 
-                  title="Grid Return"
-                  value="2.1 MWh"
-                  change="+8%"
-                  trend="up"
-                  icon={TrendingUp}
-                />
-              </div>
-              <div onClick={() => setOverviewView('efficiency')} className="cursor-pointer">
-                <MetricsCard 
-                  title="Fleet Efficiency"
-                  value="94.2%"
-                  change="+3.1%"
-                  trend="up"
-                  icon={Activity}
-                />
-              </div>
+              <MetricsCard 
+                title="Energy & Grid"
+                value="4.2 MWh"
+                change="+15%"
+                trend="up"
+                icon={Zap}
+                secondaryValue="2.1 MWh returned"
+                secondaryLabel="Grid Return"
+                onClick={() => setOverviewView('energy')}
+              />
+              <MetricsCard 
+                title="Fleet Efficiency"
+                value="94.2%"
+                change="+3.1%"
+                trend="up"
+                icon={Activity}
+                onClick={() => setOverviewView('efficiency')}
+              />
+              <MetricsCard 
+                title="Scheduled Services"
+                value="8"
+                change="+3"
+                trend="up"
+                icon={Wrench}
+                secondaryValue="2 today"
+                secondaryLabel="Due Today"
+                onClick={() => setSelectedTab('maintenance')}
+              />
             </div>
 
             {overviewView === 'main' && (
