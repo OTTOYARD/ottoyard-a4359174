@@ -1083,65 +1083,63 @@ const Index = () => {
 
         {/* Due Soon Summary Dialog */}
         <Dialog open={showDueSoonSummary} onOpenChange={setShowDueSoonSummary}>
-          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto w-[95vw] sm:w-full">
             <DialogHeader>
-              <DialogTitle className="flex items-center">
-                <AlertTriangle className="h-5 w-5 mr-2 text-warning" />
-                Due Soon Maintenance Summary
+              <DialogTitle className="flex items-center text-base sm:text-lg">
+                <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-warning" />
+                Due Soon Summary
               </DialogTitle>
             </DialogHeader>
-            <div className="space-y-4 mt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-3 mt-4">
+              <div className="grid grid-cols-1 gap-3">
                 {vehicles.slice(0, 3).map((vehicle, index) => (
-                  <div key={vehicle.id} className="p-4 border border-warning/20 rounded-lg bg-warning/5">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="font-semibold text-lg">{vehicle.name}</h3>
+                  <div key={vehicle.id} className="p-3 border border-warning/20 rounded-lg bg-warning/5">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-semibold text-sm sm:text-base">{vehicle.name}</h3>
                       <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">
                         Due Soon
                       </Badge>
                     </div>
-                    <div className="space-y-2 text-sm">
-                      <p><span className="font-medium">Service Type:</span> Routine Service</p>
-                      <p><span className="font-medium">Due Date:</span> {vehicle.nextMaintenance}</p>
-                      <p><span className="font-medium">Location:</span> {vehicle.location.lat.toFixed(4)}, {vehicle.location.lng.toFixed(4)}</p>
-                      <p><span className="font-medium">Battery:</span> {vehicle.battery}%</p>
-                      <p><span className="font-medium">Status:</span> {vehicle.status}</p>
+                    <div className="space-y-1 text-xs sm:text-sm">
+                      <p><span className="font-medium">Due:</span> {vehicle.nextMaintenance}</p>
+                      <p><span className="font-medium">Battery:</span> {vehicle.battery}% | <span className="font-medium">Status:</span> {vehicle.status}</p>
                     </div>
-                    <div className="flex gap-2 mt-4">
+                    <div className="flex gap-2 mt-3">
                       <Button 
                         size="sm" 
                         variant="default"
+                        className="text-xs px-2 py-1 h-7"
                         onClick={() => {
                           setPopupVehicle(vehicle);
                           setMaintenanceOpen(true);
                           setShowDueSoonSummary(false);
                         }}
                       >
-                        Schedule Now
+                        Schedule
                       </Button>
                       <Button 
                         size="sm" 
                         variant="outline"
+                        className="text-xs px-2 py-1 h-7"
                         onClick={() => {
                           setPopupVehicle(vehicle);
                           setVehicleDetailsOpen(true);
                           setShowDueSoonSummary(false);
                         }}
                       >
-                        View Details
+                        Details
                       </Button>
                     </div>
                   </div>
                 ))}
               </div>
-              <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-                <h4 className="font-semibold mb-2">Quick Actions</h4>
-                <div className="flex gap-2 flex-wrap">
+              <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+                <div className="flex gap-2 flex-wrap justify-center">
                   <Button 
                     variant="outline" 
                     size="sm"
+                    className="text-xs px-3 py-1 h-7"
                     onClick={() => {
-                      // Schedule all due soon vehicles
                       vehicles.slice(0, 3).forEach(vehicle => {
                         setPopupVehicle(vehicle);
                         setMaintenanceOpen(true);
@@ -1154,9 +1152,10 @@ const Index = () => {
                   <Button 
                     variant="outline" 
                     size="sm"
+                    className="text-xs px-3 py-1 h-7"
                     onClick={() => setShowDueSoonSummary(false)}
                   >
-                    Close Summary
+                    Close
                   </Button>
                 </div>
               </div>
