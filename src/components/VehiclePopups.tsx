@@ -327,23 +327,23 @@ export const MaintenancePopup = ({ open, onOpenChange, vehicle, depots }: Mainte
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
         <DialogHeader>
-          <DialogTitle className="flex items-center">
-            <Wrench className="h-5 w-5 mr-2 text-primary" />
+          <DialogTitle className="flex items-center text-base sm:text-lg">
+            <Wrench className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-primary" />
             Schedule Maintenance for {vehicle?.name}
           </DialogTitle>
         </DialogHeader>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-4 sm:gap-6">
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Service Type</Label>
+              <Label className="text-sm font-medium">Service Type</Label>
               <Select onValueChange={setSelectedService}>
-                <SelectTrigger>
+                <SelectTrigger className="bg-background">
                   <SelectValue placeholder="Select service" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background border z-50">
                   <SelectItem value="routine">
                     <div className="flex items-center">
                       <Wrench className="h-4 w-4 mr-2" />
@@ -373,19 +373,19 @@ export const MaintenancePopup = ({ open, onOpenChange, vehicle, depots }: Mainte
             </div>
             
             <div className="space-y-2">
-              <Label>Available Depots</Label>
-              <div className="space-y-2">
+              <Label className="text-sm font-medium">Available Depots</Label>
+              <div className="space-y-2 max-h-48 overflow-y-auto">
                 {depots.slice(0, 4).map((depot) => (
                   <div 
                     key={depot.id} 
-                    className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                    className={`p-2 sm:p-3 border rounded-lg cursor-pointer transition-colors ${
                       selectedDepot === depot.id ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted/50'
                     }`}
                     onClick={() => setSelectedDepot(depot.id)}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-medium">{depot.name}</span>
-                      <Badge className={depot.status === 'optimal' ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}>
+                      <span className="font-medium text-sm">{depot.name}</span>
+                      <Badge className={depot.status === 'optimal' ? 'bg-success/10 text-success text-xs' : 'bg-warning/10 text-warning text-xs'}>
                         {depot.availableStalls} slots
                       </Badge>
                     </div>
@@ -397,27 +397,33 @@ export const MaintenancePopup = ({ open, onOpenChange, vehicle, depots }: Mainte
           
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Select Date</Label>
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={setSelectedDate}
-                className="rounded-md border pointer-events-auto"
-                disabled={(date) => date < new Date()}
-              />
+              <Label className="text-sm font-medium">Select Date</Label>
+              <div className="flex justify-center">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={setSelectedDate}
+                  className="rounded-md border pointer-events-auto scale-90 sm:scale-100"
+                  disabled={(date) => date < new Date()}
+                />
+              </div>
             </div>
           </div>
         </div>
         
-        <div className="flex space-x-2 pt-4">
-          <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-2 pt-4 sticky bottom-0 bg-background border-t -mx-6 -mb-6 px-6 pb-6">
+          <Button 
+            variant="outline" 
+            className="w-full sm:flex-1 h-10" 
+            onClick={() => onOpenChange(false)}
+          >
             Cancel
           </Button>
           <Button 
-            className="flex-1"
+            className="w-full sm:flex-1 h-10"
             disabled={!selectedService || !selectedDepot || !selectedDate}
           >
-            <CalendarIcon className="h-4 w-4 mr-2" />
+            <Calendar className="h-4 w-4 mr-2" />
             Schedule Service
           </Button>
         </div>
