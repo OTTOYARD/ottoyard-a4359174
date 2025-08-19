@@ -234,46 +234,6 @@ const Index = () => {
           </div>
 
           <TabsContent value="overview" className="space-y-6">
-            {/* Key Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <MetricsCard 
-                title="Active Vehicles"
-                value="12"
-                change="+2"
-                trend="up"
-                icon={Truck}
-                onClick={() => setOverviewView('vehicles')}
-              />
-              <MetricsCard 
-                title="Energy & Grid"
-                value="4.2 MWh"
-                change="+15%"
-                trend="up"
-                icon={Zap}
-                secondaryValue="2.1 MWh returned"
-                secondaryLabel="Grid Return"
-                onClick={() => setOverviewView('energy')}
-              />
-              <MetricsCard 
-                title="Fleet Efficiency"
-                value="94.2%"
-                change="+3.1%"
-                trend="up"
-                icon={Activity}
-                onClick={() => setOverviewView('efficiency')}
-              />
-              <MetricsCard 
-                title="Scheduled Services"
-                value="8"
-                change="+3"
-                trend="up"
-                icon={Wrench}
-                secondaryValue="2 today"
-                secondaryLabel="Due Today"
-                onClick={() => setSelectedTab('maintenance')}
-              />
-            </div>
-
             {overviewView === 'main' && (
               <>
                 {/* Fleet Map */}
@@ -290,6 +250,49 @@ const Index = () => {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Quick Glance Section */}
+                <div className="space-y-4">
+                  <h2 className="text-xl font-semibold text-foreground">Quick Glance</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <MetricsCard 
+                      title="Active Vehicles"
+                      value="12"
+                      change="+2"
+                      trend="up"
+                      icon={Truck}
+                      onClick={() => setOverviewView('vehicles')}
+                    />
+                    <MetricsCard 
+                      title="Energy & Grid"
+                      value="4.2 MWh"
+                      change="+15%"
+                      trend="up"
+                      icon={Zap}
+                      secondaryValue="2.1 MWh returned"
+                      secondaryLabel="Grid Return"
+                      onClick={() => setOverviewView('energy')}
+                    />
+                    <MetricsCard 
+                      title="Fleet Efficiency"
+                      value="94.2%"
+                      change="+3.1%"
+                      trend="up"
+                      icon={Activity}
+                      onClick={() => setOverviewView('efficiency')}
+                    />
+                    <MetricsCard 
+                      title="Scheduled Services"
+                      value="8"
+                      change="+3"
+                      trend="up"
+                      icon={Wrench}
+                      secondaryValue="2 today"
+                      secondaryLabel="Due Today"
+                      onClick={() => setSelectedTab('maintenance')}
+                    />
+                  </div>
+                </div>
 
                 {/* Quick Status */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
