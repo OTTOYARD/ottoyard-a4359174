@@ -560,13 +560,14 @@ const Index = () => {
           <TabsContent value="fleet" className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-3xl font-bold text-foreground">Fleet Management</h2>
-              <Button 
-                className="bg-gradient-primary hover:bg-primary-hover"
-                onClick={() => setAddVehicleOpen(true)}
-              >
-                <Truck className="h-4 w-4 mr-2" />
-                Add Vehicle
-              </Button>
+               <Button 
+                 className="bg-gradient-primary hover:bg-primary-hover sm:px-6 px-3 sm:text-base text-sm"
+                 onClick={() => setAddVehicleOpen(true)}
+               >
+                 <Truck className="h-4 w-4 sm:mr-2 mr-1" />
+                 <span className="sm:inline hidden">Add Vehicle</span>
+                 <span className="sm:hidden inline">Add</span>
+               </Button>
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -609,10 +610,11 @@ const Index = () => {
           <TabsContent value="depots" className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-3xl font-bold text-foreground">Energy Depots</h2>
-              <Button className="bg-gradient-energy hover:bg-accent-hover">
-                <Zap className="h-4 w-4 mr-2" />
-                Add Depot
-              </Button>
+               <Button className="bg-gradient-energy hover:bg-accent-hover sm:px-6 px-3 sm:text-base text-sm">
+                 <Zap className="h-4 w-4 sm:mr-2 mr-1" />
+                 <span className="sm:inline hidden">Add Depot</span>
+                 <span className="sm:hidden inline">Add</span>
+               </Button>
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -654,30 +656,32 @@ const Index = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {vehicles.slice(0, 8).map((vehicle, index) => (
-                      <div key={vehicle.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
-                        <div className="flex items-center space-x-3">
-                          <AlertTriangle className="h-5 w-5 text-warning" />
-                          <div>
-                            <p className="font-medium">{vehicle.name} - Routine Service</p>
-                            <p className="text-sm text-muted-foreground">Due: {vehicle.nextMaintenance}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">
-                            {index < 3 ? 'Due Soon' : 'Scheduled'}
-                          </Badge>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => handleMaintenanceSchedule(vehicle)}
-                          >
-                            <Wrench className="h-4 w-4 mr-1" />
-                            Schedule
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
+                     {vehicles.slice(0, 8).map((vehicle, index) => (
+                       <div key={vehicle.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
+                         <div className="flex items-center space-x-3">
+                           <div className="flex flex-col items-center space-y-1">
+                             <AlertTriangle className="h-4 w-4 text-warning" />
+                             <Wrench className="h-3 w-3 text-muted-foreground" />
+                           </div>
+                           <div>
+                             <p className="font-medium">{vehicle.name} - Routine Service</p>
+                             <p className="text-sm text-muted-foreground">Due: {vehicle.nextMaintenance}</p>
+                           </div>
+                         </div>
+                         <div className="flex items-center space-x-2">
+                           <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">
+                             {index < 3 ? 'Due Soon' : 'Scheduled'}
+                           </Badge>
+                           <Button 
+                             size="sm" 
+                             variant="outline"
+                             onClick={() => handleMaintenanceSchedule(vehicle)}
+                           >
+                             Schedule
+                           </Button>
+                         </div>
+                       </div>
+                     ))}
                   </div>
                 </CardContent>
               </Card>
@@ -688,34 +692,36 @@ const Index = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {vehicles.slice(8, 16).map((vehicle, index) => (
-                      <div key={vehicle.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
-                        <div className="flex items-center space-x-3">
-                          <CheckCircle2 className="h-5 w-5 text-accent" />
-                          <div>
-                            <p className="font-medium">{vehicle.name} - Interior/Exterior Clean</p>
-                            <p className="text-sm text-muted-foreground">
-                              {index < 4 ? `Completed: 2024-08-${15 + index}` : `Scheduled: 2024-08-${25 + index}`}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Badge variant="outline" className={index < 4 
-                            ? "bg-success/10 text-success border-success/20" 
-                            : "bg-accent/10 text-accent border-accent/20"}>
-                            {index < 4 ? 'Complete' : 'Scheduled'}
-                          </Badge>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => handleMaintenanceSchedule(vehicle)}
-                          >
-                            <Calendar className="h-4 w-4 mr-1" />
-                            Schedule
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
+                     {vehicles.slice(8, 16).map((vehicle, index) => (
+                       <div key={vehicle.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
+                         <div className="flex items-center space-x-3">
+                           <div className="flex flex-col items-center space-y-1">
+                             <CheckCircle2 className="h-4 w-4 text-accent" />
+                             <Calendar className="h-3 w-3 text-muted-foreground" />
+                           </div>
+                           <div>
+                             <p className="font-medium">{vehicle.name} - Interior/Exterior Clean</p>
+                             <p className="text-sm text-muted-foreground">
+                               {index < 4 ? `Completed: 2024-08-${15 + index}` : `Scheduled: 2024-08-${25 + index}`}
+                             </p>
+                           </div>
+                         </div>
+                         <div className="flex items-center space-x-2">
+                           <Badge variant="outline" className={index < 4 
+                             ? "bg-success/10 text-success border-success/20" 
+                             : "bg-accent/10 text-accent border-accent/20"}>
+                             {index < 4 ? 'Complete' : 'Scheduled'}
+                           </Badge>
+                           <Button 
+                             size="sm" 
+                             variant="outline"
+                             onClick={() => handleMaintenanceSchedule(vehicle)}
+                           >
+                             Schedule
+                           </Button>
+                         </div>
+                       </div>
+                     ))}
                   </div>
                 </CardContent>
               </Card>
@@ -797,17 +803,27 @@ const Index = () => {
                           tickLine={true}
                           tick={{ fontSize: 12 }}
                         />
-                        <YAxis 
-                          domain={[80, 100]} 
-                          label={{ value: 'Efficiency (%)', angle: -90, position: 'insideLeft' }}
-                          axisLine={true}
-                          tickLine={true}
-                          tick={{ fontSize: 12 }}
-                        />
-                        <Tooltip 
-                          formatter={(value) => [`${value}%`, 'Efficiency']}
-                          labelFormatter={(label) => `Period: ${label}`}
-                        />
+                         <YAxis 
+                           domain={[80, 100]} 
+                           label={{ value: 'Efficiency (%)', angle: -90, position: 'insideLeft', textAnchor: 'middle' }}
+                           axisLine={true}
+                           tickLine={true}
+                           tick={{ fontSize: 12 }}
+                         />
+                         <Tooltip 
+                           formatter={(value) => [`${value}%`, 'Efficiency']}
+                           labelFormatter={(label) => `Period: ${label}`}
+                           contentStyle={{
+                             backgroundColor: 'hsl(var(--card))',
+                             border: '1px solid hsl(var(--border))',
+                             borderRadius: '8px',
+                             boxShadow: '0 4px 12px hsl(var(--muted) / 0.15)',
+                             padding: '8px 12px',
+                             fontSize: '12px',
+                             fontWeight: '500'
+                           }}
+                           labelStyle={{ color: 'hsl(var(--foreground))', marginBottom: '4px' }}
+                         />
                         <Legend />
                         <Line 
                           type="monotone" 
@@ -830,22 +846,37 @@ const Index = () => {
                   <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
-                        <Pie
-                          data={[
-                            { name: 'Active', value: vehicles.filter(v => v.status === 'active').length, fill: 'hsl(var(--success))' },
-                            { name: 'Charging', value: vehicles.filter(v => v.status === 'charging').length, fill: 'hsl(var(--primary))' },
-                            { name: 'Maintenance', value: vehicles.filter(v => v.status === 'maintenance').length, fill: 'hsl(var(--warning))' },
-                            { name: 'Idle', value: vehicles.filter(v => v.status === 'idle').length, fill: 'hsl(var(--muted-foreground))' }
-                          ]}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          label={({ name, percent, value }) => `${name}: ${value} (${(percent * 100).toFixed(0)}%)`}
-                          outerRadius={80}
-                          fill="#8884d8"
-                          dataKey="value"
-                        />
-                        <Tooltip formatter={(value, name) => [`${value} vehicles`, name]} />
+                         <Pie
+                           data={[
+                             { name: 'Active', value: vehicles.filter(v => v.status === 'active').length, fill: 'hsl(var(--success))' },
+                             { name: 'Charging', value: vehicles.filter(v => v.status === 'charging').length, fill: 'hsl(var(--primary))' },
+                             { name: 'Maintenance', value: vehicles.filter(v => v.status === 'maintenance').length, fill: 'hsl(var(--warning))' },
+                             { name: 'Idle', value: vehicles.filter(v => v.status === 'idle').length, fill: 'hsl(var(--muted-foreground))' }
+                           ]}
+                           cx="50%"
+                           cy="50%"
+                           labelLine={false}
+                           label={({ name, percent, value }) => 
+                             window.innerWidth >= 768 
+                               ? `${name}: ${value} (${(percent * 100).toFixed(0)}%)` 
+                               : `${value}`
+                           }
+                           outerRadius={80}
+                           fill="#8884d8"
+                           dataKey="value"
+                         />
+                         <Tooltip 
+                           formatter={(value, name) => [`${value} vehicles`, name]}
+                           contentStyle={{
+                             backgroundColor: 'hsl(var(--card))',
+                             border: '1px solid hsl(var(--border))',
+                             borderRadius: '8px',
+                             boxShadow: '0 4px 12px hsl(var(--muted) / 0.15)',
+                             padding: '8px 12px',
+                             fontSize: '12px',
+                             fontWeight: '500'
+                           }}
+                         />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
@@ -912,16 +943,26 @@ const Index = () => {
                           tickLine={true}
                           tick={{ fontSize: 12 }}
                         />
-                        <YAxis 
-                          label={{ value: 'Energy (MWh)', angle: -90, position: 'insideLeft' }}
-                          axisLine={true}
-                          tickLine={true}
-                          tick={{ fontSize: 12 }}
-                        />
-                        <Tooltip 
-                          formatter={(value, name) => [`${value} MWh`, name === 'generated' ? 'Generated' : 'Returned to Grid']}
-                          labelFormatter={(label) => `Period: ${label}`}
-                        />
+                         <YAxis 
+                           label={{ value: 'Energy (MWh)', angle: -90, position: 'insideLeft', textAnchor: 'middle' }}
+                           axisLine={true}
+                           tickLine={true}
+                           tick={{ fontSize: 12 }}
+                         />
+                         <Tooltip 
+                           formatter={(value, name) => [`${value} MWh`, name === 'generated' ? 'Generated' : 'Returned to Grid']}
+                           labelFormatter={(label) => `Period: ${label}`}
+                           contentStyle={{
+                             backgroundColor: 'hsl(var(--card))',
+                             border: '1px solid hsl(var(--border))',
+                             borderRadius: '8px',
+                             boxShadow: '0 4px 12px hsl(var(--muted) / 0.15)',
+                             padding: '8px 12px',
+                             fontSize: '12px',
+                             fontWeight: '500'
+                           }}
+                           labelStyle={{ color: 'hsl(var(--foreground))', marginBottom: '4px' }}
+                         />
                         <Legend />
                         <Area 
                           type="monotone" 
@@ -968,16 +1009,26 @@ const Index = () => {
                           tickLine={true}
                           tick={{ fontSize: 12 }}
                         />
-                        <YAxis 
-                          label={{ value: 'Number of Vehicles', angle: -90, position: 'insideLeft' }}
-                          axisLine={true}
-                          tickLine={true}
-                          tick={{ fontSize: 12 }}
-                        />
-                        <Tooltip 
-                          formatter={(value) => [`${value} vehicles`, 'Count']}
-                          labelFormatter={(label) => `Battery Range: ${label}`}
-                        />
+                         <YAxis 
+                           label={{ value: 'Number of Vehicles', angle: -90, position: 'insideLeft', textAnchor: 'middle' }}
+                           axisLine={true}
+                           tickLine={true}
+                           tick={{ fontSize: 12 }}
+                         />
+                         <Tooltip 
+                           formatter={(value) => [`${value} vehicles`, 'Count']}
+                           labelFormatter={(label) => `Battery Range: ${label}`}
+                           contentStyle={{
+                             backgroundColor: 'hsl(var(--card))',
+                             border: '1px solid hsl(var(--border))',
+                             borderRadius: '8px',
+                             boxShadow: '0 4px 12px hsl(var(--muted) / 0.15)',
+                             padding: '8px 12px',
+                             fontSize: '12px',
+                             fontWeight: '500'
+                           }}
+                           labelStyle={{ color: 'hsl(var(--foreground))', marginBottom: '4px' }}
+                         />
                         <Bar dataKey="count" fill="hsl(var(--primary))" name="Vehicles" />
                       </BarChart>
                     </ResponsiveContainer>
