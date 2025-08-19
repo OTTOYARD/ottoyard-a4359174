@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   MapPin, 
   Battery, 
@@ -17,7 +18,8 @@ import {
   AlertTriangle,
   CheckCircle2,
   Wrench,
-  Bot
+  Bot,
+  Eye
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, AreaChart, Area } from 'recharts';
 import FleetMap from "@/components/FleetMap";
@@ -163,6 +165,7 @@ const Index = () => {
   const [vehicleDetailsOpen, setVehicleDetailsOpen] = useState(false);
   const [maintenanceOpen, setMaintenanceOpen] = useState(false);
   const [aiAgentOpen, setAiAgentOpen] = useState(false);
+  const [showDueSoonSummary, setShowDueSoonSummary] = useState(false);
   const [popupVehicle, setPopupVehicle] = useState<typeof vehicles[0] | null>(null);
   
   const handleTrackVehicle = (vehicle: typeof vehicles[0]) => {
@@ -649,6 +652,19 @@ const Index = () => {
               <h2 className="text-3xl font-bold text-foreground">Maintenance & Detailing</h2>
             </div>
             
+            {/* Due Soon Summary Button */}
+            <div className="flex justify-center">
+              <Button 
+                variant="outline" 
+                className="bg-warning/5 border-warning/30 text-warning hover:bg-warning/10"
+                onClick={() => setShowDueSoonSummary(true)}
+              >
+                <AlertTriangle className="h-4 w-4 mr-2" />
+                Due Soon Summary ({vehicles.slice(0, 3).length} vehicles)
+                <Eye className="h-4 w-4 ml-2" />
+              </Button>
+            </div>
+            
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card className="shadow-fleet-md">
                 <CardHeader>
@@ -1064,6 +1080,89 @@ const Index = () => {
           open={aiAgentOpen} 
           onOpenChange={setAiAgentOpen}
         />
+
+        {/* Due Soon Summary Dialog */}
+        <Dialog open={showDueSoonSummary} onOpenChange={setShowDueSoonSummary}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center">
+                <AlertTriangle className="h-5 w-5 mr-2 text-warning" />
+                Due Soon Maintenance Summary
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 mt-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {vehicles.slice(0, 3).map((vehicle, index) => (
+                  <div key={vehicle.id} className="p-4 border border-warning/20 rounded-lg bg-warning/5">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-semibold text-lg">{vehicle.name}</h3>
+                      <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">
+                        Due Soon
+                      </Badge>
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      <p><span className="font-medium">Service Type:</span> Routine Service</p>
+                      <p><span className="font-medium">Due Date:</span> {vehicle.nextMaintenance}</p>
+                      <p><span className="font-medium">Location:</span> {vehicle.location.lat.toFixed(4)}, {vehicle.location.lng.toFixed(4)}</p>
+                      <p><span className="font-medium">Battery:</span> {vehicle.battery}%</p>
+                      <p><span className="font-medium">Status:</span> {vehicle.status}</p>
+                    </div>
+                    <div className="flex gap-2 mt-4">
+                      <Button 
+                        size="sm" 
+                        variant="default"
+                        onClick={() => {
+                          setPopupVehicle(vehicle);
+                          setMaintenanceOpen(true);
+                          setShowDueSoonSummary(false);
+                        }}
+                      >
+                        Schedule Now
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => {
+                          setPopupVehicle(vehicle);
+                          setVehicleDetailsOpen(true);
+                          setShowDueSoonSummary(false);
+                        }}
+                      >
+                        View Details
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-6 p-4 bg-muted/50 rounded-lg">
+                <h4 className="font-semibold mb-2">Quick Actions</h4>
+                <div className="flex gap-2 flex-wrap">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      // Schedule all due soon vehicles
+                      vehicles.slice(0, 3).forEach(vehicle => {
+                        setPopupVehicle(vehicle);
+                        setMaintenanceOpen(true);
+                      });
+                      setShowDueSoonSummary(false);
+                    }}
+                  >
+                    Schedule All
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setShowDueSoonSummary(false)}
+                  >
+                    Close Summary
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );
