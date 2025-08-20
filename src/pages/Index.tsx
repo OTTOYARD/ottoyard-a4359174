@@ -768,11 +768,12 @@ const Index = () => {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle>Energy Efficiency Trends</CardTitle>
-                    <div className="flex space-x-1">
+                    <div className="flex space-x-1 md:flex-row flex-col md:space-x-1 md:space-y-0 space-y-1 space-x-0">
                       <Button 
                         size="sm" 
                         variant={chartPeriod === 'week' ? 'default' : 'outline'}
                         onClick={() => setChartPeriod('week')}
+                        className="md:min-w-0 min-w-16 text-xs md:text-sm px-2 py-1 md:px-3 md:py-2"
                       >
                         Week
                       </Button>
@@ -780,6 +781,7 @@ const Index = () => {
                         size="sm" 
                         variant={chartPeriod === 'month' ? 'default' : 'outline'}
                         onClick={() => setChartPeriod('month')}
+                        className="md:min-w-0 min-w-16 text-xs md:text-sm px-2 py-1 md:px-3 md:py-2"
                       >
                         Month
                       </Button>
@@ -787,6 +789,7 @@ const Index = () => {
                         size="sm" 
                         variant={chartPeriod === 'year' ? 'default' : 'outline'}
                         onClick={() => setChartPeriod('year')}
+                        className="md:min-w-0 min-w-16 text-xs md:text-sm px-2 py-1 md:px-3 md:py-2"
                       >
                         Year
                       </Button>
@@ -913,11 +916,12 @@ const Index = () => {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle>Daily Energy Generation</CardTitle>
-                    <div className="flex space-x-1">
+                    <div className="flex space-x-1 md:flex-row flex-col md:space-x-1 md:space-y-0 space-y-1 space-x-0">
                       <Button 
                         size="sm" 
                         variant={chartPeriod === 'week' ? 'default' : 'outline'}
                         onClick={() => setChartPeriod('week')}
+                        className="md:min-w-0 min-w-16 text-xs md:text-sm px-2 py-1 md:px-3 md:py-2"
                       >
                         Week
                       </Button>
@@ -925,6 +929,7 @@ const Index = () => {
                         size="sm" 
                         variant={chartPeriod === 'month' ? 'default' : 'outline'}
                         onClick={() => setChartPeriod('month')}
+                        className="md:min-w-0 min-w-16 text-xs md:text-sm px-2 py-1 md:px-3 md:py-2"
                       >
                         Month
                       </Button>
@@ -932,6 +937,7 @@ const Index = () => {
                         size="sm" 
                         variant={chartPeriod === 'year' ? 'default' : 'outline'}
                         onClick={() => setChartPeriod('year')}
+                        className="md:min-w-0 min-w-16 text-xs md:text-sm px-2 py-1 md:px-3 md:py-2"
                       >
                         Year
                       </Button>
