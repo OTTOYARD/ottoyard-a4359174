@@ -10,11 +10,40 @@ interface Vehicle {
   route: string;
 }
 
-interface FleetMapProps {
-  vehicles: Vehicle[];
+interface Depot {
+  id: string;
+  name: string;
+  location: { lat: number; lng: number };
+  stalls: number;
+  available: number;
 }
 
-const FleetMap = ({ vehicles }: FleetMapProps) => {
+interface FleetMapProps {
+  vehicles: Vehicle[];
+  onVehicleClick?: (vehicleId: string) => void;
+  onDepotClick?: (depotId: string) => void;
+  currentCity?: { name: string; coordinates: [number, number] };
+}
+
+const FleetMap = ({ vehicles, onVehicleClick, onDepotClick, currentCity }: FleetMapProps) => {
+  // Generate depot locations for the current city
+  const generateDepots = () => {
+    if (!currentCity) return [];
+    
+    const depotNames = ['OTTOYARD Central Hub', 'OTTOYARD North Station', 'OTTOYARD Port Terminal', 'OTTOYARD Tech Center'];
+    return depotNames.slice(0, Math.min(3, depotNames.length)).map((name, index) => ({
+      id: `depot-${index}`,
+      name,
+      location: {
+        lat: currentCity.coordinates[1] + (Math.random() - 0.5) * 0.15,
+        lng: currentCity.coordinates[0] + (Math.random() - 0.5) * 0.2
+      },
+      stalls: 8 + Math.floor(Math.random() * 8),
+      available: Math.floor(Math.random() * 6) + 2
+    }));
+  };
+
+  const depots = generateDepots();
   const getStatusColor = (status: string) => {
     switch (status) {
       case "active":
@@ -58,22 +87,25 @@ const FleetMap = ({ vehicles }: FleetMapProps) => {
       </div>
 
       {/* Vehicle Markers */}
-      {vehicles.map((vehicle, index) => (
+      {vehicles.slice(0, 12).map((vehicle, index) => (
         <div
           key={vehicle.id}
           className="absolute transform -translate-x-1/2 -translate-y-1/2 animate-slide-up"
           style={{
-            left: `${20 + index * 25}%`,
-            top: `${30 + index * 15}%`,
+            left: `${15 + (index % 4) * 20}%`,
+            top: `${25 + Math.floor(index / 4) * 20}%`,
             animationDelay: `${index * 0.1}s`
           }}
         >
-          <div className="relative group cursor-pointer">
+          <div 
+            className="relative group cursor-pointer"
+            onClick={() => onVehicleClick?.(vehicle.id)}
+          >
             {/* Vehicle Marker */}
-            <div className={`w-4 h-4 rounded-full ${getStatusColor(vehicle.status)} border-2 border-white shadow-fleet-md`} />
+            <div className={`w-6 h-6 rounded-full ${getStatusColor(vehicle.status)} border-2 border-white shadow-fleet-md hover:scale-110 transition-transform`} />
             
             {/* Tooltip */}
-            <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+            <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
               <div className="bg-card border border-border rounded-lg shadow-fleet-lg p-3 min-w-48">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
@@ -99,9 +131,45 @@ const FleetMap = ({ vehicles }: FleetMapProps) => {
         </div>
       ))}
 
+      {/* Depot Markers */}
+      {depots.map((depot, index) => (
+        <div
+          key={depot.id}
+          className="absolute transform -translate-x-1/2 -translate-y-1/2 animate-slide-up"
+          style={{
+            left: `${70 + index * 15}%`,
+            top: `${20 + index * 25}%`,
+            animationDelay: `${(vehicles.length + index) * 0.1}s`
+          }}
+        >
+          <div 
+            className="relative group cursor-pointer"
+            onClick={() => onDepotClick?.(depot.id)}
+          >
+            {/* Depot Marker */}
+            <div className="w-8 h-8 rounded-lg bg-primary border-2 border-white shadow-fleet-md hover:scale-110 transition-transform flex items-center justify-center">
+              <div className="w-3 h-3 bg-white rounded-sm" />
+            </div>
+            
+            {/* Tooltip */}
+            <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+              <div className="bg-card border border-border rounded-lg shadow-fleet-lg p-3 min-w-48">
+                <div className="space-y-2">
+                  <h4 className="font-medium text-card-foreground">{depot.name}</h4>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Available Stalls:</span>
+                    <span className="font-medium text-success">{depot.available}/{depot.stalls}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+
       {/* Map Legend */}
       <div className="absolute top-4 right-4 bg-card/90 backdrop-blur-sm border border-border rounded-lg p-3 space-y-2">
-        <h5 className="text-sm font-medium text-card-foreground mb-2">Vehicle Status</h5>
+        <h5 className="text-sm font-medium text-card-foreground mb-2">Map Legend</h5>
         <div className="space-y-1">
           <div className="flex items-center text-xs">
             <div className="w-3 h-3 rounded-full bg-success mr-2" />
@@ -115,6 +183,12 @@ const FleetMap = ({ vehicles }: FleetMapProps) => {
             <div className="w-3 h-3 rounded-full bg-destructive mr-2" />
             <span className="text-muted-foreground">Maintenance</span>
           </div>
+          <div className="flex items-center text-xs">
+            <div className="w-4 h-4 rounded-lg bg-primary mr-2 flex items-center justify-center">
+              <div className="w-1.5 h-1.5 bg-white rounded-sm" />
+            </div>
+            <span className="text-muted-foreground">Depot</span>
+          </div>
         </div>
       </div>
 
@@ -122,7 +196,7 @@ const FleetMap = ({ vehicles }: FleetMapProps) => {
       <div className="absolute bottom-4 left-4 bg-card/90 backdrop-blur-sm border border-border rounded-lg p-3">
         <div className="flex items-center text-sm text-muted-foreground">
           <MapPin className="h-4 w-4 mr-2 text-primary" />
-          San Francisco Bay Area
+          {currentCity?.name || 'San Francisco'} Area
         </div>
       </div>
     </div>

@@ -47,6 +47,8 @@ const generateVehiclesForCity = (city: City) => {
     'University Campus', 'Hospital Route', 'Financial District'
   ];
   
+  const avCompanies = ['Waymo', 'Zoox', 'Tensor', 'Cruise', 'Aurora', 'Argo AI', 'Nuro', 'Mobileye', 'Motional', 'Apple Car'];
+  
   const vehicles = [];
   const vehicleCount = Math.floor(Math.random() * 30) + 15; // 15-45 vehicles per city
   
@@ -61,6 +63,7 @@ const generateVehiclesForCity = (city: City) => {
     const status = statuses[Math.floor(Math.random() * statuses.length)];
     const battery = Math.floor(Math.random() * 100);
     const route = routes[Math.floor(Math.random() * routes.length)];
+    const company = avCompanies[Math.floor(Math.random() * avCompanies.length)];
     
     // Generate random coordinates around the city center
     const lat = city.coordinates[1] + (Math.random() - 0.5) * 0.2;
@@ -68,7 +71,7 @@ const generateVehiclesForCity = (city: City) => {
     
     vehicles.push({
       id,
-      name: `OTTOYARD ${id}`,
+      name: `${company} ${id}`,
       status,
       battery,
       location: { lat, lng },
@@ -214,26 +217,28 @@ const Index = () => {
                 <p className="text-xs sm:text-sm text-muted-foreground truncate text-center">Fleet Command</p>
               </div>
             </div>
-            <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
-              <Badge variant="outline" className="bg-success/10 text-success border-success/20 hidden sm:flex">
+            <div className="flex flex-col items-end space-y-2 flex-shrink-0">
+              <Badge variant="outline" className="bg-success/10 text-success border-success/20">
                 <Activity className="h-3 w-3 mr-1" />
                 <span className="hidden md:inline">All Systems Operational</span>
                 <span className="md:hidden">Online</span>
               </Badge>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setAiAgentOpen(true)}
-                className="bg-gradient-primary text-white border-0 hover:bg-gradient-primary/90"
-              >
-                <Bot className="h-4 w-4 mr-1" />
-                <span className="hidden sm:inline">AI Agent</span>
-              </Button>
-              <SettingsDialog>
-                <Button variant="outline" size="sm">
-                  <Settings className="h-4 w-4" />
+              <div className="flex items-center space-x-1 sm:space-x-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setAiAgentOpen(true)}
+                  className="bg-gradient-primary text-white border-0 hover:bg-gradient-primary/90"
+                >
+                  <Bot className="h-4 w-4 mr-1" />
+                  <span className="hidden sm:inline">FieldOps AI</span>
                 </Button>
-              </SettingsDialog>
+                <SettingsDialog>
+                  <Button variant="outline" size="sm">
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                </SettingsDialog>
+              </div>
             </div>
           </div>
         </div>
@@ -257,19 +262,32 @@ const Index = () => {
               <>
                 {/* Fleet Map */}
                 <Card className="shadow-fleet-md">
-                  <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <MapPin className="h-5 w-5 mr-2 text-primary" />
-                      Live Fleet Tracking
-                    </CardTitle>
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="flex items-center">
+                        <MapPin className="h-5 w-5 mr-2 text-primary" />
+                        Live Fleet Tracking
+                      </CardTitle>
+                      <CitySearchBar 
+                        currentCity={currentCity} 
+                        onCitySelect={handleCitySelect} 
+                      />
+                    </div>
                   </CardHeader>
-                  <CardContent>
-                    <CitySearchBar 
-                      currentCity={currentCity} 
-                      onCitySelect={handleCitySelect} 
-                    />
+                  <CardContent className="pt-2">
                     <div className="h-[500px]">
-                      <MapboxMap vehicles={vehicles} city={currentCity} />
+                      <FleetMap 
+                        vehicles={vehicles} 
+                        onVehicleClick={(vehicleId) => {
+                          setSelectedTab('fleet');
+                          // Scroll to vehicle in fleet tab
+                        }}
+                        onDepotClick={(depotId) => {
+                          setSelectedTab('depots');
+                          // Scroll to depot in depots tab
+                        }}
+                        currentCity={currentCity}
+                      />
                     </div>
                   </CardContent>
                 </Card>
