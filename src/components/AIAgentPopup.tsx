@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -36,6 +36,12 @@ export const AIAgentPopup = ({ open, onOpenChange }: AIAgentPopupProps) => {
     }
   ]);
   const [inputMessage, setInputMessage] = useState("");
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, [messages, open]);
 
   const quickActions = [
     { icon: Calendar, label: "Schedule Maintenance", action: "schedule maintenance for vehicle" },
@@ -48,22 +54,26 @@ export const AIAgentPopup = ({ open, onOpenChange }: AIAgentPopupProps) => {
   const handleSendMessage = () => {
     if (!inputMessage.trim()) return;
 
+    const text = inputMessage;
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
-      content: inputMessage,
+      content: text,
       timestamp: new Date()
     };
 
     setMessages(prev => [...prev, userMessage]);
     setInputMessage("");
+    if (inputRef.current) {
+      inputRef.current.style.height = 'auto';
+    }
 
     // Simulate AI response
     setTimeout(() => {
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: getAIResponse(inputMessage),
+        content: getAIResponse(text),
         timestamp: new Date()
       };
       setMessages(prev => [...prev, assistantMessage]);
@@ -157,17 +167,29 @@ export const AIAgentPopup = ({ open, onOpenChange }: AIAgentPopupProps) => {
                   </div>
                 </div>
               ))}
+              <div ref={bottomRef} />
             </div>
           </ScrollArea>
 
           {/* Input */}
-          <div className="flex space-x-2 bg-muted/30 p-3 rounded-lg">
-            <Input
+          <div className="flex items-end space-x-2 bg-muted/30 p-3 rounded-lg">
+            <Textarea
+              ref={inputRef}
               placeholder="Ask me anything about your fleet..."
               value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-              className="flex-1 bg-background"
+              rows={1}
+              onChange={(e) => {
+                setInputMessage(e.target.value);
+                e.currentTarget.style.height = 'auto';
+                e.currentTarget.style.height = Math.min(e.currentTarget.scrollHeight, 128) + 'px';
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+              className="flex-1 bg-background resize-none max-h-32 min-h-[44px] leading-5"
             />
             <Button 
               onClick={handleSendMessage} 
