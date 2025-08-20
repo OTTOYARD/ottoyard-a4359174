@@ -126,7 +126,7 @@ const DepotAnalytics = ({ depot, open, onOpenChange }: DepotAnalyticsProps) => {
                         value: 'Energy (MWh)', 
                         angle: -90, 
                         position: 'insideLeft',
-                        textAnchor: 'middle'
+                        style: { textAnchor: 'middle' }
                       }} 
                       tick={{ fontSize: 12 }} 
                     />
@@ -192,8 +192,10 @@ const DepotAnalytics = ({ depot, open, onOpenChange }: DepotAnalyticsProps) => {
                         backgroundColor: 'hsl(var(--card))',
                         border: '1px solid hsl(var(--border))',
                         borderRadius: '8px',
-                        color: 'red'
+                        color: 'hsl(var(--destructive))'
                       }}
+                      labelStyle={{ color: 'hsl(var(--destructive))' }}
+                      itemStyle={{ color: 'hsl(var(--destructive))' }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -220,7 +222,7 @@ const DepotAnalytics = ({ depot, open, onOpenChange }: DepotAnalyticsProps) => {
                         value: 'Efficiency (%)', 
                         angle: -90, 
                         position: 'insideLeft',
-                        textAnchor: 'middle'
+                        style: { textAnchor: 'middle' }
                       }} 
                       tick={{ fontSize: 12 }} 
                     />
