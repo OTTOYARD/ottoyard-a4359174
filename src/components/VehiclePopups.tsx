@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,6 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 import MapboxMap from "@/components/MapboxMap";
 import { 
@@ -316,97 +318,279 @@ export const VehicleDetailsPopup = ({ open, onOpenChange, vehicle }: VehicleDeta
 };
 
 export const MaintenancePopup = ({ open, onOpenChange, vehicle, depots }: MaintenancePopupProps) => {
-  
+  const [step, setStep] = useState<'select' | 'calendar' | 'confirm'>('select');
   const [selectedService, setSelectedService] = useState<string>("");
   const [selectedDepot, setSelectedDepot] = useState<string>("");
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [selectedTime, setSelectedTime] = useState<string>("");
+
+  const timeSlots = [
+    "8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM", 
+    "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM"
+  ];
+
+  const getServiceDetails = (serviceType: string) => {
+    const services = {
+      routine: { name: "Routine Maintenance", icon: Wrench, duration: "2-3 hours" },
+      battery: { name: "Battery Check", icon: Battery, duration: "1 hour" },
+      detailing: { name: "Interior/Exterior Detailing", icon: Sparkles, duration: "3-4 hours" },
+      inspection: { name: "Safety Inspection", icon: Gauge, duration: "1-2 hours" }
+    };
+    return services[serviceType as keyof typeof services];
+  };
+
+  const getSelectedDepot = () => depots.find(d => d.id === selectedDepot);
+
+  const handleNext = () => {
+    if (step === 'select' && selectedService && selectedDepot) {
+      setStep('calendar');
+    } else if (step === 'calendar' && selectedDate && selectedTime) {
+      setStep('confirm');
+    }
+  };
+
+  const handleBack = () => {
+    if (step === 'calendar') setStep('select');
+    if (step === 'confirm') setStep('calendar');
+  };
+
+  const handleConfirm = () => {
+    // Handle the actual scheduling logic here
+    onOpenChange(false);
+    // Reset state
+    setStep('select');
+    setSelectedService("");
+    setSelectedDepot("");
+    setSelectedDate(undefined);
+    setSelectedTime("");
+  };
+
+  const handleClose = () => {
+    onOpenChange(false);
+    // Reset state
+    setStep('select');
+    setSelectedService("");
+    setSelectedDepot("");
+    setSelectedDate(undefined);
+    setSelectedTime("");
+  };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
         <DialogHeader>
           <DialogTitle className="flex items-center text-base sm:text-lg">
             <Wrench className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-primary" />
-            Schedule Maintenance for {vehicle?.name}
+            {step === 'select' && `Schedule Service for ${vehicle?.name}`}
+            {step === 'calendar' && `Select Date & Time`}
+            {step === 'confirm' && `Confirm Appointment`}
           </DialogTitle>
         </DialogHeader>
         
-        <div className="grid grid-cols-1 gap-4 sm:gap-6">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Service Type</Label>
-              <Select onValueChange={setSelectedService}>
-                <SelectTrigger className="bg-background">
-                  <SelectValue placeholder="Select service" />
-                </SelectTrigger>
-                <SelectContent className="bg-background border z-50">
-                  <SelectItem value="routine">
-                    <div className="flex items-center">
-                      <Wrench className="h-4 w-4 mr-2" />
-                      Routine Maintenance
+        {/* Step 1: Select Service and Depot */}
+        {step === 'select' && (
+          <div className="grid grid-cols-1 gap-4 sm:gap-6">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Service Type</Label>
+                <Select onValueChange={setSelectedService} value={selectedService}>
+                  <SelectTrigger className="bg-background">
+                    <SelectValue placeholder="Select service" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border z-50">
+                    <SelectItem value="routine">
+                      <div className="flex items-center">
+                        <Wrench className="h-4 w-4 mr-2" />
+                        Routine Maintenance
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="battery">
+                      <div className="flex items-center">
+                        <Battery className="h-4 w-4 mr-2" />
+                        Battery Check
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="detailing">
+                      <div className="flex items-center">
+                        <Sparkles className="h-4 w-4 mr-2" />
+                        Interior/Exterior Detailing
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="inspection">
+                      <div className="flex items-center">
+                        <Gauge className="h-4 w-4 mr-2" />
+                        Safety Inspection
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Available Depots</Label>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {depots.slice(0, 4).map((depot) => (
+                    <div 
+                      key={depot.id} 
+                      className={`p-2 sm:p-3 border rounded-lg cursor-pointer transition-colors ${
+                        selectedDepot === depot.id ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted/50'
+                      }`}
+                      onClick={() => setSelectedDepot(depot.id)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-sm">{depot.name}</span>
+                        <Badge className={depot.status === 'optimal' ? 'bg-success/10 text-success text-xs' : 'bg-warning/10 text-warning text-xs'}>
+                          {depot.availableStalls} slots
+                        </Badge>
+                      </div>
                     </div>
-                  </SelectItem>
-                  <SelectItem value="battery">
-                    <div className="flex items-center">
-                      <Battery className="h-4 w-4 mr-2" />
-                      Battery Check
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="detailing">
-                    <div className="flex items-center">
-                      <Sparkles className="h-4 w-4 mr-2" />
-                      Interior/Exterior Detailing
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="inspection">
-                    <div className="flex items-center">
-                      <Gauge className="h-4 w-4 mr-2" />
-                      Safety Inspection
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Available Depots</Label>
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                {depots.slice(0, 4).map((depot) => (
-                  <div 
-                    key={depot.id} 
-                    className={`p-2 sm:p-3 border rounded-lg cursor-pointer transition-colors ${
-                      selectedDepot === depot.id ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted/50'
-                    }`}
-                    onClick={() => setSelectedDepot(depot.id)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-sm">{depot.name}</span>
-                      <Badge className={depot.status === 'optimal' ? 'bg-success/10 text-success text-xs' : 'bg-warning/10 text-warning text-xs'}>
-                        {depot.availableStalls} slots
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-          
-        </div>
+        )}
+
+        {/* Step 2: Calendar and Time Selection */}
+        {step === 'calendar' && (
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Select Date</Label>
+                <div className="flex justify-center">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={setSelectedDate}
+                    className="rounded-md border pointer-events-auto"
+                    disabled={(date) => date < new Date()}
+                  />
+                </div>
+              </div>
+              
+              {selectedDate && (
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Available Times</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {timeSlots.map((time) => (
+                      <Button
+                        key={time}
+                        variant={selectedTime === time ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setSelectedTime(time)}
+                        className="text-xs"
+                      >
+                        <Clock className="h-3 w-3 mr-1" />
+                        {time}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Confirmation */}
+        {step === 'confirm' && (
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Appointment Summary</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {selectedService && (
+                  <div className="flex items-center justify-between py-2 border-b">
+                    <div className="flex items-center">
+                      {React.createElement(getServiceDetails(selectedService)?.icon || Wrench, { className: "h-4 w-4 mr-2" })}
+                      <span className="font-medium">Service</span>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium">{getServiceDetails(selectedService)?.name}</p>
+                      <p className="text-sm text-muted-foreground">Duration: {getServiceDetails(selectedService)?.duration}</p>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="flex items-center justify-between py-2 border-b">
+                  <div className="flex items-center">
+                    <MapPin className="h-4 w-4 mr-2" />
+                    <span className="font-medium">Location</span>
+                  </div>
+                  <span>{getSelectedDepot()?.name}</span>
+                </div>
+                
+                <div className="flex items-center justify-between py-2 border-b">
+                  <div className="flex items-center">
+                    <CalendarIcon className="h-4 w-4 mr-2" />
+                    <span className="font-medium">Date</span>
+                  </div>
+                  <span>{selectedDate?.toLocaleDateString()}</span>
+                </div>
+                
+                <div className="flex items-center justify-between py-2">
+                  <div className="flex items-center">
+                    <Clock className="h-4 w-4 mr-2" />
+                    <span className="font-medium">Time</span>
+                  </div>
+                  <span>{selectedTime}</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
         
+        {/* Navigation Buttons */}
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-2 pt-4 sticky bottom-0 bg-background border-t -mx-6 -mb-6 px-6 pb-6">
+          {step !== 'select' && (
+            <Button 
+              variant="outline" 
+              className="w-full sm:flex-1 h-10" 
+              onClick={handleBack}
+            >
+              Back
+            </Button>
+          )}
+          
           <Button 
             variant="outline" 
             className="w-full sm:flex-1 h-10" 
-            onClick={() => onOpenChange(false)}
+            onClick={handleClose}
           >
             Cancel
           </Button>
-          <Button 
-            className="w-full sm:flex-1 h-10"
-            disabled={!selectedService || !selectedDepot}
-          >
-            <Wrench className="h-4 w-4 mr-2" />
-            Schedule Service
-          </Button>
+          
+          {step === 'confirm' ? (
+            <Button 
+              className="w-full sm:flex-1 h-10"
+              onClick={handleConfirm}
+            >
+              <CalendarIcon className="h-4 w-4 mr-2" />
+              Confirm Appointment
+            </Button>
+          ) : (
+            <Button 
+              className="w-full sm:flex-1 h-10"
+              disabled={
+                (step === 'select' && (!selectedService || !selectedDepot)) ||
+                (step === 'calendar' && (!selectedDate || !selectedTime))
+              }
+              onClick={handleNext}
+            >
+              {step === 'select' && (
+                <>
+                  <CalendarIcon className="h-4 w-4 mr-2" />
+                  Select Date & Time
+                </>
+              )}
+              {step === 'calendar' && (
+                <>
+                  <Wrench className="h-4 w-4 mr-2" />
+                  Review Appointment
+                </>
+              )}
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>
