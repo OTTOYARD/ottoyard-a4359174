@@ -197,22 +197,27 @@ const Index = () => {
               </div>
             </div>
             <div className="flex flex-col items-end space-y-2 flex-shrink-0">
-              {/* Top Row: Status + Settings */}
+              {/* Top Row: Settings + Cart */}
+              <div className="flex items-center space-x-2">
+                <SettingsDialog>
+                  <Button variant="outline" size="sm">
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                </SettingsDialog>
+                <CartButton 
+                  cartItems={cartItems}
+                  onRemoveItem={handleRemoveFromCart}
+                  onCheckout={handleCheckout}
+                />
+              </div>
+              
+              {/* Bottom Row: Status + AI */}
               <div className="flex items-center space-x-2">
                 <Badge variant="outline" className="bg-success/10 text-success border-success/20 text-xs">
                   <Activity className="h-3 w-3 mr-1" />
                   <span className="hidden md:inline">All Systems Operational</span>
                   <span className="md:hidden">Online</span>
                 </Badge>
-                <SettingsDialog>
-                  <Button variant="outline" size="sm">
-                    <Settings className="h-4 w-4" />
-                  </Button>
-                </SettingsDialog>
-              </div>
-              
-              {/* Bottom Row: AI + Cart */}
-              <div className="flex items-center space-x-2">
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -222,11 +227,6 @@ const Index = () => {
                   <Bot className="h-4 w-4 mr-1" />
                   <span className="hidden sm:inline">FieldOps AI</span>
                 </Button>
-                <CartButton 
-                  cartItems={cartItems}
-                  onRemoveItem={handleRemoveFromCart}
-                  onCheckout={handleCheckout}
-                />
               </div>
             </div>
           </div>
