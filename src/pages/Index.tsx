@@ -200,7 +200,7 @@ const Index = () => {
       <main className="container mx-auto px-4 py-6">
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
           <div className="overflow-x-auto scrollbar-hide pb-2">
-            <TabsList className="inline-flex w-max h-12 min-w-full sm:min-w-0 sm:w-auto justify-start sm:justify-center">
+            <TabsList className="inline-flex w-max h-12 min-w-full sm:min-w-0 sm:w-auto justify-start md:justify-center">
               <TabsTrigger value="overview" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Overview</TabsTrigger>
               <TabsTrigger value="fleet" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Fleet</TabsTrigger>
               <TabsTrigger value="depots" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Depots</TabsTrigger>
@@ -563,14 +563,14 @@ const Index = () => {
             </div>
             
             {/* Action Buttons */}
-            <div className="flex flex-col items-center gap-3">
-              <Button variant="outline" className="bg-warning/5 border-warning/30 text-warning hover:bg-warning/10 w-full max-w-md" onClick={() => setShowDueSoonSummary(true)}>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+              <Button variant="outline" className="bg-warning/5 border-warning/30 text-warning hover:bg-warning/10 w-full sm:w-auto sm:max-w-md" onClick={() => setShowDueSoonSummary(true)}>
                 <AlertTriangle className="h-4 w-4 mr-2" />
                 Due Soon Summary ({vehicles.slice(0, 3).length} vehicles)
                 <Eye className="h-4 w-4 ml-2" />
               </Button>
               
-              <Button className="bg-gradient-primary hover:bg-primary-hover w-full max-w-md" onClick={() => handleMaintenanceSchedule(vehicles[0])}>
+              <Button className="bg-gradient-primary hover:bg-primary-hover w-full sm:w-auto sm:max-w-md" onClick={() => handleMaintenanceSchedule(vehicles[0])}>
                 <Wrench className="h-4 w-4 mr-2" />
                 Schedule Maintenance
               </Button>
