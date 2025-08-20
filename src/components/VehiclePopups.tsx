@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar } from "@/components/ui/calendar";
+
 import MapboxMap from "@/components/MapboxMap";
 import { 
   Truck, 
@@ -316,7 +316,7 @@ export const VehicleDetailsPopup = ({ open, onOpenChange, vehicle }: VehicleDeta
 };
 
 export const MaintenancePopup = ({ open, onOpenChange, vehicle, depots }: MaintenancePopupProps) => {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  
   const [selectedService, setSelectedService] = useState<string>("");
   const [selectedDepot, setSelectedDepot] = useState<string>("");
 
@@ -390,20 +390,6 @@ export const MaintenancePopup = ({ open, onOpenChange, vehicle, depots }: Mainte
             </div>
           </div>
           
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Select Date</Label>
-              <div className="flex justify-center">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={setSelectedDate}
-                  className="rounded-md border pointer-events-auto scale-90 sm:scale-100"
-                  disabled={(date) => date < new Date()}
-                />
-              </div>
-            </div>
-          </div>
         </div>
         
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-2 pt-4 sticky bottom-0 bg-background border-t -mx-6 -mb-6 px-6 pb-6">
@@ -416,9 +402,9 @@ export const MaintenancePopup = ({ open, onOpenChange, vehicle, depots }: Mainte
           </Button>
           <Button 
             className="w-full sm:flex-1 h-10"
-            disabled={!selectedService || !selectedDepot || !selectedDate}
+            disabled={!selectedService || !selectedDepot}
           >
-            <Calendar className="h-4 w-4 mr-2" />
+            <Wrench className="h-4 w-4 mr-2" />
             Schedule Service
           </Button>
         </div>
