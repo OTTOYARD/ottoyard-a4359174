@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import {
   MoreVertical,
   Activity
 } from "lucide-react";
+import DepotAnalytics from "./DepotAnalytics";
 
 interface Depot {
   id: string;
@@ -27,6 +29,7 @@ interface DepotCardProps {
 }
 
 const DepotCard = ({ depot, compact = false }: DepotCardProps) => {
+  const [analyticsOpen, setAnalyticsOpen] = useState(false);
   const efficiencyRate = (depot.energyReturned / depot.energyGenerated) * 100;
 
   const getStatusColor = (status: string) => {
@@ -134,7 +137,7 @@ const DepotCard = ({ depot, compact = false }: DepotCardProps) => {
 
         {/* Actions */}
         <div className="flex space-x-2 pt-2">
-          <Button variant="outline" size="sm" className="flex-1">
+          <Button variant="outline" size="sm" className="flex-1" onClick={() => setAnalyticsOpen(true)}>
             <Activity className="h-4 w-4 mr-2" />
             Monitor
           </Button>
@@ -143,6 +146,12 @@ const DepotCard = ({ depot, compact = false }: DepotCardProps) => {
           </Button>
         </div>
       </CardContent>
+      
+      <DepotAnalytics 
+        depot={depot}
+        open={analyticsOpen}
+        onOpenChange={setAnalyticsOpen}
+      />
     </Card>
   );
 };

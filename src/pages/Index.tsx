@@ -197,11 +197,6 @@ const Index = () => {
               </div>
             </div>
             <div className="flex flex-col items-end space-y-2 flex-shrink-0">
-              <Badge variant="outline" className="bg-success/10 text-success border-success/20">
-                <Activity className="h-3 w-3 mr-1" />
-                <span className="hidden md:inline">All Systems Operational</span>
-                <span className="md:hidden">Online</span>
-              </Badge>
               <div className="flex items-center space-x-1 sm:space-x-2">
                 <CartButton 
                   cartItems={cartItems}
@@ -212,6 +207,13 @@ const Index = () => {
                   <Bot className="h-4 w-4 mr-1" />
                   <span className="hidden sm:inline">FieldOps AI</span>
                 </Button>
+              </div>
+              <div className="flex items-center justify-between w-full gap-2">
+                <Badge variant="outline" className="bg-success/10 text-success border-success/20">
+                  <Activity className="h-3 w-3 mr-1" />
+                  <span className="hidden md:inline">All Systems Operational</span>
+                  <span className="md:hidden">Online</span>
+                </Badge>
                 <SettingsDialog>
                   <Button variant="outline" size="sm">
                     <Settings className="h-4 w-4" />
