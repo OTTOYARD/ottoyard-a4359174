@@ -191,11 +191,11 @@ const Index = () => {
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
               <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center flex-shrink-0">
-                <img src="/lovable-uploads/28eaaca9-b235-45e8-8e35-5ddc069f02f8.png" alt="OTTOYARD Logo" className="h-7 w-7 sm:h-9 sm:w-9" />
+                <img src="/lovable-uploads/30d8f072-040b-43f4-9b0c-d6c35e5f3fcb.png" alt="Fleet Command Logo" className="h-7 w-7 sm:h-9 sm:w-9" />
               </div>
               <div className="min-w-0">
                 <h1 className="text-lg sm:text-2xl font-bold text-foreground truncate">OTTOYARD</h1>
-                <p className="text-xs sm:text-sm text-muted-foreground truncate">Fleet Management</p>
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">Fleet Command</p>
               </div>
             </div>
             <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
