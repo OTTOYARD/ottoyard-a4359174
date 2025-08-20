@@ -692,18 +692,19 @@ const Index = () => {
                              <p className="text-sm text-muted-foreground">Due: {vehicle.nextMaintenance}</p>
                            </div>
                          </div>
-                         <div className="flex items-center space-x-2">
-                           <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">
-                             {index < 3 ? 'Due Soon' : 'Scheduled'}
-                           </Badge>
-                           <Button 
-                             size="sm" 
-                             variant="outline"
-                             onClick={() => handleMaintenanceSchedule(vehicle)}
-                           >
-                             Schedule
-                           </Button>
-                         </div>
+                          <div className="flex flex-col items-end space-y-2">
+                            <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">
+                              {index < 3 ? 'Due Soon' : 'Scheduled'}
+                            </Badge>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleMaintenanceSchedule(vehicle)}
+                              className="w-20"
+                            >
+                              Schedule
+                            </Button>
+                          </div>
                        </div>
                      ))}
                   </div>
@@ -730,20 +731,21 @@ const Index = () => {
                              </p>
                            </div>
                          </div>
-                         <div className="flex items-center space-x-2">
-                           <Badge variant="outline" className={index < 4 
-                             ? "bg-success/10 text-success border-success/20" 
-                             : "bg-accent/10 text-accent border-accent/20"}>
-                             {index < 4 ? 'Complete' : 'Scheduled'}
-                           </Badge>
-                           <Button 
-                             size="sm" 
-                             variant="outline"
-                             onClick={() => handleMaintenanceSchedule(vehicle)}
-                           >
-                             Schedule
-                           </Button>
-                         </div>
+                          <div className="flex flex-col items-end space-y-2">
+                            <Badge variant="outline" className={index < 4 
+                              ? "bg-success/10 text-success border-success/20" 
+                              : "bg-accent/10 text-accent border-accent/20"}>
+                              {index < 4 ? 'Complete' : 'Scheduled'}
+                            </Badge>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleMaintenanceSchedule(vehicle)}
+                              className="w-20"
+                            >
+                              Schedule
+                            </Button>
+                          </div>
                        </div>
                      ))}
                   </div>
