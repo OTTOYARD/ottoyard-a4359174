@@ -84,16 +84,16 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, city, onVehicleClick, o
         border: 2px solid white;
         box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         cursor: pointer;
-        transition: transform 0.2s;
-        transform-origin: center center;
+        transition: box-shadow 0.2s;
       `;
 
-      // Add hover effect
+      // Subtle hover emphasis without movement
+      const baseShadow = '0 2px 8px rgba(0,0,0,0.3)';
       markerEl.addEventListener('mouseenter', () => {
-        markerEl.style.transform = 'scale(1.1)';
+        markerEl.style.boxShadow = '0 4px 12px rgba(0,0,0,0.35)';
       });
       markerEl.addEventListener('mouseleave', () => {
-        markerEl.style.transform = 'scale(1)';
+        markerEl.style.boxShadow = baseShadow;
       });
 
       // Add click handler
@@ -112,7 +112,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, city, onVehicleClick, o
         </div>
       `);
 
-      new mapboxgl.Marker(markerEl)
+      new mapboxgl.Marker({ element: markerEl, anchor: 'center', offset: [0, 0] })
         .setLngLat([vehicle.location.lng, vehicle.location.lat])
         .setPopup(popup)
         .addTo(map.current!);
@@ -134,8 +134,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, city, onVehicleClick, o
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: transform 0.2s;
-        transform-origin: center center;
+        transition: box-shadow 0.2s;
       `;
 
       // Add inner square
@@ -148,12 +147,13 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, city, onVehicleClick, o
       `;
       markerEl.appendChild(innerSquare);
 
-      // Add hover effect
+      // Subtle hover emphasis without movement
+      const depotBaseShadow = '0 2px 8px rgba(0,0,0,0.3)';
       markerEl.addEventListener('mouseenter', () => {
-        markerEl.style.transform = 'scale(1.1)';
+        markerEl.style.boxShadow = '0 4px 12px rgba(0,0,0,0.35)';
       });
       markerEl.addEventListener('mouseleave', () => {
-        markerEl.style.transform = 'scale(1)';
+        markerEl.style.boxShadow = depotBaseShadow;
       });
 
       // Add click handler
@@ -170,7 +170,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, city, onVehicleClick, o
         </div>
       `);
 
-      new mapboxgl.Marker(markerEl)
+      new mapboxgl.Marker({ element: markerEl, anchor: 'center', offset: [0, 0] })
         .setLngLat([depot.location.lng, depot.location.lat])
         .setPopup(popup)
         .addTo(map.current!);
