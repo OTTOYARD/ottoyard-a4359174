@@ -333,8 +333,11 @@ export const MaintenancePopup = ({ open, onOpenChange, vehicle, depots }: Mainte
     const services = {
       routine: { name: "Routine Maintenance", icon: Wrench, duration: "2-3 hours" },
       battery: { name: "Battery Check", icon: Battery, duration: "1 hour" },
-      detailing: { name: "Interior/Exterior Detailing", icon: Sparkles, duration: "3-4 hours" },
-      inspection: { name: "Safety Inspection", icon: Gauge, duration: "1-2 hours" }
+      safety: { name: "Safety Inspection", icon: Gauge, duration: "1-2 hours" },
+      "detailing-interior": { name: "Interior Detailing", icon: Sparkles, duration: "2-3 hours" },
+      "detailing-exterior": { name: "Exterior Detailing", icon: Sparkles, duration: "2-3 hours" },
+      "detailing-full": { name: "Full Interior/Exterior Detailing", icon: Sparkles, duration: "4-5 hours" },
+      "detailing-premium": { name: "Premium Detailing Package", icon: Sparkles, duration: "6-8 hours" }
     };
     return services[serviceType as keyof typeof services];
   };
@@ -381,7 +384,7 @@ export const MaintenancePopup = ({ open, onOpenChange, vehicle, depots }: Mainte
         <DialogHeader>
           <DialogTitle className="flex items-center text-base sm:text-lg">
             <Wrench className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-primary" />
-            {step === 'select' && `Schedule Service for ${vehicle?.name}`}
+            {step === 'select' && `Schedule Maintenance/Detailing for ${vehicle?.name}`}
             {step === 'calendar' && `Select Date & Time`}
             {step === 'confirm' && `Confirm Appointment`}
           </DialogTitle>
@@ -410,16 +413,34 @@ export const MaintenancePopup = ({ open, onOpenChange, vehicle, depots }: Mainte
                         Battery Check
                       </div>
                     </SelectItem>
-                    <SelectItem value="detailing">
-                      <div className="flex items-center">
-                        <Sparkles className="h-4 w-4 mr-2" />
-                        Interior/Exterior Detailing
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="inspection">
+                    <SelectItem value="safety">
                       <div className="flex items-center">
                         <Gauge className="h-4 w-4 mr-2" />
                         Safety Inspection
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="detailing-interior">
+                      <div className="flex items-center">
+                        <Sparkles className="h-4 w-4 mr-2" />
+                        Interior Detailing
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="detailing-exterior">
+                      <div className="flex items-center">
+                        <Sparkles className="h-4 w-4 mr-2" />
+                        Exterior Detailing
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="detailing-full">
+                      <div className="flex items-center">
+                        <Sparkles className="h-4 w-4 mr-2" />
+                        Full Interior/Exterior Detailing
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="detailing-premium">
+                      <div className="flex items-center">
+                        <Sparkles className="h-4 w-4 mr-2" />
+                        Premium Detailing Package
                       </div>
                     </SelectItem>
                   </SelectContent>
