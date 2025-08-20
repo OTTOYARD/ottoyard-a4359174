@@ -94,32 +94,47 @@ export const AIAgentPopup = ({ open, onOpenChange }: AIAgentPopupProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl h-[600px] flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="flex items-center">
-            <Bot className="h-5 w-5 mr-2 text-primary" />
-            OTTOYARD AI Assistant
+      <DialogContent className="sm:max-w-3xl h-[700px] flex flex-col">
+        <DialogHeader className="pb-2">
+          <DialogTitle className="flex items-center justify-between">
+            <div className="flex items-center">
+              <div className="h-8 w-8 rounded-full bg-gradient-primary flex items-center justify-center mr-3">
+                <Bot className="h-4 w-4 text-white" />
+              </div>
+              <div>
+                <span className="text-lg font-semibold">FieldOps AI</span>
+                <p className="text-xs text-muted-foreground">OTTOYARD AI Assistant</p>
+              </div>
+            </div>
+            <Badge variant="outline" className="bg-success/10 text-success border-success/20">
+              <div className="h-2 w-2 rounded-full bg-success mr-2 animate-pulse"></div>
+              Online
+            </Badge>
           </DialogTitle>
         </DialogHeader>
         
         <div className="flex-1 flex flex-col space-y-4">
           {/* Quick Actions */}
-          <div className="flex flex-wrap gap-2">
-            {quickActions.map((action, index) => (
-              <Badge
-                key={index}
-                variant="outline"
-                className="cursor-pointer hover:bg-primary/10 transition-colors"
-                onClick={() => handleQuickAction(action.action)}
-              >
-                <action.icon className="h-3 w-3 mr-1" />
-                {action.label}
-              </Badge>
-            ))}
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-muted-foreground">Quick Actions</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {quickActions.map((action, index) => (
+                <Button
+                  key={index}
+                  variant="outline"
+                  size="sm"
+                  className="h-auto p-3 flex flex-col items-center space-y-1 hover:bg-primary/5 hover:border-primary/30 transition-all duration-200 hover:scale-[1.02]"
+                  onClick={() => handleQuickAction(action.action)}
+                >
+                  <action.icon className="h-4 w-4 text-primary" />
+                  <span className="text-xs text-center leading-tight">{action.label}</span>
+                </Button>
+              ))}
+            </div>
           </div>
 
           {/* Messages */}
-          <ScrollArea className="flex-1 border rounded-lg p-4">
+          <ScrollArea className="flex-1 border rounded-lg p-4 bg-muted/20">
             <div className="space-y-4">
               {messages.map((message) => (
                 <div
@@ -129,14 +144,14 @@ export const AIAgentPopup = ({ open, onOpenChange }: AIAgentPopupProps) => {
                   }`}
                 >
                   <div
-                    className={`max-w-[80%] p-3 rounded-lg ${
+                    className={`max-w-[85%] p-3 rounded-lg shadow-sm ${
                       message.role === 'user'
                         ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted text-foreground'
+                        : 'bg-card text-foreground border'
                     }`}
                   >
-                    <p className="text-sm">{message.content}</p>
-                    <span className="text-xs opacity-70">
+                    <p className="text-sm break-words whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                    <span className="text-xs opacity-70 mt-1 block">
                       {message.timestamp.toLocaleTimeString()}
                     </span>
                   </div>
@@ -146,14 +161,19 @@ export const AIAgentPopup = ({ open, onOpenChange }: AIAgentPopupProps) => {
           </ScrollArea>
 
           {/* Input */}
-          <div className="flex space-x-2">
+          <div className="flex space-x-2 bg-muted/30 p-3 rounded-lg">
             <Input
               placeholder="Ask me anything about your fleet..."
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+              className="flex-1 bg-background"
             />
-            <Button onClick={handleSendMessage} disabled={!inputMessage.trim()}>
+            <Button 
+              onClick={handleSendMessage} 
+              disabled={!inputMessage.trim()}
+              className="bg-gradient-primary hover:bg-primary-hover"
+            >
               <Send className="h-4 w-4" />
             </Button>
           </div>
