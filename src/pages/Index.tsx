@@ -602,14 +602,21 @@ const Index = () => {
             </div>
             
             {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-              <Button variant="outline" className="bg-warning/5 border-warning/30 text-warning hover:bg-warning/10 w-full sm:w-auto sm:max-w-md" onClick={() => setShowDueSoonSummary(true)}>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 w-full max-w-2xl mx-auto">
+              <Button 
+                variant="outline" 
+                className="bg-warning/5 border-warning/30 text-warning hover:bg-warning/10 w-full sm:w-60 h-12" 
+                onClick={() => setShowDueSoonSummary(true)}
+              >
                 <AlertTriangle className="h-4 w-4 mr-2" />
                 Due Soon Summary ({vehicles.slice(0, 3).length} vehicles)
                 <Eye className="h-4 w-4 ml-2" />
               </Button>
               
-              <Button className="bg-gradient-primary hover:bg-primary-hover w-full sm:w-auto sm:max-w-md" onClick={() => handleMaintenanceSchedule(vehicles[0])}>
+              <Button 
+                className="bg-gradient-primary hover:bg-primary-hover w-full sm:w-60 h-12" 
+                onClick={() => handleMaintenanceSchedule(vehicles[0])}
+              >
                 <Wrench className="h-4 w-4 mr-2" />
                 Schedule Maintenance
               </Button>
