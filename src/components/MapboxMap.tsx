@@ -87,13 +87,15 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, city, onVehicleClick, o
         transition: box-shadow 0.2s;
       `;
 
-      // Subtle hover emphasis without movement
+      // Add hover preview popup
       const baseShadow = '0 2px 8px rgba(0,0,0,0.3)';
       markerEl.addEventListener('mouseenter', () => {
         markerEl.style.boxShadow = '0 4px 12px rgba(0,0,0,0.35)';
+        popup.addTo(map.current!);
       });
       markerEl.addEventListener('mouseleave', () => {
         markerEl.style.boxShadow = baseShadow;
+        popup.remove();
       });
 
       // Add click handler
@@ -102,7 +104,12 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, city, onVehicleClick, o
       });
 
       // Create popup content
-      const popup = new mapboxgl.Popup({ offset: 15 }).setHTML(`
+      const popup = new mapboxgl.Popup({ 
+        offset: 15, 
+        closeButton: false, 
+        closeOnClick: false,
+        className: 'vehicle-preview-popup'
+      }).setHTML(`
         <div class="p-3 bg-card text-card-foreground rounded-lg border shadow-lg">
           <h3 class="font-semibold text-sm mb-1">${vehicle.name}</h3>
           <p class="text-xs text-muted-foreground">Status: ${vehicle.status}</p>
@@ -114,7 +121,6 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, city, onVehicleClick, o
 
       new mapboxgl.Marker({ element: markerEl, anchor: 'center', offset: [0, 0] })
         .setLngLat([vehicle.location.lng, vehicle.location.lat])
-        .setPopup(popup)
         .addTo(map.current!);
     });
 
@@ -147,13 +153,15 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, city, onVehicleClick, o
       `;
       markerEl.appendChild(innerSquare);
 
-      // Subtle hover emphasis without movement
+      // Add hover preview popup
       const depotBaseShadow = '0 2px 8px rgba(0,0,0,0.3)';
       markerEl.addEventListener('mouseenter', () => {
         markerEl.style.boxShadow = '0 4px 12px rgba(0,0,0,0.35)';
+        depotPopup.addTo(map.current!);
       });
       markerEl.addEventListener('mouseleave', () => {
         markerEl.style.boxShadow = depotBaseShadow;
+        depotPopup.remove();
       });
 
       // Add click handler
@@ -162,7 +170,12 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, city, onVehicleClick, o
       });
 
       // Create popup content
-      const popup = new mapboxgl.Popup({ offset: 15 }).setHTML(`
+      const depotPopup = new mapboxgl.Popup({ 
+        offset: 15, 
+        closeButton: false, 
+        closeOnClick: false,
+        className: 'depot-preview-popup'
+      }).setHTML(`
         <div class="p-3 bg-card text-card-foreground rounded-lg border shadow-lg">
           <h3 class="font-semibold text-sm mb-1">${depot.name}</h3>
           <p class="text-xs text-muted-foreground">Available Stalls: ${depot.available}/${depot.stalls}</p>
@@ -172,7 +185,6 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, city, onVehicleClick, o
 
       new mapboxgl.Marker({ element: markerEl, anchor: 'center', offset: [0, 0] })
         .setLngLat([depot.location.lng, depot.location.lat])
-        .setPopup(popup)
         .addTo(map.current!);
     });
   };

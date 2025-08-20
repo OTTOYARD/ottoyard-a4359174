@@ -281,11 +281,33 @@ const Index = () => {
                         city={currentCity}
                         onVehicleClick={(vehicleId) => {
                           setSelectedTab('fleet');
-                          // Scroll to vehicle in fleet tab
+                          // Add a delay to ensure tab switches first
+                          setTimeout(() => {
+                            const element = document.getElementById(`vehicle-${vehicleId}`);
+                            if (element) {
+                              element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                              // Highlight the selected vehicle temporarily
+                              element.style.backgroundColor = 'hsl(var(--primary) / 0.1)';
+                              setTimeout(() => {
+                                element.style.backgroundColor = '';
+                              }, 2000);
+                            }
+                          }, 100);
                         }}
                         onDepotClick={(depotId) => {
                           setSelectedTab('depots');
-                          // Scroll to depot in depots tab
+                          // Add a delay to ensure tab switches first
+                          setTimeout(() => {
+                            const element = document.getElementById(`depot-${depotId}`);
+                            if (element) {
+                              element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                              // Highlight the selected depot temporarily
+                              element.style.backgroundColor = 'hsl(var(--primary) / 0.1)';
+                              setTimeout(() => {
+                                element.style.backgroundColor = '';
+                              }, 2000);
+                            }
+                          }, 100);
                         }}
                       />
                     </div>
@@ -614,6 +636,7 @@ const Index = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
               {vehicles.map((vehicle) => (
                 <div key={vehicle.id} 
+                     id={`vehicle-${vehicle.id}`}
                      className={`cursor-pointer transition-all duration-200 ${
                        selectedVehicle === vehicle.id ? 'ring-2 ring-primary' : ''
                      }`}
@@ -661,6 +684,7 @@ const Index = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {depots.map((depot) => (
                 <div key={depot.id} 
+                     id={`depot-${depot.id}`}
                      className={`cursor-pointer transition-all duration-200 ${
                        selectedDepot === depot.id ? 'ring-2 ring-primary' : ''
                      }`}
