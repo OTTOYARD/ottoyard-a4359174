@@ -226,13 +226,13 @@ const Index = () => {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
-          <div className="overflow-x-auto">
-            <TabsList className="inline-flex w-auto h-10">
-              <TabsTrigger value="overview" className="whitespace-nowrap px-4">Overview</TabsTrigger>
-              <TabsTrigger value="fleet" className="whitespace-nowrap px-4">Fleet</TabsTrigger>
-              <TabsTrigger value="depots" className="whitespace-nowrap px-4">Depots</TabsTrigger>
-              <TabsTrigger value="maintenance" className="whitespace-nowrap px-4">Maintenance</TabsTrigger>
-              <TabsTrigger value="analytics" className="whitespace-nowrap px-4">Analytics</TabsTrigger>
+          <div className="overflow-x-auto flex justify-center">
+            <TabsList className="inline-flex w-auto h-12">
+              <TabsTrigger value="overview" className="whitespace-nowrap px-5 text-base">Overview</TabsTrigger>
+              <TabsTrigger value="fleet" className="whitespace-nowrap px-5 text-base">Fleet</TabsTrigger>
+              <TabsTrigger value="depots" className="whitespace-nowrap px-5 text-base">Depots</TabsTrigger>
+              <TabsTrigger value="maintenance" className="whitespace-nowrap px-5 text-base">Maintenance</TabsTrigger>
+              <TabsTrigger value="analytics" className="whitespace-nowrap px-5 text-base">Analytics</TabsTrigger>
             </TabsList>
           </div>
 
