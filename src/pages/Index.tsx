@@ -894,18 +894,19 @@ const Index = () => {
                            fill="#8884d8"
                            dataKey="value"
                          />
-                         <Tooltip 
-                           formatter={(value, name) => [`${value} vehicles`, name]}
-                           contentStyle={{
-                             backgroundColor: 'hsl(var(--card))',
-                             border: '1px solid hsl(var(--border))',
-                             borderRadius: '8px',
-                             boxShadow: '0 4px 12px hsl(var(--muted) / 0.15)',
-                             padding: '8px 12px',
-                             fontSize: '12px',
-                             fontWeight: '500'
-                           }}
-                         />
+                          <Tooltip 
+                            formatter={(value, name) => [`${value} vehicles`, name]}
+                            contentStyle={{
+                              backgroundColor: 'hsl(var(--card))',
+                              border: '1px solid hsl(var(--border))',
+                              borderRadius: '8px',
+                              boxShadow: '0 4px 12px hsl(var(--muted) / 0.15)',
+                              padding: '8px 12px',
+                              fontSize: '12px',
+                              fontWeight: '500',
+                              color: 'red'
+                            }}
+                          />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
