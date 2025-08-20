@@ -831,10 +831,10 @@ const Index = () => {
                         />
                          <YAxis 
                            domain={[80, 100]} 
-                           label={{ value: 'Efficiency (%)', angle: -90, position: 'insideLeft', textAnchor: 'middle' }}
+                           label={{ value: 'Efficiency (%)', angle: -90, position: 'insideLeft', textAnchor: 'middle', style: { textAnchor: 'middle' } }}
                            axisLine={true}
                            tickLine={true}
-                           tick={{ fontSize: 12 }}
+                           tick={{ fontSize: 12, textAnchor: 'end' }}
                          />
                          <Tooltip 
                            formatter={(value) => [`${value}%`, 'Efficiency']}
@@ -970,10 +970,10 @@ const Index = () => {
                           tick={{ fontSize: 12 }}
                         />
                          <YAxis 
-                           label={{ value: 'Energy (MWh)', angle: -90, position: 'insideLeft', textAnchor: 'middle' }}
+                           label={{ value: 'Energy (MWh)', angle: -90, position: 'insideLeft', textAnchor: 'middle', style: { textAnchor: 'middle' } }}
                            axisLine={true}
                            tickLine={true}
-                           tick={{ fontSize: 12 }}
+                           tick={{ fontSize: 12, textAnchor: 'end' }}
                          />
                          <Tooltip 
                            formatter={(value, name) => [`${value} MWh`, name === 'generated' ? 'Generated' : 'Returned to Grid']}
@@ -1036,10 +1036,10 @@ const Index = () => {
                           tick={{ fontSize: 12 }}
                         />
                          <YAxis 
-                           label={{ value: 'Number of Vehicles', angle: -90, position: 'insideLeft', textAnchor: 'middle' }}
+                           label={{ value: 'Number of Vehicles', angle: -90, position: 'insideLeft', textAnchor: 'middle', style: { textAnchor: 'middle' } }}
                            axisLine={true}
                            tickLine={true}
-                           tick={{ fontSize: 12 }}
+                           tick={{ fontSize: 12, textAnchor: 'end' }}
                          />
                          <Tooltip 
                            formatter={(value) => [`${value} vehicles`, 'Count']}
