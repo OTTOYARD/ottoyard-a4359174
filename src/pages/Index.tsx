@@ -248,7 +248,7 @@ const Index = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-0">
-                    <div className="p-4">
+                    <div className="h-[500px]">
                       <MapboxMap vehicles={vehicles} />
                     </div>
                   </CardContent>
