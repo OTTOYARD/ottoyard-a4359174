@@ -904,8 +904,10 @@ const Index = () => {
                               padding: '8px 12px',
                               fontSize: '12px',
                               fontWeight: '500',
-                              color: 'red'
+                              color: 'hsl(var(--destructive))'
                             }}
+                            labelStyle={{ color: 'hsl(var(--destructive))' }}
+                            itemStyle={{ color: 'hsl(var(--destructive))' }}
                           />
                       </PieChart>
                     </ResponsiveContainer>
