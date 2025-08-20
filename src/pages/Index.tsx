@@ -652,16 +652,24 @@ const Index = () => {
               <h2 className="text-3xl font-bold text-foreground">Maintenance & Detailing</h2>
             </div>
             
-            {/* Due Soon Summary Button */}
-            <div className="flex justify-center">
+            {/* Action Buttons */}
+            <div className="flex flex-col items-center gap-3">
               <Button 
                 variant="outline" 
-                className="bg-warning/5 border-warning/30 text-warning hover:bg-warning/10"
+                className="bg-warning/5 border-warning/30 text-warning hover:bg-warning/10 w-full max-w-md"
                 onClick={() => setShowDueSoonSummary(true)}
               >
                 <AlertTriangle className="h-4 w-4 mr-2" />
                 Due Soon Summary ({vehicles.slice(0, 3).length} vehicles)
                 <Eye className="h-4 w-4 ml-2" />
+              </Button>
+              
+              <Button 
+                className="bg-gradient-primary hover:bg-primary-hover w-full max-w-md"
+                onClick={() => handleMaintenanceSchedule(vehicles[0])}
+              >
+                <Wrench className="h-4 w-4 mr-2" />
+                Schedule Maintenance
               </Button>
             </div>
             
