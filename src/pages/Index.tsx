@@ -199,13 +199,13 @@ const Index = () => {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
-          <div className="overflow-x-auto flex justify-center">
-            <TabsList className="inline-flex w-auto h-12">
-              <TabsTrigger value="overview" className="whitespace-nowrap px-2 sm:px-5 text-base">Overview</TabsTrigger>
-              <TabsTrigger value="fleet" className="whitespace-nowrap px-2 sm:px-5 text-base">Fleet</TabsTrigger>
-              <TabsTrigger value="depots" className="whitespace-nowrap px-2 sm:px-5 text-base">Depots</TabsTrigger>
-              <TabsTrigger value="maintenance" className="whitespace-nowrap px-2 sm:px-5 text-base">Maintenance</TabsTrigger>
-              <TabsTrigger value="analytics" className="whitespace-nowrap px-2 sm:px-5 text-base">Analytics</TabsTrigger>
+          <div className="overflow-x-auto scrollbar-hide pb-2">
+            <TabsList className="inline-flex w-max h-12 min-w-full sm:min-w-0 sm:w-auto justify-start sm:justify-center">
+              <TabsTrigger value="overview" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Overview</TabsTrigger>
+              <TabsTrigger value="fleet" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Fleet</TabsTrigger>
+              <TabsTrigger value="depots" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Depots</TabsTrigger>
+              <TabsTrigger value="maintenance" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Maintenance</TabsTrigger>
+              <TabsTrigger value="analytics" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Analytics</TabsTrigger>
             </TabsList>
           </div>
 
