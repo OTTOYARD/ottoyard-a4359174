@@ -35,9 +35,10 @@ interface VehicleCardProps {
   onTrack?: (vehicle: Vehicle) => void;
   onDetails?: (vehicle: Vehicle) => void;
   onSchedule?: (vehicle: Vehicle) => void;
+  onSendToOtto?: (vehicle: Vehicle) => void;
 }
 
-const VehicleCard = ({ vehicle, compact = false, onTrack, onDetails, onSchedule }: VehicleCardProps) => {
+const VehicleCard = ({ vehicle, compact = false, onTrack, onDetails, onSchedule, onSendToOtto }: VehicleCardProps) => {
   const [showDetails, setShowDetails] = useState(false);
   const getStatusVariant = (status: string) => {
     switch (status) {
@@ -160,30 +161,41 @@ const VehicleCard = ({ vehicle, compact = false, onTrack, onDetails, onSchedule 
         </div>
 
         {/* Actions */}
-        <div className="grid grid-cols-3 gap-2 pt-2">
+        <div className="space-y-2 pt-2">
+          <div className="grid grid-cols-3 gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => onTrack?.(vehicle)}
+            >
+              <MapPin className="h-4 w-4 mr-1" />
+              Track
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => onDetails?.(vehicle)}
+            >
+              <Gauge className="h-4 w-4 mr-1" />
+              Details
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => onSchedule?.(vehicle)}
+            >
+              <Wrench className="h-4 w-4 mr-1" />
+              Schedule
+            </Button>
+          </div>
           <Button 
-            variant="outline" 
+            variant="default" 
             size="sm" 
-            onClick={() => onTrack?.(vehicle)}
+            className="w-full bg-gradient-primary text-white border-0 hover:bg-gradient-primary/90"
+            onClick={() => onSendToOtto?.(vehicle)}
           >
-            <MapPin className="h-4 w-4 mr-1" />
-            Track
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => onDetails?.(vehicle)}
-          >
-            <Gauge className="h-4 w-4 mr-1" />
-            Details
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => onSchedule?.(vehicle)}
-          >
-            <Wrench className="h-4 w-4 mr-1" />
-            Schedule
+            <Zap className="h-4 w-4 mr-1" />
+            Send to OTTOYARD Depot
           </Button>
         </div>
 

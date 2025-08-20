@@ -23,6 +23,8 @@ import {
   Database,
   Zap,
   AlertTriangle,
+  CreditCard,
+  DollarSign,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -62,10 +64,11 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({ children }) => {
         </DialogHeader>
 
         <Tabs defaultValue="profile" className="h-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="notifications">Alerts</TabsTrigger>
             <TabsTrigger value="fleet">Fleet</TabsTrigger>
+            <TabsTrigger value="billing">Billing</TabsTrigger>
             <TabsTrigger value="integrations">Services</TabsTrigger>
             <TabsTrigger value="security">Security</TabsTrigger>
           </TabsList>
@@ -221,9 +224,22 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({ children }) => {
             <TabsContent value="fleet" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Zap className="h-4 w-4 mr-2" />
-                    Fleet Configuration
+                  <CardTitle className="flex items-center justify-between">
+                    <span className="flex items-center">
+                      <Zap className="h-4 w-4 mr-2" />
+                      Fleet Summary
+                    </span>
+                     <div className="flex space-x-2">
+                       <Badge variant="outline" className="bg-success/10 text-success border-success/20">
+                         42 Active
+                       </Badge>
+                       <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">
+                         8 Charging
+                       </Badge>
+                       <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20">
+                         3 Maintenance
+                       </Badge>
+                     </div>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -241,20 +257,108 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({ children }) => {
                     <Label htmlFor="depot-capacity">Default Depot Capacity (kWh)</Label>
                     <Input id="depot-capacity" type="number" placeholder="5000" />
                   </div>
-                  <Separator />
-                  <div className="space-y-2">
-                    <h4 className="font-medium">Active Fleet Summary</h4>
-                    <div className="grid grid-cols-3 gap-2">
-                      <Badge variant="outline" className="justify-center">
-                        12 Active Vehicles
-                      </Badge>
-                      <Badge variant="outline" className="justify-center">
-                        2 Depots Online
-                      </Badge>
-                      <Badge variant="outline" className="justify-center">
-                        94.2% Efficiency
-                      </Badge>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="billing" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <CreditCard className="h-4 w-4 mr-2" />
+                    Billing & Pricing
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-4">
+                    <h4 className="font-medium">Monthly Subscription</h4>
+                    <div className="grid grid-cols-1 gap-4">
+                      <div className="flex items-center justify-between p-3 border border-border rounded-lg">
+                        <div>
+                          <p className="font-medium">Stall Reservation</p>
+                          <p className="text-sm text-muted-foreground">Per vehicle per month</p>
+                        </div>
+                        <span className="font-bold text-lg">$2,000</span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 border border-border rounded-lg">
+                        <div>
+                          <p className="font-medium">Software Usage</p>
+                          <p className="text-sm text-muted-foreground">Per vehicle per month</p>
+                        </div>
+                        <span className="font-bold text-lg">$400</span>
+                      </div>
                     </div>
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div className="space-y-4">
+                    <h4 className="font-medium">Service Pricing</h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="flex justify-between p-2 bg-muted/50 rounded">
+                        <span className="text-sm">Routine Maintenance</span>
+                        <span className="text-sm font-medium">$500</span>
+                      </div>
+                      <div className="flex justify-between p-2 bg-muted/50 rounded">
+                        <span className="text-sm">Battery Check</span>
+                        <span className="text-sm font-medium">$50</span>
+                      </div>
+                      <div className="flex justify-between p-2 bg-muted/50 rounded">
+                        <span className="text-sm">Safety Check</span>
+                        <span className="text-sm font-medium">$100</span>
+                      </div>
+                      <div className="flex justify-between p-2 bg-muted/50 rounded">
+                        <span className="text-sm">Interior Detail</span>
+                        <span className="text-sm font-medium">$100</span>
+                      </div>
+                      <div className="flex justify-between p-2 bg-muted/50 rounded">
+                        <span className="text-sm">Exterior Detail</span>
+                        <span className="text-sm font-medium">$100</span>
+                      </div>
+                      <div className="flex justify-between p-2 bg-muted/50 rounded">
+                        <span className="text-sm">Full Detail</span>
+                        <span className="text-sm font-medium">$150</span>
+                      </div>
+                      <div className="flex justify-between p-2 bg-muted/50 rounded">
+                        <span className="text-sm">Premium Detail</span>
+                        <span className="text-sm font-medium">$250</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div className="space-y-4">
+                    <h4 className="font-medium">Current Usage</h4>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span>Active Vehicles</span>
+                        <span className="font-medium">42</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Monthly Stall Cost</span>
+                        <span className="font-medium">$84,000</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Monthly Software Cost</span>
+                        <span className="font-medium">$16,800</span>
+                      </div>
+                      <Separator />
+                      <div className="flex justify-between text-lg font-bold">
+                        <span>Total Monthly</span>
+                        <span>$100,800</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Button variant="outline" className="flex-1">
+                      <DollarSign className="h-4 w-4 mr-2" />
+                      View Invoice History
+                    </Button>
+                    <Button className="flex-1">
+                      Update Payment Method
+                    </Button>
                   </div>
                 </CardContent>
               </Card>

@@ -66,6 +66,7 @@ interface MaintenancePopupProps {
   onOpenChange: (open: boolean) => void;
   vehicle: Vehicle | null;
   depots: Depot[];
+  onAddToCart?: (items: any[]) => void;
 }
 
 export const AddVehiclePopup = ({ open, onOpenChange }: AddVehiclePopupProps) => {
@@ -317,9 +318,9 @@ export const VehicleDetailsPopup = ({ open, onOpenChange, vehicle }: VehicleDeta
   );
 };
 
-export const MaintenancePopup = ({ open, onOpenChange, vehicle, depots }: MaintenancePopupProps) => {
+export const MaintenancePopup = ({ open, onOpenChange, vehicle, depots, onAddToCart }: MaintenancePopupProps) => {
   const [step, setStep] = useState<'select' | 'calendar' | 'confirm'>('select');
-  const [selectedService, setSelectedService] = useState<string>("");
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [selectedDepot, setSelectedDepot] = useState<string>("");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string>("");
@@ -331,21 +332,36 @@ export const MaintenancePopup = ({ open, onOpenChange, vehicle, depots }: Mainte
 
   const getServiceDetails = (serviceType: string) => {
     const services = {
-      routine: { name: "Routine Maintenance", icon: Wrench, duration: "2-3 hours" },
-      battery: { name: "Battery Check", icon: Battery, duration: "1 hour" },
-      safety: { name: "Safety Inspection", icon: Gauge, duration: "1-2 hours" },
-      "detailing-interior": { name: "Interior Detailing", icon: Sparkles, duration: "2-3 hours" },
-      "detailing-exterior": { name: "Exterior Detailing", icon: Sparkles, duration: "2-3 hours" },
-      "detailing-full": { name: "Full Interior/Exterior Detailing", icon: Sparkles, duration: "4-5 hours" },
-      "detailing-premium": { name: "Premium Detailing Package", icon: Sparkles, duration: "6-8 hours" }
+      routine: { name: "Routine Maintenance", icon: Wrench, duration: "2-3 hours", price: 500 },
+      battery: { name: "Battery Check", icon: Battery, duration: "1 hour", price: 50 },
+      safety: { name: "Safety Inspection", icon: Gauge, duration: "1-2 hours", price: 100 },
+      "detailing-interior": { name: "Interior Detailing", icon: Sparkles, duration: "2-3 hours", price: 100 },
+      "detailing-exterior": { name: "Exterior Detailing", icon: Sparkles, duration: "2-3 hours", price: 100 },
+      "detailing-full": { name: "Full Interior/Exterior Detailing", icon: Sparkles, duration: "4-5 hours", price: 150 },
+      "detailing-premium": { name: "Premium Detailing Package", icon: Sparkles, duration: "6-8 hours", price: 250 }
     };
     return services[serviceType as keyof typeof services];
+  };
+
+  const toggleService = (serviceId: string) => {
+    setSelectedServices(prev => 
+      prev.includes(serviceId) 
+        ? prev.filter(id => id !== serviceId)
+        : [...prev, serviceId]
+    );
+  };
+
+  const getTotalPrice = () => {
+    return selectedServices.reduce((total, serviceId) => {
+      const service = getServiceDetails(serviceId);
+      return total + (service?.price || 0);
+    }, 0);
   };
 
   const getSelectedDepot = () => depots.find(d => d.id === selectedDepot);
 
   const handleNext = () => {
-    if (step === 'select' && selectedService && selectedDepot) {
+    if (step === 'select' && selectedServices.length > 0 && selectedDepot) {
       setStep('calendar');
     } else if (step === 'calendar' && selectedDate && selectedTime) {
       setStep('confirm');
@@ -358,11 +374,26 @@ export const MaintenancePopup = ({ open, onOpenChange, vehicle, depots }: Mainte
   };
 
   const handleConfirm = () => {
-    // Handle the actual scheduling logic here
+    // Add items to cart if function is provided
+    if (onAddToCart && vehicle) {
+      const cartItems = selectedServices.map(serviceId => ({
+        id: `${vehicle.id}-${serviceId}-${Date.now()}`,
+        vehicleId: vehicle.id,
+        vehicleName: vehicle.name,
+        service: serviceId,
+        serviceName: getServiceDetails(serviceId)?.name || serviceId,
+        price: getServiceDetails(serviceId)?.price || 0,
+        date: selectedDate?.toLocaleDateString(),
+        time: selectedTime,
+        depot: getSelectedDepot()?.name
+      }));
+      onAddToCart(cartItems);
+    }
+    
     onOpenChange(false);
     // Reset state
     setStep('select');
-    setSelectedService("");
+    setSelectedServices([]);
     setSelectedDepot("");
     setSelectedDate(undefined);
     setSelectedTime("");
@@ -372,7 +403,7 @@ export const MaintenancePopup = ({ open, onOpenChange, vehicle, depots }: Mainte
     onOpenChange(false);
     // Reset state
     setStep('select');
-    setSelectedService("");
+    setSelectedServices([]);
     setSelectedDepot("");
     setSelectedDate(undefined);
     setSelectedTime("");
@@ -395,56 +426,44 @@ export const MaintenancePopup = ({ open, onOpenChange, vehicle, depots }: Mainte
           <div className="grid grid-cols-1 gap-4 sm:gap-6">
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label className="text-sm font-medium">Service Type</Label>
-                <Select onValueChange={setSelectedService} value={selectedService}>
-                  <SelectTrigger className="bg-background">
-                    <SelectValue placeholder="Select service" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background border z-50">
-                    <SelectItem value="routine">
-                      <div className="flex items-center">
-                        <Wrench className="h-4 w-4 mr-2" />
-                        Routine Maintenance
+                <Label className="text-sm font-medium">Select Services (Multiple allowed)</Label>
+                <div className="grid grid-cols-1 gap-2">
+                  {[
+                    { id: 'routine', name: 'Routine Maintenance', icon: Wrench, price: 500 },
+                    { id: 'battery', name: 'Battery Check', icon: Battery, price: 50 },
+                    { id: 'safety', name: 'Safety Inspection', icon: Gauge, price: 100 },
+                    { id: 'detailing-interior', name: 'Interior Detailing', icon: Sparkles, price: 100 },
+                    { id: 'detailing-exterior', name: 'Exterior Detailing', icon: Sparkles, price: 100 },
+                    { id: 'detailing-full', name: 'Full Interior/Exterior Detailing', icon: Sparkles, price: 150 },
+                    { id: 'detailing-premium', name: 'Premium Detailing Package', icon: Sparkles, price: 250 }
+                  ].map((service) => (
+                    <div
+                      key={service.id}
+                      className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                        selectedServices.includes(service.id) 
+                          ? 'border-primary bg-primary/5' 
+                          : 'border-border hover:bg-muted/50'
+                      }`}
+                      onClick={() => toggleService(service.id)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          {React.createElement(service.icon, { className: "h-4 w-4 mr-2" })}
+                          <span className="font-medium text-sm">{service.name}</span>
+                        </div>
+                        <span className="font-semibold text-primary">${service.price}</span>
                       </div>
-                    </SelectItem>
-                    <SelectItem value="battery">
-                      <div className="flex items-center">
-                        <Battery className="h-4 w-4 mr-2" />
-                        Battery Check
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="safety">
-                      <div className="flex items-center">
-                        <Gauge className="h-4 w-4 mr-2" />
-                        Safety Inspection
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="detailing-interior">
-                      <div className="flex items-center">
-                        <Sparkles className="h-4 w-4 mr-2" />
-                        Interior Detailing
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="detailing-exterior">
-                      <div className="flex items-center">
-                        <Sparkles className="h-4 w-4 mr-2" />
-                        Exterior Detailing
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="detailing-full">
-                      <div className="flex items-center">
-                        <Sparkles className="h-4 w-4 mr-2" />
-                        Full Interior/Exterior Detailing
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="detailing-premium">
-                      <div className="flex items-center">
-                        <Sparkles className="h-4 w-4 mr-2" />
-                        Premium Detailing Package
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+                    </div>
+                  ))}
+                </div>
+                {selectedServices.length > 0 && (
+                  <div className="mt-2 p-2 bg-muted rounded-lg">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium">Total:</span>
+                      <span className="text-lg font-bold text-primary">${getTotalPrice()}</span>
+                    </div>
+                  </div>
+                )}
               </div>
               
               <div className="space-y-2">
@@ -520,15 +539,24 @@ export const MaintenancePopup = ({ open, onOpenChange, vehicle, depots }: Mainte
                 <CardTitle className="text-lg">Appointment Summary</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {selectedService && (
-                  <div className="flex items-center justify-between py-2 border-b">
-                    <div className="flex items-center">
-                      {React.createElement(getServiceDetails(selectedService)?.icon || Wrench, { className: "h-4 w-4 mr-2" })}
-                      <span className="font-medium">Service</span>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium">{getServiceDetails(selectedService)?.name}</p>
-                      <p className="text-sm text-muted-foreground">Duration: {getServiceDetails(selectedService)?.duration}</p>
+                {selectedServices.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Selected Services:</h4>
+                    {selectedServices.map(serviceId => (
+                      <div key={serviceId} className="flex items-center justify-between py-2 border-b last:border-b-0">
+                        <div className="flex items-center">
+                          {React.createElement(getServiceDetails(serviceId)?.icon || Wrench, { className: "h-4 w-4 mr-2" })}
+                          <span className="font-medium">{getServiceDetails(serviceId)?.name}</span>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium">${getServiceDetails(serviceId)?.price}</p>
+                          <p className="text-sm text-muted-foreground">{getServiceDetails(serviceId)?.duration}</p>
+                        </div>
+                      </div>
+                    ))}
+                    <div className="flex items-center justify-between py-2 font-bold text-lg border-t">
+                      <span>Total:</span>
+                      <span className="text-primary">${getTotalPrice()}</span>
                     </div>
                   </div>
                 )}
@@ -593,7 +621,7 @@ export const MaintenancePopup = ({ open, onOpenChange, vehicle, depots }: Mainte
             <Button 
               className="w-full sm:flex-1 h-10"
               disabled={
-                (step === 'select' && (!selectedService || !selectedDepot)) ||
+                (step === 'select' && (selectedServices.length === 0 || !selectedDepot)) ||
                 (step === 'calendar' && (!selectedDate || !selectedTime))
               }
               onClick={handleNext}

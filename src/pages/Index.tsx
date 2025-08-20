@@ -15,6 +15,7 @@ import DepotCard from "@/components/DepotCard";
 import MetricsCard from "@/components/MetricsCard";
 import { AddVehiclePopup, TrackVehiclePopup, VehicleDetailsPopup, MaintenancePopup } from "@/components/VehiclePopups";
 import { AIAgentPopup } from "@/components/AIAgentPopup";
+import CartButton, { CartItem } from "@/components/CartButton";
 
 // Generate vehicles for specific city with unique 5-digit alphanumeric IDs
 const generateVehiclesForCity = (city: City) => {
@@ -144,6 +145,7 @@ const Index = () => {
   const [aiAgentOpen, setAiAgentOpen] = useState(false);
   const [showDueSoonSummary, setShowDueSoonSummary] = useState(false);
   const [popupVehicle, setPopupVehicle] = useState<typeof vehicles[0] | null>(null);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const handleTrackVehicle = (vehicle: typeof vehicles[0]) => {
     setPopupVehicle(vehicle);
     setTrackVehicleOpen(true);
@@ -155,6 +157,26 @@ const Index = () => {
   const handleMaintenanceSchedule = (vehicle: typeof vehicles[0]) => {
     setPopupVehicle(vehicle);
     setMaintenanceOpen(true);
+  };
+
+  const handleSendToOtto = (vehicle: typeof vehicles[0]) => {
+    // Add logic to send vehicle to OTTOYARD depot
+    console.log(`Sending ${vehicle.name} to OTTOYARD depot for charging/staging`);
+    // You could add a toast notification here
+  };
+
+  const handleAddToCart = (items: CartItem[]) => {
+    setCartItems(prev => [...prev, ...items]);
+  };
+
+  const handleRemoveFromCart = (itemId: string) => {
+    setCartItems(prev => prev.filter(item => item.id !== itemId));
+  };
+
+  const handleCheckout = () => {
+    console.log('Processing checkout for items:', cartItems);
+    // Add checkout logic here
+    setCartItems([]);
   };
   const handleCitySelect = (city: City) => {
     setCurrentCity(city);
@@ -181,6 +203,11 @@ const Index = () => {
                 <span className="md:hidden">Online</span>
               </Badge>
               <div className="flex items-center space-x-1 sm:space-x-2">
+                <CartButton 
+                  cartItems={cartItems}
+                  onRemoveItem={handleRemoveFromCart}
+                  onCheckout={handleCheckout}
+                />
                 <Button variant="outline" size="sm" onClick={() => setAiAgentOpen(true)} className="bg-gradient-primary text-white border-0 hover:bg-gradient-primary/90">
                   <Bot className="h-4 w-4 mr-1" />
                   <span className="hidden sm:inline">FieldOps AI</span>
@@ -292,8 +319,8 @@ const Index = () => {
                     </CardHeader>
                     <CardContent className="space-y-3">
                       {vehicles.slice(0, 3).map(vehicle => <div key={vehicle.id}>
-                          <div className={`cursor-pointer transition-all duration-200 ${selectedVehicle === vehicle.id ? 'ring-2 ring-primary rounded-lg' : ''}`} onClick={() => setSelectedVehicle(selectedVehicle === vehicle.id ? null : vehicle.id)}>
-                             <VehicleCard vehicle={vehicle} compact onTrack={handleTrackVehicle} onDetails={handleVehicleDetails} onSchedule={handleMaintenanceSchedule} />
+                           <div className={`cursor-pointer transition-all duration-200 ${selectedVehicle === vehicle.id ? 'ring-2 ring-primary rounded-lg' : ''}`} onClick={() => setSelectedVehicle(selectedVehicle === vehicle.id ? null : vehicle.id)}>
+                             <VehicleCard vehicle={vehicle} compact onTrack={handleTrackVehicle} onDetails={handleVehicleDetails} onSchedule={handleMaintenanceSchedule} onSendToOtto={handleSendToOtto} />
                           </div>
                           {selectedVehicle === vehicle.id && <div className="mt-2 p-3 bg-card border border-border rounded-lg">
                               <h4 className="font-semibold mb-2">Quick Vehicle Info</h4>
@@ -362,8 +389,8 @@ const Index = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-                    {vehicles.map(vehicle => <div key={vehicle.id} className={`cursor-pointer transition-all duration-200 ${selectedVehicle === vehicle.id ? 'ring-2 ring-primary' : ''}`} onClick={() => setSelectedVehicle(selectedVehicle === vehicle.id ? null : vehicle.id)}>
-                        <VehicleCard vehicle={vehicle} onTrack={handleTrackVehicle} onDetails={handleVehicleDetails} onSchedule={handleMaintenanceSchedule} />
+                     {vehicles.map(vehicle => <div key={vehicle.id} className={`cursor-pointer transition-all duration-200 ${selectedVehicle === vehicle.id ? 'ring-2 ring-primary' : ''}`} onClick={() => setSelectedVehicle(selectedVehicle === vehicle.id ? null : vehicle.id)}>
+                        <VehicleCard vehicle={vehicle} onTrack={handleTrackVehicle} onDetails={handleVehicleDetails} onSchedule={handleMaintenanceSchedule} onSendToOtto={handleSendToOtto} />
                         {selectedVehicle === vehicle.id && <div className="mt-2 p-3 bg-card border border-border rounded-lg">
                             <h4 className="font-semibold mb-2">Vehicle Details</h4>
                             <div className="space-y-2 text-sm">
@@ -511,7 +538,7 @@ const Index = () => {
             
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
               {vehicles.map(vehicle => <div key={vehicle.id} id={`vehicle-${vehicle.id}`} className={`cursor-pointer transition-all duration-200 ${selectedVehicle === vehicle.id ? 'ring-2 ring-primary' : ''}`} onClick={() => setSelectedVehicle(selectedVehicle === vehicle.id ? null : vehicle.id)}>
-                  <VehicleCard vehicle={vehicle} onTrack={handleTrackVehicle} onDetails={handleVehicleDetails} onSchedule={handleMaintenanceSchedule} />
+                  <VehicleCard vehicle={vehicle} onTrack={handleTrackVehicle} onDetails={handleVehicleDetails} onSchedule={handleMaintenanceSchedule} onSendToOtto={handleSendToOtto} />
                   {selectedVehicle === vehicle.id && <div className="mt-2 p-3 bg-card border border-border rounded-lg">
                       <h4 className="font-semibold mb-2">Vehicle Details</h4>
                       <div className="space-y-2 text-sm">
@@ -1016,7 +1043,7 @@ const Index = () => {
         <AddVehiclePopup open={addVehicleOpen} onOpenChange={setAddVehicleOpen} />
         <TrackVehiclePopup open={trackVehicleOpen} onOpenChange={setTrackVehicleOpen} vehicle={popupVehicle} />
         <VehicleDetailsPopup open={vehicleDetailsOpen} onOpenChange={setVehicleDetailsOpen} vehicle={popupVehicle} />
-        <MaintenancePopup open={maintenanceOpen} onOpenChange={setMaintenanceOpen} vehicle={popupVehicle} depots={depots} />
+        <MaintenancePopup open={maintenanceOpen} onOpenChange={setMaintenanceOpen} vehicle={popupVehicle} depots={depots} onAddToCart={handleAddToCart} />
         <AIAgentPopup open={aiAgentOpen} onOpenChange={setAiAgentOpen} />
 
         {/* Due Soon Summary Dialog */}
