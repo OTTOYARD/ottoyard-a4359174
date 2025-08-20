@@ -47,7 +47,7 @@ const generateVehiclesForCity = (city: City) => {
     'University Campus', 'Hospital Route', 'Financial District'
   ];
   
-  const avCompanies = ['Waymo', 'Zoox', 'Tensor', 'Cruise', 'Aurora', 'Argo AI', 'Nuro', 'Mobileye', 'Motional', 'Apple Car'];
+  const avCompanies = ['Waymo', 'Zoox', 'Tensor', 'Cruise', 'Aurora', 'Argo AI', 'Nuro', 'Mobileye', 'Motional', 'Waymo'];
   
   const vehicles = [];
   const vehicleCount = Math.floor(Math.random() * 30) + 15; // 15-45 vehicles per city
@@ -276,8 +276,9 @@ const Index = () => {
                   </CardHeader>
                   <CardContent className="pt-2">
                     <div className="h-[500px]">
-                      <FleetMap 
+                      <MapboxMap 
                         vehicles={vehicles} 
+                        city={currentCity}
                         onVehicleClick={(vehicleId) => {
                           setSelectedTab('fleet');
                           // Scroll to vehicle in fleet tab
@@ -286,7 +287,6 @@ const Index = () => {
                           setSelectedTab('depots');
                           // Scroll to depot in depots tab
                         }}
-                        currentCity={currentCity}
                       />
                     </div>
                   </CardContent>

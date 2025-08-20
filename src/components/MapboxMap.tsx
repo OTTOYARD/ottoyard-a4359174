@@ -18,9 +18,11 @@ interface Vehicle {
 interface MapboxMapProps {
   vehicles: Vehicle[];
   city?: { name: string; coordinates: [number, number] };
+  onVehicleClick?: (vehicleId: string) => void;
+  onDepotClick?: (depotId: string) => void;
 }
 
-const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, city }) => {
+const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, city, onVehicleClick, onDepotClick }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [mapboxToken, setMapboxToken] = useState('pk.eyJ1Ijoib3R0b3lhcmQiLCJhIjoiY21lZWY5cjduMGtsdzJpb2wxNWpweGg4NCJ9.NfsLzQ2-o8wEHOfRrPO5WQ');
@@ -40,7 +42,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, city }) => {
     
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/dark-v11',
+      style: 'mapbox://styles/mapbox/light-v11',
       center: city?.coordinates || [-122.4194, 37.7749], // Default to San Francisco
       zoom: 12,
     });
@@ -48,35 +50,126 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, city }) => {
     // Add navigation controls
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
+    // Generate depot locations for the current city
+    const generateDepots = () => {
+      if (!city) return [];
+      
+      const depotNames = ['OTTOYARD Central Hub', 'OTTOYARD North Station', 'OTTOYARD Port Terminal'];
+      return depotNames.map((name, index) => ({
+        id: `depot-${index}`,
+        name,
+        location: {
+          lat: city.coordinates[1] + (Math.random() - 0.5) * 0.05,
+          lng: city.coordinates[0] + (Math.random() - 0.5) * 0.08
+        },
+        stalls: 8 + Math.floor(Math.random() * 8),
+        available: Math.floor(Math.random() * 6) + 2
+      }));
+    };
+
+    const depots = generateDepots();
+
     // Add vehicle markers
-    vehicles.forEach((vehicle) => {
+    vehicles.slice(0, 12).forEach((vehicle) => {
       const markerColor = getStatusColor(vehicle.status);
       
       // Create custom marker element
       const markerEl = document.createElement('div');
       markerEl.className = 'vehicle-marker';
       markerEl.style.cssText = `
-        width: 12px;
-        height: 12px;
+        width: 24px;
+        height: 24px;
         border-radius: 50%;
         background-color: ${markerColor};
         border: 2px solid white;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         cursor: pointer;
+        transition: transform 0.2s;
       `;
+
+      // Add hover effect
+      markerEl.addEventListener('mouseenter', () => {
+        markerEl.style.transform = 'scale(1.1)';
+      });
+      markerEl.addEventListener('mouseleave', () => {
+        markerEl.style.transform = 'scale(1)';
+      });
+
+      // Add click handler
+      markerEl.addEventListener('click', () => {
+        onVehicleClick?.(vehicle.id);
+      });
 
       // Create popup content
       const popup = new mapboxgl.Popup({ offset: 15 }).setHTML(`
-        <div class="p-2 bg-card text-card-foreground rounded-lg">
-          <h3 class="font-semibold text-sm">${vehicle.name}</h3>
+        <div class="p-3 bg-card text-card-foreground rounded-lg border shadow-lg">
+          <h3 class="font-semibold text-sm mb-1">${vehicle.name}</h3>
           <p class="text-xs text-muted-foreground">Status: ${vehicle.status}</p>
           <p class="text-xs text-muted-foreground">Battery: ${vehicle.battery}%</p>
           <p class="text-xs text-muted-foreground">Route: ${vehicle.route}</p>
+          <p class="text-xs text-primary mt-1 cursor-pointer">Click to view in Fleet →</p>
         </div>
       `);
 
       new mapboxgl.Marker(markerEl)
         .setLngLat([vehicle.location.lng, vehicle.location.lat])
+        .setPopup(popup)
+        .addTo(map.current!);
+    });
+
+    // Add depot markers
+    depots.forEach((depot) => {
+      // Create custom depot marker element
+      const markerEl = document.createElement('div');
+      markerEl.className = 'depot-marker';
+      markerEl.style.cssText = `
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background-color: hsl(var(--primary));
+        border: 2px solid white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.2s;
+      `;
+
+      // Add inner square
+      const innerSquare = document.createElement('div');
+      innerSquare.style.cssText = `
+        width: 12px;
+        height: 12px;
+        background-color: white;
+        border-radius: 2px;
+      `;
+      markerEl.appendChild(innerSquare);
+
+      // Add hover effect
+      markerEl.addEventListener('mouseenter', () => {
+        markerEl.style.transform = 'scale(1.1)';
+      });
+      markerEl.addEventListener('mouseleave', () => {
+        markerEl.style.transform = 'scale(1)';
+      });
+
+      // Add click handler
+      markerEl.addEventListener('click', () => {
+        onDepotClick?.(depot.id);
+      });
+
+      // Create popup content
+      const popup = new mapboxgl.Popup({ offset: 15 }).setHTML(`
+        <div class="p-3 bg-card text-card-foreground rounded-lg border shadow-lg">
+          <h3 class="font-semibold text-sm mb-1">${depot.name}</h3>
+          <p class="text-xs text-muted-foreground">Available Stalls: ${depot.available}/${depot.stalls}</p>
+          <p class="text-xs text-primary mt-1 cursor-pointer">Click to view in Depots →</p>
+        </div>
+      `);
+
+      new mapboxgl.Marker(markerEl)
+        .setLngLat([depot.location.lng, depot.location.lat])
         .setPopup(popup)
         .addTo(map.current!);
     });
