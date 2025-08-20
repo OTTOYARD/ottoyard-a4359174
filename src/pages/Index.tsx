@@ -196,37 +196,34 @@ const Index = () => {
                 <p className="text-xs sm:text-sm text-muted-foreground truncate text-center">Fleet Command</p>
               </div>
             </div>
-            <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
-              {/* Status Badge - Secondary Info */}
-              <Badge variant="outline" className="bg-success/10 text-success border-success/20 text-xs hidden sm:flex">
-                <Activity className="h-3 w-3 mr-1" />
-                <span className="hidden lg:inline">All Systems Operational</span>
-                <span className="lg:hidden">Online</span>
-              </Badge>
-              
-              {/* Primary Action Buttons */}
+            <div className="flex flex-col items-end space-y-2 flex-shrink-0">
+              {/* Top Row: Status + Cart */}
               <div className="flex items-center space-x-2">
+                <Badge variant="outline" className="bg-success/10 text-success border-success/20 text-xs">
+                  <Activity className="h-3 w-3 mr-1" />
+                  <span className="hidden md:inline">All Systems Operational</span>
+                  <span className="md:hidden">Online</span>
+                </Badge>
                 <CartButton 
                   cartItems={cartItems}
                   onRemoveItem={handleRemoveFromCart}
                   onCheckout={handleCheckout}
                 />
-                <Button 
-                  variant="default" 
-                  size="default" 
-                  onClick={() => setAiAgentOpen(true)} 
-                  className="bg-gradient-primary text-white border-0 hover:bg-gradient-primary/90 px-3 py-2"
-                >
-                  <Bot className="h-4 w-4 mr-2" />
-                  <span className="hidden sm:inline font-medium">FieldOps AI</span>
-                  <span className="sm:hidden">AI</span>
-                </Button>
               </div>
               
-              {/* Secondary Actions */}
-              <div className="flex items-center">
+              {/* Bottom Row: AI + Settings */}
+              <div className="flex items-center space-x-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setAiAgentOpen(true)} 
+                  className="bg-gradient-primary text-white border-0 hover:bg-gradient-primary/90"
+                >
+                  <Bot className="h-4 w-4 mr-1" />
+                  <span className="hidden sm:inline">FieldOps AI</span>
+                </Button>
                 <SettingsDialog>
-                  <Button variant="ghost" size="sm" className="p-2">
+                  <Button variant="outline" size="sm">
                     <Settings className="h-4 w-4" />
                   </Button>
                 </SettingsDialog>
