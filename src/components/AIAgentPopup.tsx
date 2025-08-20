@@ -144,8 +144,8 @@ export const AIAgentPopup = ({ open, onOpenChange }: AIAgentPopupProps) => {
           </div>
 
           {/* Messages */}
-          <ScrollArea className="flex-1 border rounded-lg p-4 bg-muted/20">
-            <div className="space-y-4">
+          <div className="flex-1 border rounded-lg bg-muted/20 flex flex-col min-h-0">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ maxHeight: 'calc(100vh - 400px)' }}>
               {messages.map((message) => (
                 <div
                   key={message.id}
@@ -169,7 +169,7 @@ export const AIAgentPopup = ({ open, onOpenChange }: AIAgentPopupProps) => {
               ))}
               <div ref={bottomRef} />
             </div>
-          </ScrollArea>
+          </div>
 
           {/* Input */}
           <div className="flex items-end space-x-2 bg-muted/30 p-3 rounded-lg">
