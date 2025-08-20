@@ -673,7 +673,7 @@ const Index = () => {
                 <CardContent>
                   <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={chartPeriod === 'week' ? [{
+                      <AreaChart data={chartPeriod === 'week' ? [{
                       period: 'Mon',
                       efficiency: 93
                     }, {
@@ -734,6 +734,13 @@ const Index = () => {
                       period: '2024',
                       efficiency: 94
                     }]}>
+                        <defs>
+                          <linearGradient id="efficiencyGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
+                            <stop offset="50%" stopColor="hsl(var(--destructive))" stopOpacity={0.6}/>
+                            <stop offset="100%" stopColor="hsl(var(--destructive))" stopOpacity={0.2}/>
+                          </linearGradient>
+                        </defs>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="period" axisLine={true} tickLine={true} tick={{
                         fontSize: 12
@@ -763,8 +770,15 @@ const Index = () => {
                         marginBottom: '4px'
                       }} />
                         <Legend />
-                        <Line type="monotone" dataKey="efficiency" stroke="hsl(var(--primary))" strokeWidth={2} name="Fleet Efficiency" />
-                      </LineChart>
+                        <Area 
+                          type="monotone" 
+                          dataKey="efficiency" 
+                          stroke="hsl(var(--primary))" 
+                          strokeWidth={2} 
+                          fill="url(#efficiencyGradient)" 
+                          name="Fleet Efficiency" 
+                        />
+                      </AreaChart>
                     </ResponsiveContainer>
                   </div>
                 </CardContent>
