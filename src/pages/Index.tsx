@@ -602,22 +602,22 @@ const Index = () => {
             </div>
             
             {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 w-full max-w-2xl mx-auto">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 w-full max-w-3xl mx-auto">
               <Button 
                 variant="outline" 
-                className="bg-warning/5 border-warning/30 text-warning hover:bg-warning/10 w-full sm:w-60 h-12" 
+                className="bg-warning/5 border-warning/30 text-warning hover:bg-warning/10 w-full sm:w-80 md:w-96 h-10 sm:h-14 md:h-16 text-sm sm:text-base" 
                 onClick={() => setShowDueSoonSummary(true)}
               >
-                <AlertTriangle className="h-4 w-4 mr-2" />
+                <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 mr-2" />
                 Due Soon Summary ({vehicles.slice(0, 3).length} vehicles)
-                <Eye className="h-4 w-4 ml-2" />
+                <Eye className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 ml-2" />
               </Button>
               
               <Button 
-                className="bg-gradient-primary hover:bg-primary-hover w-full sm:w-60 h-12" 
+                className="bg-gradient-primary hover:bg-primary-hover w-full sm:w-80 md:w-96 h-10 sm:h-14 md:h-16 text-sm sm:text-base" 
                 onClick={() => handleMaintenanceSchedule(vehicles[0])}
               >
-                <Wrench className="h-4 w-4 mr-2" />
+                <Wrench className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 mr-2" />
                 Schedule Maintenance
               </Button>
             </div>
