@@ -24,6 +24,7 @@ import {
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, AreaChart, Area } from 'recharts';
 import FleetMap from "@/components/FleetMap";
 import MapboxMap from "@/components/MapboxMap";
+import CitySearchBar, { City } from "@/components/CitySearchBar";
 import SettingsDialog from "@/components/SettingsDialog";
 import VehicleCard from "@/components/VehicleCard";
 import DepotCard from "@/components/DepotCard";
@@ -36,8 +37,8 @@ import {
 } from "@/components/VehiclePopups";
 import { AIAgentPopup } from "@/components/AIAgentPopup";
 
-// Generate 45 vehicles with unique 5-digit alphanumeric IDs
-const generateVehicles = () => {
+// Generate vehicles for specific city with unique 5-digit alphanumeric IDs
+const generateVehiclesForCity = (city: City) => {
   const statuses = ['active', 'charging', 'maintenance', 'idle'];
   const routes = [
     'Downtown Delivery', 'Warehouse Route A', 'Port Transfer', 'Industrial Zone B',
@@ -47,7 +48,9 @@ const generateVehicles = () => {
   ];
   
   const vehicles = [];
-  for (let i = 0; i < 45; i++) {
+  const vehicleCount = Math.floor(Math.random() * 30) + 15; // 15-45 vehicles per city
+  
+  for (let i = 0; i < vehicleCount; i++) {
     // Generate unique 5-digit alphanumeric ID
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let id = '';
@@ -59,9 +62,9 @@ const generateVehicles = () => {
     const battery = Math.floor(Math.random() * 100);
     const route = routes[Math.floor(Math.random() * routes.length)];
     
-    // Generate random SF Bay Area coordinates
-    const lat = 37.7749 + (Math.random() - 0.5) * 0.2;
-    const lng = -122.4194 + (Math.random() - 0.5) * 0.3;
+    // Generate random coordinates around the city center
+    const lat = city.coordinates[1] + (Math.random() - 0.5) * 0.2;
+    const lng = city.coordinates[0] + (Math.random() - 0.5) * 0.3;
     
     vehicles.push({
       id,
@@ -76,8 +79,6 @@ const generateVehicles = () => {
   }
   return vehicles;
 };
-
-const vehicles = generateVehicles();
 
 const depots = [
   {
@@ -158,6 +159,16 @@ const Index = () => {
   const [selectedDepot, setSelectedDepot] = useState<string | null>(null);
   const [overviewView, setOverviewView] = useState<'main' | 'vehicles' | 'energy' | 'grid' | 'efficiency'>('main');
   const [chartPeriod, setChartPeriod] = useState<'week' | 'month' | 'year'>('week');
+  const [currentCity, setCurrentCity] = useState<City>({ 
+    name: "San Francisco", 
+    coordinates: [-122.4194, 37.7749], 
+    country: "USA" 
+  });
+  const [vehicles, setVehicles] = useState(() => generateVehiclesForCity({ 
+    name: "San Francisco", 
+    coordinates: [-122.4194, 37.7749], 
+    country: "USA" 
+  }));
   
   // Popup states
   const [addVehicleOpen, setAddVehicleOpen] = useState(false);
@@ -181,6 +192,11 @@ const Index = () => {
   const handleMaintenanceSchedule = (vehicle: typeof vehicles[0]) => {
     setPopupVehicle(vehicle);
     setMaintenanceOpen(true);
+  };
+
+  const handleCitySelect = (city: City) => {
+    setCurrentCity(city);
+    setVehicles(generateVehiclesForCity(city));
   };
 
   return (
@@ -247,9 +263,13 @@ const Index = () => {
                       Live Fleet Tracking
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="p-0">
+                  <CardContent>
+                    <CitySearchBar 
+                      currentCity={currentCity} 
+                      onCitySelect={handleCitySelect} 
+                    />
                     <div className="h-[500px]">
-                      <MapboxMap vehicles={vehicles} />
+                      <MapboxMap vehicles={vehicles} city={currentCity} />
                     </div>
                   </CardContent>
                 </Card>

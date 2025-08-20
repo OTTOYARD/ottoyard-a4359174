@@ -17,9 +17,10 @@ interface Vehicle {
 
 interface MapboxMapProps {
   vehicles: Vehicle[];
+  city?: { name: string; coordinates: [number, number] };
 }
 
-const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles }) => {
+const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, city }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [mapboxToken, setMapboxToken] = useState('pk.eyJ1Ijoib3R0b3lhcmQiLCJhIjoiY21lZWY5cjduMGtsdzJpb2wxNWpweGg4NCJ9.NfsLzQ2-o8wEHOfRrPO5WQ');
@@ -40,7 +41,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles }) => {
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/dark-v11',
-      center: [-122.4194, 37.7749], // San Francisco
+      center: city?.coordinates || [-122.4194, 37.7749], // Default to San Francisco
       zoom: 12,
     });
 
@@ -98,7 +99,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles }) => {
     return () => {
       map.current?.remove();
     };
-  }, [isTokenSet, mapboxToken, vehicles]);
+  }, [isTokenSet, mapboxToken, vehicles, city]);
 
   if (!isTokenSet) {
     return (
