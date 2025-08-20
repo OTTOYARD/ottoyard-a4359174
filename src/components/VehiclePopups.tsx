@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
+import MapboxMap from "@/components/MapboxMap";
 import { 
   Truck, 
   Battery, 
@@ -173,14 +174,8 @@ export const TrackVehiclePopup = ({ open, onOpenChange, vehicle }: TrackVehicleP
         
         {vehicle && (
           <div className="space-y-4">
-            <div className="h-40 bg-muted rounded-lg flex items-center justify-center border">
-              <div className="text-center">
-                <MapPin className="h-8 w-8 mx-auto mb-2 text-primary" />
-                <p className="text-sm font-medium">Mini Map</p>
-                <p className="text-xs text-muted-foreground">
-                  {vehicle.location.lat.toFixed(4)}, {vehicle.location.lng.toFixed(4)}
-                </p>
-              </div>
+            <div className="h-40 bg-muted rounded-lg border overflow-hidden">
+              <MapboxMap vehicles={vehicle ? [vehicle] : []} />
             </div>
             
             <div className="grid grid-cols-2 gap-4">
