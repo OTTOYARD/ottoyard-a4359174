@@ -94,12 +94,21 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, city, onVehicleClick, o
         closeOnClick: false,
         className: 'vehicle-preview-popup'
       }).setHTML(`
-        <div class="p-3 bg-card text-card-foreground rounded-lg border shadow-lg">
-          <h3 class="font-semibold text-sm mb-1">${vehicle.name}</h3>
-          <p class="text-xs text-muted-foreground">Status: ${vehicle.status}</p>
-          <p class="text-xs text-muted-foreground">Battery: ${vehicle.battery}%</p>
-          <p class="text-xs text-muted-foreground">Route: ${vehicle.route}</p>
-          <p class="text-xs text-primary mt-1 cursor-pointer">Click to view in Fleet →</p>
+        <div class="p-4 bg-card text-card-foreground rounded-lg border shadow-lg min-w-52">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="font-semibold text-sm text-foreground">${vehicle.name}</h3>
+            <span class="px-2 py-1 text-xs rounded-full ${vehicle.status === 'active' ? 'bg-success/20 text-success' : vehicle.status === 'charging' ? 'bg-warning/20 text-warning' : 'bg-destructive/20 text-destructive'}">${vehicle.status}</span>
+          </div>
+          <div class="space-y-1">
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-muted-foreground">Battery:</span>
+              <span class="font-medium ${vehicle.battery > 60 ? 'text-success' : vehicle.battery > 30 ? 'text-warning' : 'text-destructive'}">${vehicle.battery}%</span>
+            </div>
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-muted-foreground">Route:</span>
+              <span class="font-medium text-foreground">${vehicle.route}</span>
+            </div>
+          </div>
         </div>
       `);
 
@@ -161,10 +170,15 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, city, onVehicleClick, o
         closeOnClick: false,
         className: 'depot-preview-popup'
       }).setHTML(`
-        <div class="p-3 bg-card text-card-foreground rounded-lg border shadow-lg">
-          <h3 class="font-semibold text-sm mb-1">${depot.name}</h3>
-          <p class="text-xs text-muted-foreground">Available Stalls: ${depot.available}/${depot.stalls}</p>
-          <p class="text-xs text-primary mt-1 cursor-pointer">Click to view in Depots →</p>
+        <div class="p-4 bg-card text-card-foreground rounded-lg border shadow-lg min-w-52">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="font-semibold text-sm text-foreground">${depot.name}</h3>
+            <span class="px-2 py-1 text-xs rounded-full bg-primary/20 text-primary">Depot</span>
+          </div>
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-muted-foreground">Available Stalls:</span>
+            <span class="font-medium text-success">${depot.available}/${depot.stalls}</span>
+          </div>
         </div>
       `);
 
