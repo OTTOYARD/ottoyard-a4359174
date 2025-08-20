@@ -190,12 +190,12 @@ const Index = () => {
         <div className="container mx-auto px-4 py-4 sm:py-6">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center flex-shrink-0">
-                <img src="/lovable-uploads/30d8f072-040b-43f4-9b0c-d6c35e5f3fcb.png" alt="Fleet Command Logo" className="h-7 w-7 sm:h-9 sm:w-9" />
+              <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center flex-shrink-0">
+                <img src="/lovable-uploads/30d8f072-040b-43f4-9b0c-d6c35e5f3fcb.png" alt="Fleet Command Logo" className="h-14 w-14 sm:h-18 sm:w-18" />
               </div>
               <div className="min-w-0">
-                <h1 className="text-lg sm:text-2xl font-bold text-foreground truncate">OTTOYARD</h1>
-                <p className="text-xs sm:text-sm text-muted-foreground truncate">Fleet Command</p>
+                <h1 className="text-lg sm:text-2xl font-bold text-foreground truncate text-center">OTTOYARD</h1>
+                <p className="text-xs sm:text-sm text-muted-foreground truncate text-center">Fleet Command</p>
               </div>
             </div>
             <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
