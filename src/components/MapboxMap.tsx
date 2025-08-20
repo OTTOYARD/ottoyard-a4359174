@@ -85,6 +85,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, city, onVehicleClick, o
         box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         cursor: pointer;
         transition: transform 0.2s;
+        transform-origin: center center;
       `;
 
       // Add hover effect
@@ -134,6 +135,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, city, onVehicleClick, o
         align-items: center;
         justify-content: center;
         transition: transform 0.2s;
+        transform-origin: center center;
       `;
 
       // Add inner square
