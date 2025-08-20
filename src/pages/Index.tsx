@@ -199,14 +199,16 @@ const Index = () => {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
-          <div className="overflow-x-auto scrollbar-hide pb-2">
-            <TabsList className="inline-flex w-max h-12 min-w-full sm:min-w-0 sm:w-auto justify-start md:justify-center">
-              <TabsTrigger value="overview" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Overview</TabsTrigger>
-              <TabsTrigger value="fleet" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Fleet</TabsTrigger>
-              <TabsTrigger value="depots" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Depots</TabsTrigger>
-              <TabsTrigger value="maintenance" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Maintenance</TabsTrigger>
-              <TabsTrigger value="analytics" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Analytics</TabsTrigger>
-            </TabsList>
+          <div className="flex justify-center">
+            <div className="overflow-x-auto scrollbar-hide pb-2 md:overflow-visible">
+              <TabsList className="inline-flex w-max h-12 min-w-full md:min-w-0 md:w-auto justify-start md:justify-center">
+                <TabsTrigger value="overview" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Overview</TabsTrigger>
+                <TabsTrigger value="fleet" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Fleet</TabsTrigger>
+                <TabsTrigger value="depots" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Depots</TabsTrigger>
+                <TabsTrigger value="maintenance" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Maintenance</TabsTrigger>
+                <TabsTrigger value="analytics" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Analytics</TabsTrigger>
+              </TabsList>
+            </div>
           </div>
 
           <TabsContent value="overview" className="space-y-6">

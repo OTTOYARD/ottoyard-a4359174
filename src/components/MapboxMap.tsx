@@ -87,22 +87,6 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, city, onVehicleClick, o
         transition: box-shadow 0.2s;
       `;
 
-      // Add hover preview popup
-      const baseShadow = '0 2px 8px rgba(0,0,0,0.3)';
-      markerEl.addEventListener('mouseenter', () => {
-        markerEl.style.boxShadow = '0 4px 12px rgba(0,0,0,0.35)';
-        popup.addTo(map.current!);
-      });
-      markerEl.addEventListener('mouseleave', () => {
-        markerEl.style.boxShadow = baseShadow;
-        popup.remove();
-      });
-
-      // Add click handler
-      markerEl.addEventListener('click', () => {
-        onVehicleClick?.(vehicle.id);
-      });
-
       // Create popup content
       const popup = new mapboxgl.Popup({ 
         offset: 15, 
@@ -118,6 +102,23 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, city, onVehicleClick, o
           <p class="text-xs text-primary mt-1 cursor-pointer">Click to view in Fleet →</p>
         </div>
       `);
+
+      // Add hover preview popup
+      const baseShadow = '0 2px 8px rgba(0,0,0,0.3)';
+      markerEl.addEventListener('mouseenter', () => {
+        markerEl.style.boxShadow = '0 4px 12px rgba(0,0,0,0.35)';
+        popup.setLngLat([vehicle.location.lng, vehicle.location.lat]);
+        popup.addTo(map.current!);
+      });
+      markerEl.addEventListener('mouseleave', () => {
+        markerEl.style.boxShadow = baseShadow;
+        popup.remove();
+      });
+
+      // Add click handler
+      markerEl.addEventListener('click', () => {
+        onVehicleClick?.(vehicle.id);
+      });
 
       new mapboxgl.Marker({ element: markerEl, anchor: 'center', offset: [0, 0] })
         .setLngLat([vehicle.location.lng, vehicle.location.lat])
@@ -153,22 +154,6 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, city, onVehicleClick, o
       `;
       markerEl.appendChild(innerSquare);
 
-      // Add hover preview popup
-      const depotBaseShadow = '0 2px 8px rgba(0,0,0,0.3)';
-      markerEl.addEventListener('mouseenter', () => {
-        markerEl.style.boxShadow = '0 4px 12px rgba(0,0,0,0.35)';
-        depotPopup.addTo(map.current!);
-      });
-      markerEl.addEventListener('mouseleave', () => {
-        markerEl.style.boxShadow = depotBaseShadow;
-        depotPopup.remove();
-      });
-
-      // Add click handler
-      markerEl.addEventListener('click', () => {
-        onDepotClick?.(depot.id);
-      });
-
       // Create popup content
       const depotPopup = new mapboxgl.Popup({ 
         offset: 15, 
@@ -182,6 +167,23 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, city, onVehicleClick, o
           <p class="text-xs text-primary mt-1 cursor-pointer">Click to view in Depots →</p>
         </div>
       `);
+
+      // Add hover preview popup
+      const depotBaseShadow = '0 2px 8px rgba(0,0,0,0.3)';
+      markerEl.addEventListener('mouseenter', () => {
+        markerEl.style.boxShadow = '0 4px 12px rgba(0,0,0,0.35)';
+        depotPopup.setLngLat([depot.location.lng, depot.location.lat]);
+        depotPopup.addTo(map.current!);
+      });
+      markerEl.addEventListener('mouseleave', () => {
+        markerEl.style.boxShadow = depotBaseShadow;
+        depotPopup.remove();
+      });
+
+      // Add click handler
+      markerEl.addEventListener('click', () => {
+        onDepotClick?.(depot.id);
+      });
 
       new mapboxgl.Marker({ element: markerEl, anchor: 'center', offset: [0, 0] })
         .setLngLat([depot.location.lng, depot.location.lat])
