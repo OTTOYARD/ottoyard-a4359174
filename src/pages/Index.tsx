@@ -191,7 +191,7 @@ const Index = () => {
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
               <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center flex-shrink-0">
-                <img src="/lovable-uploads/30d8f072-040b-43f4-9b0c-d6c35e5f3fcb.png" alt="Fleet Command Logo" className="h-14 w-14 sm:h-18 sm:w-18" />
+                <img src="/lovable-uploads/0802aeb6-e42e-4389-8e93-c10d17cf963e.png" alt="Fleet Command Logo" className="h-14 w-14 sm:h-18 sm:w-18" />
               </div>
               <div className="min-w-0">
                 <h1 className="text-lg sm:text-2xl font-bold text-foreground truncate text-center">OTTOYARD</h1>
@@ -227,7 +227,7 @@ const Index = () => {
       <main className="container mx-auto px-4 py-6">
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
           <div className="overflow-x-auto">
-            <TabsList className="inline-flex w-max min-w-full h-10">
+            <TabsList className="inline-flex w-auto h-10">
               <TabsTrigger value="overview" className="whitespace-nowrap px-4">Overview</TabsTrigger>
               <TabsTrigger value="fleet" className="whitespace-nowrap px-4">Fleet</TabsTrigger>
               <TabsTrigger value="depots" className="whitespace-nowrap px-4">Depots</TabsTrigger>
