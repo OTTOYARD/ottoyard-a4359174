@@ -69,8 +69,8 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, city, onVehicleClick, o
 
     const depots = generateDepots();
 
-    // Add vehicle markers
-    vehicles.slice(0, 12).forEach((vehicle) => {
+    // Add vehicle markers - show all vehicles for the city
+    vehicles.forEach((vehicle) => {
       const markerColor = getStatusColor(vehicle.status);
       
       // Create custom marker element

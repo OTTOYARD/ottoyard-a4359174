@@ -50,7 +50,7 @@ const generateVehiclesForCity = (city: City) => {
   const avCompanies = ['Waymo', 'Zoox', 'Tensor', 'Cruise', 'Aurora', 'Argo AI', 'Nuro', 'Mobileye', 'Motional', 'Waymo'];
   
   const vehicles = [];
-  const vehicleCount = Math.floor(Math.random() * 30) + 15; // 15-45 vehicles per city
+  const vehicleCount = Math.floor(Math.random() * 20) + 30; // 30-50 vehicles per city
   
   for (let i = 0; i < vehicleCount; i++) {
     // Generate unique 5-digit alphanumeric ID
