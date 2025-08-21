@@ -31,7 +31,7 @@ export const AIAgentPopup = ({ open, onOpenChange }: AIAgentPopupProps) => {
     {
       id: '1',
       role: 'assistant',
-      content: 'Hello! I\'m your OTTOYARD AI assistant. I can help you with scheduling, reservations, data analysis, and fleet management tasks. What would you like me to help you with?',
+      content: 'Hello! I\'m OttoCommand AI, your fleet management assistant. I can help you with scheduling, reservations, data analysis, and fleet management tasks. What would you like me to help you with?',
       timestamp: new Date()
     }
   ]);
@@ -112,8 +112,8 @@ export const AIAgentPopup = ({ open, onOpenChange }: AIAgentPopupProps) => {
                 <Bot className="h-4 w-4 text-white" />
               </div>
               <div>
-                <span className="text-lg font-semibold">FieldOps AI</span>
-                <p className="text-xs text-muted-foreground">OTTOYARD AI Assistant</p>
+                <span className="text-lg font-semibold">OttoCommand AI</span>
+                <p className="text-xs text-muted-foreground">AI Assistant</p>
               </div>
             </div>
             <Badge variant="outline" className="bg-success/10 text-success border-success/20">
