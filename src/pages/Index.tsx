@@ -452,8 +452,44 @@ const Index = () => {
                         <p className="text-2xl font-bold text-primary">96.8%</p>
                       </div>
                     </div>
-                    <div className="h-64 bg-muted rounded-lg flex items-center justify-center">
-                      <p className="text-muted-foreground">Energy Generation Chart Placeholder</p>
+                    <div className="h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={[
+                          { time: '6AM', generated: 2.1, consumed: 1.8 },
+                          { time: '9AM', generated: 3.2, consumed: 2.1 },
+                          { time: '12PM', generated: 4.8, consumed: 2.9 },
+                          { time: '3PM', generated: 5.2, consumed: 3.1 },
+                          { time: '6PM', generated: 3.7, consumed: 2.7 },
+                          { time: '9PM', generated: 2.4, consumed: 2.2 },
+                        ]}>
+                          <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                          <XAxis dataKey="time" className="text-xs" />
+                          <YAxis className="text-xs" />
+                          <Tooltip 
+                            contentStyle={{ 
+                              backgroundColor: 'hsl(var(--card))',
+                              border: '1px solid hsl(var(--border))',
+                              borderRadius: '8px'
+                            }}
+                          />
+                          <Area 
+                            type="monotone" 
+                            dataKey="generated" 
+                            stackId="1"
+                            stroke="hsl(var(--energy-high))" 
+                            fill="hsl(var(--energy-high) / 0.3)" 
+                            name="Generated (MWh)"
+                          />
+                          <Area 
+                            type="monotone" 
+                            dataKey="consumed" 
+                            stackId="2"
+                            stroke="hsl(var(--energy-medium))" 
+                            fill="hsl(var(--energy-medium) / 0.3)" 
+                            name="Consumed (MWh)"
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
                     </div>
                   </div>
                 </CardContent>
@@ -491,8 +527,48 @@ const Index = () => {
                         <p className="text-2xl font-bold text-accent">A+</p>
                       </div>
                     </div>
-                    <div className="h-64 bg-muted rounded-lg flex items-center justify-center">
-                      <p className="text-muted-foreground">Grid Return Chart Placeholder</p>
+                    <div className="h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={[
+                          { time: '6AM', returned: 0.3, revenue: 45 },
+                          { time: '9AM', returned: 1.1, revenue: 165 },
+                          { time: '12PM', returned: 1.9, revenue: 285 },
+                          { time: '3PM', returned: 2.1, revenue: 315 },
+                          { time: '6PM', returned: 1.0, revenue: 150 },
+                          { time: '9PM', returned: 0.2, revenue: 30 },
+                        ]}>
+                          <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                          <XAxis dataKey="time" className="text-xs" />
+                          <YAxis yAxisId="left" className="text-xs" />
+                          <YAxis yAxisId="right" orientation="right" className="text-xs" />
+                          <Tooltip 
+                            contentStyle={{ 
+                              backgroundColor: 'hsl(var(--card))',
+                              border: '1px solid hsl(var(--border))',
+                              borderRadius: '8px'
+                            }}
+                          />
+                          <Line 
+                            yAxisId="left"
+                            type="monotone" 
+                            dataKey="returned" 
+                            stroke="hsl(var(--accent))" 
+                            strokeWidth={3}
+                            name="Returned (MWh)"
+                            dot={{ fill: 'hsl(var(--accent))', strokeWidth: 2, r: 4 }}
+                          />
+                          <Line 
+                            yAxisId="right"
+                            type="monotone" 
+                            dataKey="revenue" 
+                            stroke="hsl(var(--success))" 
+                            strokeWidth={2}
+                            strokeDasharray="5 5"
+                            name="Revenue ($)"
+                            dot={{ fill: 'hsl(var(--success))', strokeWidth: 2, r: 3 }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
                     </div>
                   </div>
                 </CardContent>
@@ -530,8 +606,40 @@ const Index = () => {
                         <p className="text-2xl font-bold text-success">1,247 mi</p>
                       </div>
                     </div>
-                    <div className="h-64 bg-muted rounded-lg flex items-center justify-center">
-                      <p className="text-muted-foreground">Fleet Efficiency Chart Placeholder</p>
+                    <div className="h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={[
+                          { vehicle: 'Fleet A', efficiency: 96.8, uptime: 99.2 },
+                          { vehicle: 'Fleet B', efficiency: 94.2, uptime: 98.7 },
+                          { vehicle: 'Fleet C', efficiency: 92.1, uptime: 97.5 },
+                          { vehicle: 'Fleet D', efficiency: 95.7, uptime: 98.9 },
+                          { vehicle: 'Fleet E', efficiency: 91.3, uptime: 96.8 },
+                          { vehicle: 'Fleet F', efficiency: 97.2, uptime: 99.5 },
+                        ]}>
+                          <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                          <XAxis dataKey="vehicle" className="text-xs" />
+                          <YAxis className="text-xs" />
+                          <Tooltip 
+                            contentStyle={{ 
+                              backgroundColor: 'hsl(var(--card))',
+                              border: '1px solid hsl(var(--border))',
+                              borderRadius: '8px'
+                            }}
+                          />
+                          <Bar 
+                            dataKey="efficiency" 
+                            fill="hsl(var(--success) / 0.8)" 
+                            name="Efficiency (%)"
+                            radius={[4, 4, 0, 0]}
+                          />
+                          <Bar 
+                            dataKey="uptime" 
+                            fill="hsl(var(--primary) / 0.6)" 
+                            name="Uptime (%)"
+                            radius={[4, 4, 0, 0]}
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
                     </div>
                   </div>
                 </CardContent>
