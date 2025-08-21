@@ -211,13 +211,8 @@ const Index = () => {
                 />
               </div>
               
-              {/* Bottom Row: Status + AI */}
-              <div className="flex items-center space-x-2">
-                <Badge variant="outline" className="bg-success/10 text-success border-success/20 text-xs">
-                  <Activity className="h-3 w-3 mr-1" />
-                  <span className="hidden md:inline">All Systems Operational</span>
-                  <span className="md:hidden">Online</span>
-                </Badge>
+              {/* Second Row: AI Button */}
+              <div className="flex items-center">
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -227,6 +222,15 @@ const Index = () => {
                   <Bot className="h-4 w-4 mr-1" />
                   <span className="hidden sm:inline">OttoCommand AI</span>
                 </Button>
+              </div>
+              
+              {/* Third Row: Status Badge */}
+              <div className="flex items-center">
+                <Badge variant="outline" className="bg-success/10 text-success border-success/20 text-xs">
+                  <Activity className="h-3 w-3 mr-1" />
+                  <span className="hidden md:inline">All Systems Operational</span>
+                  <span className="md:hidden">Online</span>
+                </Badge>
               </div>
             </div>
           </div>
