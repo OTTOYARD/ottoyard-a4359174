@@ -39,23 +39,25 @@ const CitySearchBar: React.FC<CitySearchBarProps> = ({ onCitySelect, currentCity
   const [searchValue, setSearchValue] = useState('');
 
   return (
-    <div className="flex items-center justify-center space-x-2 mb-4">
-      <MapPin className="h-5 w-5 text-primary flex-shrink-0" />
+    <div className="w-full max-w-md mx-auto px-2 mb-4">
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            className="justify-between w-full sm:min-w-[300px] bg-background/50 backdrop-blur-sm border-border/50"
+            className="w-full justify-between bg-background/50 backdrop-blur-sm border-border/50 h-10 px-3"
           >
-            <span className="truncate">
-              {currentCity.name}, {currentCity.country}
-            </span>
-            <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            <div className="flex items-center space-x-2 truncate">
+              <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
+              <span className="truncate text-sm">
+                {currentCity.name}, {currentCity.country}
+              </span>
+            </div>
+            <Search className="h-4 w-4 shrink-0 opacity-50 ml-2" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[calc(100vw-2rem)] sm:w-[350px] p-0 bg-background/95 backdrop-blur-md border-border/50" align="center">
+        <PopoverContent className="w-[calc(100vw-1rem)] max-w-md p-0 bg-background/95 backdrop-blur-md border-border/50" align="center">
           <Command>
             <CommandInput placeholder="Search cities..." />
             <CommandList>
