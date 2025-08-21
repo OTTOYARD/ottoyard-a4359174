@@ -47,7 +47,7 @@ const CitySearchBar: React.FC<CitySearchBarProps> = ({ onCitySelect, currentCity
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            className="justify-between min-w-[300px] bg-background/50 backdrop-blur-sm border-border/50"
+            className="justify-between w-full sm:min-w-[300px] bg-background/50 backdrop-blur-sm border-border/50"
           >
             <span className="truncate">
               {currentCity.name}, {currentCity.country}
@@ -55,7 +55,7 @@ const CitySearchBar: React.FC<CitySearchBarProps> = ({ onCitySelect, currentCity
             <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[350px] p-0 bg-background/95 backdrop-blur-md border-border/50" align="center">
+        <PopoverContent className="w-[calc(100vw-2rem)] sm:w-[350px] p-0 bg-background/95 backdrop-blur-md border-border/50" align="center">
           <Command>
             <CommandInput placeholder="Search cities..." />
             <CommandList>
