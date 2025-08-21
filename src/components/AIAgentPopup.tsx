@@ -104,7 +104,7 @@ export const AIAgentPopup = ({ open, onOpenChange }: AIAgentPopupProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-3xl h-[90vh] sm:h-[700px] max-h-[800px] flex flex-col">
+      <DialogContent className="sm:max-w-3xl h-[100dvh] sm:h-[700px] max-h-[800px] flex flex-col">
         <DialogHeader className="pb-2">
           <DialogTitle className="flex items-center justify-between">
             <div className="flex items-center">
@@ -123,51 +123,53 @@ export const AIAgentPopup = ({ open, onOpenChange }: AIAgentPopupProps) => {
           </DialogTitle>
         </DialogHeader>
         
-        <div className="flex-1 flex flex-col space-y-4">
-          {/* Quick Actions */}
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-muted-foreground">Quick Actions</p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {quickActions.map((action, index) => (
-                <Button
-                  key={index}
-                  variant="outline"
-                  size="sm"
-                  className="h-auto p-3 flex flex-col items-center space-y-1 hover:bg-primary/5 hover:border-primary/30 transition-all duration-200 hover:scale-[1.02]"
-                  onClick={() => handleQuickAction(action.action)}
-                >
-                  <action.icon className="h-4 w-4 text-primary" />
-                  <span className="text-xs text-center leading-tight">{action.label}</span>
-                </Button>
-              ))}
+        <div className="flex-1 min-h-0 flex flex-col">
+          <div className="flex-1 min-h-0 overflow-y-auto space-y-4">
+            {/* Quick Actions */}
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-muted-foreground">Quick Actions</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {quickActions.map((action, index) => (
+                  <Button
+                    key={index}
+                    variant="outline"
+                    size="sm"
+                    className="h-auto p-3 flex flex-col items-center space-y-1 hover:bg-primary/5 hover:border-primary/30 transition-all duration-200 hover:scale-[1.02]"
+                    onClick={() => handleQuickAction(action.action)}
+                  >
+                    <action.icon className="h-4 w-4 text-primary" />
+                    <span className="text-xs text-center leading-tight">{action.label}</span>
+                  </Button>
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Messages */}
-          <div className="flex-1 border rounded-lg bg-muted/20 flex flex-col min-h-0">
-            <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ maxHeight: 'calc(100vh - 350px)', minHeight: '200px' }}>
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${
-                    message.role === 'user' ? 'justify-end' : 'justify-start'
-                  }`}
-                >
+            {/* Messages */}
+            <div className="border rounded-lg bg-muted/20">
+              <div className="p-4 space-y-4">
+                {messages.map((message) => (
                   <div
-                    className={`max-w-[85%] p-3 rounded-lg shadow-sm ${
-                      message.role === 'user'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-card text-foreground border'
+                    key={message.id}
+                    className={`flex ${
+                      message.role === 'user' ? 'justify-end' : 'justify-start'
                     }`}
                   >
-                    <p className="text-sm break-words whitespace-pre-wrap leading-relaxed">{message.content}</p>
-                    <span className="text-xs opacity-70 mt-1 block">
-                      {message.timestamp.toLocaleTimeString()}
-                    </span>
+                    <div
+                      className={`max-w-[85%] p-3 rounded-lg shadow-sm ${
+                        message.role === 'user'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-card text-foreground border'
+                      }`}
+                    >
+                      <p className="text-sm break-words whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                      <span className="text-xs opacity-70 mt-1 block">
+                        {message.timestamp.toLocaleTimeString()}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))}
-              <div ref={bottomRef} />
+                ))}
+                <div ref={bottomRef} />
+              </div>
             </div>
           </div>
 
