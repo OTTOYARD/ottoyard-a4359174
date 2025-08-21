@@ -57,7 +57,7 @@ const CitySearchBar: React.FC<CitySearchBarProps> = ({ onCitySelect, currentCity
             <Search className="h-4 w-4 shrink-0 opacity-50 ml-2" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[calc(100vw-1rem)] max-w-md p-0 bg-background/95 backdrop-blur-md border-border/50" align="center">
+        <PopoverContent className="z-50 w-[calc(100vw-1rem)] max-w-md p-0 bg-popover border-border/50 shadow-fleet-md" align="center">
           <Command>
             <CommandInput placeholder="Search cities..." />
             <CommandList>

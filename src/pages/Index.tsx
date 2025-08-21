@@ -253,12 +253,14 @@ const Index = () => {
                 {/* Fleet Map */}
                 <Card className="shadow-fleet-md">
                   <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                       <CardTitle className="flex items-center">
                         <MapPin className="h-5 w-5 mr-2 text-primary" />
                         Live Fleet Tracking
                       </CardTitle>
-                      <CitySearchBar currentCity={currentCity} onCitySelect={handleCitySelect} />
+                      <div className="w-full sm:w-auto">
+                        <CitySearchBar currentCity={currentCity} onCitySelect={handleCitySelect} />
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent className="pt-2">
