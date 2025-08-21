@@ -104,7 +104,7 @@ export const AIAgentPopup = ({ open, onOpenChange }: AIAgentPopupProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-3xl h-[700px] flex flex-col">
+      <DialogContent className="sm:max-w-3xl h-[90vh] sm:h-[700px] max-h-[800px] flex flex-col">
         <DialogHeader className="pb-2">
           <DialogTitle className="flex items-center justify-between">
             <div className="flex items-center">
@@ -145,7 +145,7 @@ export const AIAgentPopup = ({ open, onOpenChange }: AIAgentPopupProps) => {
 
           {/* Messages */}
           <div className="flex-1 border rounded-lg bg-muted/20 flex flex-col min-h-0">
-            <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ maxHeight: 'calc(100vh - 400px)' }}>
+            <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ maxHeight: 'calc(100vh - 350px)', minHeight: '200px' }}>
               {messages.map((message) => (
                 <div
                   key={message.id}
@@ -172,7 +172,7 @@ export const AIAgentPopup = ({ open, onOpenChange }: AIAgentPopupProps) => {
           </div>
 
           {/* Input */}
-          <div className="flex items-end space-x-2 bg-muted/30 p-3 rounded-lg">
+          <div className="flex items-end space-x-2 bg-muted/30 p-3 rounded-lg flex-shrink-0">
             <Textarea
               ref={inputRef}
               placeholder="Ask me anything about your fleet..."
