@@ -323,7 +323,10 @@ const Index = () => {
                         onClick={() => setSelectedQuickGlanceTile(selectedQuickGlanceTile === 'vehicles' ? null : 'vehicles')} 
                       />
                       {selectedQuickGlanceTile === 'vehicles' && (
-                        <div className="absolute top-full left-0 right-0 mt-2 p-4 bg-card border border-border rounded-lg shadow-lg z-10 animate-fade-in">
+                        <div 
+                          className="absolute top-full left-0 right-0 mt-2 p-4 bg-card border border-border rounded-lg shadow-lg z-10 animate-fade-in"
+                          onClick={() => setSelectedQuickGlanceTile(null)}
+                        >
                           <h4 className="font-semibold mb-3">Fleet Status Overview</h4>
                           
                           {/* Vehicle Status Chart */}
@@ -353,7 +356,7 @@ const Index = () => {
                             <p><span className="font-medium">Maintenance:</span> 1 vehicle scheduled</p>
                           </div>
                           
-                          <div className="flex gap-2 flex-wrap">
+                          <div className="flex gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
                             <Button size="sm" variant="outline" onClick={() => {setSelectedTab('fleet'); setSelectedQuickGlanceTile(null);}}>
                               View All Vehicles
                             </Button>
@@ -380,7 +383,10 @@ const Index = () => {
                         onClick={() => setSelectedQuickGlanceTile(selectedQuickGlanceTile === 'energy' ? null : 'energy')} 
                       />
                       {selectedQuickGlanceTile === 'energy' && (
-                        <div className="absolute top-full left-0 right-0 mt-2 p-4 bg-card border border-border rounded-lg shadow-lg z-10 animate-fade-in">
+                        <div 
+                          className="absolute top-full left-0 right-0 mt-2 p-4 bg-card border border-border rounded-lg shadow-lg z-10 animate-fade-in"
+                          onClick={() => setSelectedQuickGlanceTile(null)}
+                        >
                           <h4 className="font-semibold mb-3">Energy Management</h4>
                           
                           {/* Energy Flow Chart */}
@@ -411,7 +417,7 @@ const Index = () => {
                             <p><span className="font-medium">Peak Hours:</span> 12PM-3PM optimal return</p>
                           </div>
                           
-                          <div className="flex gap-2 flex-wrap">
+                          <div className="flex gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
                             <Button size="sm" variant="outline" onClick={() => {setSelectedTab('analytics'); setSelectedQuickGlanceTile(null);}}>
                               Energy Analytics
                             </Button>
@@ -436,7 +442,10 @@ const Index = () => {
                         onClick={() => setSelectedQuickGlanceTile(selectedQuickGlanceTile === 'efficiency' ? null : 'efficiency')} 
                       />
                       {selectedQuickGlanceTile === 'efficiency' && (
-                        <div className="absolute top-full left-0 right-0 mt-2 p-4 bg-card border border-border rounded-lg shadow-lg z-10 animate-fade-in">
+                        <div 
+                          className="absolute top-full left-0 right-0 mt-2 p-4 bg-card border border-border rounded-lg shadow-lg z-10 animate-fade-in"
+                          onClick={() => setSelectedQuickGlanceTile(null)}
+                        >
                           <h4 className="font-semibold mb-3">Performance Metrics</h4>
                           
                           {/* Efficiency Trend Chart */}
@@ -467,7 +476,7 @@ const Index = () => {
                             <p><span className="font-medium">Energy Optimization:</span> 12% below target</p>
                           </div>
                           
-                          <div className="flex gap-2 flex-wrap">
+                          <div className="flex gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
                             <Button size="sm" variant="outline" onClick={() => {setSelectedTab('analytics'); setSelectedQuickGlanceTile(null);}}>
                               Performance Analytics
                             </Button>
@@ -494,7 +503,10 @@ const Index = () => {
                         onClick={() => setSelectedQuickGlanceTile(selectedQuickGlanceTile === 'maintenance' ? null : 'maintenance')} 
                       />
                       {selectedQuickGlanceTile === 'maintenance' && (
-                        <div className="absolute top-full left-0 right-0 mt-2 p-4 bg-card border border-border rounded-lg shadow-lg z-10 animate-fade-in">
+                        <div 
+                          className="absolute top-full left-0 right-0 mt-2 p-4 bg-card border border-border rounded-lg shadow-lg z-10 animate-fade-in"
+                          onClick={() => setSelectedQuickGlanceTile(null)}
+                        >
                           <h4 className="font-semibold mb-3">Maintenance Schedule</h4>
                           
                           {/* Maintenance Priority Chart */}
@@ -525,7 +537,7 @@ const Index = () => {
                             <p><span className="font-medium">Urgent:</span> 1 brake inspection</p>
                           </div>
                           
-                          <div className="flex gap-2 flex-wrap">
+                          <div className="flex gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
                             <Button size="sm" variant="outline" onClick={() => {setSelectedTab('maintenance'); setSelectedQuickGlanceTile(null);}}>
                               Maintenance Schedule
                             </Button>
