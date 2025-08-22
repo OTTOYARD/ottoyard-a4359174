@@ -398,7 +398,7 @@ const Index = () => {
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis dataKey="time" tick={{ fill: '#2563eb' }} />
                                 <YAxis />
-                                <Tooltip />
+                                <Tooltip contentStyle={{ color: '#2563eb' }} labelStyle={{ color: '#2563eb' }} />
                                 <Area type="monotone" dataKey="consumed" stackId="1" stroke="hsl(var(--destructive))" fill="hsl(var(--destructive))" fillOpacity={0.3} />
                                 <Area type="monotone" dataKey="returned" stackId="2" stroke="hsl(var(--success))" fill="hsl(var(--success))" fillOpacity={0.3} />
                               </AreaChart>
@@ -454,7 +454,7 @@ const Index = () => {
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis dataKey="day" tick={{ fill: '#2563eb' }} />
                                 <YAxis domain={[90, 100]} />
-                                <Tooltip />
+                                <Tooltip contentStyle={{ color: '#2563eb' }} labelStyle={{ color: '#2563eb' }} />
                                 <Line type="monotone" dataKey="efficiency" stroke="hsl(var(--primary))" strokeWidth={2} />
                                 <Line type="monotone" dataKey="delivery" stroke="hsl(var(--success))" strokeWidth={2} />
                               </LineChart>
@@ -511,7 +511,7 @@ const Index = () => {
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis dataKey="type" tick={{ fill: '#2563eb' }} />
                                 <YAxis />
-                                <Tooltip />
+                                <Tooltip contentStyle={{ color: '#2563eb' }} labelStyle={{ color: '#2563eb' }} />
                                 <Bar dataKey="today" fill="hsl(var(--destructive))" />
                                 <Bar dataKey="week" fill="hsl(var(--warning))" />
                                 <Bar dataKey="urgent" fill="hsl(var(--primary))" />
