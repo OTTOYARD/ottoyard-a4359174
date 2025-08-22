@@ -324,16 +324,46 @@ const Index = () => {
                       />
                       {selectedQuickGlanceTile === 'vehicles' && (
                         <div className="absolute top-full left-0 right-0 mt-2 p-4 bg-card border border-border rounded-lg shadow-lg z-10 animate-fade-in">
-                          <h4 className="font-semibold mb-2">Fleet Status Overview</h4>
-                          <div className="space-y-2 text-sm">
-                            <p><span className="font-medium">Active:</span> 12 vehicles currently operational</p>
+                          <h4 className="font-semibold mb-3">Fleet Status Overview</h4>
+                          
+                          {/* Vehicle Status Chart */}
+                          <div className="h-32 mb-4">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <PieChart>
+                                <Pie
+                                  data={[
+                                    { name: 'Active', value: 8, fill: 'hsl(var(--success))' },
+                                    { name: 'Charging', value: 3, fill: 'hsl(var(--primary))' },
+                                    { name: 'Maintenance', value: 1, fill: 'hsl(var(--warning))' }
+                                  ]}
+                                  cx="50%"
+                                  cy="50%"
+                                  innerRadius={25}
+                                  outerRadius={50}
+                                  dataKey="value"
+                                />
+                                <Tooltip />
+                              </PieChart>
+                            </ResponsiveContainer>
+                          </div>
+                          
+                          <div className="space-y-2 text-sm mb-4">
+                            <p><span className="font-medium">Active:</span> 8 vehicles on deliveries</p>
                             <p><span className="font-medium">Charging:</span> 3 vehicles at depots</p>
-                            <p><span className="font-medium">En Route:</span> 8 vehicles on deliveries</p>
                             <p><span className="font-medium">Maintenance:</span> 1 vehicle scheduled</p>
                           </div>
-                          <Button size="sm" className="mt-3 w-full" onClick={() => {setSelectedTab('fleet'); setSelectedQuickGlanceTile(null);}}>
-                            Go to Fleet Tab
-                          </Button>
+                          
+                          <div className="flex gap-2 flex-wrap">
+                            <Button size="sm" variant="outline" onClick={() => {setSelectedTab('fleet'); setSelectedQuickGlanceTile(null);}}>
+                              View All Vehicles
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => {setSelectedTab('depots'); setSelectedQuickGlanceTile(null);}}>
+                              Charging Status
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => {setSelectedTab('maintenance'); setSelectedQuickGlanceTile(null);}}>
+                              Schedule Service
+                            </Button>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -351,16 +381,47 @@ const Index = () => {
                       />
                       {selectedQuickGlanceTile === 'energy' && (
                         <div className="absolute top-full left-0 right-0 mt-2 p-4 bg-card border border-border rounded-lg shadow-lg z-10 animate-fade-in">
-                          <h4 className="font-semibold mb-2">Energy Management</h4>
-                          <div className="space-y-2 text-sm">
-                            <p><span className="font-medium">Total Consumed:</span> 4.2 MWh today</p>
-                            <p><span className="font-medium">Grid Return:</span> 2.1 MWh earned back</p>
-                            <p><span className="font-medium">Net Usage:</span> 2.1 MWh consumed</p>
-                            <p><span className="font-medium">Efficiency:</span> 50% energy returned</p>
+                          <h4 className="font-semibold mb-3">Energy Management</h4>
+                          
+                          {/* Energy Flow Chart */}
+                          <div className="h-32 mb-4">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <AreaChart
+                                data={[
+                                  { time: '6AM', consumed: 0.3, returned: 0.1 },
+                                  { time: '9AM', consumed: 0.8, returned: 0.2 },
+                                  { time: '12PM', consumed: 1.2, returned: 0.6 },
+                                  { time: '3PM', consumed: 0.9, returned: 0.8 },
+                                  { time: '6PM', consumed: 1.0, returned: 0.4 }
+                                ]}
+                              >
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="time" />
+                                <YAxis />
+                                <Tooltip />
+                                <Area type="monotone" dataKey="consumed" stackId="1" stroke="hsl(var(--destructive))" fill="hsl(var(--destructive))" fillOpacity={0.3} />
+                                <Area type="monotone" dataKey="returned" stackId="2" stroke="hsl(var(--success))" fill="hsl(var(--success))" fillOpacity={0.3} />
+                              </AreaChart>
+                            </ResponsiveContainer>
                           </div>
-                          <Button size="sm" className="mt-3 w-full" onClick={() => {setSelectedTab('analytics'); setSelectedQuickGlanceTile(null);}}>
-                            Go to Analytics Tab
-                          </Button>
+                          
+                          <div className="space-y-2 text-sm mb-4">
+                            <p><span className="font-medium">Net Usage:</span> 2.1 MWh consumed today</p>
+                            <p><span className="font-medium">Return Rate:</span> 50% energy efficiency</p>
+                            <p><span className="font-medium">Peak Hours:</span> 12PM-3PM optimal return</p>
+                          </div>
+                          
+                          <div className="flex gap-2 flex-wrap">
+                            <Button size="sm" variant="outline" onClick={() => {setSelectedTab('analytics'); setSelectedQuickGlanceTile(null);}}>
+                              Energy Analytics
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => {setSelectedTab('depots'); setSelectedQuickGlanceTile(null);}}>
+                              Depot Status
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => {setSelectedTab('analytics'); setSelectedQuickGlanceTile(null);}}>
+                              Grid Return Report
+                            </Button>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -376,16 +437,47 @@ const Index = () => {
                       />
                       {selectedQuickGlanceTile === 'efficiency' && (
                         <div className="absolute top-full left-0 right-0 mt-2 p-4 bg-card border border-border rounded-lg shadow-lg z-10 animate-fade-in">
-                          <h4 className="font-semibold mb-2">Performance Metrics</h4>
-                          <div className="space-y-2 text-sm">
-                            <p><span className="font-medium">Overall Efficiency:</span> 94.2% fleet performance</p>
-                            <p><span className="font-medium">On-Time Delivery:</span> 97.8% success rate</p>
-                            <p><span className="font-medium">Energy Usage:</span> 12% below target</p>
-                            <p><span className="font-medium">Uptime:</span> 99.1% operational time</p>
+                          <h4 className="font-semibold mb-3">Performance Metrics</h4>
+                          
+                          {/* Efficiency Trend Chart */}
+                          <div className="h-32 mb-4">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <LineChart
+                                data={[
+                                  { day: 'Mon', efficiency: 91.2, delivery: 95.8 },
+                                  { day: 'Tue', efficiency: 92.5, delivery: 97.1 },
+                                  { day: 'Wed', efficiency: 93.1, delivery: 96.9 },
+                                  { day: 'Thu', efficiency: 94.2, delivery: 97.8 },
+                                  { day: 'Fri', efficiency: 94.2, delivery: 98.1 }
+                                ]}
+                              >
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="day" />
+                                <YAxis domain={[90, 100]} />
+                                <Tooltip />
+                                <Line type="monotone" dataKey="efficiency" stroke="hsl(var(--primary))" strokeWidth={2} />
+                                <Line type="monotone" dataKey="delivery" stroke="hsl(var(--success))" strokeWidth={2} />
+                              </LineChart>
+                            </ResponsiveContainer>
                           </div>
-                          <Button size="sm" className="mt-3 w-full" onClick={() => {setSelectedTab('analytics'); setSelectedQuickGlanceTile(null);}}>
-                            Go to Analytics Tab
-                          </Button>
+                          
+                          <div className="space-y-2 text-sm mb-4">
+                            <p><span className="font-medium">Fleet Efficiency:</span> 94.2% (↑3.1%)</p>
+                            <p><span className="font-medium">Delivery Success:</span> 97.8% on-time</p>
+                            <p><span className="font-medium">Energy Optimization:</span> 12% below target</p>
+                          </div>
+                          
+                          <div className="flex gap-2 flex-wrap">
+                            <Button size="sm" variant="outline" onClick={() => {setSelectedTab('analytics'); setSelectedQuickGlanceTile(null);}}>
+                              Performance Analytics
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => {setSelectedTab('fleet'); setSelectedQuickGlanceTile(null);}}>
+                              Vehicle Performance
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => {setSelectedTab('analytics'); setSelectedQuickGlanceTile(null);}}>
+                              Efficiency Reports
+                            </Button>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -403,16 +495,47 @@ const Index = () => {
                       />
                       {selectedQuickGlanceTile === 'maintenance' && (
                         <div className="absolute top-full left-0 right-0 mt-2 p-4 bg-card border border-border rounded-lg shadow-lg z-10 animate-fade-in">
-                          <h4 className="font-semibold mb-2">Maintenance Schedule</h4>
-                          <div className="space-y-2 text-sm">
-                            <p><span className="font-medium">Due Today:</span> 2 vehicles need service</p>
-                            <p><span className="font-medium">This Week:</span> 8 scheduled services</p>
-                            <p><span className="font-medium">Overdue:</span> 0 vehicles (excellent!)</p>
-                            <p><span className="font-medium">Next Service:</span> Battery check in 3 days</p>
+                          <h4 className="font-semibold mb-3">Maintenance Schedule</h4>
+                          
+                          {/* Maintenance Priority Chart */}
+                          <div className="h-32 mb-4">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <BarChart
+                                data={[
+                                  { type: 'Battery', today: 2, week: 3, urgent: 0 },
+                                  { type: 'Brake', today: 0, week: 2, urgent: 1 },
+                                  { type: 'Tire', today: 0, week: 2, urgent: 0 },
+                                  { type: 'Software', today: 0, week: 1, urgent: 0 }
+                                ]}
+                              >
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="type" />
+                                <YAxis />
+                                <Tooltip />
+                                <Bar dataKey="today" fill="hsl(var(--destructive))" />
+                                <Bar dataKey="week" fill="hsl(var(--warning))" />
+                                <Bar dataKey="urgent" fill="hsl(var(--primary))" />
+                              </BarChart>
+                            </ResponsiveContainer>
                           </div>
-                          <Button size="sm" className="mt-3 w-full" onClick={() => {setSelectedTab('maintenance'); setSelectedQuickGlanceTile(null);}}>
-                            Go to Maintenance Tab
-                          </Button>
+                          
+                          <div className="space-y-2 text-sm mb-4">
+                            <p><span className="font-medium">Due Today:</span> 2 battery checks</p>
+                            <p><span className="font-medium">This Week:</span> 8 total services</p>
+                            <p><span className="font-medium">Urgent:</span> 1 brake inspection</p>
+                          </div>
+                          
+                          <div className="flex gap-2 flex-wrap">
+                            <Button size="sm" variant="outline" onClick={() => {setSelectedTab('maintenance'); setSelectedQuickGlanceTile(null);}}>
+                              Maintenance Schedule
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => {setSelectedTab('fleet'); setSelectedQuickGlanceTile(null);}}>
+                              Vehicle Status
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => {setSelectedTab('maintenance'); setSelectedQuickGlanceTile(null);}}>
+                              Schedule Service
+                            </Button>
+                          </div>
                         </div>
                       )}
                     </div>
