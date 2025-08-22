@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { MapPin, Battery, Zap, Truck, Calendar, TrendingUp, Activity, Settings, ChevronRight, ChevronLeft, AlertTriangle, CheckCircle2, Wrench, Bot, Eye } from "lucide-react";
+import { MapPin, Battery, Zap, Truck, Calendar, TrendingUp, Activity, Settings, ChevronRight, ChevronLeft, AlertTriangle, CheckCircle2, Wrench, Bot, Eye, Radio, Car } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, AreaChart, Area } from 'recharts';
 import FleetMap from "@/components/FleetMap";
 import MapboxMap from "@/components/MapboxMap";
@@ -260,7 +260,7 @@ const Index = () => {
                   <CardHeader className="pb-2">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                       <CardTitle className="flex items-center">
-                        <MapPin className="h-5 w-5 mr-2 text-primary" />
+                        <Radio className="h-5 w-5 mr-2 text-primary" />
                         Live Fleet Tracking
                       </CardTitle>
                       <div className="w-full sm:w-auto">
@@ -560,7 +560,7 @@ const Index = () => {
                     <CardHeader>
                       <CardTitle className="flex items-center justify-between">
                         <span className="flex items-center">
-                          <Battery className="h-5 w-5 mr-2 text-accent" />
+                          <Car className="h-5 w-5 mr-2 text-accent" />
                           Active Vehicles
                         </span>
                         <Button variant="ghost" size="sm" onClick={() => setOverviewView('vehicles')}>
@@ -630,7 +630,7 @@ const Index = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     <span className="flex items-center">
-                      <Battery className="h-5 w-5 mr-2 text-accent" />
+                      <Car className="h-5 w-5 mr-2 text-accent" />
                       All Active Vehicles
                     </span>
                     <Button variant="ghost" size="sm" onClick={() => setOverviewView('main')}>
