@@ -189,12 +189,12 @@ const Index = () => {
         <div className="container mx-auto px-4 sm:py-6 py-[18px]">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-              <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center flex-shrink-0">
-                <img src="/lovable-uploads/0802aeb6-e42e-4389-8e93-c10d17cf963e.png" alt="Fleet Command Logo" className="h-14 w-14 sm:h-18 sm:w-18" />
+              <div className="w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center flex-shrink-0">
+                <img src="/lovable-uploads/0802aeb6-e42e-4389-8e93-c10d17cf963e.png" alt="Fleet Command Logo" className="h-18 w-18 sm:h-24 sm:w-24" />
               </div>
               <div className="min-w-0">
-                <h1 className="text-lg sm:text-2xl font-bold text-foreground truncate text-center">OTTOYARD</h1>
-                <p className="text-xs sm:text-sm text-muted-foreground truncate text-center">Fleet Command</p>
+                <h1 className="text-xl sm:text-3xl font-bold text-foreground truncate text-center">OTTOYARD</h1>
+                <p className="text-sm sm:text-base text-muted-foreground truncate text-center">Fleet Command</p>
               </div>
             </div>
             <div className="flex flex-col items-end space-y-2 flex-shrink-0">
