@@ -396,7 +396,7 @@ const Index = () => {
                                 ]}
                               >
                                 <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="time" />
+                                <XAxis dataKey="time" tick={{ fill: 'hsl(var(--primary))' }} />
                                 <YAxis />
                                 <Tooltip />
                                 <Area type="monotone" dataKey="consumed" stackId="1" stroke="hsl(var(--destructive))" fill="hsl(var(--destructive))" fillOpacity={0.3} />
@@ -452,7 +452,7 @@ const Index = () => {
                                 ]}
                               >
                                 <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="day" />
+                                <XAxis dataKey="day" tick={{ fill: 'hsl(var(--primary))' }} />
                                 <YAxis domain={[90, 100]} />
                                 <Tooltip />
                                 <Line type="monotone" dataKey="efficiency" stroke="hsl(var(--primary))" strokeWidth={2} />
@@ -509,7 +509,7 @@ const Index = () => {
                                 ]}
                               >
                                 <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="type" />
+                                <XAxis dataKey="type" tick={{ fill: 'hsl(var(--primary))' }} />
                                 <YAxis />
                                 <Tooltip />
                                 <Bar dataKey="today" fill="hsl(var(--destructive))" />
