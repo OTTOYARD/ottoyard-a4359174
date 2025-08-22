@@ -27,15 +27,15 @@ const MetricsCard = ({
   
   return (
     <Card 
-      className={`shadow-fleet-sm hover:shadow-fleet-md transition-all duration-300 ease-out hover-scale ${
+      className={`h-32 shadow-fleet-sm hover:shadow-fleet-md transition-all duration-300 ease-out hover-scale ${
         onClick ? 'cursor-pointer hover:ring-2 hover:ring-primary/30 hover:bg-gradient-to-br hover:from-card hover:to-primary/5 active:scale-95 hover:shadow-glow active:shadow-fleet-lg' : ''
       }`}
       onClick={onClick}
     >
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div className="space-y-2 flex-1">
-            <p className="text-sm font-medium text-muted-foreground">{title}</p>
+      <CardContent className="p-6 h-full flex flex-col justify-between">
+        <div className="flex items-start justify-between h-full">
+          <div className="space-y-1 flex-1">
+            <h3 className="text-base font-bold text-foreground leading-tight">{title}</h3>
             <div className="flex items-baseline space-x-2">
               <p className="text-2xl font-bold text-foreground">{value}</p>
               <div className={`flex items-center text-sm font-medium ${trendColor}`}>
