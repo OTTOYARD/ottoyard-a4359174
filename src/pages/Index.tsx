@@ -125,6 +125,7 @@ const Index = () => {
   const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null);
   const [selectedDepot, setSelectedDepot] = useState<string | null>(null);
   const [overviewView, setOverviewView] = useState<'main' | 'vehicles' | 'energy' | 'grid' | 'efficiency'>('main');
+  const [selectedQuickGlanceTile, setSelectedQuickGlanceTile] = useState<string | null>(null);
   const [chartPeriod, setChartPeriod] = useState<'week' | 'month' | 'year'>('week');
   const [currentCity, setCurrentCity] = useState<City>({
     name: "San Francisco",
@@ -312,10 +313,109 @@ const Index = () => {
                 <div className="space-y-4">
                   <h2 className="text-xl font-semibold text-foreground">Quick Glance</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <MetricsCard title="Active Vehicles" value="12" change="+2" trend="up" icon={Truck} onClick={() => setOverviewView('vehicles')} />
-                    <MetricsCard title="Energy & Grid" value="4.2 MWh" change="+15%" trend="up" icon={Zap} secondaryValue="2.1 MWh returned" secondaryLabel="Grid Return" onClick={() => setOverviewView('energy')} />
-                    <MetricsCard title="Fleet Efficiency" value="94.2%" change="+3.1%" trend="up" icon={Activity} onClick={() => setOverviewView('efficiency')} />
-                    <MetricsCard title="Scheduled Services" value="8" change="+3" trend="up" icon={Wrench} secondaryValue="2 today" secondaryLabel="Due Today" onClick={() => setSelectedTab('maintenance')} />
+                    <div className="relative">
+                      <MetricsCard 
+                        title="Active Vehicles" 
+                        value="12" 
+                        change="+2" 
+                        trend="up" 
+                        icon={Truck} 
+                        onClick={() => setSelectedQuickGlanceTile(selectedQuickGlanceTile === 'vehicles' ? null : 'vehicles')} 
+                      />
+                      {selectedQuickGlanceTile === 'vehicles' && (
+                        <div className="absolute top-full left-0 right-0 mt-2 p-4 bg-card border border-border rounded-lg shadow-lg z-10 animate-fade-in">
+                          <h4 className="font-semibold mb-2">Fleet Status Overview</h4>
+                          <div className="space-y-2 text-sm">
+                            <p><span className="font-medium">Active:</span> 12 vehicles currently operational</p>
+                            <p><span className="font-medium">Charging:</span> 3 vehicles at depots</p>
+                            <p><span className="font-medium">En Route:</span> 8 vehicles on deliveries</p>
+                            <p><span className="font-medium">Maintenance:</span> 1 vehicle scheduled</p>
+                          </div>
+                          <Button size="sm" className="mt-3 w-full" onClick={() => {setSelectedTab('fleet'); setSelectedQuickGlanceTile(null);}}>
+                            Go to Fleet Tab
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="relative">
+                      <MetricsCard 
+                        title="Energy & Grid" 
+                        value="4.2 MWh" 
+                        change="+15%" 
+                        trend="up" 
+                        icon={Zap} 
+                        secondaryValue="2.1 MWh returned" 
+                        secondaryLabel="Grid Return" 
+                        onClick={() => setSelectedQuickGlanceTile(selectedQuickGlanceTile === 'energy' ? null : 'energy')} 
+                      />
+                      {selectedQuickGlanceTile === 'energy' && (
+                        <div className="absolute top-full left-0 right-0 mt-2 p-4 bg-card border border-border rounded-lg shadow-lg z-10 animate-fade-in">
+                          <h4 className="font-semibold mb-2">Energy Management</h4>
+                          <div className="space-y-2 text-sm">
+                            <p><span className="font-medium">Total Consumed:</span> 4.2 MWh today</p>
+                            <p><span className="font-medium">Grid Return:</span> 2.1 MWh earned back</p>
+                            <p><span className="font-medium">Net Usage:</span> 2.1 MWh consumed</p>
+                            <p><span className="font-medium">Efficiency:</span> 50% energy returned</p>
+                          </div>
+                          <Button size="sm" className="mt-3 w-full" onClick={() => {setSelectedTab('analytics'); setSelectedQuickGlanceTile(null);}}>
+                            Go to Analytics Tab
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="relative">
+                      <MetricsCard 
+                        title="Fleet Efficiency" 
+                        value="94.2%" 
+                        change="+3.1%" 
+                        trend="up" 
+                        icon={Activity} 
+                        onClick={() => setSelectedQuickGlanceTile(selectedQuickGlanceTile === 'efficiency' ? null : 'efficiency')} 
+                      />
+                      {selectedQuickGlanceTile === 'efficiency' && (
+                        <div className="absolute top-full left-0 right-0 mt-2 p-4 bg-card border border-border rounded-lg shadow-lg z-10 animate-fade-in">
+                          <h4 className="font-semibold mb-2">Performance Metrics</h4>
+                          <div className="space-y-2 text-sm">
+                            <p><span className="font-medium">Overall Efficiency:</span> 94.2% fleet performance</p>
+                            <p><span className="font-medium">On-Time Delivery:</span> 97.8% success rate</p>
+                            <p><span className="font-medium">Energy Usage:</span> 12% below target</p>
+                            <p><span className="font-medium">Uptime:</span> 99.1% operational time</p>
+                          </div>
+                          <Button size="sm" className="mt-3 w-full" onClick={() => {setSelectedTab('analytics'); setSelectedQuickGlanceTile(null);}}>
+                            Go to Analytics Tab
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="relative">
+                      <MetricsCard 
+                        title="Scheduled Services" 
+                        value="8" 
+                        change="+3" 
+                        trend="up" 
+                        icon={Wrench} 
+                        secondaryValue="2 today" 
+                        secondaryLabel="Due Today" 
+                        onClick={() => setSelectedQuickGlanceTile(selectedQuickGlanceTile === 'maintenance' ? null : 'maintenance')} 
+                      />
+                      {selectedQuickGlanceTile === 'maintenance' && (
+                        <div className="absolute top-full left-0 right-0 mt-2 p-4 bg-card border border-border rounded-lg shadow-lg z-10 animate-fade-in">
+                          <h4 className="font-semibold mb-2">Maintenance Schedule</h4>
+                          <div className="space-y-2 text-sm">
+                            <p><span className="font-medium">Due Today:</span> 2 vehicles need service</p>
+                            <p><span className="font-medium">This Week:</span> 8 scheduled services</p>
+                            <p><span className="font-medium">Overdue:</span> 0 vehicles (excellent!)</p>
+                            <p><span className="font-medium">Next Service:</span> Battery check in 3 days</p>
+                          </div>
+                          <Button size="sm" className="mt-3 w-full" onClick={() => {setSelectedTab('maintenance'); setSelectedQuickGlanceTile(null);}}>
+                            Go to Maintenance Tab
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
