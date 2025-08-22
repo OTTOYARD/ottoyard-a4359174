@@ -85,13 +85,13 @@ export const AIAgentPopup = ({ open, onOpenChange }: AIAgentPopupProps) => {
     
     // Enhanced command recognition with multiple patterns
     const patterns = {
-      maintenance: /\b(schedule|book|arrange|plan|set up|maintenance|service|repair|fix|check)\b.*\b(maintenance|service|repair|fix|inspection)\b/i,
+      maintenance: /\b(schedule|book|arrange|plan|set up|maintenance|service|repair|fix|check)\b.*\b(maintenance|service|repair|fix|inspection|battery|brake|oil|tire)\b/i,
       stall: /\b(reserve|book|get|need|want|find)\b.*\b(stall|spot|space|bay|dock)\b/i,
       analysis: /\b(analyze|analysis|show|report|data|performance|metrics|stats|statistics|dashboard|insights)\b/i,
       status: /\b(status|state|condition|how|what|check|show|tell)\b.*\b(vehicle|fleet|bus|truck|van)\b/i,
       energy: /\b(energy|power|battery|charge|charging|electric|efficiency|grid|kwh|mwh|optimization|optimize)\b/i,
       location: /\b(where|location|find|track|gps|position|route|map)\b/i,
-      emergency: /\b(emergency|urgent|critical|help|problem|issue|breakdown|alert|warning)\b/i,
+      emergency: /\b(emergency|urgent|critical|help|problem|issue|breakdown|alert|warning|asap|immediately|now)\b/i,
       cost: /\b(cost|price|budget|expense|money|financial|savings|profit)\b/i,
       schedule: /\b(schedule|calendar|time|when|appointment|booking)\b/i,
       weather: /\b(weather|rain|snow|temperature|conditions|forecast)\b/i,
@@ -101,6 +101,126 @@ export const AIAgentPopup = ({ open, onOpenChange }: AIAgentPopupProps) => {
       inventory: /\b(inventory|parts|supplies|stock|equipment|tools)\b/i,
       report: /\b(report|summary|overview|brief|update|status)\b/i
     };
+
+    // Extract command components for complex parsing
+    const extractCommandData = (msg: string) => {
+      const data: any = {};
+      
+      // Extract locations (cities, states, regions)
+      const locationMatches = msg.match(/\b(in|at|near|around)\s+([A-Za-z\s,]+?)(?:\s+(for|to|with)|$)/gi);
+      if (locationMatches) {
+        data.locations = locationMatches.map(match => 
+          match.replace(/\b(in|at|near|around)\s+/i, '').replace(/\s+(for|to|with).*$/i, '').trim()
+        );
+      }
+
+      // Extract vehicle quantities and types
+      const vehicleMatches = msg.match(/\b(all|every|\d+)\s+(vehicle|bus|truck|van|car|fleet)/gi);
+      if (vehicleMatches) {
+        data.vehicles = vehicleMatches[0];
+      }
+
+      // Extract service types
+      const serviceMatches = msg.match(/\b(battery|brake|oil|tire|engine|transmission|inspection|maintenance|service|repair)\s+(check|service|repair|replacement|inspection)/gi);
+      if (serviceMatches) {
+        data.services = serviceMatches;
+      }
+
+      // Extract urgency indicators
+      const urgencyMatches = msg.match(/\b(asap|immediately|urgent|emergency|critical|now|today|tomorrow|this week|next week)/gi);
+      if (urgencyMatches) {
+        data.urgency = urgencyMatches[0];
+      }
+
+      // Extract depot/location preferences
+      const depotMatches = msg.match(/\b(depot|facility|location|yard|station|respective|nearest|closest)/gi);
+      if (depotMatches) {
+        data.depots = depotMatches;
+      }
+
+      return data;
+    };
+
+    const commandData = extractCommandData(message);
+
+    // Handle complex multi-part commands with extracted data
+    if (commandData.locations || commandData.vehicles || commandData.services || commandData.urgency) {
+      let response = "🎯 Processing your fleet management request:\n\n";
+      
+      // Handle specific complex commands
+      if (commandData.locations && commandData.vehicles && commandData.services) {
+        const location = commandData.locations[0] || "specified area";
+        const vehicleCount = commandData.vehicles.includes("all") ? "all vehicles" : commandData.vehicles;
+        const service = commandData.services[0] || "requested service";
+        const urgency = commandData.urgency ? ` (${commandData.urgency.toUpperCase()})` : "";
+        
+        response += `📋 **Task**: Schedule ${vehicleCount} in ${location} for ${service}${urgency}\n\n`;
+        response += `🔍 **Fleet Analysis for ${location}**:\n`;
+        response += `• Found 12 vehicles currently in ${location} area\n`;
+        response += `• 8 vehicles available for immediate scheduling\n`;
+        response += `• 4 vehicles completing current routes (available in 2-3 hours)\n\n`;
+        
+        response += `🏢 **Available Depots in ${location}**:\n`;
+        response += `• OTTOYARD Central ${location}: 6 service bays available\n`;
+        response += `• OTTOYARD East ${location}: 4 service bays available\n`;
+        response += `• Mobile service units: 2 available for on-site service\n\n`;
+        
+        if (service.toLowerCase().includes("battery")) {
+          response += `🔋 **Battery Check Service Details**:\n`;
+          response += `• Duration: 45-60 minutes per vehicle\n`;
+          response += `• Equipment: Battery diagnostic tools ready\n`;
+          response += `• Technicians: 3 certified battery specialists available\n\n`;
+        }
+        
+        if (commandData.urgency) {
+          response += `⚡ **PRIORITY SCHEDULING** (${commandData.urgency}):\n`;
+          response += `• Immediate slots: 4 vehicles can start within 30 minutes\n`;
+          response += `• Remaining 8 vehicles: Scheduled for next 2-4 hours\n`;
+          response += `• Emergency protocols activated for fastest turnaround\n\n`;
+        }
+        
+        response += `📅 **Proposed Schedule**:\n`;
+        response += `• Wave 1 (Now-1:30 PM): Vehicles V001, V003, V007, V012\n`;
+        response += `• Wave 2 (2:00-3:30 PM): Vehicles V015, V018, V021, V024\n`;
+        response += `• Wave 3 (4:00-5:30 PM): Remaining 4 vehicles\n\n`;
+        response += `🚦 **Action Required**: Should I proceed with this scheduling plan?`;
+        
+        return response;
+      }
+      
+      // Handle location-specific queries
+      if (commandData.locations && !commandData.services) {
+        const location = commandData.locations[0];
+        response += `📍 **Fleet Status in ${location}**:\n`;
+        response += `• Active vehicles: 12 (routes 101-108, 201-204)\n`;
+        response += `• Available vehicles: 8 (ready for deployment)\n`;
+        response += `• Charging: 3 vehicles (90% charge, ready in 30 mins)\n`;
+        response += `• Maintenance: 2 vehicles (completion in 1-2 hours)\n\n`;
+        response += `🏢 **${location} Depot Status**:\n`;
+        response += `• OTTOYARD Central: 6/10 stalls occupied\n`;
+        response += `• OTTOYARD East: 3/8 stalls occupied\n`;
+        response += `• Fuel stations: All operational\n`;
+        response += `• Maintenance bays: 4 available\n\n`;
+        response += `What specific action would you like me to take with the ${location} fleet?`;
+        return response;
+      }
+      
+      // Handle vehicle-specific commands
+      if (commandData.vehicles && commandData.services) {
+        const vehicleCount = commandData.vehicles;
+        const service = commandData.services[0];
+        response += `🚐 **${vehicleCount.toUpperCase()} Service Request**: ${service}\n\n`;
+        response += `📊 **Service Capacity Analysis**:\n`;
+        response += `• Simultaneous service slots: 8 vehicles max\n`;
+        response += `• Estimated completion time: 3-4 hours for full fleet\n`;
+        response += `• Required technicians: 4 (2 per service bay)\n`;
+        response += `• Parts availability: ✅ All components in stock\n\n`;
+        response += `🗓️ **Optimal scheduling window**: Today 2:00 PM - 6:00 PM\n`;
+        response += `📋 **Pre-scheduling checklist**: All vehicles will be recalled from routes\n\n`;
+        response += `Proceed with fleet-wide ${service}?`;
+        return response;
+      }
+    }
 
     // Check for greetings
     if (/\b(hi|hello|hey|good morning|good afternoon|good evening)\b/i.test(message)) {
