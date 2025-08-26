@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { 
   Bot, 
   Send, 
@@ -11,7 +13,8 @@ import {
   MapPin,
   BarChart3,
   Wrench,
-  Zap
+  Zap,
+  Loader2
 } from "lucide-react";
 
 interface AIAgentPopupProps {
@@ -31,11 +34,12 @@ export const AIAgentPopup = ({ open, onOpenChange }: AIAgentPopupProps) => {
     {
       id: '1',
       role: 'assistant',
-      content: 'Hello! I\'m OttoCommand AI, your fleet management assistant. I can help you with scheduling, reservations, data analysis, and fleet management tasks. What would you like me to help you with?',
+      content: 'Hello! I\'m OttoCommand AI, your advanced GPT-5 powered fleet management assistant. I can help you with scheduling, reservations, data analysis, predictive maintenance, voice commands, and comprehensive fleet management. What would you like me to help you with today?',
       timestamp: new Date()
     }
   ]);
   const [inputMessage, setInputMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -51,8 +55,8 @@ export const AIAgentPopup = ({ open, onOpenChange }: AIAgentPopupProps) => {
     { icon: Zap, label: "Energy Optimization", action: "optimize energy usage" }
   ];
 
-  const handleSendMessage = () => {
-    if (!inputMessage.trim()) return;
+  const handleSendMessage = async () => {
+    if (!inputMessage.trim() || isLoading) return;
 
     const text = inputMessage;
     const userMessage: Message = {
@@ -67,258 +71,44 @@ export const AIAgentPopup = ({ open, onOpenChange }: AIAgentPopupProps) => {
     if (inputRef.current) {
       inputRef.current.style.height = 'auto';
     }
+    setIsLoading(true);
 
-    // Simulate AI response
-    setTimeout(() => {
+    try {
+      // Call GPT-5 through our edge function
+      const { data, error } = await supabase.functions.invoke('ottocommand-ai-chat', {
+        body: {
+          message: text,
+          conversationHistory: messages.slice(-10) // Send last 10 messages for context
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: getAIResponse(text),
+        content: data.response || 'I apologize, but I encountered an issue processing your request. Please try again.',
         timestamp: new Date()
       };
       setMessages(prev => [...prev, assistantMessage]);
-    }, 1000);
-  };
 
-  const getAIResponse = (message: string): string => {
-    const lowerMessage = message.toLowerCase();
-    
-    // Enhanced command recognition with multiple patterns
-    const patterns = {
-      maintenance: /\b(schedule|book|arrange|plan|set up|maintenance|service|repair|fix|check)\b.*\b(maintenance|service|repair|fix|inspection|battery|brake|oil|tire)\b/i,
-      stall: /\b(reserve|book|get|need|want|find)\b.*\b(stall|spot|space|bay|dock)\b/i,
-      analysis: /\b(analyze|analysis|show|report|data|performance|metrics|stats|statistics|dashboard|insights)\b/i,
-      status: /\b(status|state|condition|how|what|check|show|tell)\b.*\b(vehicle|fleet|bus|truck|van)\b/i,
-      energy: /\b(energy|power|battery|charge|charging|electric|efficiency|grid|kwh|mwh|optimization|optimize)\b/i,
-      location: /\b(where|location|find|track|gps|position|route|map)\b/i,
-      emergency: /\b(emergency|urgent|critical|help|problem|issue|breakdown|alert|warning|asap|immediately|now)\b/i,
-      cost: /\b(cost|price|budget|expense|money|financial|savings|profit)\b/i,
-      schedule: /\b(schedule|calendar|time|when|appointment|booking)\b/i,
-      weather: /\b(weather|rain|snow|temperature|conditions|forecast)\b/i,
-      driver: /\b(driver|operator|staff|personnel|team|worker)\b/i,
-      route: /\b(route|path|direction|navigation|journey|trip|destination)\b/i,
-      fuel: /\b(fuel|gas|diesel|refuel|consumption|mpg|efficiency)\b/i,
-      inventory: /\b(inventory|parts|supplies|stock|equipment|tools)\b/i,
-      report: /\b(report|summary|overview|brief|update|status)\b/i
-    };
-
-    // Extract command components for complex parsing
-    const extractCommandData = (msg: string) => {
-      const data: any = {};
+    } catch (error) {
+      console.error('Error calling OttoCommand AI:', error);
+      toast.error('Failed to get AI response. Please try again.');
       
-      // Extract locations (cities, states, regions)
-      const locationMatches = msg.match(/\b(in|at|near|around)\s+([A-Za-z\s,]+?)(?:\s+(for|to|with)|$)/gi);
-      if (locationMatches) {
-        data.locations = locationMatches.map(match => 
-          match.replace(/\b(in|at|near|around)\s+/i, '').replace(/\s+(for|to|with).*$/i, '').trim()
-        );
-      }
-
-      // Extract vehicle quantities and types
-      const vehicleMatches = msg.match(/\b(all|every|\d+)\s+(vehicle|bus|truck|van|car|fleet)/gi);
-      if (vehicleMatches) {
-        data.vehicles = vehicleMatches[0];
-      }
-
-      // Extract service types
-      const serviceMatches = msg.match(/\b(battery|brake|oil|tire|engine|transmission|inspection|maintenance|service|repair)\s+(check|service|repair|replacement|inspection)/gi);
-      if (serviceMatches) {
-        data.services = serviceMatches;
-      }
-
-      // Extract urgency indicators
-      const urgencyMatches = msg.match(/\b(asap|immediately|urgent|emergency|critical|now|today|tomorrow|this week|next week)/gi);
-      if (urgencyMatches) {
-        data.urgency = urgencyMatches[0];
-      }
-
-      // Extract depot/location preferences
-      const depotMatches = msg.match(/\b(depot|facility|location|yard|station|respective|nearest|closest)/gi);
-      if (depotMatches) {
-        data.depots = depotMatches;
-      }
-
-      return data;
-    };
-
-    const commandData = extractCommandData(message);
-
-    // Handle complex multi-part commands with extracted data
-    if (commandData.locations || commandData.vehicles || commandData.services || commandData.urgency) {
-      let response = "🎯 Processing your fleet management request:\n\n";
-      
-      // Handle specific complex commands
-      if (commandData.locations && commandData.vehicles && commandData.services) {
-        const location = commandData.locations[0] || "specified area";
-        const vehicleCount = commandData.vehicles.includes("all") ? "all vehicles" : commandData.vehicles;
-        const service = commandData.services[0] || "requested service";
-        const urgency = commandData.urgency ? ` (${commandData.urgency.toUpperCase()})` : "";
-        
-        response += `📋 **Task**: Schedule ${vehicleCount} in ${location} for ${service}${urgency}\n\n`;
-        response += `🔍 **Fleet Analysis for ${location}**:\n`;
-        response += `• Found 12 vehicles currently in ${location} area\n`;
-        response += `• 8 vehicles available for immediate scheduling\n`;
-        response += `• 4 vehicles completing current routes (available in 2-3 hours)\n\n`;
-        
-        response += `🏢 **Available Depots in ${location}**:\n`;
-        response += `• OTTOYARD Central ${location}: 6 service bays available\n`;
-        response += `• OTTOYARD East ${location}: 4 service bays available\n`;
-        response += `• Mobile service units: 2 available for on-site service\n\n`;
-        
-        if (service.toLowerCase().includes("battery")) {
-          response += `🔋 **Battery Check Service Details**:\n`;
-          response += `• Duration: 45-60 minutes per vehicle\n`;
-          response += `• Equipment: Battery diagnostic tools ready\n`;
-          response += `• Technicians: 3 certified battery specialists available\n\n`;
-        }
-        
-        if (commandData.urgency) {
-          response += `⚡ **PRIORITY SCHEDULING** (${commandData.urgency}):\n`;
-          response += `• Immediate slots: 4 vehicles can start within 30 minutes\n`;
-          response += `• Remaining 8 vehicles: Scheduled for next 2-4 hours\n`;
-          response += `• Emergency protocols activated for fastest turnaround\n\n`;
-        }
-        
-        response += `📅 **Proposed Schedule**:\n`;
-        response += `• Wave 1 (Now-1:30 PM): Vehicles V001, V003, V007, V012\n`;
-        response += `• Wave 2 (2:00-3:30 PM): Vehicles V015, V018, V021, V024\n`;
-        response += `• Wave 3 (4:00-5:30 PM): Remaining 4 vehicles\n\n`;
-        response += `🚦 **Action Required**: Should I proceed with this scheduling plan?`;
-        
-        return response;
-      }
-      
-      // Handle location-specific queries
-      if (commandData.locations && !commandData.services) {
-        const location = commandData.locations[0];
-        response += `📍 **Fleet Status in ${location}**:\n`;
-        response += `• Active vehicles: 12 (routes 101-108, 201-204)\n`;
-        response += `• Available vehicles: 8 (ready for deployment)\n`;
-        response += `• Charging: 3 vehicles (90% charge, ready in 30 mins)\n`;
-        response += `• Maintenance: 2 vehicles (completion in 1-2 hours)\n\n`;
-        response += `🏢 **${location} Depot Status**:\n`;
-        response += `• OTTOYARD Central: 6/10 stalls occupied\n`;
-        response += `• OTTOYARD East: 3/8 stalls occupied\n`;
-        response += `• Fuel stations: All operational\n`;
-        response += `• Maintenance bays: 4 available\n\n`;
-        response += `What specific action would you like me to take with the ${location} fleet?`;
-        return response;
-      }
-      
-      // Handle vehicle-specific commands
-      if (commandData.vehicles && commandData.services) {
-        const vehicleCount = commandData.vehicles;
-        const service = commandData.services[0];
-        response += `🚐 **${vehicleCount.toUpperCase()} Service Request**: ${service}\n\n`;
-        response += `📊 **Service Capacity Analysis**:\n`;
-        response += `• Simultaneous service slots: 8 vehicles max\n`;
-        response += `• Estimated completion time: 3-4 hours for full fleet\n`;
-        response += `• Required technicians: 4 (2 per service bay)\n`;
-        response += `• Parts availability: ✅ All components in stock\n\n`;
-        response += `🗓️ **Optimal scheduling window**: Today 2:00 PM - 6:00 PM\n`;
-        response += `📋 **Pre-scheduling checklist**: All vehicles will be recalled from routes\n\n`;
-        response += `Proceed with fleet-wide ${service}?`;
-        return response;
-      }
+      // Fallback response
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: 'I apologize, but I\'m experiencing technical difficulties. Please try again in a moment, or contact support if the issue persists.',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
     }
-
-    // Check for greetings
-    if (/\b(hi|hello|hey|good morning|good afternoon|good evening)\b/i.test(message)) {
-      return "Hello! I'm OttoCommand AI, ready to assist with your fleet operations. I can help with scheduling, vehicle status, energy optimization, route planning, and much more. What can I do for you today?";
-    }
-
-    // Check for goodbyes
-    if (/\b(bye|goodbye|see you|thanks|thank you|that's all)\b/i.test(message)) {
-      return "You're welcome! I'm here whenever you need assistance with your fleet operations. Have a great day managing your vehicles!";
-    }
-
-    // Emergency handling
-    if (patterns.emergency.test(message)) {
-      return "🚨 I detect this may be urgent. For immediate emergencies, contact dispatch at ext. 911. I can help coordinate: 1) Nearest available vehicles for backup, 2) Emergency maintenance crews, 3) Route diversions. What specific assistance do you need right now?";
-    }
-
-    // Weather queries
-    if (patterns.weather.test(message)) {
-      return "Current weather conditions may affect operations. I recommend: 1) Pre-heating vehicles in cold weather, 2) Adjusting routes for precipitation, 3) Monitoring battery performance in extreme temperatures. Would you like me to check which vehicles might be affected?";
-    }
-
-    // Driver/staff queries
-    if (patterns.driver.test(message)) {
-      return "For driver management: I can track driver schedules, certifications, and vehicle assignments. Currently showing 18 drivers on duty, 4 on break, 3 completing training. Do you need help with driver scheduling or assignments?";
-    }
-
-    // Route optimization
-    if (patterns.route.test(message)) {
-      return "Route optimization analysis: Current average route efficiency is 87%. I can suggest optimizations for fuel savings, time reduction, or avoiding traffic. Which vehicles or routes would you like me to analyze?";
-    }
-
-    // Maintenance scheduling (enhanced)
-    if (patterns.maintenance.test(message)) {
-      const vehicleMatch = message.match(/\b(vehicle|bus|truck|van)\s*(\d+|[A-Z]\d+)\b/i);
-      if (vehicleMatch) {
-        return `Scheduling maintenance for ${vehicleMatch[0]}. I found available slots at OTTOYARD Central (9 stalls) and Airport (9 stalls). Recommended service: Oil change + brake inspection (2.5 hrs). Preferred time window?`;
-      }
-      return "Maintenance scheduling options: 1) Preventive maintenance (15 vehicles due), 2) Emergency repairs (3 vehicles), 3) Inspection renewals (7 vehicles). OTTOYARD Central has immediate availability. Which vehicle needs service?";
-    }
-
-    // Stall reservations (enhanced)
-    if (patterns.stall.test(message)) {
-      return "Stall availability across depots:\n• OTTOYARD Central: 9 available (closest to maintenance)\n• OTTOYARD Airport: 9 available (largest capacity)\n• OTTOYARD East: 4 available\n• OTTOYARD North: 6 available\nBest match for your needs? I can reserve immediately.";
-    }
-
-    // Advanced data analysis
-    if (patterns.analysis.test(message)) {
-      return "📊 Fleet Performance Analytics:\n• 45 vehicles, 94.2% efficiency (+3.1% vs last month)\n• Energy: 4.2 MWh generated, 2.1 MWh returned to grid\n• Cost savings: $1,247 this week\n• Predictive maintenance alerts: 3 vehicles\n• Route optimization potential: 12% fuel savings\nWhich area needs deeper analysis?";
-    }
-
-    // Enhanced status checks
-    if (patterns.status.test(message)) {
-      return "🚐 Real-time Fleet Status:\n• Active: 12 vehicles (routes 101-108, 201-204)\n• Charging: 8 vehicles (completion in 45-90 mins)\n• Maintenance: 3 vehicles (ETA 2-4 hours)\n• Idle: 22 vehicles (available for dispatch)\n• Efficiency trend: ↗️ +3.1%\nNeed details on any specific vehicle?";
-    }
-
-    // Advanced energy management
-    if (patterns.energy.test(message)) {
-      return "⚡ Energy Optimization Insights:\n• Current load balancing: 78% efficient\n• Off-peak charging opportunities: 6 vehicles\n• Grid return potential: Increase from 50% to 65%\n• Battery health: 94% fleet average\n• Suggested actions: Move 2 idle vehicles to charging, schedule 3 maintenance items\nImplement these optimizations?";
-    }
-
-    // Location and tracking
-    if (patterns.location.test(message)) {
-      return "📍 Vehicle Tracking: All 45 vehicles GPS-enabled and reporting. Real-time locations available on fleet map. I can help find specific vehicles, optimize routes, or track delivery progress. Which vehicle or area do you need to locate?";
-    }
-
-    // Cost and financial analysis
-    if (patterns.cost.test(message)) {
-      return "💰 Financial Analysis:\n• This week: $1,247 in energy savings\n• Maintenance costs: 15% below budget\n• Fuel efficiency: +8% improvement\n• ROI on electric fleet: 127% annually\n• Predictive savings: $3,200 next quarter\nNeed detailed cost breakdown for any category?";
-    }
-
-    // Inventory management
-    if (patterns.inventory.test(message)) {
-      return "📦 Inventory Status: Parts inventory at 89% optimal levels. Low stock alerts: brake pads (3 sets), oil filters (12 units). Next delivery scheduled Tuesday. Emergency parts available at Central depot. Need help ordering specific items?";
-    }
-
-    // Report generation
-    if (patterns.report.test(message)) {
-      return "📋 Available Reports:\n• Daily Operations Summary\n• Maintenance Schedule & History\n• Energy Usage & Savings\n• Driver Performance Metrics\n• Route Efficiency Analysis\n• Cost & Budget Tracking\nWhich report would you like me to generate?";
-    }
-
-    // Scheduling general
-    if (patterns.schedule.test(message)) {
-      return "📅 Scheduling Assistant: I can help schedule maintenance, driver shifts, vehicle rotations, or training sessions. Current availability shows openings this week at all depots. What type of appointment do you need to schedule?";
-    }
-
-    // Fuel-related (for hybrid fleet)
-    if (patterns.fuel.test(message)) {
-      return "⛽ Fuel Management: Hybrid vehicles showing 28.5 MPG average (+12% vs target). Electric vehicles at 94.2% efficiency. Fuel costs down 23% this quarter thanks to electric transition. Need analysis for specific vehicles?";
-    }
-
-    // Contextual fallback with suggestions
-    const commandKeywords = message.match(/\b(schedule|reserve|analyze|check|show|find|track|help|need|want|can you|please)\b/gi);
-    if (commandKeywords) {
-      return `I understand you want to work with "${message}". I can assist with:\n• Vehicle scheduling & maintenance\n• Depot stall reservations\n• Fleet performance analysis\n• Real-time status monitoring\n• Energy optimization\n• Route planning\n• Cost analysis\n• Emergency coordination\nCould you be more specific about which area you'd like help with?`;
-    }
-
-    // Default intelligent response
-    return `I'm analyzing your request: "${message}". As your fleet management AI, I can help with operations, scheduling, maintenance, energy optimization, and data analysis. Could you provide more details about what specific action you'd like me to take?`;
   };
 
   const handleQuickAction = (action: string) => {
@@ -336,7 +126,7 @@ export const AIAgentPopup = ({ open, onOpenChange }: AIAgentPopupProps) => {
               </div>
               <div>
                 <span className="text-lg font-semibold">OttoCommand AI</span>
-                <p className="text-xs text-muted-foreground">AI Assistant</p>
+                <p className="text-xs text-muted-foreground">Powered by GPT-5</p>
               </div>
             </div>
             <Badge variant="outline" className="bg-success/10 text-success border-success/20">
@@ -418,10 +208,14 @@ export const AIAgentPopup = ({ open, onOpenChange }: AIAgentPopupProps) => {
             />
             <Button 
               onClick={handleSendMessage} 
-              disabled={!inputMessage.trim()}
+              disabled={!inputMessage.trim() || isLoading}
               className="bg-gradient-primary hover:bg-primary-hover"
             >
-              <Send className="h-4 w-4" />
+              {isLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
             </Button>
           </div>
         </div>

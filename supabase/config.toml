@@ -54,3 +54,6 @@ verify_jwt = false
 
 [functions.predictive-maintenance]
 verify_jwt = false
+
+[functions.ottocommand-ai-chat]
+verify_jwt = false
