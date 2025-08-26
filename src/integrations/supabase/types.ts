@@ -14,6 +14,103 @@ export type Database = {
   }
   public: {
     Tables: {
+      fleet_analytics: {
+        Row: {
+          analysis_type: string
+          created_at: string
+          id: string
+          insights: Json
+          recommendations: Json | null
+          severity_level: string | null
+          status: string | null
+          updated_at: string
+          user_id: string
+          vehicle_id: string | null
+        }
+        Insert: {
+          analysis_type: string
+          created_at?: string
+          id?: string
+          insights: Json
+          recommendations?: Json | null
+          severity_level?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id: string
+          vehicle_id?: string | null
+        }
+        Update: {
+          analysis_type?: string
+          created_at?: string
+          id?: string
+          insights?: Json
+          recommendations?: Json | null
+          severity_level?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id?: string
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fleet_analytics_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      maintenance_records: {
+        Row: {
+          ai_predicted: boolean | null
+          cost: number | null
+          created_at: string
+          description: string
+          id: string
+          maintenance_type: string
+          next_due_date: string | null
+          performed_at: string | null
+          prediction_confidence: number | null
+          user_id: string
+          vehicle_id: string | null
+        }
+        Insert: {
+          ai_predicted?: boolean | null
+          cost?: number | null
+          created_at?: string
+          description: string
+          id?: string
+          maintenance_type: string
+          next_due_date?: string | null
+          performed_at?: string | null
+          prediction_confidence?: number | null
+          user_id: string
+          vehicle_id?: string | null
+        }
+        Update: {
+          ai_predicted?: boolean | null
+          cost?: number | null
+          created_at?: string
+          description?: string
+          id?: string
+          maintenance_type?: string
+          next_due_date?: string | null
+          performed_at?: string | null
+          prediction_confidence?: number | null
+          user_id?: string
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_records_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -37,6 +134,161 @@ export type Database = {
           id?: string
           phone?: string | null
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      routes: {
+        Row: {
+          created_at: string
+          end_location: string
+          estimated_distance: number | null
+          estimated_duration: number | null
+          fuel_consumption_estimate: number | null
+          id: string
+          optimization_score: number | null
+          optimized_by_ai: boolean | null
+          route_name: string
+          start_location: string
+          updated_at: string
+          user_id: string
+          vehicle_id: string | null
+          waypoints: Json | null
+        }
+        Insert: {
+          created_at?: string
+          end_location: string
+          estimated_distance?: number | null
+          estimated_duration?: number | null
+          fuel_consumption_estimate?: number | null
+          id?: string
+          optimization_score?: number | null
+          optimized_by_ai?: boolean | null
+          route_name: string
+          start_location: string
+          updated_at?: string
+          user_id: string
+          vehicle_id?: string | null
+          waypoints?: Json | null
+        }
+        Update: {
+          created_at?: string
+          end_location?: string
+          estimated_distance?: number | null
+          estimated_duration?: number | null
+          fuel_consumption_estimate?: number | null
+          id?: string
+          optimization_score?: number | null
+          optimized_by_ai?: boolean | null
+          route_name?: string
+          start_location?: string
+          updated_at?: string
+          user_id?: string
+          vehicle_id?: string | null
+          waypoints?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "routes_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vehicles: {
+        Row: {
+          created_at: string
+          engine_hours: number | null
+          fuel_level: number | null
+          id: string
+          last_location_update: string | null
+          license_plate: string | null
+          location_lat: number | null
+          location_lng: number | null
+          make: string | null
+          mileage: number | null
+          model: string | null
+          status: string | null
+          updated_at: string
+          user_id: string
+          vehicle_number: string
+          vehicle_type: string | null
+          vin: string | null
+          year: number | null
+        }
+        Insert: {
+          created_at?: string
+          engine_hours?: number | null
+          fuel_level?: number | null
+          id?: string
+          last_location_update?: string | null
+          license_plate?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          make?: string | null
+          mileage?: number | null
+          model?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id: string
+          vehicle_number: string
+          vehicle_type?: string | null
+          vin?: string | null
+          year?: number | null
+        }
+        Update: {
+          created_at?: string
+          engine_hours?: number | null
+          fuel_level?: number | null
+          id?: string
+          last_location_update?: string | null
+          license_plate?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          make?: string | null
+          mileage?: number | null
+          model?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id?: string
+          vehicle_number?: string
+          vehicle_type?: string | null
+          vin?: string | null
+          year?: number | null
+        }
+        Relationships: []
+      }
+      voice_commands: {
+        Row: {
+          command_text: string
+          command_type: string
+          created_at: string
+          executed_successfully: boolean | null
+          execution_details: Json | null
+          id: string
+          response_text: string | null
+          user_id: string
+        }
+        Insert: {
+          command_text: string
+          command_type: string
+          created_at?: string
+          executed_successfully?: boolean | null
+          execution_details?: Json | null
+          id?: string
+          response_text?: string | null
+          user_id: string
+        }
+        Update: {
+          command_text?: string
+          command_type?: string
+          created_at?: string
+          executed_successfully?: boolean | null
+          execution_details?: Json | null
+          id?: string
+          response_text?: string | null
           user_id?: string
         }
         Relationships: []
