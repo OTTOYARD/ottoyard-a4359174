@@ -32,8 +32,10 @@ serve(async (req) => {
     console.log('SUPABASE_URL:', Deno.env.get('SUPABASE_URL') ? 'FOUND' : 'NOT FOUND');
     console.log('SUPABASE_SERVICE_ROLE_KEY:', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ? 'FOUND' : 'NOT FOUND');
     
-    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-    console.log('🔑 API Key Check:', openAIApiKey ? `Found (${openAIApiKey.length} chars)` : 'NOT FOUND');
+    const keyNames = ['OPENAI_API_KEY', 'OPEN_AI_API_KEY', 'OPENAI_KEY', 'OPENAI_APIKEY'];
+    const foundKeyName = keyNames.find((k) => Deno.env.get(k));
+    const openAIApiKey = foundKeyName ? Deno.env.get(foundKeyName)! : undefined;
+    console.log('🔑 API Key Check:', foundKeyName ? `Found in ${foundKeyName} (${openAIApiKey!.length} chars)` : 'NOT FOUND');
     
     // CLEAR ERROR if no API key found
     if (!openAIApiKey || openAIApiKey.length < 10) {
