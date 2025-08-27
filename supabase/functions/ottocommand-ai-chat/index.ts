@@ -41,8 +41,13 @@ serve(async (req) => {
     if (!openAIApiKey || openAIApiKey.length < 10) {
       return new Response(JSON.stringify({
         success: false,
-        response: "❌ **OpenAI API Key Missing**\n\nThe OpenAI API key is not properly configured. Please add a valid OpenAI API key to enable GPT-5 functionality.",
+        response: "❌ OpenAI API key missing. Add it in Supabase Edge Function Secrets.",
         model: 'error-no-api-key',
+        diagnostics: {
+          foundKeyName: foundKeyName || null,
+          triedKeyNames: keyNames,
+          availableEnvKeys: allEnvKeys,
+        },
         timestamp: new Date().toISOString()
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -196,20 +201,65 @@ Be the most intelligent, data-driven fleet AI assistant ever created.`;
     });
 
     if (!response.ok) {
-      const error = await response.text();
-      console.error('OpenAI API error:', error);
-      
-      // Generate intelligent fallback
-      const fallback = generateRobustFallbackResponse(message, conversationHistory);
-      return new Response(JSON.stringify({
-        success: true,
-        response: fallback,
-        model: 'fallback-local-generator',
-        note: 'Using intelligent fallback due to AI provider error',
-        timestamp: new Date().toISOString()
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      const errorText = await response.text();
+      console.error('OpenAI API error (gpt-5):', errorText);
+
+      try {
+        const altResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openAIApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-4.1-2025-04-14',
+            messages: messages,
+            functions: functions,
+            function_call: 'auto',
+            max_tokens: 2000
+          }),
+        });
+
+        if (altResponse.ok) {
+          const altData = await altResponse.json();
+          const altMessage = altData.choices[0].message;
+          return new Response(JSON.stringify({
+            success: true,
+            response: altMessage.content,
+            model: 'gpt-4.1-2025-04-14',
+            timestamp: new Date().toISOString()
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        const altErrorText = await altResponse.text();
+        console.error('OpenAI API error (gpt-4.1):', altErrorText);
+        const fallback = generateRobustFallbackResponse(message, conversationHistory);
+        return new Response(JSON.stringify({
+          success: true,
+          response: fallback,
+          model: 'fallback-local-generator',
+          note: 'AI provider error on both models',
+          provider_error: { gpt5: errorText, gpt41: altErrorText },
+          timestamp: new Date().toISOString()
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } catch (e) {
+        console.error('OpenAI alt model exception:', e);
+        const fallback = generateRobustFallbackResponse(message, conversationHistory);
+        return new Response(JSON.stringify({
+          success: true,
+          response: fallback,
+          model: 'fallback-local-generator',
+          note: 'AI provider exception on both models',
+          provider_error_exception: String(e),
+          timestamp: new Date().toISOString()
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
     }
 
     const data = await response.json();
