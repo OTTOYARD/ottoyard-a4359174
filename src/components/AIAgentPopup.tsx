@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -134,7 +134,7 @@ export const AIAgentPopup = ({ open, onOpenChange }: AIAgentPopupProps) => {
               Online
             </Badge>
           </DialogTitle>
-          <p className="sr-only">OttoCommand AI chat interface for fleet management assistance</p>
+          <DialogDescription>OttoCommand AI chat interface for fleet management assistance</DialogDescription>
         </DialogHeader>
         
         <div className="flex-1 min-h-0 flex flex-col">
