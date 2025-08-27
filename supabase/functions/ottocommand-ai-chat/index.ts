@@ -33,27 +33,21 @@ serve(async (req) => {
     console.log('SUPABASE_SERVICE_ROLE_KEY:', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ? 'FOUND' : 'NOT FOUND');
     
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-    console.log('OpenAI API key status:', openAIApiKey ? 'FOUND' : 'NOT FOUND');
-    if (openAIApiKey) {
-      console.log('OpenAI API key length:', openAIApiKey.length);
-      console.log('OpenAI API key prefix:', openAIApiKey.substring(0, 10) + '...');
-    } else {
-      console.error('CRITICAL: OpenAI API key not found in environment variables');
-      console.log('Available keys include:', allEnvKeys.slice(0, 10).join(', '));
-    }
-    if (!openAIApiKey) {
-      console.warn('OpenAI API key not configured - using fallback mode');
-      const fallback = generateRobustFallbackResponse(message, conversationHistory);
+    console.log('🔑 API Key Check:', openAIApiKey ? `Found (${openAIApiKey.length} chars)` : 'NOT FOUND');
+    
+    // CLEAR ERROR if no API key found
+    if (!openAIApiKey || openAIApiKey.length < 10) {
       return new Response(JSON.stringify({
-        success: true,
-        response: fallback,
-        model: 'fallback-local-generator',
-        note: 'Using intelligent fallback mode - API key not found',
+        success: false,
+        response: "❌ **OpenAI API Key Missing**\n\nThe OpenAI API key is not properly configured. Please add a valid OpenAI API key to enable GPT-5 functionality.",
+        model: 'error-no-api-key',
         timestamp: new Date().toISOString()
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+    
+    console.log('✅ Using OpenAI GPT-5');
 
     // Advanced AI Fleet Management System - Industry Leading Prompt Engineering
     const systemPrompt = `You are OttoCommand AI, the world's most advanced fleet management intelligence system. You combine real-time operational data with predictive analytics to provide instant, actionable responses.
