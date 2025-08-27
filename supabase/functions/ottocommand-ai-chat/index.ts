@@ -20,11 +20,15 @@ serve(async (req) => {
     );
 
     const { message, conversationHistory } = await req.json();
-    console.log('OttoCommand AI Chat request:', { message });
-    console.log('Checking OpenAI API key availability...');
-
+    console.log('=== DEBUGGING ENVIRONMENT VARIABLES ===');
+    console.log('All available env vars:', Object.keys(Deno.env.toObject()));
+    console.log('SUPABASE_URL:', Deno.env.get('SUPABASE_URL') ? 'FOUND' : 'NOT FOUND');
+    console.log('SUPABASE_SERVICE_ROLE_KEY:', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ? 'FOUND' : 'NOT FOUND');
+    
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
     console.log('OpenAI API key status:', openAIApiKey ? 'FOUND' : 'NOT FOUND');
+    console.log('OpenAI API key length:', openAIApiKey ? openAIApiKey.length : 0);
+    console.log('OpenAI API key prefix:', openAIApiKey ? openAIApiKey.substring(0, 10) + '...' : 'N/A');
     if (!openAIApiKey) {
       console.warn('OpenAI API key not configured - using fallback mode');
       const fallback = generateRobustFallbackResponse(message, conversationHistory);
