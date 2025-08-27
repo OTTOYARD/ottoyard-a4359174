@@ -32,21 +32,26 @@ serve(async (req) => {
     console.log('SUPABASE_URL:', Deno.env.get('SUPABASE_URL') ? 'FOUND' : 'NOT FOUND');
     console.log('SUPABASE_SERVICE_ROLE_KEY:', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ? 'FOUND' : 'NOT FOUND');
     
-    // Direct check for OPENAI_API_KEY
-    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-    console.log('🔑 Direct OPENAI_API_KEY check:', openAIApiKey ? `Found (${openAIApiKey.length} chars)` : 'NOT FOUND');
-    console.log('🔑 First 10 chars of key:', openAIApiKey ? openAIApiKey.substring(0, 10) : 'N/A');
+    // More robust API key detection
+    const openAIApiKey = Deno.env.get('OPENAI_API_KEY')?.trim();
+    console.log('🔑 OpenAI API Key Status:', {
+      exists: !!openAIApiKey,
+      length: openAIApiKey?.length || 0,
+      startsWithSk: openAIApiKey?.startsWith('sk-') || false,
+      preview: openAIApiKey ? `${openAIApiKey.substring(0, 7)}...${openAIApiKey.substring(openAIApiKey.length - 4)}` : 'none'
+    });
     
-    // CLEAR ERROR if no API key found
-    if (!openAIApiKey || openAIApiKey.trim().length < 10) {
+    // Validate API key
+    if (!openAIApiKey || openAIApiKey.length < 20 || !openAIApiKey.startsWith('sk-')) {
       return new Response(JSON.stringify({
         success: false,
-        response: "❌ OpenAI API key missing or invalid. Please update it in Supabase Edge Function Secrets.",
-        model: 'error-no-api-key',
+        response: "❌ OpenAI API key is missing, invalid, or malformed. Please ensure it starts with 'sk-' and is properly set in Supabase secrets.",
+        model: 'error-invalid-api-key',
         diagnostics: {
           keyExists: !!openAIApiKey,
-          keyLength: openAIApiKey ? openAIApiKey.length : 0,
-          keyPreview: openAIApiKey ? openAIApiKey.substring(0, 10) + '...' : 'none',
+          keyLength: openAIApiKey?.length || 0,
+          startsWithSk: openAIApiKey?.startsWith('sk-') || false,
+          keyPreview: openAIApiKey ? `${openAIApiKey.substring(0, 7)}...` : 'none',
           availableEnvKeys: allEnvKeys,
         },
         timestamp: new Date().toISOString()
