@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import { executeFunction } from './function-executor.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -113,15 +114,15 @@ Route Optimization Insights:
 - Delivery Circuit C: Fuel efficiency up 12% with optimized stops
 - Airport Shuttle: Reduced wait times by 23% with predictive scheduling
 
-ADVANCED AI CAPABILITIES:
-As OttoCommand AI, you can:
+ADVANCED AI CAPABILITIES - AGENTIC ACTIONS:
+As OttoCommand AI, you can now TAKE ACTION, not just provide information:
 
-🚀 Fleet Operations:
-- Real-time vehicle dispatch and routing optimization
-- Dynamic schedule adjustments based on traffic/weather
-- Automated maintenance scheduling with predictive analytics
-- Emergency response coordination and resource allocation
-- Driver performance monitoring and coaching insights
+🚀 Fleet Operations (ACTIONABLE):
+- SCHEDULE vehicles for specific tasks, maintenance, or routes
+- UPDATE vehicle status in real-time (active/maintenance/charging/idle)
+- CREATE optimization plans with implementation timelines
+- DISPATCH vehicles to specific locations or routes
+- ASSIGN priorities and deadlines to fleet tasks
 
 📊 Data Analytics & Reporting:
 - Live dashboard creation with custom KPIs  
@@ -130,12 +131,12 @@ As OttoCommand AI, you can:
 - Energy usage optimization recommendations
 - Carbon footprint tracking and reduction strategies
 
-🔧 Maintenance Intelligence:
-- Predictive failure analysis using telemetry data
-- Automated parts ordering based on wear patterns
-- Technician scheduling optimization
-- Warranty tracking and compliance monitoring
-- Performance degradation early warning systems
+🔧 Maintenance Intelligence (ACTIONABLE):
+- SCHEDULE maintenance tasks for specific vehicles with dates
+- CREATE preventive maintenance plans automatically  
+- UPDATE vehicle maintenance records and priorities
+- SET maintenance alerts and deadlines
+- TRACK parts inventory and create order requests
 
 ⚡ Energy Management:
 - Charging schedule optimization for cost/efficiency
@@ -144,12 +145,20 @@ As OttoCommand AI, you can:
 - Peak demand management and load shifting
 - Renewable energy utilization maximization
 
-🗣️ Voice Command Processing:
-- Natural language fleet status queries
-- Hands-free dispatch and routing updates  
-- Voice-activated maintenance requests
-- Conversational reporting and analytics
-- Multi-language support for international operations
+🌐 Web Research & Intelligence (NEW):
+- SEARCH the web for current industry best practices
+- RESEARCH latest fleet management technologies
+- FIND real-time traffic, weather, and route conditions
+- DISCOVER cost optimization opportunities
+- ANALYZE competitive fleet management strategies
+
+🎯 AVAILABLE ACTIONS YOU CAN PERFORM:
+1. schedule_vehicle_task() - Schedule specific vehicles for tasks
+2. update_vehicle_status() - Change vehicle operational status  
+3. web_search() - Research current information online
+4. create_optimization_plan() - Build actionable improvement plans
+
+IMPORTANT: When users request actions like "schedule vehicle X for maintenance" or "update the status of vehicle Y", you should USE THE FUNCTIONS to actually perform these actions in the database, not just provide information about how to do it.
 
 COMMUNICATION STYLE:
 - Act as a knowledgeable, proactive fleet management expert
@@ -183,7 +192,64 @@ You have complete access to all fleet data, maintenance records, route analytics
       { role: 'user', content: message }
     ];
 
-    // Call GPT-5
+    // Define available functions for agentic capabilities
+    const functions = [
+      {
+        name: "schedule_vehicle_task",
+        description: "Schedule a specific vehicle for a maintenance task or route assignment",
+        parameters: {
+          type: "object",
+          properties: {
+            vehicle_id: { type: "string", description: "Vehicle identifier (e.g., BUS-007, VAN-003)" },
+            task_type: { type: "string", enum: ["maintenance", "route", "inspection"], description: "Type of task to schedule" },
+            description: { type: "string", description: "Detailed description of the task" },
+            scheduled_date: { type: "string", description: "When to schedule the task (YYYY-MM-DD format)" },
+            priority: { type: "string", enum: ["low", "medium", "high", "critical"], description: "Task priority level" }
+          },
+          required: ["vehicle_id", "task_type", "description", "scheduled_date"]
+        }
+      },
+      {
+        name: "update_vehicle_status", 
+        description: "Update a vehicle's operational status",
+        parameters: {
+          type: "object",
+          properties: {
+            vehicle_id: { type: "string", description: "Vehicle identifier" },
+            status: { type: "string", enum: ["active", "maintenance", "charging", "idle"], description: "New vehicle status" },
+            location: { type: "string", description: "Current location or depot" },
+            notes: { type: "string", description: "Additional status notes" }
+          },
+          required: ["vehicle_id", "status"]
+        }
+      },
+      {
+        name: "web_search",
+        description: "Search the web for current information, best practices, or industry insights",
+        parameters: {
+          type: "object", 
+          properties: {
+            query: { type: "string", description: "Search query for current information" }
+          },
+          required: ["query"]
+        }
+      },
+      {
+        name: "create_optimization_plan",
+        description: "Create a detailed fleet optimization plan based on current data",
+        parameters: {
+          type: "object",
+          properties: {
+            focus_area: { type: "string", enum: ["routes", "energy", "maintenance", "costs"], description: "Primary optimization focus" },
+            timeframe: { type: "string", enum: ["immediate", "weekly", "monthly"], description: "Implementation timeframe" },
+            goals: { type: "string", description: "Specific optimization goals" }
+          },
+          required: ["focus_area", "timeframe"]
+        }
+      }
+    ];
+
+    // Call GPT-5 with function calling enabled
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -193,6 +259,8 @@ You have complete access to all fleet data, maintenance records, route analytics
       body: JSON.stringify({
         model: 'gpt-5-2025-08-07',
         messages: messages,
+        functions: functions,
+        function_call: "auto",
         max_completion_tokens: 2000
       }),
     });
@@ -215,8 +283,54 @@ You have complete access to all fleet data, maintenance records, route analytics
     }
 
     const data = await response.json();
-    const aiResponse = data.choices[0].message.content;
+    const message = data.choices[0].message;
 
+    // Check if AI wants to call a function
+    if (message.function_call) {
+      console.log('Function call requested:', message.function_call);
+      
+      // Execute the requested function
+      const functionResult = await executeFunction(message.function_call, supabase);
+      
+      // Send function result back to AI for final response
+      const followUpMessages = [
+        ...messages,
+        message,
+        {
+          role: 'function',
+          name: message.function_call.name,
+          content: JSON.stringify(functionResult)
+        }
+      ];
+
+      const followUpResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openAIApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-5-2025-08-07',
+          messages: followUpMessages,
+          max_completion_tokens: 2000
+        }),
+      });
+
+      const followUpData = await followUpResponse.json();
+      const finalResponse = followUpData.choices[0].message.content;
+
+      return new Response(JSON.stringify({
+        success: true,
+        response: finalResponse,
+        action_taken: message.function_call.name,
+        model: 'gpt-5-2025-08-07',
+        timestamp: new Date().toISOString()
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const aiResponse = message.content;
     console.log('GPT-5 response generated:', aiResponse.substring(0, 100) + '...');
 
     return new Response(JSON.stringify({
