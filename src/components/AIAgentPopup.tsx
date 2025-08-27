@@ -134,6 +134,7 @@ export const AIAgentPopup = ({ open, onOpenChange }: AIAgentPopupProps) => {
               Online
             </Badge>
           </DialogTitle>
+          <p className="sr-only">OttoCommand AI chat interface for fleet management assistance</p>
         </DialogHeader>
         
         <div className="flex-1 min-h-0 flex flex-col">
