@@ -77,6 +77,19 @@ ${fleetData.maintenanceAlerts}
 RECENT ANALYTICS:
 ${fleetData.recentAnalytics}
 
+ROUTE INFORMATION:
+${fleetData.routeInfo}
+
+DEPOT STATUS:
+${fleetData.depotInfo}
+
+AVAILABLE REAL DATA: You have access to live database information including:
+- ${fleetData.rawData?.vehicles?.length || 0} vehicles with real-time status, energy levels, mileage
+- ${fleetData.rawData?.maintenance?.length || 0} maintenance records with AI predictions
+- ${fleetData.rawData?.analytics?.length || 0} analytics insights with severity levels
+- ${fleetData.rawData?.routes?.length || 0} route records with optimization data
+- Fleet metrics: ${fleetData.rawData?.metrics?.totalMileage || 0} total miles, ${fleetData.rawData?.metrics?.avgEnergyLevel || 0}% avg energy
+
 INTELLIGENT RESPONSE PROTOCOL:
 1. ANALYZE: Parse question against real-time data
 2. IDENTIFY: Find specific vehicles/routes/data points relevant to query
@@ -328,85 +341,167 @@ Be the most intelligent, data-driven fleet AI assistant ever created, using REAL
 // Function to get real-time fleet data from database
 async function getRealTimeFleetData(supabase: any) {
   try {
-    // Get vehicles data
-    const { data: vehicles, error: vehiclesError } = await supabase
-      .from('vehicles')
-      .select('*')
-      .order('vehicle_number');
+    // Get comprehensive fleet data with parallel queries
+    const [vehiclesResult, maintenanceResult, analyticsResult, routesResult] = await Promise.all([
+      // Get all vehicles with detailed status
+      supabase
+        .from('vehicles')
+        .select('*')
+        .order('vehicle_number'),
+      
+      // Get recent maintenance records
+      supabase
+        .from('maintenance_records')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(20),
+      
+      // Get recent analytics
+      supabase
+        .from('fleet_analytics')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(10),
+      
+      // Get recent routes
+      supabase
+        .from('routes')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(15)
+    ]);
 
-    // Get maintenance records
-    const { data: maintenance, error: maintenanceError } = await supabase
-      .from('maintenance_records')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(10);
+    const vehicles = vehiclesResult.data || [];
+    const maintenance = maintenanceResult.data || [];
+    const analytics = analyticsResult.data || [];
+    const routes = routesResult.data || [];
 
-    // Get analytics data
-    const { data: analytics, error: analyticsError } = await supabase
-      .from('fleet_analytics')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(5);
-
-    // Get routes data
-    const { data: routes, error: routesError } = await supabase
-      .from('routes')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(10);
-
-    console.log('Database queries completed', {
-      vehicles: vehicles?.length || 0,
-      maintenance: maintenance?.length || 0,
-      analytics: analytics?.length || 0,
-      routes: routes?.length || 0
+    console.log('Comprehensive database queries completed', {
+      vehicles: vehicles.length,
+      maintenance: maintenance.length,
+      analytics: analytics.length,
+      routes: routes.length
     });
 
-    // Build fleet summary
-    const totalVehicles = vehicles?.length || 0;
-    const activeVehicles = vehicles?.filter(v => v.status === 'active')?.length || 0;
-    const maintenanceVehicles = vehicles?.filter(v => v.status === 'maintenance')?.length || 0;
-    const chargingVehicles = vehicles?.filter(v => v.status === 'charging')?.length || 0;
+    // Calculate fleet metrics
+    const totalVehicles = vehicles.length;
+    const activeVehicles = vehicles.filter(v => v.status === 'active').length;
+    const maintenanceVehicles = vehicles.filter(v => v.status === 'maintenance').length;
+    const chargingVehicles = vehicles.filter(v => v.status === 'charging' || v.fuel_level < 100).length;
+    const availableVehicles = vehicles.filter(v => v.status === 'active' && v.fuel_level > 80).length;
     
-    const fleetSummary = `Active Fleet: ${totalVehicles} vehicles (${Math.round((activeVehicles/totalVehicles)*100) || 0}% utilization) | Active: ${activeVehicles} units | Maintenance: ${maintenanceVehicles} units | Charging: ${chargingVehicles} units
-Performance: Real-time data from database | Fleet Status: ${totalVehicles} vehicles tracked`;
+    // Calculate energy metrics
+    const totalEnergyLevel = vehicles.reduce((sum, v) => sum + (v.fuel_level || 0), 0);
+    const avgEnergyLevel = totalVehicles > 0 ? Math.round(totalEnergyLevel / totalVehicles) : 0;
+    const lowEnergyVehicles = vehicles.filter(v => v.fuel_level < 30).length;
+    const highEnergyVehicles = vehicles.filter(v => v.fuel_level > 80).length;
+    
+    // Calculate total mileage and engine hours
+    const totalMileage = vehicles.reduce((sum, v) => sum + (v.mileage || 0), 0);
+    const totalEngineHours = vehicles.reduce((sum, v) => sum + (v.engine_hours || 0), 0);
+    
+    // Build comprehensive fleet summary
+    const fleetSummary = `🚛 LIVE FLEET STATUS: ${totalVehicles} total vehicles
+📊 Operational Status: ${activeVehicles} active, ${maintenanceVehicles} in maintenance, ${chargingVehicles} charging
+⚡ Energy Status: ${avgEnergyLevel}% average charge, ${highEnergyVehicles} high charge (>80%), ${lowEnergyVehicles} low charge (<30%)
+🔧 Fleet Totals: ${totalMileage.toLocaleString()} total miles, ${Math.round(totalEngineHours)} engine hours
+🎯 Available for Dispatch: ${availableVehicles} vehicles ready`;
 
-    // Build vehicle status from real data
-    const vehicleStatus = vehicles?.map(vehicle => {
-      const fuelIcon = vehicle.vehicle_type === 'bus' ? '🚌' : vehicle.vehicle_type === 'truck' ? '🚛' : '🚐';
-      const statusText = vehicle.status === 'active' ? 'Active' : 
-                        vehicle.status === 'maintenance' ? 'MAINTENANCE' :
-                        vehicle.status === 'charging' ? 'Charging' : 'Standby';
+    // Build detailed vehicle status from real data
+    const vehicleStatus = vehicles.length > 0 ? vehicles.map(vehicle => {
+      const statusIcon = vehicle.vehicle_type === 'bus' ? '🚌' : 
+                        vehicle.vehicle_type === 'truck' ? '🚛' : 
+                        vehicle.vehicle_type === 'van' ? '🚐' : '🚗';
       
-      return `${fuelIcon} ${vehicle.make} ${vehicle.vehicle_number}: ${statusText}, ${vehicle.fuel_level || 0}% energy, ${vehicle.mileage || 0} miles total`;
-    }).join('\n') || 'No vehicles found in database - please add vehicle data to get real-time status';
+      const statusText = vehicle.status === 'active' ? `Active (${vehicle.fuel_level || 0}% charge)` : 
+                        vehicle.status === 'maintenance' ? `🔧 MAINTENANCE` :
+                        vehicle.status === 'charging' ? `⚡ Charging (${vehicle.fuel_level || 0}%)` : 
+                        `Standby (${vehicle.fuel_level || 0}% charge)`;
+      
+      const lastUpdate = vehicle.last_location_update ? 
+        ` | Last update: ${new Date(vehicle.last_location_update).toLocaleTimeString()}` : '';
+      
+      return `${statusIcon} ${vehicle.make || 'Vehicle'} ${vehicle.vehicle_number}: ${statusText}, ${(vehicle.mileage || 0).toLocaleString()} miles${lastUpdate}`;
+    }).join('\n') : 'No vehicles found in database - Add vehicle data to see real-time status';
 
     // Build maintenance alerts from real data
-    const maintenanceAlerts = maintenance?.length > 0 ? 
-      maintenance.map(m => `⚠️ ${m.maintenance_type}: ${m.description} - ${m.ai_predicted ? 'AI PREDICTED' : 'SCHEDULED'}`).join('\n') :
-      'No maintenance alerts - All vehicles operating normally';
+    const criticalMaintenance = maintenance.filter(m => 
+      m.next_due_date && new Date(m.next_due_date) <= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    );
+    
+    const maintenanceAlerts = maintenance.length > 0 ? [
+      `🔧 MAINTENANCE OVERVIEW: ${maintenance.length} total records, ${criticalMaintenance.length} due within 7 days`,
+      ...maintenance.slice(0, 5).map(m => {
+        const urgency = m.next_due_date && new Date(m.next_due_date) <= new Date() ? '🚨 OVERDUE' :
+                       m.next_due_date && new Date(m.next_due_date) <= new Date(Date.now() + 3 * 24 * 60 * 60 * 1000) ? '⚠️ URGENT' : '📅';
+        return `${urgency} ${m.maintenance_type}: ${m.description} ${m.ai_predicted ? '(AI Predicted)' : ''}`;
+      })
+    ].join('\n') : 'No maintenance records found - All vehicles operating normally';
 
-    // Build recent analytics from real data
-    const recentAnalytics = analytics?.length > 0 ?
-      analytics.map(a => `📊 ${a.analysis_type}: ${a.severity_level.toUpperCase()} - ${JSON.stringify(a.insights).slice(0, 100)}...`).join('\n') :
-      '📊 No recent analytics data - Add analytics to see performance insights';
+    // Build analytics from real data
+    const recentAnalytics = analytics.length > 0 ? [
+      `📊 ANALYTICS OVERVIEW: ${analytics.length} recent insights available`,
+      ...analytics.slice(0, 3).map(a => {
+        const severity = a.severity_level?.toUpperCase() || 'INFO';
+        const insightText = typeof a.insights === 'object' ? 
+          Object.values(a.insights).slice(0, 2).join(', ') : 
+          String(a.insights).slice(0, 100);
+        return `📈 ${a.analysis_type} (${severity}): ${insightText}...`;
+      })
+    ].join('\n') : '📊 No analytics data available - System will generate insights as data accumulates';
+
+    // Build route information
+    const routeInfo = routes.length > 0 ? [
+      `🗺️ ROUTE DATA: ${routes.length} recent routes tracked`,
+      ...routes.slice(0, 3).map(r => {
+        const efficiency = r.optimization_score ? `${r.optimization_score}% optimized` : 'Standard route';
+        const distance = r.estimated_distance ? `${Math.round(r.estimated_distance)} miles` : 'Distance N/A';
+        return `📍 ${r.route_name || 'Route'}: ${r.start_location} → ${r.end_location} (${distance}, ${efficiency})`;
+      })
+    ].join('\n') : '🗺️ No route data available - Routes will appear as they are created';
+
+    // Build depot information (simulated based on vehicle locations)
+    const depotInfo = `🏭 DEPOT STATUS:
+Central Depot: ${vehicles.filter(v => v.location_lat && v.location_lat > 40.7).length} vehicles
+North Depot: ${vehicles.filter(v => v.location_lat && v.location_lat <= 40.7 && v.location_lat > 40.6).length} vehicles  
+South Depot: ${vehicles.filter(v => v.location_lat && v.location_lat <= 40.6).length} vehicles
+Mobile/Field: ${vehicles.filter(v => !v.location_lat).length} vehicles (no GPS data)`;
 
     return {
       fleetSummary,
       vehicleStatus,
       maintenanceAlerts,
-      recentAnalytics
+      recentAnalytics,
+      routeInfo,
+      depotInfo,
+      rawData: {
+        vehicles,
+        maintenance,
+        analytics,
+        routes,
+        metrics: {
+          totalVehicles,
+          activeVehicles,
+          maintenanceVehicles,
+          avgEnergyLevel,
+          totalMileage,
+          totalEngineHours
+        }
+      }
     };
 
   } catch (error) {
-    console.error('Error fetching fleet data:', error);
+    console.error('Error fetching comprehensive fleet data:', error);
     
     // Return fallback data structure
     return {
       fleetSummary: 'Fleet data temporarily unavailable - using fallback mode',
       vehicleStatus: 'Real-time vehicle status temporarily unavailable',
       maintenanceAlerts: 'Maintenance alerts temporarily unavailable',
-      recentAnalytics: 'Analytics data temporarily unavailable'
+      recentAnalytics: 'Analytics data temporarily unavailable',
+      routeInfo: 'Route information temporarily unavailable',
+      depotInfo: 'Depot status temporarily unavailable',
+      rawData: null
     };
   }
 }
