@@ -20,20 +20,24 @@ serve(async (req) => {
     );
 
     const { message, conversationHistory } = await req.json();
+    console.log('=== EDGE FUNCTION STARTUP ===');
+    console.log('Function deployed at:', new Date().toISOString());
+    
     console.log('=== DEBUGGING ENVIRONMENT VARIABLES ===');
-    console.log('All available env vars:', Object.keys(Deno.env.toObject()));
+    const allEnvKeys = Object.keys(Deno.env.toObject());
+    console.log('All available env vars:', allEnvKeys);
+    console.log('Total env vars count:', allEnvKeys.length);
     console.log('SUPABASE_URL:', Deno.env.get('SUPABASE_URL') ? 'FOUND' : 'NOT FOUND');
     console.log('SUPABASE_SERVICE_ROLE_KEY:', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ? 'FOUND' : 'NOT FOUND');
     
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
     console.log('OpenAI API key status:', openAIApiKey ? 'FOUND' : 'NOT FOUND');
-    console.log('OpenAI API key length:', openAIApiKey ? openAIApiKey.length : 0);
-    console.log('OpenAI API key prefix:', openAIApiKey ? openAIApiKey.substring(0, 10) + '...' : 'N/A');
-    
-    // FORCE SUCCESS FOR TESTING - Remove this once working
-    if (!openAIApiKey) {
+    if (openAIApiKey) {
+      console.log('OpenAI API key length:', openAIApiKey.length);
+      console.log('OpenAI API key prefix:', openAIApiKey.substring(0, 10) + '...');
+    } else {
       console.error('CRITICAL: OpenAI API key not found in environment variables');
-      console.log('Available keys:', Object.keys(Deno.env.toObject()).join(', '));
+      console.log('Available keys include:', allEnvKeys.slice(0, 10).join(', '));
     }
     if (!openAIApiKey) {
       console.warn('OpenAI API key not configured - using fallback mode');
