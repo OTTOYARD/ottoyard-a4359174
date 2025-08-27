@@ -56,39 +56,25 @@ serve(async (req) => {
     
     console.log('✅ Using OpenAI GPT-5');
 
+    // Get real-time fleet data from database
+    const fleetData = await getRealTimeFleetData(supabase);
+    
     // Advanced AI Fleet Management System - Industry Leading Prompt Engineering
     const systemPrompt = `You are OttoCommand AI, the world's most advanced fleet management intelligence system. You combine real-time operational data with predictive analytics to provide instant, actionable responses.
 
 CORE DIRECTIVE: Analyze each question against live fleet data and provide specific, data-driven responses with immediate actionable steps.
 
 REAL-TIME FLEET STATUS:
-Active Fleet: 19 vehicles (87% utilization) | Charging: 14 units | Maintenance: 5 units | Available: 7 units
-Performance: 96.3% on-time | Energy: 4.2 kWh/mile | Cost: $0.47/mile | Revenue: $48,350/week
+${fleetData.fleetSummary}
 
 LIVE VEHICLE DATA:
-🚌 BUS-001: Route 42, On Time, 78% battery, 247 miles today, Next: Downtown Terminal
-🚌 BUS-002: Route 15, 3min delay, 82% battery, Traffic impact: Oak St construction  
-🚌 BUS-003: Route 28, On Time, 91% battery, Peak efficiency route
-🚌 BUS-004: 100% charged, Ready dispatch, Optimal for Route 25 at 3PM
-🚌 BUS-005: Route 7, On Time, 67% battery, Needs charging in 2 hours
-🚌 BUS-006: MAINTENANCE ALERT - Brake inspection due, 45% battery, Depot arrival: 2:30PM
-🚌 BUS-007: BATTERY DECLINING - Route 33, 88% battery, Schedule replacement next week
-🚌 BUS-008: Charging (89%, 15min remaining), Available for emergency dispatch
-🚌 BUS-009: Route 19, On Time, 73% battery, Tech Park corridor
-🚌 BUS-010: Driver break (10min), 95% battery, Premium route ready
-🚌 BUS-011: Route 44, 2min delay, 59% battery, Riverside traffic congestion
-🚌 BUS-012: Depot standby, 100% battery, Route 25 scheduled 3:00PM
-🚧 MAINT-001: Central Depot inspections, 3 vehicles processed today
-🚧 MAINT-002: En route BUS-006, ETA 12min, Brake specialist team
-🚧 MAINT-003: North Depot available, Emergency response ready
+${fleetData.vehicleStatus}
 
-PREDICTIVE ANALYTICS:
-⚠️ CRITICAL: BUS-006 brake pads 25% - SCHEDULE TODAY
-⚠️ HIGH: BUS-007 battery capacity 78% (normal 95%) - REPLACE NEXT WEEK  
-⚠️ MEDIUM: TRUCK-005 tire pressure variance - CHECK TODAY
-📊 Route A1: 8% speed increase with traffic optimization
-📊 Energy efficiency up 12% this week vs last week
-📊 Predictive maintenance preventing $4,200 in breakdowns
+MAINTENANCE ALERTS:
+${fleetData.maintenanceAlerts}
+
+RECENT ANALYTICS:
+${fleetData.recentAnalytics}
 
 INTELLIGENT RESPONSE PROTOCOL:
 1. ANALYZE: Parse question against real-time data
@@ -99,21 +85,14 @@ INTELLIGENT RESPONSE PROTOCOL:
 
 RESPONSE STYLE:
 - Lead with specific data points that answer the exact question
-- Reference vehicle IDs, routes, percentages, costs, timeframes
+- Reference vehicle IDs, routes, percentages, costs, timeframes from REAL DATA
 - Execute actions immediately when requested (scheduling, status updates)
 - Provide precise recommendations based on current fleet state
 - Ask for clarification only if question is truly ambiguous
 
 AVAILABLE ACTIONS: schedule_vehicle_task, update_vehicle_status, web_search, create_optimization_plan
 
-EXAMPLE RESPONSES:
-Q: "How's BUS-007 doing?"
-A: "BUS-007 is on Route 33, running 5min early with 88% battery. However, CRITICAL ALERT: Battery capacity has declined to 78% (normal 95%). I recommend scheduling battery replacement next week. Should I schedule this maintenance now?"
-
-Q: "Optimize energy usage"
-A: "Current fleet energy: 4.2 kWh/mile (Target: 4.5). Top opportunities: 1) BUS-005 needs charging in 2hrs (optimal window), 2) Route A1 showing 8% efficiency gains, 3) BUS-008 finishing charge in 15min. Immediate action: Should I create an energy optimization plan for this week?"
-
-Be the most intelligent, data-driven fleet AI assistant ever created.`;
+Be the most intelligent, data-driven fleet AI assistant ever created, using REAL fleet data.`;
 
     // Prepare messages for GPT-5 with proper conversation mapping
     const formattedHistory = (conversationHistory || []).slice(-10).map((msg: any) => ({
@@ -344,6 +323,92 @@ Be the most intelligent, data-driven fleet AI assistant ever created.`;
     });
   }
 });
+
+// Function to get real-time fleet data from database
+async function getRealTimeFleetData(supabase: any) {
+  try {
+    // Get vehicles data
+    const { data: vehicles, error: vehiclesError } = await supabase
+      .from('vehicles')
+      .select('*')
+      .order('vehicle_number');
+
+    // Get maintenance records
+    const { data: maintenance, error: maintenanceError } = await supabase
+      .from('maintenance_records')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    // Get analytics data
+    const { data: analytics, error: analyticsError } = await supabase
+      .from('fleet_analytics')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(5);
+
+    // Get routes data
+    const { data: routes, error: routesError } = await supabase
+      .from('routes')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    console.log('Database queries completed', {
+      vehicles: vehicles?.length || 0,
+      maintenance: maintenance?.length || 0,
+      analytics: analytics?.length || 0,
+      routes: routes?.length || 0
+    });
+
+    // Build fleet summary
+    const totalVehicles = vehicles?.length || 0;
+    const activeVehicles = vehicles?.filter(v => v.status === 'active')?.length || 0;
+    const maintenanceVehicles = vehicles?.filter(v => v.status === 'maintenance')?.length || 0;
+    const chargingVehicles = vehicles?.filter(v => v.status === 'charging')?.length || 0;
+    
+    const fleetSummary = `Active Fleet: ${totalVehicles} vehicles (${Math.round((activeVehicles/totalVehicles)*100) || 0}% utilization) | Active: ${activeVehicles} units | Maintenance: ${maintenanceVehicles} units | Charging: ${chargingVehicles} units
+Performance: Real-time data from database | Fleet Status: ${totalVehicles} vehicles tracked`;
+
+    // Build vehicle status from real data
+    const vehicleStatus = vehicles?.map(vehicle => {
+      const fuelIcon = vehicle.vehicle_type === 'bus' ? '🚌' : vehicle.vehicle_type === 'truck' ? '🚛' : '🚐';
+      const statusText = vehicle.status === 'active' ? 'Active' : 
+                        vehicle.status === 'maintenance' ? 'MAINTENANCE' :
+                        vehicle.status === 'charging' ? 'Charging' : 'Standby';
+      
+      return `${fuelIcon} ${vehicle.make} ${vehicle.vehicle_number}: ${statusText}, ${vehicle.fuel_level || 0}% energy, ${vehicle.mileage || 0} miles total`;
+    }).join('\n') || 'No vehicles found in database - please add vehicle data to get real-time status';
+
+    // Build maintenance alerts from real data
+    const maintenanceAlerts = maintenance?.length > 0 ? 
+      maintenance.map(m => `⚠️ ${m.maintenance_type}: ${m.description} - ${m.ai_predicted ? 'AI PREDICTED' : 'SCHEDULED'}`).join('\n') :
+      'No maintenance alerts - All vehicles operating normally';
+
+    // Build recent analytics from real data
+    const recentAnalytics = analytics?.length > 0 ?
+      analytics.map(a => `📊 ${a.analysis_type}: ${a.severity_level.toUpperCase()} - ${JSON.stringify(a.insights).slice(0, 100)}...`).join('\n') :
+      '📊 No recent analytics data - Add analytics to see performance insights';
+
+    return {
+      fleetSummary,
+      vehicleStatus,
+      maintenanceAlerts,
+      recentAnalytics
+    };
+
+  } catch (error) {
+    console.error('Error fetching fleet data:', error);
+    
+    // Return fallback data structure
+    return {
+      fleetSummary: 'Fleet data temporarily unavailable - using fallback mode',
+      vehicleStatus: 'Real-time vehicle status temporarily unavailable',
+      maintenanceAlerts: 'Maintenance alerts temporarily unavailable',
+      recentAnalytics: 'Analytics data temporarily unavailable'
+    };
+  }
+}
 
 // Robust fallback generator with contextual intelligence
 function generateRobustFallbackResponse(userMessage: string, history: any[]) {

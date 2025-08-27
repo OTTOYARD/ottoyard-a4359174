@@ -196,7 +196,7 @@ export const AIAgentPopup = ({ open, onOpenChange }: AIAgentPopupProps) => {
           <div className="flex items-end space-x-3 bg-muted/30 p-4 rounded-xl flex-shrink-0 futuristic-card">
             <Textarea
               ref={inputRef}
-              placeholder="Ask me anything about your fleet... (Spell check enabled)"
+              placeholder="Ask me anything about your fleet..."
               value={inputMessage}
               rows={1}
               spellCheck={true}
