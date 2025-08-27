@@ -29,6 +29,12 @@ serve(async (req) => {
     console.log('OpenAI API key status:', openAIApiKey ? 'FOUND' : 'NOT FOUND');
     console.log('OpenAI API key length:', openAIApiKey ? openAIApiKey.length : 0);
     console.log('OpenAI API key prefix:', openAIApiKey ? openAIApiKey.substring(0, 10) + '...' : 'N/A');
+    
+    // FORCE SUCCESS FOR TESTING - Remove this once working
+    if (!openAIApiKey) {
+      console.error('CRITICAL: OpenAI API key not found in environment variables');
+      console.log('Available keys:', Object.keys(Deno.env.toObject()).join(', '));
+    }
     if (!openAIApiKey) {
       console.warn('OpenAI API key not configured - using fallback mode');
       const fallback = generateRobustFallbackResponse(message, conversationHistory);
