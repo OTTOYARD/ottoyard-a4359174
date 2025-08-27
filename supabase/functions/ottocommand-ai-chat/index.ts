@@ -21,6 +21,7 @@ serve(async (req) => {
 
     const { message, conversationHistory } = await req.json();
     console.log('OttoCommand AI Chat request:', { message });
+    console.log('Checking OpenAI API key availability...');
 
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openAIApiKey) {
