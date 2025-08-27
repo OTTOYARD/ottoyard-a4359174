@@ -24,6 +24,7 @@ serve(async (req) => {
     console.log('Checking OpenAI API key availability...');
 
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+    console.log('OpenAI API key status:', openAIApiKey ? 'FOUND' : 'NOT FOUND');
     if (!openAIApiKey) {
       console.warn('OpenAI API key not configured - using fallback mode');
       const fallback = generateRobustFallbackResponse(message, conversationHistory);
@@ -31,7 +32,7 @@ serve(async (req) => {
         success: true,
         response: fallback,
         model: 'fallback-local-generator',
-        note: 'Using intelligent fallback mode',
+        note: 'Using intelligent fallback mode - API key not found',
         timestamp: new Date().toISOString()
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
