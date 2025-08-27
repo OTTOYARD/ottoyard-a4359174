@@ -283,22 +283,22 @@ You have complete access to all fleet data, maintenance records, route analytics
     }
 
     const data = await response.json();
-    const message = data.choices[0].message;
+    const aiMessage = data.choices[0].message;
 
     // Check if AI wants to call a function
-    if (message.function_call) {
-      console.log('Function call requested:', message.function_call);
+    if (aiMessage.function_call) {
+      console.log('Function call requested:', aiMessage.function_call);
       
       // Execute the requested function
-      const functionResult = await executeFunction(message.function_call, supabase);
+      const functionResult = await executeFunction(aiMessage.function_call, supabase);
       
       // Send function result back to AI for final response
       const followUpMessages = [
         ...messages,
-        message,
+        aiMessage,
         {
           role: 'function',
-          name: message.function_call.name,
+          name: aiMessage.function_call.name,
           content: JSON.stringify(functionResult)
         }
       ];
@@ -322,7 +322,7 @@ You have complete access to all fleet data, maintenance records, route analytics
       return new Response(JSON.stringify({
         success: true,
         response: finalResponse,
-        action_taken: message.function_call.name,
+        action_taken: aiMessage.function_call.name,
         model: 'gpt-5-2025-08-07',
         timestamp: new Date().toISOString()
       }), {
@@ -330,7 +330,7 @@ You have complete access to all fleet data, maintenance records, route analytics
       });
     }
 
-    const aiResponse = message.content;
+    const aiResponse = aiMessage.content;
     console.log('GPT-5 response generated:', aiResponse.substring(0, 100) + '...');
 
     return new Response(JSON.stringify({
