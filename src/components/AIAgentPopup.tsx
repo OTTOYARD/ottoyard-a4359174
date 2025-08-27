@@ -6,6 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { MessageRenderer } from "./MessageRenderer";
 import { 
   Bot, 
   Send, 
@@ -159,8 +160,8 @@ export const AIAgentPopup = ({ open, onOpenChange }: AIAgentPopupProps) => {
             </div>
 
             {/* Messages */}
-            <div className="border rounded-lg bg-muted/20">
-              <div className="p-4 space-y-4">
+            <div className="border rounded-lg bg-muted/20 futuristic-card">
+              <div className="p-4 space-y-6">
                 {messages.map((message) => (
                   <div
                     key={message.id}
@@ -169,16 +170,20 @@ export const AIAgentPopup = ({ open, onOpenChange }: AIAgentPopupProps) => {
                     }`}
                   >
                     <div
-                      className={`max-w-[85%] p-3 rounded-lg shadow-sm ${
+                      className={`max-w-[85%] p-4 rounded-xl shadow-sm transition-all duration-200 ${
                         message.role === 'user'
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-card text-foreground border'
+                          ? 'bg-gradient-primary text-primary-foreground glow-soft'
+                          : 'bg-card/80 text-foreground border border-border/50 backdrop-blur-sm'
                       }`}
                     >
-                      <p className="text-sm break-words whitespace-pre-wrap leading-relaxed">{message.content}</p>
-                      <span className="text-xs opacity-70 mt-1 block">
+                      <MessageRenderer content={message.content} role={message.role} />
+                      <div className={`text-xs mt-3 pt-2 border-t ${
+                        message.role === 'user' 
+                          ? 'border-primary-foreground/20 text-primary-foreground/70' 
+                          : 'border-border/30 text-muted-foreground'
+                      }`}>
                         {message.timestamp.toLocaleTimeString()}
-                      </span>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -188,12 +193,15 @@ export const AIAgentPopup = ({ open, onOpenChange }: AIAgentPopupProps) => {
           </div>
 
           {/* Input */}
-          <div className="flex items-end space-x-2 bg-muted/30 p-3 rounded-lg flex-shrink-0">
+          <div className="flex items-end space-x-3 bg-muted/30 p-4 rounded-xl flex-shrink-0 futuristic-card">
             <Textarea
               ref={inputRef}
-              placeholder="Ask me anything about your fleet..."
+              placeholder="Ask me anything about your fleet... (Spell check enabled)"
               value={inputMessage}
               rows={1}
+              spellCheck={true}
+              autoComplete="on"
+              autoCorrect="on"
               onChange={(e) => {
                 setInputMessage(e.target.value);
                 e.currentTarget.style.height = 'auto';
@@ -205,17 +213,17 @@ export const AIAgentPopup = ({ open, onOpenChange }: AIAgentPopupProps) => {
                   handleSendMessage();
                 }
               }}
-              className="flex-1 bg-background resize-none max-h-32 min-h-[44px] leading-5"
+              className="flex-1 bg-background/80 backdrop-blur-sm resize-none max-h-32 min-h-[48px] leading-6 border border-border/50 focus:border-primary/50 focus:glow-soft transition-all duration-200"
             />
             <Button 
               onClick={handleSendMessage} 
               disabled={!inputMessage.trim() || isLoading}
-              className="bg-gradient-primary hover:bg-primary-hover"
+              className="futuristic-button h-12 px-4 min-w-[48px]"
             >
               {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-5 w-5 animate-spin" />
               ) : (
-                <Send className="h-4 w-4" />
+                <Send className="h-5 w-5" />
               )}
             </Button>
           </div>
