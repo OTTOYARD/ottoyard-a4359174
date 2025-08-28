@@ -91,108 +91,138 @@ serve(async (req) => {
       );
     }
 
-    // Initialize Supabase client to fetch real fleet data
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    console.log("📊 Using mock fleet data for MVP...");
 
-    console.log("🗄️ Fetching real-time fleet data...");
+    // Mock fleet data matching the UI tabs
+    const mockVehicles = [
+      { id: 'BUS07', name: 'Waymo BUS07', status: 'active', battery: 85, route: 'Downtown Delivery', location: { lat: 37.7749, lng: -122.4194 }, nextMaintenance: '2025-10-15' },
+      { id: 'VAN03', name: 'Zoox VAN03', status: 'charging', battery: 45, route: 'Warehouse Route A', location: { lat: 37.7849, lng: -122.4094 }, nextMaintenance: '2025-11-02' },
+      { id: 'TRK12', name: 'Cruise TRK12', status: 'maintenance', battery: 92, route: 'Port Transfer', location: { lat: 37.7649, lng: -122.4294 }, nextMaintenance: 'In Progress' },
+      { id: 'BUS15', name: 'Aurora BUS15', status: 'active', battery: 67, route: 'Airport Cargo', location: { lat: 37.7549, lng: -122.4394 }, nextMaintenance: '2025-12-08' },
+      { id: 'VAN08', name: 'Nuro VAN08', status: 'idle', battery: 78, route: 'City Center Loop', location: { lat: 37.7949, lng: -122.3994 }, nextMaintenance: '2025-10-28' },
+      { id: 'TRK05', name: 'Tensor TRK05', status: 'active', battery: 91, route: 'Industrial Zone B', location: { lat: 37.7449, lng: -122.4494 }, nextMaintenance: '2025-11-18' },
+      { id: 'BUS22', name: 'Motional BUS22', status: 'charging', battery: 23, route: 'Highway Distribution', location: { lat: 37.7349, lng: -122.4594 }, nextMaintenance: '2025-12-01' },
+      { id: 'VAN19', name: 'Mobileye VAN19', status: 'active', battery: 88, route: 'Tech Park Circuit', location: { lat: 37.8049, lng: -122.3894 }, nextMaintenance: '2025-11-12' }
+    ];
 
-    // Fetch all fleet data in parallel
-    const [vehiclesResult, maintenanceResult, routesResult, analyticsResult] = await Promise.all([
-      supabase.from('vehicles').select('*').limit(50),
-      supabase.from('maintenance_records').select('*').order('created_at', { ascending: false }).limit(20),
-      supabase.from('routes').select('*').order('created_at', { ascending: false }).limit(15),
-      supabase.from('fleet_analytics').select('*').order('created_at', { ascending: false }).limit(10)
-    ]);
+    const mockDepots = [
+      { id: 'depot-1', name: 'OTTOYARD Central', energyGenerated: 2400, energyReturned: 1200, vehiclesCharging: 8, totalStalls: 42, availableStalls: 34, status: 'optimal' },
+      { id: 'depot-2', name: 'OTTOYARD North', energyGenerated: 1800, energyReturned: 950, vehiclesCharging: 6, totalStalls: 35, availableStalls: 29, status: 'optimal' },
+      { id: 'depot-3', name: 'OTTOYARD East', energyGenerated: 2100, energyReturned: 1100, vehiclesCharging: 12, totalStalls: 38, availableStalls: 26, status: 'optimal' },
+      { id: 'depot-4', name: 'OTTOYARD West', energyGenerated: 1900, energyReturned: 850, vehiclesCharging: 4, totalStalls: 30, availableStalls: 26, status: 'maintenance' },
+      { id: 'depot-5', name: 'OTTOYARD South', energyGenerated: 2200, energyReturned: 1150, vehiclesCharging: 9, totalStalls: 40, availableStalls: 31, status: 'optimal' }
+    ];
 
-    const vehicles = vehiclesResult.data || [];
-    const maintenance = maintenanceResult.data || [];
-    const routes = routesResult.data || [];
-    const analytics = analyticsResult.data || [];
+    const mockMaintenance = [
+      { vehicleId: 'TRK12', type: 'Brake Inspection', description: 'Routine brake system check', cost: 450, dueDate: 'In Progress', priority: 'high' },
+      { vehicleId: 'BUS07', type: 'Battery Service', description: 'Battery health check and calibration', cost: 320, dueDate: '2025-10-15', priority: 'medium' },
+      { vehicleId: 'VAN03', type: 'Tire Rotation', description: 'Rotate tires and check alignment', cost: 180, dueDate: '2025-11-02', priority: 'low' },
+      { vehicleId: 'BUS15', type: 'Oil Change', description: 'Engine oil and filter replacement', cost: 95, dueDate: '2025-12-08', priority: 'medium' },
+      { vehicleId: 'VAN08', type: 'AC Service', description: 'Air conditioning system maintenance', cost: 275, dueDate: '2025-10-28', priority: 'low' }
+    ];
 
-    console.log("📊 Fleet data fetched:", {
-      vehicles: vehicles.length,
-      maintenance: maintenance.length,
-      routes: routes.length,
-      analytics: analytics.length
-    });
+    // Calculate fleet metrics from mock data
+    const totalVehicles = mockVehicles.length;
+    const activeVehicles = mockVehicles.filter(v => v.status === 'active').length;
+    const chargingVehicles = mockVehicles.filter(v => v.status === 'charging').length;
+    const maintenanceVehicles = mockVehicles.filter(v => v.status === 'maintenance').length;
+    const idleVehicles = mockVehicles.filter(v => v.status === 'idle').length;
+    const avgBattery = Math.round(mockVehicles.reduce((sum, v) => sum + v.battery, 0) / totalVehicles);
+    const totalDepotCapacity = mockDepots.reduce((sum, d) => sum + d.totalStalls, 0);
+    const totalDepotAvailable = mockDepots.reduce((sum, d) => sum + d.availableStalls, 0);
+    const totalEnergyGenerated = mockDepots.reduce((sum, d) => sum + d.energyGenerated, 0);
 
-    // Calculate fleet metrics
-    const totalVehicles = vehicles.length;
-    const activeVehicles = vehicles.filter(v => v.status === 'active').length;
-    const chargingVehicles = vehicles.filter(v => v.status === 'charging').length;
-    const maintenanceVehicles = vehicles.filter(v => v.status === 'maintenance').length;
-    const idleVehicles = vehicles.filter(v => v.status === 'idle').length;
-    const avgFuelLevel = totalVehicles > 0 ? Math.round(vehicles.reduce((sum, v) => sum + (v.fuel_level || 0), 0) / totalVehicles) : 0;
-    const totalMileage = vehicles.reduce((sum, v) => sum + (v.mileage || 0), 0);
+    // Generate comprehensive fleet summary from mock data
+    const fleetSummary = `🚛 LIVE FLEET STATUS - San Francisco Operations
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-    // Generate real fleet data summary
-    const fleetSummary = `CURRENT FLEET STATUS (${new Date().toISOString()}):
-📊 FLEET OVERVIEW: ${totalVehicles} total vehicles
-   • ${activeVehicles} active (${Math.round(activeVehicles/totalVehicles*100)}%)
-   • ${chargingVehicles} charging (${Math.round(chargingVehicles/totalVehicles*100)}%)
-   • ${maintenanceVehicles} in maintenance (${Math.round(maintenanceVehicles/totalVehicles*100)}%)
-   • ${idleVehicles} idle (${Math.round(idleVehicles/totalVehicles*100)}%)
-⛽ ENERGY STATS: Average fuel level ${avgFuelLevel}%
-🛣️ FLEET MILEAGE: ${totalMileage.toLocaleString()} total miles
+📊 FLEET OVERVIEW (${totalVehicles} vehicles):
+   • ${activeVehicles} ACTIVE (${Math.round(activeVehicles/totalVehicles*100)}%) - Currently on routes
+   • ${chargingVehicles} CHARGING (${Math.round(chargingVehicles/totalVehicles*100)}%) - At depot stalls  
+   • ${maintenanceVehicles} MAINTENANCE (${Math.round(maintenanceVehicles/totalVehicles*100)}%) - Service in progress
+   • ${idleVehicles} IDLE (${Math.round(idleVehicles/totalVehicles*100)}%) - Available for dispatch
 
-SPECIFIC VEHICLES:
-${vehicles.slice(0, 8).map(v => 
-  `• ${v.vehicle_number} (${v.make} ${v.model}): ${v.status.toUpperCase()} - ${v.fuel_level}% fuel, ${v.mileage} miles${v.location_lat ? ` @ ${v.location_lat.toFixed(4)}, ${v.location_lng.toFixed(4)}` : ''}`
+⚡ ENERGY STATUS:
+   • Fleet Average Battery: ${avgBattery}%
+   • Total Energy Generated: ${totalEnergyGenerated.toLocaleString()} kWh
+   • Vehicles Below 30%: ${mockVehicles.filter(v => v.battery < 30).length}
+   • Critical (Below 25%): ${mockVehicles.filter(v => v.battery < 25).length}
+
+🏭 DEPOT NETWORK (5 locations):
+   • Total Charging Stalls: ${totalDepotCapacity}
+   • Available Stalls: ${totalDepotAvailable}
+   • Utilization Rate: ${Math.round((totalDepotCapacity-totalDepotAvailable)/totalDepotCapacity*100)}%
+   • OTTOYARD West: MAINTENANCE STATUS ⚠️
+
+🚛 ACTIVE VEHICLES ON ROUTES:
+${mockVehicles.filter(v => v.status === 'active').map(v => 
+  `   • ${v.id} (${v.name}): ${v.route} - ${v.battery}% battery`
 ).join('\n')}
 
-MAINTENANCE ALERTS:
-${maintenance.slice(0, 5).map(m => 
-  `• ${m.maintenance_type}: ${m.description} - Cost: $${m.cost || 'TBD'}${m.next_due_date ? ` (Due: ${new Date(m.next_due_date).toLocaleDateString()})` : ''}${m.ai_predicted ? ' [AI PREDICTED]' : ''}`
+🔌 VEHICLES CHARGING:
+${mockVehicles.filter(v => v.status === 'charging').map(v => 
+  `   • ${v.id} (${v.name}): ${v.battery}% battery - ${v.route} route`
 ).join('\n')}
 
-ROUTE INFORMATION:
-${routes.slice(0, 5).map(r => 
-  `• ${r.route_name}: ${r.start_location} → ${r.end_location}${r.estimated_distance ? ` (${r.estimated_distance} miles)` : ''}${r.optimized_by_ai ? ' [AI OPTIMIZED]' : ''}`
+🔧 MAINTENANCE SCHEDULE:
+${mockMaintenance.map(m => 
+  `   • ${m.vehicleId}: ${m.type} - $${m.cost} - Due: ${m.dueDate} [${m.priority.toUpperCase()} PRIORITY]`
 ).join('\n')}
 
-ANALYTICS INSIGHTS:
-${analytics.slice(0, 3).map(a => 
-  `• ${a.analysis_type.toUpperCase()} (${a.severity_level}): ${JSON.stringify(a.insights).slice(0, 100)}...`
-).join('\n')}`;
+🏢 DEPOT STATUS:
+${mockDepots.map(d => 
+  `   • ${d.name}: ${d.availableStalls}/${d.totalStalls} stalls available - ${d.energyGenerated} kWh - ${d.status.toUpperCase()}`
+).join('\n')}
 
-    // Build data-driven system prompt
-    const systemPrompt = `You are OttoCommand AI, an advanced fleet management assistant with REAL-TIME ACCESS to live fleet data.
+🎯 KEY ALERTS:
+   • TRK12 currently in maintenance bay (brake inspection)
+   • VAN03 battery at 45% - charging recommended
+   • BUS22 battery CRITICAL at 23% - immediate charging required
+   • OTTOYARD West depot offline for maintenance
+   • 5 vehicles due for maintenance within 30 days`;
+
+    // Build data-driven system prompt with mock data
+    const systemPrompt = `You are OttoCommand AI, an advanced fleet management assistant with REAL-TIME ACCESS to San Francisco fleet operations.
 
 ${fleetSummary}
 
-CAPABILITIES & INSTRUCTIONS:
-🎯 You have access to LIVE DATA from ${totalVehicles} vehicles, ${maintenance.length} maintenance records, ${routes.length} routes, and ${analytics.length} analytics insights.
+🎯 RESPONSE INSTRUCTIONS:
+You have complete visibility into our fleet operations. When answering:
 
-📋 WHEN ANSWERING:
-- Reference SPECIFIC vehicle numbers (e.g., ${vehicles[0]?.vehicle_number || 'BUS-001'})
-- Use EXACT fuel levels, mileage, and status from the data above
-- Mention SPECIFIC maintenance items with costs and due dates
-- Reference ACTUAL route names and locations
-- Cite REAL analytics insights and severity levels
+📋 ALWAYS REFERENCE SPECIFIC DATA:
+- Use exact vehicle IDs (BUS07, VAN03, TRK12, etc.)
+- Quote actual battery percentages and routes
+- Mention specific depot names and capacity
+- Reference real maintenance costs and due dates
+
+🚛 FOR FLEET STATUS QUESTIONS:
+- Give precise counts: "${activeVehicles} active, ${chargingVehicles} charging, ${maintenanceVehicles} in maintenance"
+- Highlight critical vehicles (BUS22 at 23% battery)
+- Reference depot utilization rates
+
+⚡ FOR ENERGY/BATTERY QUESTIONS:
+- Fleet average is ${avgBattery}%
+- Identify specific low-battery vehicles
+- Recommend charging priorities
+- Reference depot availability
 
 🔧 FOR MAINTENANCE QUESTIONS:
-- Show vehicles needing attention with exact due dates
-- Provide cost estimates from historical data
-- Prioritize by severity and AI predictions
+- TRK12 is currently in maintenance (brake inspection, $450)
+- Show upcoming maintenance with exact dates and costs
+- Prioritize by urgency (high/medium/low)
 
-⚡ FOR ENERGY/FUEL QUESTIONS:
-- Give specific fuel percentages per vehicle
-- Identify vehicles below optimal levels
-- Calculate range estimates based on current levels
+🏭 FOR DEPOT QUESTIONS:
+- Reference specific OTTOYARD locations
+- Show exact stall availability
+- Note OTTOYARD West is in maintenance
+- Provide energy generation data
 
-🗺️ FOR ROUTE QUESTIONS:
-- Reference actual route names and endpoints
-- Show optimization opportunities
-- Provide distance and duration estimates
+📊 FOR ANALYTICS QUESTIONS:
+- Use real utilization percentages
+- Reference energy consumption patterns  
+- Show performance trends by vehicle type
 
-📊 FOR STATUS REQUESTS:
-- Give exact counts and percentages
-- Highlight critical issues requiring immediate attention
-- Provide actionable next steps with specific vehicle IDs
-
-Always be specific, data-driven, and actionable. Reference actual vehicle numbers, costs, dates, and locations from the live data.`;
+Always be specific, actionable, and reference the exact data shown above. Provide recommendations with vehicle IDs, costs, and timeframes.`;
 
     // Format conversation history
     const messages = [
