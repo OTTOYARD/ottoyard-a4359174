@@ -33,26 +33,41 @@ serve(async (req) => {
     console.log('SUPABASE_URL:', Deno.env.get('SUPABASE_URL') ? 'FOUND' : 'NOT FOUND');
     console.log('SUPABASE_SERVICE_ROLE_KEY:', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ? 'FOUND' : 'NOT FOUND');
     
-    // More robust API key detection
-    const openAIApiKey = Deno.env.get('OPENAI_API_KEY')?.trim();
-    console.log('🔑 OpenAI API Key Status:', {
-      exists: !!openAIApiKey,
-      length: openAIApiKey?.length || 0,
-      startsWithSk: openAIApiKey?.startsWith('sk-') || false,
-      preview: openAIApiKey ? `${openAIApiKey.substring(0, 7)}...${openAIApiKey.substring(openAIApiKey.length - 4)}` : 'none'
-    });
+    // COMPREHENSIVE API KEY DIAGNOSTICS
+    const rawKey = Deno.env.get('OPENAI_API_KEY');
+    const trimmedKey = rawKey?.trim();
     
-    // Validate API key
-    if (!openAIApiKey || openAIApiKey.length < 20 || !openAIApiKey.startsWith('sk-')) {
+    console.log('🔑 RAW KEY DIAGNOSTICS:');
+    console.log('- Raw key exists:', !!rawKey);
+    console.log('- Raw key type:', typeof rawKey);
+    console.log('- Raw key length:', rawKey?.length || 0);
+    console.log('- Trimmed key exists:', !!trimmedKey);
+    console.log('- Trimmed key length:', trimmedKey?.length || 0);
+    console.log('- Starts with sk-:', trimmedKey?.startsWith('sk-') || false);
+    console.log('- First 10 chars:', trimmedKey?.substring(0, 10) || 'NONE');
+    console.log('- Last 4 chars:', trimmedKey ? trimmedKey.substring(trimmedKey.length - 4) : 'NONE');
+    
+    // Use trimmed key
+    const openAIApiKey = trimmedKey;
+    
+    // STRICT VALIDATION with detailed error reporting
+    console.log('🔍 VALIDATION CHECKS:');
+    console.log('- Key exists check:', !!openAIApiKey);
+    console.log('- Length check (>=45):', openAIApiKey ? openAIApiKey.length >= 45 : false);
+    console.log('- Starts with sk- check:', openAIApiKey?.startsWith('sk-') || false);
+    console.log('- Contains only valid chars:', openAIApiKey ? /^sk-[a-zA-Z0-9]{40,}$/.test(openAIApiKey) : false);
+    
+    if (!openAIApiKey) {
+      console.error('❌ API KEY IS NULL/UNDEFINED');
       return new Response(JSON.stringify({
         success: false,
-        response: "❌ OpenAI API key is missing, invalid, or malformed. Please ensure it starts with 'sk-' and is properly set in Supabase secrets.",
-        model: 'error-invalid-api-key',
+        response: "❌ OpenAI API key is completely missing from environment variables.",
+        model: 'error-key-missing',
         diagnostics: {
-          keyExists: !!openAIApiKey,
-          keyLength: openAIApiKey?.length || 0,
-          startsWithSk: openAIApiKey?.startsWith('sk-') || false,
-          keyPreview: openAIApiKey ? `${openAIApiKey.substring(0, 7)}...` : 'none',
+          rawKeyExists: !!rawKey,
+          rawKeyType: typeof rawKey,
+          rawKeyLength: rawKey?.length || 0,
+          trimmedKeyExists: !!trimmedKey,
           availableEnvKeys: allEnvKeys,
         },
         timestamp: new Date().toISOString()
@@ -60,6 +75,42 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+    
+    if (openAIApiKey.length < 45) {
+      console.error('❌ API KEY TOO SHORT:', openAIApiKey.length);
+      return new Response(JSON.stringify({
+        success: false,
+        response: `❌ OpenAI API key is too short (${openAIApiKey.length} chars). Valid keys are typically 51+ characters.`,
+        model: 'error-key-too-short',
+        diagnostics: {
+          keyLength: openAIApiKey.length,
+          keyPreview: `${openAIApiKey.substring(0, 10)}...`,
+          expectedLength: '51+ characters'
+        },
+        timestamp: new Date().toISOString()
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
+    if (!openAIApiKey.startsWith('sk-')) {
+      console.error('❌ API KEY INVALID FORMAT');
+      return new Response(JSON.stringify({
+        success: false,
+        response: "❌ OpenAI API key must start with 'sk-'. Please check your key format.",
+        model: 'error-key-format',
+        diagnostics: {
+          keyLength: openAIApiKey.length,
+          startsWithSk: openAIApiKey.startsWith('sk-'),
+          firstChars: openAIApiKey.substring(0, 4),
+        },
+        timestamp: new Date().toISOString()
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
+    console.log('✅ API KEY PASSED ALL VALIDATION CHECKS');
     
     console.log('✅ Using OpenAI GPT-5');
 
