@@ -1,99 +1,13 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-// OttoCommand AI — clean rebuild
-// - Uses OPENAI_API_KEY (fallback: OPENAI_API_KEY_NEW)
-// - Simple chat: { message: string, conversationHistory?: { role, content }[] }
-// - GPT-5 (Responses API) with GPT-4.1 fallback
-// - CORS, healthcheck, and robust logging (no secret exposure)
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-function getOpenAIKey() {
-  const k1 = (Deno.env.get("OPENAI_API_KEY") || "").trim();
-  const k2 = (Deno.env.get("OPENAI_API_KEY_NEW") || "").trim();
-  const key = k1 || k2;
-  const source = k1 ? "OPENAI_API_KEY" : (k2 ? "OPENAI_API_KEY_NEW" : "NONE");
-  const last4 = key ? key.slice(-4) : "NONE";
-  console.log(`OpenAI key source: ${source}; present: ${!!key}; last4: ${last4 !== "NONE" ? last4 : "NONE"}`);
-  return { key, source };
-}
-
-function buildMessages(systemPrompt: string, userMessage: string, history: any[] = []) {
-  const cleanedHistory = Array.isArray(history)
-    ? history
-        .filter((m) => m && typeof m.role === "string" && typeof m.content === "string")
-        .map((m) => ({ role: m.role, content: m.content }))
-    : [];
-  return [
-    { role: "system", content: systemPrompt },
-    ...cleanedHistory,
-    { role: "user", content: userMessage },
-  ];
-}
-
-async function callGpt5Responses(apiKey: string, messages: any[]) {
-  // GPT-5 via Responses API (uses max_completion_tokens, no temperature)
-  const res = await fetch("https://api.openai.com/v1/responses", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "gpt-5-2025-08-07",
-      input: messages,
-      max_completion_tokens: 700,
-    }),
-  });
-
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    console.error("GPT-5 Responses API error:", data);
-    throw new Error(typeof data === "string" ? data : JSON.stringify(data));
-  }
-
-  const text =
-    (data && (data.output_text || data.text)) ||
-    (data?.choices?.[0]?.message?.content) ||
-    (Array.isArray(data?.output) &&
-      data.output
-        .flatMap((o: any) => o?.content || [])
-        .map((c: any) => (typeof c?.text === "string" ? c.text : c?.content || ""))
-        .join("\n")) ||
-    "";
-
-  return { text, model: "gpt-5-2025-08-07" };
-}
-
-async function callGpt41Chat(apiKey: string, messages: any[]) {
-  // Reliable fallback using Chat Completions
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "gpt-4.1-2025-04-14",
-      messages,
-      max_tokens: 700,
-      temperature: 0.7,
-    }),
-  });
-
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    console.error("GPT-4.1 Chat API error:", data);
-    throw new Error(typeof data === "string" ? data : JSON.stringify(data));
-  }
-
-  const text = data?.choices?.[0]?.message?.content || "";
-  return { text, model: "gpt-4.1-2025-04-14" };
-}
+console.log("🚀 OttoCommand AI Edge Function - Version 4.0 - Complete ChatGPT Integration");
+console.log("Deployment time:", new Date().toISOString());
 
 serve(async (req) => {
   // CORS preflight
@@ -101,12 +15,21 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Simple healthcheck
+  // Health check
   if (req.method === "GET") {
-    return new Response(
-      JSON.stringify({ ok: true, function: "ottocommand-ai-chat", version: 1 }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    const envCheck = {
+      hasOpenAI: !!Deno.env.get("OPENAI_API_KEY"),
+      hasOpenAINew: !!Deno.env.get("OPENAI_API_KEY_NEW"),
+      timestamp: new Date().toISOString()
+    };
+    return new Response(JSON.stringify({ 
+      status: "healthy", 
+      function: "ottocommand-ai-chat",
+      version: "4.0",
+      environment: envCheck
+    }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
   }
 
   if (req.method !== "POST") {
@@ -117,7 +40,12 @@ serve(async (req) => {
   }
 
   try {
-    const { message, conversationHistory } = await req.json();
+    const { message, conversationHistory = [] } = await req.json();
+    
+    console.log("📨 Request received:", { 
+      messageLength: message?.length || 0, 
+      historyLength: conversationHistory?.length || 0 
+    });
 
     if (!message || typeof message !== "string") {
       return new Response(
@@ -126,46 +54,191 @@ serve(async (req) => {
       );
     }
 
-    const { key, source } = getOpenAIKey();
-    if (!key) {
-      console.error("OpenAI API key missing in Edge Function secrets.");
+    // Get OpenAI API key with comprehensive diagnostics
+    const openaiKey1 = Deno.env.get("OPENAI_API_KEY")?.trim();
+    const openaiKey2 = Deno.env.get("OPENAI_API_KEY_NEW")?.trim();
+    const apiKey = openaiKey1 || openaiKey2;
+    const keySource = openaiKey1 ? "OPENAI_API_KEY" : (openaiKey2 ? "OPENAI_API_KEY_NEW" : "NONE");
+    
+    console.log("🔑 API Key Check:", {
+      source: keySource,
+      hasKey: !!apiKey,
+      keyLength: apiKey?.length || 0,
+      startsWithSk: apiKey?.startsWith("sk-") || false,
+      last4: apiKey ? apiKey.slice(-4) : "NONE"
+    });
+
+    if (!apiKey) {
+      console.error("❌ No OpenAI API key found in environment");
       return new Response(
         JSON.stringify({
-          error: "OpenAI API key missing. Add OPENAI_API_KEY in Supabase Edge Functions secrets.",
+          error: "OpenAI API key not found. Please add OPENAI_API_KEY in Supabase Edge Functions secrets.",
+          details: "Key missing from environment variables"
         }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const systemPrompt =
-      "You are OttoCommand AI, a concise, expert fleet assistant. Answer clearly and helpfully.";
-    const messages = buildMessages(systemPrompt, message, conversationHistory);
-
-    let result;
-    try {
-      result = await callGpt5Responses(key, messages);
-    } catch (e) {
-      console.warn("Falling back to GPT-4.1 due to GPT-5 error.", e?.message || e);
-      result = await callGpt41Chat(key, messages);
+    if (!apiKey.startsWith("sk-") || apiKey.length < 40) {
+      console.error("❌ Invalid OpenAI API key format");
+      return new Response(
+        JSON.stringify({
+          error: "Invalid OpenAI API key format. Key must start with 'sk-' and be at least 40 characters.",
+          details: `Key length: ${apiKey.length}, starts with sk-: ${apiKey.startsWith("sk-")}`
+        }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    const payload = {
-      content: result.text,
+    // Build conversation history for ChatGPT
+    const systemPrompt = `You are OttoCommand AI, an advanced fleet management assistant. You help with:
+- Fleet status monitoring and reporting
+- Vehicle scheduling and maintenance
+- Route optimization and analytics
+- Real-time operational insights
+- Predictive maintenance recommendations
+
+Provide clear, actionable responses based on fleet management best practices. Be concise but comprehensive.`;
+
+    // Format conversation history
+    const messages = [
+      { role: "system", content: systemPrompt }
+    ];
+
+    // Add conversation history (last 10 messages to stay within token limits)
+    if (Array.isArray(conversationHistory)) {
+      const recentHistory = conversationHistory.slice(-10);
+      for (const msg of recentHistory) {
+        if (msg?.role && msg?.content) {
+          messages.push({
+            role: msg.role === "assistant" ? "assistant" : "user",
+            content: String(msg.content)
+          });
+        }
+      }
+    }
+
+    // Add current user message
+    messages.push({ role: "user", content: message });
+
+    console.log("🤖 Calling OpenAI ChatGPT API...");
+    console.log("Messages count:", messages.length);
+
+    // Call OpenAI ChatGPT API (using standard chat completions)
+    const openaiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "gpt-4o", // Reliable ChatGPT model
+        messages: messages,
+        max_tokens: 1000,
+        temperature: 0.7,
+        top_p: 1,
+        frequency_penalty: 0,
+        presence_penalty: 0
+      }),
+    });
+
+    console.log("📡 OpenAI Response Status:", openaiResponse.status);
+
+    if (!openaiResponse.ok) {
+      const errorText = await openaiResponse.text();
+      console.error("❌ OpenAI API Error:", errorText);
+      
+      // Try with GPT-3.5-turbo as fallback
+      try {
+        console.log("🔄 Trying fallback model...");
+        const fallbackResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "gpt-3.5-turbo",
+            messages: messages,
+            max_tokens: 800,
+            temperature: 0.7
+          }),
+        });
+
+        if (fallbackResponse.ok) {
+          const fallbackData = await fallbackResponse.json();
+          const aiResponse = fallbackData.choices[0].message.content;
+          
+          return new Response(JSON.stringify({
+            success: true,
+            content: aiResponse,
+            reply: aiResponse, // Legacy compatibility
+            message: aiResponse, // Legacy compatibility
+            role: "assistant",
+            model_used: "gpt-3.5-turbo",
+            key_source: keySource,
+            timestamp: new Date().toISOString()
+          }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          });
+        }
+      } catch (fallbackError) {
+        console.error("❌ Fallback also failed:", fallbackError);
+      }
+
+      return new Response(
+        JSON.stringify({
+          error: "OpenAI API request failed",
+          details: errorText,
+          status: openaiResponse.status
+        }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const data = await openaiResponse.json();
+    console.log("✅ OpenAI API Success");
+
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      console.error("❌ Unexpected OpenAI response format:", data);
+      return new Response(
+        JSON.stringify({
+          error: "Unexpected response format from OpenAI",
+          details: "Missing choices or message in response"
+        }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const aiResponse = data.choices[0].message.content;
+    
+    // Return response in multiple formats for compatibility
+    const responsePayload = {
+      success: true,
+      content: aiResponse,
+      reply: aiResponse, // For existing clients expecting 'reply'
+      message: aiResponse, // For existing clients expecting 'message'
       role: "assistant",
-      model_used: result.model,
-      key_source: source,
-      // Keep response shape flexible for existing clients
-      reply: result.text,
-      message: result.text,
+      model_used: data.model || "gpt-4o",
+      key_source: keySource,
+      usage: data.usage,
+      timestamp: new Date().toISOString()
     };
 
-    return new Response(JSON.stringify(payload), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    console.log("📤 Sending response, length:", aiResponse?.length || 0);
+
+    return new Response(JSON.stringify(responsePayload), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
+
   } catch (error: any) {
-    console.error("Unhandled error in ottocommand-ai-chat:", error?.message || error);
+    console.error("💥 Unhandled error:", error);
     return new Response(
-      JSON.stringify({ error: "Internal error", details: String(error?.message || error) }),
+      JSON.stringify({
+        error: "Internal server error",
+        details: error?.message || String(error),
+        timestamp: new Date().toISOString()
+      }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
