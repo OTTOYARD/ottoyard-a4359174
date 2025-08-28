@@ -90,7 +90,7 @@ export const AIAgentPopup = ({ open, onOpenChange }: AIAgentPopupProps) => {
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: data.response || 'I apologize, but I encountered an issue processing your request. Please try again.',
+        content: data.content || data.reply || data.message || 'I apologize, but I encountered an issue processing your request. Please try again.',
         timestamp: new Date()
       };
       setMessages(prev => [...prev, assistantMessage]);
