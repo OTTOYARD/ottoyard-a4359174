@@ -24,6 +24,7 @@ serve(async (req) => {
     const { message, conversationHistory } = await req.json();
     console.log('=== EDGE FUNCTION STARTUP ===');
     console.log('Function deployed at:', new Date().toISOString());
+    console.log('🔄 Secret refresh timestamp:', new Date().toISOString());
     
     console.log('=== DEBUGGING ENVIRONMENT VARIABLES ===');
     const allEnvKeys = Object.keys(Deno.env.toObject());
