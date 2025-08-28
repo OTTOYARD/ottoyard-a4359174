@@ -126,64 +126,77 @@ Be the most intelligent, data-driven fleet AI assistant ever created, using REAL
       { role: 'user', content: message }
     ];
 
-    // Define available functions for agentic capabilities
-    const functions = [
+    // Define available tools for agentic capabilities (GPT-5 format)
+    const tools = [
       {
-        name: "schedule_vehicle_task",
-        description: "Schedule a specific vehicle for a maintenance task or route assignment",
-        parameters: {
-          type: "object",
-          properties: {
-            vehicle_id: { type: "string", description: "Vehicle identifier (e.g., BUS-007, VAN-003)" },
-            task_type: { type: "string", enum: ["maintenance", "route", "inspection"], description: "Type of task to schedule" },
-            description: { type: "string", description: "Detailed description of the task" },
-            scheduled_date: { type: "string", description: "When to schedule the task (YYYY-MM-DD format)" },
-            priority: { type: "string", enum: ["low", "medium", "high", "critical"], description: "Task priority level" }
-          },
-          required: ["vehicle_id", "task_type", "description", "scheduled_date"]
+        type: "function",
+        function: {
+          name: "schedule_vehicle_task",
+          description: "Schedule a specific vehicle for a maintenance task or route assignment",
+          parameters: {
+            type: "object",
+            properties: {
+              vehicle_id: { type: "string", description: "Vehicle identifier (e.g., BUS-007, VAN-003)" },
+              task_type: { type: "string", enum: ["maintenance", "route", "inspection"], description: "Type of task to schedule" },
+              description: { type: "string", description: "Detailed description of the task" },
+              scheduled_date: { type: "string", description: "When to schedule the task (YYYY-MM-DD format)" },
+              priority: { type: "string", enum: ["low", "medium", "high", "critical"], description: "Task priority level" }
+            },
+            required: ["vehicle_id", "task_type", "description", "scheduled_date"]
+          }
         }
       },
       {
-        name: "update_vehicle_status", 
-        description: "Update a vehicle's operational status",
-        parameters: {
-          type: "object",
-          properties: {
-            vehicle_id: { type: "string", description: "Vehicle identifier" },
-            status: { type: "string", enum: ["active", "maintenance", "charging", "idle"], description: "New vehicle status" },
-            location: { type: "string", description: "Current location or depot" },
-            notes: { type: "string", description: "Additional status notes" }
-          },
-          required: ["vehicle_id", "status"]
+        type: "function",
+        function: {
+          name: "update_vehicle_status", 
+          description: "Update a vehicle's operational status",
+          parameters: {
+            type: "object",
+            properties: {
+              vehicle_id: { type: "string", description: "Vehicle identifier" },
+              status: { type: "string", enum: ["active", "maintenance", "charging", "idle"], description: "New vehicle status" },
+              location: { type: "string", description: "Current location or depot" },
+              notes: { type: "string", description: "Additional status notes" }
+            },
+            required: ["vehicle_id", "status"]
+          }
         }
       },
       {
-        name: "web_search",
-        description: "Search the web for current information, best practices, or industry insights",
-        parameters: {
-          type: "object", 
-          properties: {
-            query: { type: "string", description: "Search query for current information" }
-          },
-          required: ["query"]
+        type: "function",
+        function: {
+          name: "web_search",
+          description: "Search the web for current information, best practices, or industry insights",
+          parameters: {
+            type: "object", 
+            properties: {
+              query: { type: "string", description: "Search query for current information" }
+            },
+            required: ["query"]
+          }
         }
       },
       {
-        name: "create_optimization_plan",
-        description: "Create a detailed fleet optimization plan based on current data",
-        parameters: {
-          type: "object",
-          properties: {
-            focus_area: { type: "string", enum: ["routes", "energy", "maintenance", "costs"], description: "Primary optimization focus" },
-            timeframe: { type: "string", enum: ["immediate", "weekly", "monthly"], description: "Implementation timeframe" },
-            goals: { type: "string", description: "Specific optimization goals" }
-          },
-          required: ["focus_area", "timeframe"]
+        type: "function",
+        function: {
+          name: "create_optimization_plan",
+          description: "Create a detailed fleet optimization plan based on current data",
+          parameters: {
+            type: "object",
+            properties: {
+              focus_area: { type: "string", enum: ["routes", "energy", "maintenance", "costs"], description: "Primary optimization focus" },
+              timeframe: { type: "string", enum: ["immediate", "weekly", "monthly"], description: "Implementation timeframe" },
+              goals: { type: "string", description: "Specific optimization goals" }
+            },
+            required: ["focus_area", "timeframe"]
+          }
         }
       }
     ];
 
-    // Call GPT-5 with function calling enabled
+    // Call GPT-5 with tools (new format for GPT-5)
+    console.log('🤖 Calling OpenAI GPT-5 with tools...');
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -193,8 +206,8 @@ Be the most intelligent, data-driven fleet AI assistant ever created, using REAL
       body: JSON.stringify({
         model: 'gpt-5-2025-08-07',
         messages: messages,
-        functions: functions,
-        function_call: "auto",
+        tools: tools,
+        tool_choice: "auto",
         max_completion_tokens: 2000
       }),
     });
@@ -213,9 +226,9 @@ Be the most intelligent, data-driven fleet AI assistant ever created, using REAL
           body: JSON.stringify({
             model: 'gpt-4.1-2025-04-14',
             messages: messages,
-            functions: functions,
-            function_call: 'auto',
-            max_tokens: 2000
+            tools: tools,
+            tool_choice: 'auto',
+            max_completion_tokens: 2000
           }),
         });
 
@@ -264,20 +277,24 @@ Be the most intelligent, data-driven fleet AI assistant ever created, using REAL
     const data = await response.json();
     const aiMessage = data.choices[0].message;
 
-    // Check if AI wants to call a function
-    if (aiMessage.function_call) {
-      console.log('Function call requested:', aiMessage.function_call);
+    // Check if AI wants to call a tool (GPT-5 format)
+    if (aiMessage.tool_calls && aiMessage.tool_calls.length > 0) {
+      console.log('Tool calls requested:', aiMessage.tool_calls);
       
-      // Execute the requested function
-      const functionResult = await executeFunction(aiMessage.function_call, supabase);
+      // Execute the first requested tool
+      const toolCall = aiMessage.tool_calls[0];
+      const functionResult = await executeFunction({
+        name: toolCall.function.name,
+        arguments: toolCall.function.arguments
+      }, supabase);
       
       // Send function result back to AI for final response
       const followUpMessages = [
         ...messages,
         aiMessage,
         {
-          role: 'function',
-          name: aiMessage.function_call.name,
+          role: 'tool',
+          tool_call_id: toolCall.id,
           content: JSON.stringify(functionResult)
         }
       ];
@@ -301,7 +318,7 @@ Be the most intelligent, data-driven fleet AI assistant ever created, using REAL
       return new Response(JSON.stringify({
         success: true,
         response: finalResponse,
-        action_taken: aiMessage.function_call.name,
+        action_taken: toolCall.function.name,
         model: 'gpt-5-2025-08-07',
         timestamp: new Date().toISOString()
       }), {
