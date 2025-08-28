@@ -620,7 +620,7 @@ const Index = () => {
                           <Car className="h-5 w-5 mr-2 text-accent" />
                           Active Vehicles
                         </span>
-                        <Button variant="ghost" size="sm" onClick={() => setOverviewView('vehicles')}>
+                        <Button variant="ghost" size="sm" onClick={() => {setOverviewView('vehicles'); window.scrollTo({ top: 0, behavior: 'smooth' });}}>
                           View All <ChevronRight className="h-4 w-4 ml-1" />
                         </Button>
                       </CardTitle>
@@ -654,7 +654,7 @@ const Index = () => {
                           <Zap className="h-5 w-5 mr-2 text-energy-grid" />
                           Available Depots
                         </span>
-                        <Button variant="ghost" size="sm" onClick={() => setSelectedTab('depots')}>
+                        <Button variant="ghost" size="sm" onClick={() => {setSelectedTab('depots'); window.scrollTo({ top: 0, behavior: 'smooth' });}}>
                           View All <ChevronRight className="h-4 w-4 ml-1" />
                         </Button>
                       </CardTitle>
