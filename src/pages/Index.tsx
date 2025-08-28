@@ -23,7 +23,21 @@ const generateVehiclesForCity = (city: City) => {
   const routes = ['Downtown Delivery', 'Warehouse Route A', 'Port Transfer', 'Industrial Zone B', 'Airport Cargo', 'Highway Distribution', 'City Center Loop', 'Suburban Route', 'Cross-town Express', 'Harbor District', 'Tech Park Circuit', 'Mall Complex', 'University Campus', 'Hospital Route', 'Financial District'];
   const avCompanies = ['Waymo', 'Zoox', 'Tensor', 'Cruise', 'Aurora', 'Argo AI', 'Nuro', 'Mobileye', 'Motional', 'Waymo'];
   const vehicles = [];
-  const vehicleCount = Math.floor(Math.random() * 20) + 30; // 30-50 vehicles per city
+  
+  // City-specific vehicle counts and characteristics
+  const cityProfiles = {
+    'San Francisco': { count: [35, 45], batteryRange: [70, 95], activeRatio: 0.6 },
+    'New York': { count: [45, 60], batteryRange: [60, 90], activeRatio: 0.7 },
+    'Los Angeles': { count: [40, 55], batteryRange: [65, 85], activeRatio: 0.65 },
+    'Chicago': { count: [30, 42], batteryRange: [55, 80], activeRatio: 0.5 },
+    'Austin': { count: [25, 35], batteryRange: [75, 95], activeRatio: 0.8 },
+    'Seattle': { count: [28, 38], batteryRange: [80, 95], activeRatio: 0.75 },
+    'Miami': { count: [32, 42], batteryRange: [70, 90], activeRatio: 0.7 },
+    'Denver': { count: [22, 32], batteryRange: [65, 85], activeRatio: 0.6 }
+  };
+
+  const profile = cityProfiles[city.name] || cityProfiles['San Francisco'];
+  const vehicleCount = Math.floor(Math.random() * (profile.count[1] - profile.count[0])) + profile.count[0];
 
   for (let i = 0; i < vehicleCount; i++) {
     // Generate unique 5-digit alphanumeric ID
@@ -32,8 +46,16 @@ const generateVehiclesForCity = (city: City) => {
     for (let j = 0; j < 5; j++) {
       id += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-    const status = statuses[Math.floor(Math.random() * statuses.length)];
-    const battery = Math.floor(Math.random() * 100);
+    
+    // Determine status based on city profile
+    let status;
+    if (Math.random() < profile.activeRatio) {
+      status = 'active';
+    } else {
+      status = statuses[Math.floor(Math.random() * (statuses.length - 1)) + 1]; // Exclude 'active' from random
+    }
+    
+    const battery = Math.floor(Math.random() * (profile.batteryRange[1] - profile.batteryRange[0])) + profile.batteryRange[0];
     const route = routes[Math.floor(Math.random() * routes.length)];
     const company = avCompanies[Math.floor(Math.random() * avCompanies.length)];
 
@@ -56,70 +78,85 @@ const generateVehiclesForCity = (city: City) => {
   }
   return vehicles;
 };
-const depots = [{
-  id: "depot-1",
-  name: "OTTOYARD Central",
-  energyGenerated: 2400,
-  energyReturned: 1200,
-  vehiclesCharging: 8,
-  totalStalls: 42,
-  availableStalls: 34,
-  status: "optimal"
-}, {
-  id: "depot-2",
-  name: "OTTOYARD North",
-  energyGenerated: 1800,
-  energyReturned: 950,
-  vehiclesCharging: 6,
-  totalStalls: 35,
-  availableStalls: 29,
-  status: "optimal"
-}, {
-  id: "depot-3",
-  name: "OTTOYARD East",
-  energyGenerated: 2100,
-  energyReturned: 1100,
-  vehiclesCharging: 12,
-  totalStalls: 38,
-  availableStalls: 26,
-  status: "optimal"
-}, {
-  id: "depot-4",
-  name: "OTTOYARD West",
-  energyGenerated: 1900,
-  energyReturned: 850,
-  vehiclesCharging: 4,
-  totalStalls: 30,
-  availableStalls: 26,
-  status: "maintenance"
-}, {
-  id: "depot-5",
-  name: "OTTOYARD South",
-  energyGenerated: 2200,
-  energyReturned: 1150,
-  vehiclesCharging: 9,
-  totalStalls: 45,
-  availableStalls: 36,
-  status: "optimal"
-}, {
-  id: "depot-6",
-  name: "OTTOYARD Harbor",
-  energyGenerated: 1600,
-  energyReturned: 780,
-  vehiclesCharging: 7,
-  totalStalls: 32,
-  availableStalls: 25,
-  status: "optimal"
-}, {
-  id: "depot-7",
-  name: "OTTOYARD Airport",
-  energyGenerated: 2500,
-  energyReturned: 1300,
-  vehiclesCharging: 15,
-  totalStalls: 50,
-  availableStalls: 35,
-  status: "optimal"
-}];
+
+// Generate depots for specific city
+const generateDepotsForCity = (city: City) => {
+  const depotProfiles = {
+    'San Francisco': {
+      count: 7,
+      names: ['Central', 'North Bay', 'East Bay', 'Peninsula', 'South Bay', 'Downtown', 'Mission District'],
+      energyRange: [1800, 2600],
+      stallRange: [30, 50]
+    },
+    'New York': {
+      count: 8,
+      names: ['Manhattan', 'Brooklyn', 'Queens', 'Bronx', 'Staten Island', 'Long Island', 'Newark', 'JFK'],
+      energyRange: [2000, 3000],
+      stallRange: [35, 55]
+    },
+    'Los Angeles': {
+      count: 9,
+      names: ['Downtown', 'Hollywood', 'Beverly Hills', 'Santa Monica', 'LAX', 'Long Beach', 'Pasadena', 'Burbank', 'Inglewood'],
+      energyRange: [1900, 2800],
+      stallRange: [32, 48]
+    },
+    'Chicago': {
+      count: 6,
+      names: ['Downtown', 'North Side', 'South Side', 'O\'Hare', 'Midway', 'West Loop'],
+      energyRange: [1600, 2400],
+      stallRange: [28, 42]
+    },
+    'Austin': {
+      count: 5,
+      names: ['Downtown', 'North Austin', 'South Austin', 'East Austin', 'Airport'],
+      energyRange: [1400, 2200],
+      stallRange: [25, 40]
+    },
+    'Seattle': {
+      count: 6,
+      names: ['Downtown', 'Capitol Hill', 'Ballard', 'Fremont', 'SeaTac', 'Bellevue'],
+      energyRange: [1700, 2500],
+      stallRange: [30, 45]
+    },
+    'Miami': {
+      count: 7,
+      names: ['Downtown', 'South Beach', 'Wynwood', 'Coral Gables', 'Airport', 'Port', 'Aventura'],
+      energyRange: [1800, 2700],
+      stallRange: [32, 48]
+    },
+    'Denver': {
+      count: 5,
+      names: ['Downtown', 'Capitol Hill', 'Highlands', 'Airport', 'Tech Center'],
+      energyRange: [1500, 2300],
+      stallRange: [26, 38]
+    }
+  };
+
+  const profile = depotProfiles[city.name] || depotProfiles['San Francisco'];
+  const depots = [];
+
+  for (let i = 0; i < profile.count; i++) {
+    const energyGenerated = Math.floor(Math.random() * (profile.energyRange[1] - profile.energyRange[0])) + profile.energyRange[0];
+    const energyReturned = Math.floor(energyGenerated * (0.4 + Math.random() * 0.3)); // 40-70% return rate
+    const totalStalls = Math.floor(Math.random() * (profile.stallRange[1] - profile.stallRange[0])) + profile.stallRange[0];
+    const vehiclesCharging = Math.floor(Math.random() * (totalStalls * 0.6)); // Up to 60% occupancy
+    const availableStalls = totalStalls - vehiclesCharging;
+    const status = Math.random() > 0.85 ? 'maintenance' : 'optimal'; // 15% chance maintenance
+
+    depots.push({
+      id: `depot-${i + 1}`,
+      name: `OTTOYARD ${profile.names[i]}`,
+      energyGenerated,
+      energyReturned,
+      vehiclesCharging,
+      totalStalls,
+      availableStalls,
+      status
+    });
+  }
+  
+  return depots;
+};
 const Index = () => {
   const [selectedTab, setSelectedTab] = useState("overview");
   const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null);
@@ -133,6 +170,11 @@ const Index = () => {
     country: "USA"
   });
   const [vehicles, setVehicles] = useState(() => generateVehiclesForCity({
+    name: "San Francisco",
+    coordinates: [-122.4194, 37.7749],
+    country: "USA"
+  }));
+  const [depots, setDepots] = useState(() => generateDepotsForCity({
     name: "San Francisco",
     coordinates: [-122.4194, 37.7749],
     country: "USA"
@@ -182,7 +224,18 @@ const Index = () => {
   const handleCitySelect = (city: City) => {
     setCurrentCity(city);
     setVehicles(generateVehiclesForCity(city));
+    setDepots(generateDepotsForCity(city));
   };
+
+  // Calculate city-specific metrics
+  const activeVehicles = vehicles.filter(v => v.status === 'active').length;
+  const chargingVehicles = vehicles.filter(v => v.status === 'charging').length;
+  const maintenanceVehicles = vehicles.filter(v => v.status === 'maintenance').length;
+  const totalEnergyGenerated = depots.reduce((sum, depot) => sum + depot.energyGenerated, 0);
+  const totalEnergyReturned = depots.reduce((sum, depot) => sum + depot.energyReturned, 0);
+  const totalStalls = depots.reduce((sum, depot) => sum + depot.totalStalls, 0);
+  const availableStalls = depots.reduce((sum, depot) => sum + depot.availableStalls, 0);
+  const occupancyRate = Math.round(((totalStalls - availableStalls) / totalStalls) * 100);
   return <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
@@ -316,8 +369,8 @@ const Index = () => {
                     <div className="relative">
                       <MetricsCard 
                         title="Active Vehicles" 
-                        value="12" 
-                        change="+2" 
+                        value={activeVehicles.toString()} 
+                        change={`+${Math.floor(activeVehicles * 0.1)}`} 
                         trend="up" 
                         icon={Truck} 
                         onClick={() => setSelectedQuickGlanceTile(selectedQuickGlanceTile === 'vehicles' ? null : 'vehicles')} 
@@ -333,11 +386,11 @@ const Index = () => {
                           <div className="h-32 mb-4">
                             <ResponsiveContainer width="100%" height="100%">
                               <PieChart>
-                                <Pie
+                                 <Pie
                                   data={[
-                                    { name: 'Active', value: 8, fill: 'hsl(var(--success))' },
-                                    { name: 'Charging', value: 3, fill: 'hsl(var(--primary))' },
-                                    { name: 'Maintenance', value: 1, fill: 'hsl(var(--warning))' }
+                                    { name: 'Active', value: activeVehicles, fill: 'hsl(var(--success))' },
+                                    { name: 'Charging', value: chargingVehicles, fill: 'hsl(var(--primary))' },
+                                    { name: 'Maintenance', value: maintenanceVehicles, fill: 'hsl(var(--warning))' }
                                   ]}
                                   cx="50%"
                                   cy="50%"
@@ -351,9 +404,9 @@ const Index = () => {
                           </div>
                           
                           <div className="space-y-2 text-sm mb-4">
-                            <p><span className="font-medium">Active:</span> 8 vehicles on deliveries</p>
-                            <p><span className="font-medium">Charging:</span> 3 vehicles at depots</p>
-                            <p><span className="font-medium">Maintenance:</span> 1 vehicle scheduled</p>
+                            <p><span className="font-medium">Active:</span> {activeVehicles} vehicles on deliveries</p>
+                            <p><span className="font-medium">Charging:</span> {chargingVehicles} vehicles at depots</p>
+                            <p><span className="font-medium">Maintenance:</span> {maintenanceVehicles} vehicle{maintenanceVehicles !== 1 ? 's' : ''} scheduled</p>
                           </div>
                           
                           <div className="flex gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
@@ -374,11 +427,11 @@ const Index = () => {
                     <div className="relative">
                       <MetricsCard 
                         title="Energy & Grid" 
-                        value="4.2 MWh" 
-                        change="+15%" 
+                        value={`${(totalEnergyGenerated / 1000).toFixed(1)} MWh`} 
+                        change={`+${Math.round((totalEnergyReturned / totalEnergyGenerated) * 100)}%`} 
                         trend="up" 
                         icon={Zap} 
-                        secondaryValue="2.1 MWh returned" 
+                        secondaryValue={`${(totalEnergyReturned / 1000).toFixed(1)} MWh returned`} 
                         secondaryLabel="Grid Return" 
                         onClick={() => setSelectedQuickGlanceTile(selectedQuickGlanceTile === 'energy' ? null : 'energy')} 
                       />
@@ -435,8 +488,8 @@ const Index = () => {
                     <div className="relative">
                       <MetricsCard 
                         title="Fleet Efficiency" 
-                        value="94.2%" 
-                        change="+3.1%" 
+                        value={`${Math.round(85 + (occupancyRate * 0.15))}%`} 
+                        change={`+${Math.round(Math.random() * 5)}%`} 
                         trend="up" 
                         icon={Activity} 
                         onClick={() => setSelectedQuickGlanceTile(selectedQuickGlanceTile === 'efficiency' ? null : 'efficiency')} 
@@ -494,11 +547,11 @@ const Index = () => {
                     <div className="relative">
                       <MetricsCard 
                         title="Scheduled Services" 
-                        value="8" 
-                        change="+3" 
+                        value={maintenanceVehicles.toString()} 
+                        change={`+${Math.floor(maintenanceVehicles * 0.3)}`} 
                         trend="up" 
                         icon={Wrench} 
-                        secondaryValue="2 today" 
+                        secondaryValue={`${Math.min(maintenanceVehicles, 2)} today`} 
                         secondaryLabel="Due Today" 
                         onClick={() => setSelectedQuickGlanceTile(selectedQuickGlanceTile === 'maintenance' ? null : 'maintenance')} 
                       />
@@ -532,9 +585,9 @@ const Index = () => {
                           </div>
                           
                           <div className="space-y-2 text-sm mb-4">
-                            <p><span className="font-medium">Due Today:</span> 2 battery checks</p>
-                            <p><span className="font-medium">This Week:</span> 8 total services</p>
-                            <p><span className="font-medium">Urgent:</span> 1 brake inspection</p>
+                            <p><span className="font-medium">Due Today:</span> {Math.min(maintenanceVehicles, 2)} battery checks</p>
+                            <p><span className="font-medium">This Week:</span> {maintenanceVehicles} total services</p>
+                            <p><span className="font-medium">Urgent:</span> {Math.max(1, Math.floor(maintenanceVehicles * 0.2))} brake inspection{Math.floor(maintenanceVehicles * 0.2) !== 1 ? 's' : ''}</p>
                           </div>
                           
                           <div className="flex gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
@@ -1179,7 +1232,7 @@ const Index = () => {
               
               <Card className="shadow-fleet-md">
                 <CardHeader>
-                  <CardTitle>Fleet Status Distribution (Total: 45 vehicles)</CardTitle>
+                  <CardTitle>Fleet Status Distribution (Total: {vehicles.length} vehicles)</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="h-64">
