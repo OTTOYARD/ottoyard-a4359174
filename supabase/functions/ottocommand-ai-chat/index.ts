@@ -45,7 +45,10 @@ serve(async (req) => {
     
     console.log("📨 Request received:", { 
       messageLength: message?.length || 0, 
-      historyLength: conversationHistory?.length || 0 
+      historyLength: conversationHistory?.length || 0,
+      currentCity: currentCity?.name || "undefined",
+      vehiclesLength: vehicles?.length || 0,
+      depotsLength: depots?.length || 0
     });
 
     if (!message || typeof message !== "string") {
@@ -116,6 +119,8 @@ serve(async (req) => {
       { id: 'depot-5', name: 'OTTOYARD South', energyGenerated: 2200, energyReturned: 1150, vehiclesCharging: 9, totalStalls: 40, availableStalls: 31, status: 'optimal' }
     ];
 
+    console.log("✅ Data processed successfully");
+
     const mockMaintenance = [
       { vehicleId: 'TRK12', type: 'Brake Inspection', description: 'Routine brake system check', cost: 450, dueDate: 'In Progress', priority: 'high' },
       { vehicleId: 'BUS07', type: 'Battery Service', description: 'Battery health check and calibration', cost: 320, dueDate: '2025-10-15', priority: 'medium' },
@@ -126,14 +131,14 @@ serve(async (req) => {
 
     // Calculate fleet metrics from actual city data
     const totalVehicles = actualVehicles.length;
-    const activeVehicles = actualVehicles.filter(v => v.status === 'active').length;
-    const chargingVehicles = actualVehicles.filter(v => v.status === 'charging').length;
-    const maintenanceVehicles = actualVehicles.filter(v => v.status === 'maintenance').length;
-    const idleVehicles = actualVehicles.filter(v => v.status === 'idle').length;
-    const avgBattery = totalVehicles > 0 ? Math.round(actualVehicles.reduce((sum, v) => sum + (v.battery || 0), 0) / totalVehicles) : 0;
-    const totalDepotCapacity = actualDepots.reduce((sum, d) => sum + (d.totalStalls || 0), 0);
-    const totalDepotAvailable = actualDepots.reduce((sum, d) => sum + (d.availableStalls || 0), 0);
-    const totalEnergyGenerated = actualDepots.reduce((sum, d) => sum + (d.energyGenerated || 0), 0);
+    const activeVehicles = actualVehicles.filter(v => v?.status === 'active').length;
+    const chargingVehicles = actualVehicles.filter(v => v?.status === 'charging').length;
+    const maintenanceVehicles = actualVehicles.filter(v => v?.status === 'maintenance').length;
+    const idleVehicles = actualVehicles.filter(v => v?.status === 'idle').length;
+    const avgBattery = totalVehicles > 0 ? Math.round(actualVehicles.reduce((sum, v) => sum + (v?.battery || 0), 0) / totalVehicles) : 0;
+    const totalDepotCapacity = actualDepots.reduce((sum, d) => sum + (d?.totalStalls || 0), 0);
+    const totalDepotAvailable = actualDepots.reduce((sum, d) => sum + (d?.availableStalls || 0), 0);
+    const totalEnergyGenerated = actualDepots.reduce((sum, d) => sum + (d?.energyGenerated || 0), 0);
 
     // Generate comprehensive fleet summary from actual city data
     const locationInfo = currentCity ? `${currentCity.name}, ${currentCity.country}` : "All Cities Combined";
@@ -141,22 +146,22 @@ serve(async (req) => {
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 📊 FLEET OVERVIEW (${totalVehicles} vehicles):
-   • ${activeVehicles} ACTIVE (${Math.round(activeVehicles/totalVehicles*100)}%) - Currently on routes
-   • ${chargingVehicles} CHARGING (${Math.round(chargingVehicles/totalVehicles*100)}%) - At depot stalls  
-   • ${maintenanceVehicles} MAINTENANCE (${Math.round(maintenanceVehicles/totalVehicles*100)}%) - Service in progress
-   • ${idleVehicles} IDLE (${Math.round(idleVehicles/totalVehicles*100)}%) - Available for dispatch
+   • ${activeVehicles} ACTIVE (${totalVehicles > 0 ? Math.round(activeVehicles/totalVehicles*100) : 0}%) - Currently on routes
+   • ${chargingVehicles} CHARGING (${totalVehicles > 0 ? Math.round(chargingVehicles/totalVehicles*100) : 0}%) - At depot stalls  
+   • ${maintenanceVehicles} MAINTENANCE (${totalVehicles > 0 ? Math.round(maintenanceVehicles/totalVehicles*100) : 0}%) - Service in progress
+   • ${idleVehicles} IDLE (${totalVehicles > 0 ? Math.round(idleVehicles/totalVehicles*100) : 0}%) - Available for dispatch
 
 ⚡ ENERGY STATUS:
    • Fleet Average Battery: ${avgBattery}%
    • Total Energy Generated: ${totalEnergyGenerated.toLocaleString()} kWh
-   • Vehicles Below 30%: ${mockVehicles.filter(v => v.battery < 30).length}
-   • Critical (Below 25%): ${mockVehicles.filter(v => v.battery < 25).length}
+   • Vehicles Below 30%: ${actualVehicles.filter(v => v?.battery && v.battery < 30).length}
+   • Critical (Below 25%): ${actualVehicles.filter(v => v?.battery && v.battery < 25).length}
 
-🏭 DEPOT NETWORK (5 locations):
+🏭 DEPOT NETWORK (${actualDepots.length} locations):
    • Total Charging Stalls: ${totalDepotCapacity}
    • Available Stalls: ${totalDepotAvailable}
-   • Utilization Rate: ${Math.round((totalDepotCapacity-totalDepotAvailable)/totalDepotCapacity*100)}%
-   • OTTOYARD West: MAINTENANCE STATUS ⚠️
+   • Utilization Rate: ${totalDepotCapacity > 0 ? Math.round((totalDepotCapacity-totalDepotAvailable)/totalDepotCapacity*100) : 0}%
+   • Depots in maintenance: ${actualDepots.filter(d => d?.status === 'maintenance').length}
 
 🚛 ACTIVE VEHICLES ON ROUTES:
 ${actualVehicles.filter(v => v?.status === 'active').map(v => 
