@@ -27,8 +27,8 @@ const MetricsCard = ({
   
   return (
     <Card 
-      className={`h-32 shadow-fleet-sm hover:shadow-fleet-md transition-all duration-300 ease-out hover-scale ${
-        onClick ? 'cursor-pointer hover:ring-2 hover:ring-primary/30 hover:bg-gradient-to-br hover:from-card hover:to-primary/5 active:scale-95 hover:shadow-glow active:shadow-fleet-lg' : ''
+      className={`h-32 futuristic-card hover-neon pulse-border transition-all duration-300 ease-out hover-scale ${
+        onClick ? 'cursor-pointer hover:ring-2 hover:ring-primary/30 hover:bg-gradient-to-br hover:from-card hover:to-primary/5 active:scale-95 hover:shadow-neon active:shadow-intense scanning-line' : ''
       }`}
       onClick={onClick}
     >
@@ -37,9 +37,9 @@ const MetricsCard = ({
           <div className="space-y-1 flex-1">
             <h3 className="text-base font-bold text-foreground leading-tight">{title}</h3>
             <div className="flex items-baseline space-x-2">
-              <p className="text-2xl font-bold text-foreground">{value}</p>
+              <p className="text-2xl font-bold text-foreground neon-text animate-cyber-fade">{value}</p>
               <div className={`flex items-center text-sm font-medium ${trendColor}`}>
-                <TrendIcon className="h-3 w-3 mr-1" />
+                <TrendIcon className="h-3 w-3 mr-1 animate-float" />
                 {change}
               </div>
             </div>
@@ -49,8 +49,8 @@ const MetricsCard = ({
               </div>
             )}
           </div>
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <Icon className="h-6 w-6 text-primary" />
+          <div className="p-2 bg-primary/10 rounded-lg glow-soft pulse-glow">
+            <Icon className="h-6 w-6 text-primary animate-glow-pulse" />
           </div>
         </div>
       </CardContent>
