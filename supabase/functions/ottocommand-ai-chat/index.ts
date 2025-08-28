@@ -24,6 +24,7 @@ serve(async (req) => {
     const { message, conversationHistory } = await req.json();
     console.log('=== EDGE FUNCTION STARTUP ===');
     console.log('Function deployed at:', new Date().toISOString());
+    console.log('🔄 FORCED REFRESH - Build ID:', Math.random().toString(36).substr(2, 9));
     console.log('🔄 Secret refresh timestamp:', new Date().toISOString());
     
     console.log('=== DEBUGGING ENVIRONMENT VARIABLES ===');
