@@ -130,8 +130,13 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
         .addTo(map.current!);
     });
 
-    // Add depot markers
+    // Add depot markers with null checks
     depots.forEach((depot) => {
+      // Skip depots without location data
+      if (!depot.location || typeof depot.location.lat !== 'number' || typeof depot.location.lng !== 'number') {
+        console.warn('Skipping depot without valid location:', depot);
+        return;
+      }
       // Create custom depot marker element
       const markerEl = document.createElement('div');
       markerEl.className = 'depot-marker';

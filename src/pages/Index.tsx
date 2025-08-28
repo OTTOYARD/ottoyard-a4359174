@@ -146,6 +146,10 @@ const generateDepotsForCity = (city: City) => {
     depots.push({
       id: `depot-${i + 1}`,
       name: `OTTOYARD ${profile.names[i]}`,
+      location: {
+        lat: city.coordinates[1] + (Math.random() - 0.5) * 0.05,
+        lng: city.coordinates[0] + (Math.random() - 0.5) * 0.08
+      },
       energyGenerated,
       energyReturned,
       vehiclesCharging,
