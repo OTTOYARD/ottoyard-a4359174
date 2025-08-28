@@ -34,12 +34,12 @@ serve(async (req) => {
     console.log('SUPABASE_URL:', Deno.env.get('SUPABASE_URL') ? 'FOUND' : 'NOT FOUND');
     console.log('SUPABASE_SERVICE_ROLE_KEY:', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ? 'FOUND' : 'NOT FOUND');
     
-    // COMPREHENSIVE API KEY DIAGNOSTICS - USING NEW SECRET
-    const rawKey = Deno.env.get('OPENAI_API_KEY_NEW') || Deno.env.get('OPENAI_API_KEY');
+    // COMPREHENSIVE API KEY DIAGNOSTICS - USING UPDATED ORIGINAL KEY
+    const rawKey = Deno.env.get('OPENAI_API_KEY');
     const trimmedKey = rawKey?.trim();
     
-    console.log('🔑 RAW KEY DIAGNOSTICS (NEW SECRET):');
-    console.log('- Checking OPENAI_API_KEY_NEW first, then OPENAI_API_KEY');
+    console.log('🔑 RAW KEY DIAGNOSTICS (UPDATED ORIGINAL):');
+    console.log('- Using original OPENAI_API_KEY after update');
     console.log('- Raw key exists:', !!rawKey);
     console.log('- Raw key type:', typeof rawKey);
     console.log('- Raw key length:', rawKey?.length || 0);
@@ -48,6 +48,7 @@ serve(async (req) => {
     console.log('- Starts with sk-:', trimmedKey?.startsWith('sk-') || false);
     console.log('- First 10 chars:', trimmedKey?.substring(0, 10) || 'NONE');
     console.log('- Last 4 chars:', trimmedKey ? trimmedKey.substring(trimmedKey.length - 4) : 'NONE');
+    console.log('🔄 FORCED DEPLOYMENT REFRESH:', Math.random().toString(36).substr(2, 9));
     
     // Use trimmed key
     const openAIApiKey = trimmedKey;
