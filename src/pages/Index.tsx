@@ -16,6 +16,7 @@ import MetricsCard from "@/components/MetricsCard";
 import { AddVehiclePopup, TrackVehiclePopup, VehicleDetailsPopup, MaintenancePopup } from "@/components/VehiclePopups";
 import { AIAgentPopup } from "@/components/AIAgentPopup";
 import CartButton, { CartItem } from "@/components/CartButton";
+import { testOttoCommandAI } from "@/test-otto";
 
 // Generate vehicles for specific city with unique 5-digit alphanumeric IDs
 const generateVehiclesForCity = (city: City) => {
@@ -213,7 +214,7 @@ const Index = () => {
               </div>
               
               {/* Second Row: AI Button */}
-              <div className="flex items-center">
+              <div className="flex items-center gap-2">
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -222,6 +223,18 @@ const Index = () => {
                 >
                   <Bot className="h-4 w-4 mr-1" />
                   <span className="hidden sm:inline">OttoCommand AI</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={async () => {
+                    console.log("🧪 Running Otto diagnostics...");
+                    const result = await testOttoCommandAI();
+                    alert(`Test Result: ${result.success ? 'SUCCESS' : 'FAILED'}\n${JSON.stringify(result, null, 2)}`);
+                  }} 
+                  className="bg-yellow-500 text-black border-0 hover:bg-yellow-600"
+                >
+                  🧪 Test
                 </Button>
               </div>
               
