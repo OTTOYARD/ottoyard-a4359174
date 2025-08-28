@@ -21,6 +21,13 @@ import {
 interface AIAgentPopupProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  currentCity?: {
+    name: string;
+    coordinates: [number, number];
+    country: string;
+  };
+  vehicles?: any[];
+  depots?: any[];
 }
 
 interface Message {
@@ -30,7 +37,7 @@ interface Message {
   timestamp: Date;
 }
 
-export const AIAgentPopup = ({ open, onOpenChange }: AIAgentPopupProps) => {
+export const AIAgentPopup = ({ open, onOpenChange, currentCity, vehicles = [], depots = [] }: AIAgentPopupProps) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -79,7 +86,10 @@ export const AIAgentPopup = ({ open, onOpenChange }: AIAgentPopupProps) => {
       const { data, error } = await supabase.functions.invoke('ottocommand-ai-chat', {
         body: {
           message: text,
-          conversationHistory: messages.slice(-10) // Send last 10 messages for context
+          conversationHistory: messages.slice(-10), // Send last 10 messages for context
+          currentCity,
+          vehicles,
+          depots
         }
       });
 

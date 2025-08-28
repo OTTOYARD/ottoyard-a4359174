@@ -41,7 +41,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message, conversationHistory = [] } = await req.json();
+    const { message, conversationHistory = [], currentCity, vehicles = [], depots = [] } = await req.json();
     
     console.log("📨 Request received:", { 
       messageLength: message?.length || 0, 
@@ -91,10 +91,13 @@ serve(async (req) => {
       );
     }
 
-    console.log("📊 Using mock fleet data for MVP...");
+    console.log("📊 Using city-specific fleet data...");
+    console.log("🏙️ Current city:", currentCity?.name || "All Cities");
+    console.log("🚛 Vehicles count:", vehicles.length);
+    console.log("🏭 Depots count:", depots.length);
 
-    // Mock fleet data matching the UI tabs
-    const mockVehicles = [
+    // Use actual vehicle data from the UI or fallback to mock data
+    const actualVehicles = vehicles.length > 0 ? vehicles : [
       { id: 'BUS07', name: 'Waymo BUS07', status: 'active', battery: 85, route: 'Downtown Delivery', location: { lat: 37.7749, lng: -122.4194 }, nextMaintenance: '2025-10-15' },
       { id: 'VAN03', name: 'Zoox VAN03', status: 'charging', battery: 45, route: 'Warehouse Route A', location: { lat: 37.7849, lng: -122.4094 }, nextMaintenance: '2025-11-02' },
       { id: 'TRK12', name: 'Cruise TRK12', status: 'maintenance', battery: 92, route: 'Port Transfer', location: { lat: 37.7649, lng: -122.4294 }, nextMaintenance: 'In Progress' },
@@ -105,7 +108,7 @@ serve(async (req) => {
       { id: 'VAN19', name: 'Mobileye VAN19', status: 'active', battery: 88, route: 'Tech Park Circuit', location: { lat: 37.8049, lng: -122.3894 }, nextMaintenance: '2025-11-12' }
     ];
 
-    const mockDepots = [
+    const actualDepots = depots.length > 0 ? depots : [
       { id: 'depot-1', name: 'OTTOYARD Central', energyGenerated: 2400, energyReturned: 1200, vehiclesCharging: 8, totalStalls: 42, availableStalls: 34, status: 'optimal' },
       { id: 'depot-2', name: 'OTTOYARD North', energyGenerated: 1800, energyReturned: 950, vehiclesCharging: 6, totalStalls: 35, availableStalls: 29, status: 'optimal' },
       { id: 'depot-3', name: 'OTTOYARD East', energyGenerated: 2100, energyReturned: 1100, vehiclesCharging: 12, totalStalls: 38, availableStalls: 26, status: 'optimal' },
@@ -121,19 +124,20 @@ serve(async (req) => {
       { vehicleId: 'VAN08', type: 'AC Service', description: 'Air conditioning system maintenance', cost: 275, dueDate: '2025-10-28', priority: 'low' }
     ];
 
-    // Calculate fleet metrics from mock data
-    const totalVehicles = mockVehicles.length;
-    const activeVehicles = mockVehicles.filter(v => v.status === 'active').length;
-    const chargingVehicles = mockVehicles.filter(v => v.status === 'charging').length;
-    const maintenanceVehicles = mockVehicles.filter(v => v.status === 'maintenance').length;
-    const idleVehicles = mockVehicles.filter(v => v.status === 'idle').length;
-    const avgBattery = Math.round(mockVehicles.reduce((sum, v) => sum + v.battery, 0) / totalVehicles);
-    const totalDepotCapacity = mockDepots.reduce((sum, d) => sum + d.totalStalls, 0);
-    const totalDepotAvailable = mockDepots.reduce((sum, d) => sum + d.availableStalls, 0);
-    const totalEnergyGenerated = mockDepots.reduce((sum, d) => sum + d.energyGenerated, 0);
+    // Calculate fleet metrics from actual city data
+    const totalVehicles = actualVehicles.length;
+    const activeVehicles = actualVehicles.filter(v => v.status === 'active').length;
+    const chargingVehicles = actualVehicles.filter(v => v.status === 'charging').length;
+    const maintenanceVehicles = actualVehicles.filter(v => v.status === 'maintenance').length;
+    const idleVehicles = actualVehicles.filter(v => v.status === 'idle').length;
+    const avgBattery = totalVehicles > 0 ? Math.round(actualVehicles.reduce((sum, v) => sum + (v.battery || 0), 0) / totalVehicles) : 0;
+    const totalDepotCapacity = actualDepots.reduce((sum, d) => sum + (d.totalStalls || 0), 0);
+    const totalDepotAvailable = actualDepots.reduce((sum, d) => sum + (d.availableStalls || 0), 0);
+    const totalEnergyGenerated = actualDepots.reduce((sum, d) => sum + (d.energyGenerated || 0), 0);
 
-    // Generate comprehensive fleet summary from mock data
-    const fleetSummary = `🚛 LIVE FLEET STATUS - San Francisco Operations
+    // Generate comprehensive fleet summary from actual city data
+    const locationInfo = currentCity ? `${currentCity.name}, ${currentCity.country}` : "All Cities Combined";
+    const fleetSummary = `🚛 LIVE FLEET STATUS - ${locationInfo} Operations
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 📊 FLEET OVERVIEW (${totalVehicles} vehicles):
@@ -155,14 +159,14 @@ serve(async (req) => {
    • OTTOYARD West: MAINTENANCE STATUS ⚠️
 
 🚛 ACTIVE VEHICLES ON ROUTES:
-${mockVehicles.filter(v => v.status === 'active').map(v => 
-  `   • ${v.id} (${v.name}): ${v.route} - ${v.battery}% battery`
-).join('\n')}
+${actualVehicles.filter(v => v.status === 'active').map(v => 
+  `   • ${v.id} (${v.name}): ${v.route} - ${v.battery || 0}% battery`
+).join('\n') || '   • No active vehicles currently'}
 
 🔌 VEHICLES CHARGING:
-${mockVehicles.filter(v => v.status === 'charging').map(v => 
-  `   • ${v.id} (${v.name}): ${v.battery}% battery - ${v.route} route`
-).join('\n')}
+${actualVehicles.filter(v => v.status === 'charging').map(v => 
+  `   • ${v.id} (${v.name}): ${v.battery || 0}% battery - ${v.route} route`
+).join('\n') || '   • No vehicles currently charging'}
 
 🔧 MAINTENANCE SCHEDULE:
 ${mockMaintenance.map(m => 
@@ -170,19 +174,19 @@ ${mockMaintenance.map(m =>
 ).join('\n')}
 
 🏢 DEPOT STATUS:
-${mockDepots.map(d => 
-  `   • ${d.name}: ${d.availableStalls}/${d.totalStalls} stalls available - ${d.energyGenerated} kWh - ${d.status.toUpperCase()}`
-).join('\n')}
+${actualDepots.map(d => 
+  `   • ${d.name}: ${d.availableStalls || 0}/${d.totalStalls || 0} stalls available - ${d.energyGenerated || 0} kWh - ${(d.status || 'unknown').toUpperCase()}`
+).join('\n') || '   • No depot information available'}
 
 🎯 KEY ALERTS:
-   • TRK12 currently in maintenance bay (brake inspection)
-   • VAN03 battery at 45% - charging recommended
-   • BUS22 battery CRITICAL at 23% - immediate charging required
-   • OTTOYARD West depot offline for maintenance
-   • 5 vehicles due for maintenance within 30 days`;
+${actualVehicles.filter(v => v.status === 'maintenance').map(v => `   • ${v.id} currently in maintenance bay`).join('\n')}
+${actualVehicles.filter(v => v.battery && v.battery < 50).map(v => `   • ${v.id} battery at ${v.battery}% - charging ${v.battery < 25 ? 'CRITICAL' : 'recommended'}`).join('\n')}
+${actualDepots.filter(d => d.status === 'maintenance').map(d => `   • ${d.name} depot offline for maintenance`).join('\n')}
+   • Fleet operational in ${locationInfo}
+   • Real-time data from ${totalVehicles} vehicles and ${actualDepots.length} depots`;
 
-    // Build data-driven system prompt with mock data
-    const systemPrompt = `You are OttoCommand AI, an advanced fleet management assistant with REAL-TIME ACCESS to San Francisco fleet operations.
+    // Build data-driven system prompt with city-specific data
+    const systemPrompt = `You are OttoCommand AI, an advanced fleet management assistant with REAL-TIME ACCESS to ${locationInfo} fleet operations.
 
 ${fleetSummary}
 

@@ -1410,7 +1410,13 @@ const Index = () => {
         <TrackVehiclePopup open={trackVehicleOpen} onOpenChange={setTrackVehicleOpen} vehicle={popupVehicle} />
         <VehicleDetailsPopup open={vehicleDetailsOpen} onOpenChange={setVehicleDetailsOpen} vehicle={popupVehicle} />
         <MaintenancePopup open={maintenanceOpen} onOpenChange={setMaintenanceOpen} vehicle={popupVehicle} depots={depots} onAddToCart={handleAddToCart} />
-        <AIAgentPopup open={aiAgentOpen} onOpenChange={setAiAgentOpen} />
+          <AIAgentPopup 
+            open={aiAgentOpen} 
+            onOpenChange={setAiAgentOpen}
+            currentCity={currentCity}
+            vehicles={vehicles}
+            depots={depots}
+          />
 
         {/* Due Soon Summary Dialog */}
         <Dialog open={showDueSoonSummary} onOpenChange={setShowDueSoonSummary}>
