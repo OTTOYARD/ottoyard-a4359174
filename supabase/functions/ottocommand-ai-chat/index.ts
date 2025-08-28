@@ -34,11 +34,12 @@ serve(async (req) => {
     console.log('SUPABASE_URL:', Deno.env.get('SUPABASE_URL') ? 'FOUND' : 'NOT FOUND');
     console.log('SUPABASE_SERVICE_ROLE_KEY:', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ? 'FOUND' : 'NOT FOUND');
     
-    // COMPREHENSIVE API KEY DIAGNOSTICS
-    const rawKey = Deno.env.get('OPENAI_API_KEY');
+    // COMPREHENSIVE API KEY DIAGNOSTICS - USING NEW SECRET
+    const rawKey = Deno.env.get('OPENAI_API_KEY_NEW') || Deno.env.get('OPENAI_API_KEY');
     const trimmedKey = rawKey?.trim();
     
-    console.log('🔑 RAW KEY DIAGNOSTICS:');
+    console.log('🔑 RAW KEY DIAGNOSTICS (NEW SECRET):');
+    console.log('- Checking OPENAI_API_KEY_NEW first, then OPENAI_API_KEY');
     console.log('- Raw key exists:', !!rawKey);
     console.log('- Raw key type:', typeof rawKey);
     console.log('- Raw key length:', rawKey?.length || 0);
