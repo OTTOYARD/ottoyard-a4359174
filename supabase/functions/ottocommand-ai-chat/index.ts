@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -90,15 +91,108 @@ serve(async (req) => {
       );
     }
 
-    // Build conversation history for ChatGPT
-    const systemPrompt = `You are OttoCommand AI, an advanced fleet management assistant. You help with:
-- Fleet status monitoring and reporting
-- Vehicle scheduling and maintenance
-- Route optimization and analytics
-- Real-time operational insights
-- Predictive maintenance recommendations
+    // Initialize Supabase client to fetch real fleet data
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-Provide clear, actionable responses based on fleet management best practices. Be concise but comprehensive.`;
+    console.log("🗄️ Fetching real-time fleet data...");
+
+    // Fetch all fleet data in parallel
+    const [vehiclesResult, maintenanceResult, routesResult, analyticsResult] = await Promise.all([
+      supabase.from('vehicles').select('*').limit(50),
+      supabase.from('maintenance_records').select('*').order('created_at', { ascending: false }).limit(20),
+      supabase.from('routes').select('*').order('created_at', { ascending: false }).limit(15),
+      supabase.from('fleet_analytics').select('*').order('created_at', { ascending: false }).limit(10)
+    ]);
+
+    const vehicles = vehiclesResult.data || [];
+    const maintenance = maintenanceResult.data || [];
+    const routes = routesResult.data || [];
+    const analytics = analyticsResult.data || [];
+
+    console.log("📊 Fleet data fetched:", {
+      vehicles: vehicles.length,
+      maintenance: maintenance.length,
+      routes: routes.length,
+      analytics: analytics.length
+    });
+
+    // Calculate fleet metrics
+    const totalVehicles = vehicles.length;
+    const activeVehicles = vehicles.filter(v => v.status === 'active').length;
+    const chargingVehicles = vehicles.filter(v => v.status === 'charging').length;
+    const maintenanceVehicles = vehicles.filter(v => v.status === 'maintenance').length;
+    const idleVehicles = vehicles.filter(v => v.status === 'idle').length;
+    const avgFuelLevel = totalVehicles > 0 ? Math.round(vehicles.reduce((sum, v) => sum + (v.fuel_level || 0), 0) / totalVehicles) : 0;
+    const totalMileage = vehicles.reduce((sum, v) => sum + (v.mileage || 0), 0);
+
+    // Generate real fleet data summary
+    const fleetSummary = `CURRENT FLEET STATUS (${new Date().toISOString()}):
+📊 FLEET OVERVIEW: ${totalVehicles} total vehicles
+   • ${activeVehicles} active (${Math.round(activeVehicles/totalVehicles*100)}%)
+   • ${chargingVehicles} charging (${Math.round(chargingVehicles/totalVehicles*100)}%)
+   • ${maintenanceVehicles} in maintenance (${Math.round(maintenanceVehicles/totalVehicles*100)}%)
+   • ${idleVehicles} idle (${Math.round(idleVehicles/totalVehicles*100)}%)
+⛽ ENERGY STATS: Average fuel level ${avgFuelLevel}%
+🛣️ FLEET MILEAGE: ${totalMileage.toLocaleString()} total miles
+
+SPECIFIC VEHICLES:
+${vehicles.slice(0, 8).map(v => 
+  `• ${v.vehicle_number} (${v.make} ${v.model}): ${v.status.toUpperCase()} - ${v.fuel_level}% fuel, ${v.mileage} miles${v.location_lat ? ` @ ${v.location_lat.toFixed(4)}, ${v.location_lng.toFixed(4)}` : ''}`
+).join('\n')}
+
+MAINTENANCE ALERTS:
+${maintenance.slice(0, 5).map(m => 
+  `• ${m.maintenance_type}: ${m.description} - Cost: $${m.cost || 'TBD'}${m.next_due_date ? ` (Due: ${new Date(m.next_due_date).toLocaleDateString()})` : ''}${m.ai_predicted ? ' [AI PREDICTED]' : ''}`
+).join('\n')}
+
+ROUTE INFORMATION:
+${routes.slice(0, 5).map(r => 
+  `• ${r.route_name}: ${r.start_location} → ${r.end_location}${r.estimated_distance ? ` (${r.estimated_distance} miles)` : ''}${r.optimized_by_ai ? ' [AI OPTIMIZED]' : ''}`
+).join('\n')}
+
+ANALYTICS INSIGHTS:
+${analytics.slice(0, 3).map(a => 
+  `• ${a.analysis_type.toUpperCase()} (${a.severity_level}): ${JSON.stringify(a.insights).slice(0, 100)}...`
+).join('\n')}`;
+
+    // Build data-driven system prompt
+    const systemPrompt = `You are OttoCommand AI, an advanced fleet management assistant with REAL-TIME ACCESS to live fleet data.
+
+${fleetSummary}
+
+CAPABILITIES & INSTRUCTIONS:
+🎯 You have access to LIVE DATA from ${totalVehicles} vehicles, ${maintenance.length} maintenance records, ${routes.length} routes, and ${analytics.length} analytics insights.
+
+📋 WHEN ANSWERING:
+- Reference SPECIFIC vehicle numbers (e.g., ${vehicles[0]?.vehicle_number || 'BUS-001'})
+- Use EXACT fuel levels, mileage, and status from the data above
+- Mention SPECIFIC maintenance items with costs and due dates
+- Reference ACTUAL route names and locations
+- Cite REAL analytics insights and severity levels
+
+🔧 FOR MAINTENANCE QUESTIONS:
+- Show vehicles needing attention with exact due dates
+- Provide cost estimates from historical data
+- Prioritize by severity and AI predictions
+
+⚡ FOR ENERGY/FUEL QUESTIONS:
+- Give specific fuel percentages per vehicle
+- Identify vehicles below optimal levels
+- Calculate range estimates based on current levels
+
+🗺️ FOR ROUTE QUESTIONS:
+- Reference actual route names and endpoints
+- Show optimization opportunities
+- Provide distance and duration estimates
+
+📊 FOR STATUS REQUESTS:
+- Give exact counts and percentages
+- Highlight critical issues requiring immediate attention
+- Provide actionable next steps with specific vehicle IDs
+
+Always be specific, data-driven, and actionable. Reference actual vehicle numbers, costs, dates, and locations from the live data.`;
 
     // Format conversation history
     const messages = [
