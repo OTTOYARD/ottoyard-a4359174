@@ -93,11 +93,11 @@ serve(async (req) => {
 
     console.log("📊 Using city-specific fleet data...");
     console.log("🏙️ Current city:", currentCity?.name || "All Cities");
-    console.log("🚛 Vehicles count:", vehicles.length);
-    console.log("🏭 Depots count:", depots.length);
+    console.log("🚛 Vehicles count:", vehicles?.length || 0);
+    console.log("🏭 Depots count:", depots?.length || 0);
 
     // Use actual vehicle data from the UI or fallback to mock data
-    const actualVehicles = vehicles.length > 0 ? vehicles : [
+    const actualVehicles = Array.isArray(vehicles) && vehicles.length > 0 ? vehicles : [
       { id: 'BUS07', name: 'Waymo BUS07', status: 'active', battery: 85, route: 'Downtown Delivery', location: { lat: 37.7749, lng: -122.4194 }, nextMaintenance: '2025-10-15' },
       { id: 'VAN03', name: 'Zoox VAN03', status: 'charging', battery: 45, route: 'Warehouse Route A', location: { lat: 37.7849, lng: -122.4094 }, nextMaintenance: '2025-11-02' },
       { id: 'TRK12', name: 'Cruise TRK12', status: 'maintenance', battery: 92, route: 'Port Transfer', location: { lat: 37.7649, lng: -122.4294 }, nextMaintenance: 'In Progress' },
@@ -108,7 +108,7 @@ serve(async (req) => {
       { id: 'VAN19', name: 'Mobileye VAN19', status: 'active', battery: 88, route: 'Tech Park Circuit', location: { lat: 37.8049, lng: -122.3894 }, nextMaintenance: '2025-11-12' }
     ];
 
-    const actualDepots = depots.length > 0 ? depots : [
+    const actualDepots = Array.isArray(depots) && depots.length > 0 ? depots : [
       { id: 'depot-1', name: 'OTTOYARD Central', energyGenerated: 2400, energyReturned: 1200, vehiclesCharging: 8, totalStalls: 42, availableStalls: 34, status: 'optimal' },
       { id: 'depot-2', name: 'OTTOYARD North', energyGenerated: 1800, energyReturned: 950, vehiclesCharging: 6, totalStalls: 35, availableStalls: 29, status: 'optimal' },
       { id: 'depot-3', name: 'OTTOYARD East', energyGenerated: 2100, energyReturned: 1100, vehiclesCharging: 12, totalStalls: 38, availableStalls: 26, status: 'optimal' },
@@ -159,13 +159,13 @@ serve(async (req) => {
    • OTTOYARD West: MAINTENANCE STATUS ⚠️
 
 🚛 ACTIVE VEHICLES ON ROUTES:
-${actualVehicles.filter(v => v.status === 'active').map(v => 
-  `   • ${v.id} (${v.name}): ${v.route} - ${v.battery || 0}% battery`
+${actualVehicles.filter(v => v?.status === 'active').map(v => 
+  `   • ${v?.id || 'Unknown'} (${v?.name || 'Unknown Vehicle'}): ${v?.route || 'No route'} - ${v?.battery || 0}% battery`
 ).join('\n') || '   • No active vehicles currently'}
 
 🔌 VEHICLES CHARGING:
-${actualVehicles.filter(v => v.status === 'charging').map(v => 
-  `   • ${v.id} (${v.name}): ${v.battery || 0}% battery - ${v.route} route`
+${actualVehicles.filter(v => v?.status === 'charging').map(v => 
+  `   • ${v?.id || 'Unknown'} (${v?.name || 'Unknown Vehicle'}): ${v?.battery || 0}% battery - ${v?.route || 'No route'} route`
 ).join('\n') || '   • No vehicles currently charging'}
 
 🔧 MAINTENANCE SCHEDULE:
@@ -175,13 +175,13 @@ ${mockMaintenance.map(m =>
 
 🏢 DEPOT STATUS:
 ${actualDepots.map(d => 
-  `   • ${d.name}: ${d.availableStalls || 0}/${d.totalStalls || 0} stalls available - ${d.energyGenerated || 0} kWh - ${(d.status || 'unknown').toUpperCase()}`
+  `   • ${d?.name || 'Unknown Depot'}: ${d?.availableStalls || 0}/${d?.totalStalls || 0} stalls available - ${d?.energyGenerated || 0} kWh - ${(d?.status || 'unknown').toUpperCase()}`
 ).join('\n') || '   • No depot information available'}
 
 🎯 KEY ALERTS:
-${actualVehicles.filter(v => v.status === 'maintenance').map(v => `   • ${v.id} currently in maintenance bay`).join('\n')}
-${actualVehicles.filter(v => v.battery && v.battery < 50).map(v => `   • ${v.id} battery at ${v.battery}% - charging ${v.battery < 25 ? 'CRITICAL' : 'recommended'}`).join('\n')}
-${actualDepots.filter(d => d.status === 'maintenance').map(d => `   • ${d.name} depot offline for maintenance`).join('\n')}
+${actualVehicles.filter(v => v?.status === 'maintenance').map(v => `   • ${v?.id || 'Unknown'} currently in maintenance bay`).join('\n')}
+${actualVehicles.filter(v => v?.battery && v.battery < 50).map(v => `   • ${v?.id || 'Unknown'} battery at ${v?.battery || 0}% - charging ${v.battery < 25 ? 'CRITICAL' : 'recommended'}`).join('\n')}
+${actualDepots.filter(d => d?.status === 'maintenance').map(d => `   • ${d?.name || 'Unknown Depot'} depot offline for maintenance`).join('\n')}
    • Fleet operational in ${locationInfo}
    • Real-time data from ${totalVehicles} vehicles and ${actualDepots.length} depots`;
 
@@ -194,15 +194,16 @@ ${fleetSummary}
 You have complete visibility into our fleet operations. When answering:
 
 📋 ALWAYS REFERENCE SPECIFIC DATA:
-- Use exact vehicle IDs (BUS07, VAN03, TRK12, etc.)
-- Quote actual battery percentages and routes
-- Mention specific depot names and capacity
+- Use exact vehicle IDs (${actualVehicles.map(v => v?.id).filter(Boolean).join(', ') || 'No vehicles available'})
+- Quote actual battery percentages and routes from current city data
+- Mention specific depot names and capacity from ${locationInfo}
 - Reference real maintenance costs and due dates
+- When asked about cities not currently selected, explain data is for ${locationInfo} and suggest switching cities
 
 🚛 FOR FLEET STATUS QUESTIONS:
 - Give precise counts: "${activeVehicles} active, ${chargingVehicles} charging, ${maintenanceVehicles} in maintenance"
-- Highlight critical vehicles (BUS22 at 23% battery)
-- Reference depot utilization rates
+- Highlight critical vehicles with low battery levels
+- Reference depot utilization rates for ${locationInfo}
 
 ⚡ FOR ENERGY/BATTERY QUESTIONS:
 - Fleet average is ${avgBattery}%
