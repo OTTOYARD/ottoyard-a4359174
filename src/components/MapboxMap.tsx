@@ -15,14 +15,27 @@ interface Vehicle {
   route: string;
 }
 
+interface Depot {
+  id: string;
+  name: string;
+  location: { lat: number; lng: number };
+  totalStalls: number;
+  availableStalls: number;
+  energyGenerated: number;
+  energyReturned: number;
+  vehiclesCharging: number;
+  status: string;
+}
+
 interface MapboxMapProps {
   vehicles: Vehicle[];
+  depots: Depot[];
   city?: { name: string; coordinates: [number, number] };
   onVehicleClick?: (vehicleId: string) => void;
   onDepotClick?: (depotId: string) => void;
 }
 
-const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, city, onVehicleClick, onDepotClick }) => {
+const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicleClick, onDepotClick }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [mapboxToken, setMapboxToken] = useState('pk.eyJ1Ijoib3R0b3lhcmQiLCJhIjoiY21lZWY5cjduMGtsdzJpb2wxNWpweGg4NCJ9.NfsLzQ2-o8wEHOfRrPO5WQ');
@@ -50,24 +63,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, city, onVehicleClick, o
     // Add navigation controls
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
-    // Generate depot locations for the current city
-    const generateDepots = () => {
-      if (!city) return [];
-      
-      const depotNames = ['OTTOYARD Central Hub', 'OTTOYARD North Station', 'OTTOYARD Port Terminal'];
-      return depotNames.map((name, index) => ({
-        id: `depot-${index}`,
-        name,
-        location: {
-          lat: city.coordinates[1] + (Math.random() - 0.5) * 0.05,
-          lng: city.coordinates[0] + (Math.random() - 0.5) * 0.08
-        },
-        stalls: 8 + Math.floor(Math.random() * 8),
-        available: Math.floor(Math.random() * 6) + 2
-      }));
-    };
-
-    const depots = generateDepots();
+    // Use the passed depot data
 
     // Add vehicle markers - show all vehicles for the city
     vehicles.forEach((vehicle) => {
@@ -175,9 +171,15 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, city, onVehicleClick, o
             <h3 class="font-semibold text-sm text-foreground">${depot.name}</h3>
             <span class="px-2 py-1 text-xs rounded-full bg-primary/20 text-primary">Depot</span>
           </div>
-          <div class="flex items-center justify-between text-xs">
-            <span class="text-muted-foreground">Available Stalls:</span>
-            <span class="font-medium text-success">${depot.available}/${depot.stalls}</span>
+          <div class="space-y-1">
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-muted-foreground">Available Stalls:</span>
+              <span class="font-medium text-success">${depot.availableStalls}/${depot.totalStalls}</span>
+            </div>
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-muted-foreground">Charging Vehicles:</span>
+              <span class="font-medium text-warning">${depot.vehiclesCharging}</span>
+            </div>
           </div>
         </div>
       `);
@@ -222,7 +224,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, city, onVehicleClick, o
     return () => {
       map.current?.remove();
     };
-  }, [isTokenSet, mapboxToken, vehicles, city]);
+  }, [isTokenSet, mapboxToken, vehicles, depots, city]);
 
   if (!isTokenSet) {
     return (

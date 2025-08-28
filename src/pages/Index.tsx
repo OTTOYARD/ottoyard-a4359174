@@ -323,7 +323,7 @@ const Index = () => {
                   </CardHeader>
                   <CardContent className="pt-2">
                     <div className="h-[500px]">
-                      <MapboxMap vehicles={vehicles} city={currentCity} onVehicleClick={vehicleId => {
+                      <MapboxMap vehicles={vehicles} depots={depots} city={currentCity} onVehicleClick={vehicleId => {
                     setSelectedTab('fleet');
                     // Add a delay to ensure tab switches first
                     setTimeout(() => {

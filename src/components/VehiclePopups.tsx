@@ -178,7 +178,7 @@ export const TrackVehiclePopup = ({ open, onOpenChange, vehicle }: TrackVehicleP
         {vehicle && (
           <div className="space-y-4">
             <div className="h-40 bg-muted rounded-lg border overflow-hidden">
-              <MapboxMap vehicles={vehicle ? [vehicle] : []} />
+              <MapboxMap vehicles={vehicle ? [vehicle] : []} depots={[]} />
             </div>
             
             <div className="grid grid-cols-2 gap-4">
