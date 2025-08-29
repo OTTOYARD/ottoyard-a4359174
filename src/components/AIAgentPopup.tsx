@@ -130,7 +130,7 @@ export const AIAgentPopup = ({ open, onOpenChange, currentCity, vehicles = [], d
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-3xl h-[100dvh] sm:h-[700px] max-h-[800px] flex flex-col [&>button]:hidden text-sm">
-        <DialogHeader className="pb-2">
+        <DialogHeader className="pb-1">
           <DialogTitle className="flex items-center justify-between">
             <div className="flex items-center">
               <div className="h-6 w-6 rounded-full bg-gradient-primary flex items-center justify-center mr-2 sm:h-8 sm:w-8 sm:mr-3">
@@ -157,7 +157,6 @@ export const AIAgentPopup = ({ open, onOpenChange, currentCity, vehicles = [], d
               </Button>
             </div>
           </DialogTitle>
-          <DialogDescription>OttoCommand AI chat interface for fleet management assistance</DialogDescription>
         </DialogHeader>
         
         <div className="flex-1 min-h-0 flex flex-col">
