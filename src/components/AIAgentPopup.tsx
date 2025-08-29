@@ -15,7 +15,8 @@ import {
   BarChart3,
   Wrench,
   Zap,
-  Loader2
+  Loader2,
+  X
 } from "lucide-react";
 
 interface AIAgentPopupProps {
@@ -128,7 +129,7 @@ export const AIAgentPopup = ({ open, onOpenChange, currentCity, vehicles = [], d
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-3xl h-[100dvh] sm:h-[700px] max-h-[800px] flex flex-col">
+      <DialogContent className="sm:max-w-3xl h-[100dvh] sm:h-[700px] max-h-[800px] flex flex-col [&>button]:hidden">
         <DialogHeader className="pb-2">
           <DialogTitle className="flex items-center justify-between">
             <div className="flex items-center">
@@ -140,10 +141,21 @@ export const AIAgentPopup = ({ open, onOpenChange, currentCity, vehicles = [], d
                 <p className="text-xs text-muted-foreground">Powered by GPT-5</p>
               </div>
             </div>
-            <Badge variant="outline" className="bg-success/10 text-success border-success/20">
-              <div className="h-2 w-2 rounded-full bg-success mr-2 animate-pulse"></div>
-              Online
-            </Badge>
+            <div className="flex items-center gap-3">
+              <Badge variant="outline" className="bg-success/10 text-success border-success/20">
+                <div className="h-2 w-2 rounded-full bg-success mr-2 animate-pulse"></div>
+                Online
+              </Badge>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onOpenChange(false)}
+                className="h-10 w-10 p-0 bg-destructive/10 hover:bg-destructive hover:text-destructive-foreground text-destructive border border-destructive/20 hover:border-destructive rounded-lg transition-all duration-200 md:h-8 md:w-8"
+              >
+                <X className="h-5 w-5 md:h-4 md:w-4" />
+                <span className="sr-only">Close</span>
+              </Button>
+            </div>
           </DialogTitle>
           <DialogDescription>OttoCommand AI chat interface for fleet management assistance</DialogDescription>
         </DialogHeader>
