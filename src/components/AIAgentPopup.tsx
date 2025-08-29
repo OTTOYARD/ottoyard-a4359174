@@ -129,15 +129,15 @@ export const AIAgentPopup = ({ open, onOpenChange, currentCity, vehicles = [], d
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-3xl h-[100dvh] sm:h-[700px] max-h-[800px] flex flex-col [&>button]:hidden">
+      <DialogContent className="sm:max-w-3xl h-[100dvh] sm:h-[700px] max-h-[800px] flex flex-col [&>button]:hidden text-sm">
         <DialogHeader className="pb-2">
           <DialogTitle className="flex items-center justify-between">
             <div className="flex items-center">
-              <div className="h-8 w-8 rounded-full bg-gradient-primary flex items-center justify-center mr-3">
-                <Bot className="h-4 w-4 text-white" />
+              <div className="h-6 w-6 rounded-full bg-gradient-primary flex items-center justify-center mr-2 sm:h-8 sm:w-8 sm:mr-3">
+                <Bot className="h-3 w-3 text-white sm:h-4 sm:w-4" />
               </div>
               <div>
-                <span className="text-lg font-semibold">OttoCommand AI</span>
+                <span className="text-base font-semibold sm:text-lg">OttoCommand AI</span>
                 <p className="text-xs text-muted-foreground">Powered by GPT-5</p>
               </div>
             </div>
@@ -164,17 +164,17 @@ export const AIAgentPopup = ({ open, onOpenChange, currentCity, vehicles = [], d
           <div className="flex-1 min-h-0 overflow-y-auto space-y-4">
             {/* Quick Actions */}
             <div className="space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">Quick Actions</p>
+              <p className="text-xs font-medium text-muted-foreground sm:text-sm">Quick Actions</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {quickActions.map((action, index) => (
                   <Button
                     key={index}
                     variant="outline"
                     size="sm"
-                    className="h-auto p-3 flex flex-col items-center space-y-1 hover:bg-primary/5 hover:border-primary/30 transition-all duration-200 hover:scale-[1.02]"
+                    className="h-auto p-2 sm:p-3 flex flex-col items-center space-y-1 hover:bg-primary/5 hover:border-primary/30 transition-all duration-200 hover:scale-[1.02]"
                     onClick={() => handleQuickAction(action.action)}
                   >
-                    <action.icon className="h-4 w-4 text-primary" />
+                    <action.icon className="h-3 w-3 text-primary sm:h-4 sm:w-4" />
                     <span className="text-xs text-center leading-tight">{action.label}</span>
                   </Button>
                 ))}
@@ -192,14 +192,14 @@ export const AIAgentPopup = ({ open, onOpenChange, currentCity, vehicles = [], d
                     }`}
                   >
                     <div
-                      className={`max-w-[85%] p-4 rounded-xl shadow-sm transition-all duration-200 ${
+                      className={`max-w-[85%] p-3 sm:p-4 rounded-xl shadow-sm transition-all duration-200 text-sm ${
                         message.role === 'user'
                           ? 'bg-gradient-primary text-primary-foreground glow-soft'
                           : 'bg-card/80 text-foreground border border-border/50 backdrop-blur-sm'
                       }`}
                     >
                       <MessageRenderer content={message.content} role={message.role} />
-                      <div className={`text-xs mt-3 pt-2 border-t ${
+                      <div className={`text-xs mt-2 pt-2 border-t sm:mt-3 ${
                         message.role === 'user' 
                           ? 'border-primary-foreground/20 text-primary-foreground/70' 
                           : 'border-border/30 text-muted-foreground'
@@ -215,7 +215,7 @@ export const AIAgentPopup = ({ open, onOpenChange, currentCity, vehicles = [], d
           </div>
 
           {/* Input */}
-          <div className="flex items-end space-x-3 bg-muted/30 p-4 rounded-xl flex-shrink-0 futuristic-card">
+          <div className="flex items-end space-x-2 bg-muted/30 p-3 rounded-xl flex-shrink-0 futuristic-card sm:space-x-3 sm:p-4">
             <Textarea
               ref={inputRef}
               placeholder="Ask me anything about your fleet..."
@@ -227,7 +227,7 @@ export const AIAgentPopup = ({ open, onOpenChange, currentCity, vehicles = [], d
               onChange={(e) => {
                 setInputMessage(e.target.value);
                 e.currentTarget.style.height = 'auto';
-                e.currentTarget.style.height = Math.min(e.currentTarget.scrollHeight, 128) + 'px';
+                e.currentTarget.style.height = Math.min(e.currentTarget.scrollHeight, 96) + 'px';
               }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
@@ -235,17 +235,17 @@ export const AIAgentPopup = ({ open, onOpenChange, currentCity, vehicles = [], d
                   handleSendMessage();
                 }
               }}
-              className="flex-1 bg-background/80 backdrop-blur-sm resize-none max-h-32 min-h-[48px] leading-6 border border-border/50 focus:border-primary/50 focus:glow-soft transition-all duration-200"
+              className="flex-1 bg-background/80 backdrop-blur-sm resize-none max-h-24 min-h-[40px] leading-5 text-sm border border-border/50 focus:border-primary/50 focus:glow-soft transition-all duration-200 sm:max-h-32 sm:min-h-[48px] sm:leading-6"
             />
             <Button 
               onClick={handleSendMessage} 
               disabled={!inputMessage.trim() || isLoading}
-              className="futuristic-button h-12 px-4 min-w-[48px]"
+              className="futuristic-button h-10 px-3 min-w-[40px] sm:h-12 sm:px-4 sm:min-w-[48px]"
             >
               {isLoading ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin sm:h-5 sm:w-5" />
               ) : (
-                <Send className="h-5 w-5" />
+                <Send className="h-4 w-4 sm:h-5 sm:w-5" />
               )}
             </Button>
           </div>
