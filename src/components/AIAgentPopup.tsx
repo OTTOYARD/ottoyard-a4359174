@@ -43,7 +43,7 @@ export const AIAgentPopup = ({ open, onOpenChange, currentCity, vehicles = [], d
     {
       id: '1',
       role: 'assistant',
-      content: 'Hello! I\'m OttoCommand AI, your advanced GPT-5 powered fleet management assistant. I can help you with scheduling, reservations, data analysis, predictive maintenance, voice commands, and comprehensive fleet management. What would you like me to help you with today?',
+      content: 'Hello! I\'m OttoCommand AI, your GPT-5 powered fleet assistant. I can help with:\n\n• Scheduling & maintenance\n• Data analysis & reporting\n• Voice commands & reservations\n\nWhat can I help you with?',
       timestamp: new Date()
     }
   ]);
