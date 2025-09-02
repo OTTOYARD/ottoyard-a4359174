@@ -137,7 +137,7 @@ export const AIAgentPopup = ({ open, onOpenChange, currentCity, vehicles = [], d
                 <Bot className="h-3 w-3 text-white sm:h-4 sm:w-4" />
               </div>
               <div>
-                <span className="text-base font-semibold sm:text-lg">OttoCommand AI</span>
+                <span className="text-base font-semibold sm:text-lg">OttoCommand</span>
                 <p className="text-xs text-muted-foreground">Powered by GPT-5</p>
               </div>
             </div>

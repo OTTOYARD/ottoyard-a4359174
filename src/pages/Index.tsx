@@ -278,7 +278,7 @@ const Index = () => {
                   className="bg-gradient-primary text-white border-0 hover:bg-gradient-primary/90 px-3"
                 >
                   <Bot className="h-4 w-4 mr-1" />
-                  AI
+                  <span className="sm:hidden">OttoCommand</span>
                   <span className="hidden sm:inline">OttoCommand AI</span>
                 </Button>
               </div>
