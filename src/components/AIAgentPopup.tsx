@@ -157,6 +157,9 @@ export const AIAgentPopup = ({ open, onOpenChange, currentCity, vehicles = [], d
               </Button>
             </div>
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            OttoCommand AI Assistant for fleet management operations
+          </DialogDescription>
         </DialogHeader>
         
         <div className="flex-1 min-h-0 flex flex-col">

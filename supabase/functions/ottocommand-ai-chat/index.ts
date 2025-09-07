@@ -321,7 +321,7 @@ Rules:
   ] as const;
 
   // ---------- OpenAI: two-pass tool loop ----------
-  const model = Deno.env.get("OTTO_MODEL")?.trim() || "gpt-5-thinking";
+  const model = Deno.env.get("OTTO_MODEL")?.trim() || "gpt-5-2025-08-07";
   const basePayload = {
     model,
     messages,
