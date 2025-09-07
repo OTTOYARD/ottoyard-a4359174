@@ -337,9 +337,10 @@ Rules:
   };
   
   if (isNewGenModel(model)) {
-    // New-gen models: use max_completion_tokens, no temperature/top_p/penalties
+    // New-gen models: use max_completion_tokens, force text output
     basePayload.max_completion_tokens = 1200;
-    console.log(`🤖 Using new-gen model: ${model} with max_completion_tokens`);
+    basePayload.response_format = { type: "text" };
+    console.log(`🤖 Using new-gen model: ${model} with max_completion_tokens and text format`);
   } else {
     // Legacy models: use max_tokens, allow temperature/top_p
     basePayload.max_tokens = 1200;
@@ -374,9 +375,7 @@ Rules:
 
     for (const call of toolCalls) {
       const name = call.function?.name;
-      const argsRaw = call.function?.arguments || "{}";
-      let args: any = {};
-      try { args = JSON.parse(argsRaw); } catch {}
+      const args = call.function?.arguments || "{}";
       try {
         const result = await executeFunction({ name, arguments: args } as any, supabase);
         toolMessages.push(asToolMessage(call.id, result ?? {}));
@@ -386,8 +385,13 @@ Rules:
       }
     }
 
-    // Round 2 (send tool outputs back)
-    const r2Payload = { ...basePayload, messages: [...messages, r1Choice.message, ...toolMessages] };
+    // Round 2 (send tool outputs back) - force text response, no more tool calls
+    const r2Payload = { 
+      ...basePayload, 
+      messages: [...messages, r1Choice.message, ...toolMessages],
+      tool_choice: "none", // Force text response in R2
+      tools: undefined // Remove tools to prevent infinite loops
+    };
     console.log(`🚀 R2 payload keys: [${Object.keys(r2Payload).join(", ")}]`);
     const r2 = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -416,8 +420,18 @@ Rules:
 
   // ---------- Build final response ----------
   const finalChoice = finalData.choices?.[0];
-  const finalContent = finalChoice?.message?.content ?? "(no content)";
+  let finalContent = finalChoice?.message?.content ?? "";
   const executed = toolMessages.length > 0;
+  
+  console.log(`📝 Raw content length: ${finalContent.length}`);
+
+  // Server-side fallback for empty content
+  if (!finalContent.trim()) {
+    const fleetSummary = `Based on your ${vehicles.length} vehicles and ${depots.length} depots`;
+    const toolSummary = executed ? ` I executed ${toolMessages.length} actions for you.` : "";
+    finalContent = `${fleetSummary}.${toolSummary} How else can I help optimize your fleet operations?`;
+    console.log(`🔄 Generated fallback content: ${finalContent.length} chars`);
+  }
 
   const ran = toolCalls.map((t: any) => t.function?.name);
   const action =

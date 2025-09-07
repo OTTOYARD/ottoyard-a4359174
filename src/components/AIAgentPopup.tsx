@@ -98,10 +98,29 @@ export const AIAgentPopup = ({ open, onOpenChange, currentCity, vehicles = [], d
         throw error;
       }
 
+      // Enhanced content handling with action_block and function_calls fallback
+      let content = data.content || data.reply || data.message || '';
+      
+      // If no content but we have actions or function calls, create a summary
+      if (!content.trim() && (data.action_block || data.function_calls?.length)) {
+        if (data.action_block?.details?.ran?.length) {
+          content = `I executed ${data.action_block.details.ran.join(', ')} for you. `;
+        }
+        if (data.function_calls?.length) {
+          content += `Completed ${data.function_calls.length} actions. `;
+        }
+        content += 'How else can I help with your fleet management?';
+      }
+      
+      // Final fallback
+      if (!content.trim()) {
+        content = 'I apologize, but I encountered an issue processing your request. Please try again.';
+      }
+
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: data.content || data.reply || data.message || 'I apologize, but I encountered an issue processing your request. Please try again.',
+        content,
         timestamp: new Date()
       };
       setMessages(prev => [...prev, assistantMessage]);
