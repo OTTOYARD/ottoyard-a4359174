@@ -56,7 +56,7 @@ serve(async (req) => {
       hasOpenAINew: !!Deno.env.get("OPENAI_API_KEY_NEW"),
       hasSupabaseUrl: !!Deno.env.get("SUPABASE_URL"),
       hasServiceKey: !!Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),
-      model: Deno.env.get("OTTO_MODEL") || "gpt-5-thinking",
+      model: Deno.env.get("OTTO_MODEL") || "gpt-5-2025-08-07",
       now: new Date().toISOString(),
     };
     return ok({ status: "healthy", function: "ottocommand-ai-chat", version: "5.2", environment: envCheck });
@@ -322,18 +322,34 @@ Rules:
 
   // ---------- OpenAI: two-pass tool loop ----------
   const model = Deno.env.get("OTTO_MODEL")?.trim() || "gpt-5-2025-08-07";
-  const basePayload = {
+  
+  // Helper to check if model is new-gen (GPT-5, O3, O4)
+  function isNewGenModel(modelName: string): boolean {
+    return modelName.startsWith("gpt-5") || modelName.startsWith("o3") || modelName.startsWith("o4");
+  }
+  
+  // Build model-aware payload
+  const basePayload: any = {
     model,
     messages,
     tools,
     tool_choice: "auto" as const,
-    max_completion_tokens: 1200,
-    top_p: 0.9,
-    presence_penalty: 0.1,
-    frequency_penalty: 0.1,
   };
+  
+  if (isNewGenModel(model)) {
+    // New-gen models: use max_completion_tokens, no temperature/top_p/penalties
+    basePayload.max_completion_tokens = 1200;
+    console.log(`🤖 Using new-gen model: ${model} with max_completion_tokens`);
+  } else {
+    // Legacy models: use max_tokens, allow temperature/top_p
+    basePayload.max_tokens = 1200;
+    basePayload.temperature = 0.2;
+    basePayload.top_p = 0.9;
+    console.log(`🤖 Using legacy model: ${model} with max_tokens and temperature`);
+  }
 
   // Round 1
+  console.log(`🚀 R1 payload keys: [${Object.keys(basePayload).join(", ")}]`);
   const r1 = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
@@ -342,8 +358,8 @@ Rules:
 
   if (!r1.ok) {
     const text = await r1.text().catch(() => "");
-    console.error("OpenAI R1 error:", text);
-    return fail(502, "OpenAI failed (round 1)", text);
+    console.error(`OpenAI R1 error (${model}):`, text);
+    return fail(502, "OpenAI failed (round 1)", { model, error: text });
   }
 
   const r1Data = await r1.json();
@@ -371,15 +387,17 @@ Rules:
     }
 
     // Round 2 (send tool outputs back)
+    const r2Payload = { ...basePayload, messages: [...messages, r1Choice.message, ...toolMessages] };
+    console.log(`🚀 R2 payload keys: [${Object.keys(r2Payload).join(", ")}]`);
     const r2 = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ ...basePayload, messages: [...messages, r1Choice.message, ...toolMessages] }),
+      body: JSON.stringify(r2Payload),
     });
 
     if (!r2.ok) {
       const text = await r2.text().catch(() => "");
-      console.error("OpenAI R2 error:", text);
+      console.error(`OpenAI R2 error (${model}):`, text);
       // Return R1 content + tool results if R2 fails
       return ok({
         success: true,

@@ -1,8 +1,10 @@
 // Function execution handler for OttoCommand AI agentic capabilities
 
 export async function executeFunction(functionCall: any, supabase: any) {
-  const { name, arguments: args } = functionCall;
-  const parsedArgs = JSON.parse(args);
+  const { name, arguments: rawArgs } = functionCall;
+  
+  // Robust argument parsing - handle both string and already-parsed objects
+  const parsedArgs = typeof rawArgs === "string" ? JSON.parse(rawArgs || "{}") : (rawArgs ?? {});
   
   console.log(`Executing function: ${name}`, parsedArgs);
 
