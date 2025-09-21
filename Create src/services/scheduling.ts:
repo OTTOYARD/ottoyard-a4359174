@@ -1,0 +1,112 @@
+// src/services/scheduling.ts
+import { stalls, vehicles, schedule } from "../data/mock";
+import { Stall, Vehicle } from "../agent/tools";
+
+export function getStalls(depotId: string, status?: Stall["status"]) {
+  return stalls.filter(
+    (s) => s.depotId === depotId && (status ? s.status === status : true)
+  );
+}
+
+export function getChargingQueue(depotId: string) {
+  // naive: vehicles below 0.4 SOC at given depot
+  const qs = vehicles
+    .filter(
+      (v) => v.currentDepotId === depotId && (v.soc ?? 0) < 0.4 && v.status !== "charging"
+    )
+    .sort((a, b) => a.soc - b.soc);
+  return qs;
+}
+
+export function hasConflict(stallId: string, start: Date, end: Date) {
+  return schedule.assignments.some((a) => {
+    if (a.stallId !== stallId) return false;
+    const as = new Date(a.start).getTime();
+    const ae = new Date(a.end).getTime();
+    return !(end.getTime() <= as || start.getTime() >= ae);
+  });
+}
+
+export function scheduleVehicle(params: {
+  vehicleId: string;
+  stallId: string;
+  start: string;
+  end: string;
+}) {
+  const { vehicleId, stallId, start, end } = params;
+  const s = stalls.find((x) => x.id === stallId);
+  const v = vehicles.find((x) => x.id === vehicleId);
+  if (!s) throw new Error("stall_not_found");
+  if (!v) throw new Error("vehicle_not_found");
+  if (s.status !== "open" && s.status !== "reserved") throw new Error("stall_unavailable");
+
+  const sd = new Date(start);
+  const ed = new Date(end);
+  if (ed <= sd) throw new Error("invalid_time_window");
+
+  if (hasConflict(stallId, sd, ed)) throw new Error("time_conflict");
+
+  schedule.assignments.push({ vehicleId, stallId, start, end });
+  // update in-memory hints
+  v.assignedStallId = stallId;
+  v.status = "charging";
+  s.status = "occupied";
+
+  return { ok: true, assignment: { vehicleId, stallId, start, end } };
+}
+
+export function optimizeChargingPlan(params: {
+  depotId: string;
+  horizon_minutes: number;
+  objective?: "min_time_to_target" | "max_throughput" | "min_cost";
+}) {
+  const { depotId, horizon_minutes, objective = "max_throughput" } = params;
+  const open = getStalls(depotId, "open");
+  const queue = getChargingQueue(depotId);
+
+  // naive heuristic: pair lowest SOC vehicles to highest kW stalls first
+  const sortedStalls = [...open].sort((a, b) => b.powerKW - a.powerKW);
+  const sortedVehicles = [...queue].sort((a, b) => a.soc - b.soc);
+
+  const now = Date.now();
+  const horizon = new Date(now + horizon_minutes * 60 * 1000);
+  const plan = [] as Array<{ vehicleId: string; stallId: string; start: string; end: string }>;
+
+  for (let i = 0; i < Math.min(sortedStalls.length, sortedVehicles.length); i++) {
+    const v = sortedVehicles[i];
+    const s = sortedStalls[i];
+
+    // toy charge duration: raise to 0.8 SOC based on kW (do not model kWh/pack precisely yet)
+    const deficit = Math.max(0, 0.8 - v.soc);
+    const hours = Math.max(0.25, deficit * (1.5 - Math.min(1, s.powerKW / 250))); // heuristic
+    const end = new Date(now + hours * 3600 * 1000);
+    if (end > horizon) continue;
+
+    if (!hasConflict(s.id, new Date(now), end)) {
+      plan.push({
+        vehicleId: v.id,
+        stallId: s.id,
+        start: new Date(now).toISOString(),
+        end: end.toISOString(),
+      });
+    }
+  }
+
+  return { objective, horizon_minutes, assignments: plan };
+}
+
+export function utilizationReport(params: { depotId: string; start: string; end: string }) {
+  // mock computation: ratio of occupied over total at snapshot
+  const total = stalls.filter((s) => s.depotId === params.depotId).length;
+  const occupied = stalls.filter((s) => s.depotId === params.depotId && s.status === "occupied").length;
+  const utilizationPct = total ? Math.round((occupied / total) * 100) : 0;
+
+  // fake averages
+  return {
+    depotId: params.depotId,
+    utilizationPct,
+    avgWaitMins: 14,
+    avgKwhDelivered: 32,
+    window: { start: params.start, end: params.end },
+  };
+}
