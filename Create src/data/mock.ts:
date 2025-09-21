@@ -1,0 +1,44 @@
+// src/data/mock.ts
+import { Stall, Vehicle } from "../agent/tools";
+
+export const depots = [
+  { id: "depot-mini-nash", name: "OTTOYARD Mini - Nashville" },
+  { id: "depot-max-aus", name: "OTTOYARD Max - Austin" },
+];
+
+export const stalls: Stall[] = [
+  // Nashville (Mini) — 20 stalls
+  ...Array.from({ length: 20 }, (_, i) => ({
+    id: `N-${i + 1}`,
+    depotId: "depot-mini-nash",
+    status: i % 5 === 0 ? "reserved" : "open",
+    powerKW: i % 3 === 0 ? 150 : 75,
+  })),
+  // Austin (Max) — 40 stalls
+  ...Array.from({ length: 40 }, (_, i) => ({
+    id: `A-${i + 1}`,
+    depotId: "depot-max-aus",
+    status: i % 7 === 0 ? "out_of_service" : "open",
+    powerKW: i % 2 === 0 ? 250 : 150,
+  })),
+];
+
+export const vehicles: Vehicle[] = [
+  // 30 vehicles with varied SOC/status
+  ...Array.from({ length: 30 }, (_, i) => ({
+    id: `V-${i + 1}`,
+    soc: Math.max(0.1, Math.min(1, 0.2 + (i % 10) * 0.07)),
+    status: i % 6 === 0 ? "charging" : i % 5 === 0 ? "maintenance" : "idle",
+    currentDepotId: i % 2 === 0 ? "depot-mini-nash" : "depot-max-aus",
+  })),
+];
+
+// Simple in-memory schedule (replace with DB later)
+export const schedule: {
+  assignments: Array<{
+    vehicleId: string;
+    stallId: string;
+    start: string;
+    end: string;
+  }>;
+} = { assignments: [] };
