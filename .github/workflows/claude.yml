@@ -1,26 +1,55 @@
 name: Claude Code
 
 on:
+  # Run when you add a special label to an Issue (safer than every comment)
+  issues:
+    types: [labeled]
+  # Still respond on @claude comments in PRs if you want
   issue_comment:
     types: [created, edited]
-  pull_request:
-    types: [opened, synchronize, reopened]
 
-# Grant the action the rights it needs
+# Required permissions
 permissions:
-  id-token: write          # for OIDC
-  contents: write          # to push branches
-  pull-requests: write     # to open/update PRs
-  issues: write            # <-- needed to POST comments
+  id-token: write          # OIDC
+  contents: write          # push branches
+  pull-requests: write     # open/update PRs
+  issues: write            # post back results/comments
   actions: read
 
 jobs:
   run-claude:
+    if: >
+      (github.event_name == 'issues' && github.event.action == 'labeled' &&
+       github.event.label.name == 'claude:implement')
+      || github.event_name == 'issue_comment'
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
-      - name: Run Claude Code
+
+      - name: Run Claude Code (force PR mode)
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          github_token: ${{ github.token }}   # <-- use github.token, not secrets.GITHUB_TOKEN
+          github_token: ${{ github.token }}
+          # Unified "prompt" input: tell Claude exactly to create a branch + PR
+          prompt: |
+            You are operating on the OTTOYARD repo.
+            If the event is an Issue labeled "claude:implement", IMPLEMENT the Issue.
+            Create a new branch, commit changes, and OPEN A PULL REQUEST against main.
+            Title the PR based on the Issue title and include a short rationale.
+            If the event is an @claude Issue/PR comment asking for implementation,
+            do the same: create a branch, commit, and open/update a PR.
+
+            IMPORTANT:
+            - Follow CLAUDE.md quality gates (strict TS, tests, docs).
+            - Do NOT leave results only in logs; produce a PR.
+
+          # Optional extra args if supported by your version of the Action
+          claude_args: |
+            {
+              "execution_preferences": {
+                "default_mode": "pr",         // prefer PRs
+                "allow_large_edits": true
+              }
+            }
