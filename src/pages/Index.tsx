@@ -16,6 +16,7 @@ import MetricsCard from "@/components/MetricsCard";
 import { AddVehiclePopup, TrackVehiclePopup, VehicleDetailsPopup, MaintenancePopup } from "@/components/VehiclePopups";
 import { AIAgentPopup } from "@/components/AIAgentPopup";
 import CartButton, { CartItem } from "@/components/CartButton";
+import { ChargingScheduler } from "@/components/ChargingScheduler";
 
 // Generate vehicles for specific city with unique 5-digit alphanumeric IDs
 const generateVehiclesForCity = (city: City) => {
@@ -305,6 +306,7 @@ const Index = () => {
                 <TabsTrigger value="overview" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Overview</TabsTrigger>
                 <TabsTrigger value="fleet" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Fleet</TabsTrigger>
                 <TabsTrigger value="depots" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Depots</TabsTrigger>
+                <TabsTrigger value="scheduler" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Scheduler</TabsTrigger>
                 <TabsTrigger value="maintenance" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Maintenance</TabsTrigger>
                 <TabsTrigger value="analytics" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Analytics</TabsTrigger>
               </TabsList>
@@ -1001,6 +1003,10 @@ const Index = () => {
                     </div>}
                 </div>)}
             </div>
+          </TabsContent>
+
+          <TabsContent value="scheduler" className="space-y-6">
+            <ChargingScheduler depotId="depot-1" />
           </TabsContent>
 
           <TabsContent value="maintenance" className="space-y-6">
