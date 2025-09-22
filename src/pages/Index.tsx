@@ -16,6 +16,8 @@ import MetricsCard from "@/components/MetricsCard";
 import { AddVehiclePopup, TrackVehiclePopup, VehicleDetailsPopup, MaintenancePopup } from "@/components/VehiclePopups";
 import { AIAgentPopup } from "@/components/AIAgentPopup";
 import CartButton, { CartItem } from "@/components/CartButton";
+import SchedulerUI from "@/components/SchedulerUI";
+import { useOttoCommand } from "@/hooks/useOttoCommand";
 
 // Generate vehicles for specific city with unique 5-digit alphanumeric IDs
 const generateVehiclesForCity = (city: City) => {
@@ -193,6 +195,12 @@ const Index = () => {
   const [showDueSoonSummary, setShowDueSoonSummary] = useState(false);
   const [popupVehicle, setPopupVehicle] = useState<typeof vehicles[0] | null>(null);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+
+  // OttoCommand integration
+  const ottoCommand = useOttoCommand({
+    depotId: 'depot-alpha',
+    enablePolling: false
+  });
   const handleTrackVehicle = (vehicle: typeof vehicles[0]) => {
     setPopupVehicle(vehicle);
     setTrackVehicleOpen(true);
@@ -305,6 +313,7 @@ const Index = () => {
                 <TabsTrigger value="overview" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Overview</TabsTrigger>
                 <TabsTrigger value="fleet" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Fleet</TabsTrigger>
                 <TabsTrigger value="depots" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Depots</TabsTrigger>
+                <TabsTrigger value="scheduler" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Scheduler</TabsTrigger>
                 <TabsTrigger value="maintenance" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Maintenance</TabsTrigger>
                 <TabsTrigger value="analytics" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Analytics</TabsTrigger>
               </TabsList>
@@ -1001,6 +1010,21 @@ const Index = () => {
                     </div>}
                 </div>)}
             </div>
+          </TabsContent>
+
+          <TabsContent value="scheduler" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-3xl font-bold text-foreground">Charging & Staging Scheduler</h2>
+            </div>
+
+            <SchedulerUI
+              vehicles={ottoCommand.vehicles}
+              stalls={ottoCommand.stalls}
+              assignments={ottoCommand.assignments}
+              onScheduleVehicle={ottoCommand.scheduleVehicle}
+              onOptimizePlan={ottoCommand.optimizeChargingPlan}
+              onApplyPlan={ottoCommand.applyOptimizationPlan}
+            />
           </TabsContent>
 
           <TabsContent value="maintenance" className="space-y-6">
