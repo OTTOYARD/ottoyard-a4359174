@@ -34,7 +34,7 @@ serve(async (req) => {
   if (req.method === "GET") {
     const envCheck = {
       hasOpenAI: !!Deno.env.get("OPENAI_API_KEY"),
-      model: Deno.env.get("OTTO_MODEL") || "gpt-5-thinking",
+      model: Deno.env.get("OTTO_MODEL") || "gpt-4o-mini",
       demoMode: Deno.env.get("DEMO_MODE") || "0",
       now: new Date().toISOString(),
     };
@@ -61,7 +61,7 @@ serve(async (req) => {
   if (!apiKey) return fail(500, "Missing OpenAI API key. Set OPENAI_API_KEY in Supabase secrets.");
   if (!(apiKey.startsWith("sk-") && apiKey.length >= 40)) return fail(500, "Invalid OpenAI API key format (must start with 'sk-').");
 
-  const model = Deno.env.get("OTTO_MODEL")?.trim() || "gpt-5-thinking";
+  const model = Deno.env.get("OTTO_MODEL")?.trim() || "gpt-4o-mini";
   const DEMO = Deno.env.get("DEMO_MODE") === "1";
 
   // Supabase (optional for ops mode)
@@ -81,7 +81,11 @@ serve(async (req) => {
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({ model, messages, max_tokens: 1200, temperature: 0.6 }),
     });
-    if (!r.ok) return fail(502, "OpenAI failed (general mode)", await r.text().catch(() => ""));
+    if (!r.ok) {
+      const errorText = await r.text().catch(() => "");
+      console.error("OpenAI API Error (general mode):", r.status, errorText);
+      return fail(502, "OpenAI failed (general mode)", errorText);
+    }
     const data = await r.json();
     const content = data.choices?.[0]?.message?.content ?? "(no content)";
     return ok({ success: true, mode: "general", content, timestamp: new Date().toISOString() });
@@ -215,7 +219,11 @@ serve(async (req) => {
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify(basePayload),
   });
-  if (!r1.ok) return fail(502, "OpenAI failed (ops r1)", await r1.text().catch(() => ""));
+  if (!r1.ok) {
+    const errorText = await r1.text().catch(() => "");
+    console.error("OpenAI API Error (ops r1):", r1.status, errorText);
+    return fail(502, "OpenAI failed (ops r1)", errorText);
+  }
   const r1Data = await r1.json();
   const r1Choice = r1Data.choices?.[0];
   const toolCalls = r1Choice?.message?.tool_calls ?? [];
@@ -240,10 +248,14 @@ serve(async (req) => {
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({ ...basePayload, messages: [...messages, r1Choice.message, ...toolMessages] }),
     });
-    if (!r2.ok) return ok({
-      success: true, mode: "ops", content: r1Choice?.message?.content ?? "(no content)",
-      function_calls: toolMessages.map((m) => m.content), timestamp: new Date().toISOString()
-    });
+    if (!r2.ok) {
+      const errorText = await r2.text().catch(() => "");
+      console.error("OpenAI API Error (ops r2):", r2.status, errorText);
+      return ok({
+        success: true, mode: "ops", content: r1Choice?.message?.content ?? "(no content)",
+        function_calls: toolMessages.map((m) => m.content), timestamp: new Date().toISOString()
+      });
+    }
     const r2Data = await r2.json();
     const final = r2Data.choices?.[0]?.message?.content ?? "(no content)";
     const ran = toolCalls.map((t: any) => t.function?.name);
