@@ -14,6 +14,9 @@ export interface Stall {
   lastMaintenance?: string;
   utilizationRate?: number;
   avgChargingTime?: number;
+  // Autonomous vehicle specific fields
+  autonomousCompatible?: boolean;
+  biDirectional?: boolean;
 }
 
 export interface Vehicle {
@@ -34,6 +37,13 @@ export interface Vehicle {
   engineHours?: number;
   nextMaintenanceDate?: string;
   fuelEfficiency?: number;
+  // Autonomous vehicle specific fields
+  autonomyLevel?: "L3" | "L4" | "L5";
+  disengagementRate?: number; // per mile
+  safetyScore?: number; // 0-100
+  revenuePerDay?: number; // USD
+  customerRating?: number; // 1-5
+  biDirectionalCharging?: boolean;
   location?: {
     lat: number;
     lng: number;
