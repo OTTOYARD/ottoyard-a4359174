@@ -8,72 +8,100 @@ interface MessageRendererProps {
 const MessageRenderer = memo(({ content, role }: MessageRendererProps) => {
   // Enhanced message formatting with proper headings, bullets, and spacing
   const formatMessage = (text: string) => {
-    // Split into paragraphs and process each one
-    const paragraphs = text.split(/\n\s*\n/);
+    // First, split by double line breaks to get main sections
+    const sections = text.split(/\n\s*\n/);
     
-    return paragraphs.map((paragraph, index) => {
-      const trimmed = paragraph.trim();
+    return sections.map((section, sectionIndex) => {
+      const trimmed = section.trim();
       if (!trimmed) return null;
 
-      // Check for headings (text ending with :)
-      if (trimmed.endsWith(':') && trimmed.length < 80 && !trimmed.includes('\n')) {
+      // Check for section headings (text ending with : and potentially on its own line)
+      const headingMatch = trimmed.match(/^([^:\n]+:)\s*$/m);
+      if (headingMatch || (trimmed.endsWith(':') && trimmed.length < 80 && !trimmed.includes('\n'))) {
+        const headingText = headingMatch ? headingMatch[1] : trimmed;
+        const remainingText = headingMatch ? trimmed.replace(headingMatch[0], '').trim() : '';
+        
         return (
-          <h3 key={index} className="text-lg font-bold text-primary mb-3 mt-4 first:mt-0 border-b border-border/30 pb-1">
-            {trimmed}
-          </h3>
+          <div key={sectionIndex} className="mb-4">
+            <h3 className="text-lg font-bold text-primary mb-3 mt-4 first:mt-0 border-b border-border/30 pb-1">
+              {headingText}
+            </h3>
+            {remainingText && (
+              <div className="ml-2">
+                {formatContent(remainingText)}
+              </div>
+            )}
+          </div>
         );
       }
 
-      // Check for numbered lists
-      if (/^\d+\.\s/.test(trimmed)) {
-        const items = trimmed.split(/\n(?=\d+\.\s)/);
-        return (
-          <ol key={index} className="list-decimal list-inside space-y-1 mb-3 ml-2">
-            {items.map((item, itemIndex) => (
-              <li key={itemIndex} className="text-sm leading-relaxed">
-                {item.replace(/^\d+\.\s/, '')}
-              </li>
-            ))}
-          </ol>
-        );
-      }
-
-      // Check for bullet points
-      if (/^[•\-\*]\s/.test(trimmed) || trimmed.includes('\n• ')) {
-        const items = trimmed.split(/\n(?=[•\-\*]\s)/).filter(item => item.trim());
-        return (
-          <ul key={index} className="list-none space-y-1 mb-3">
-            {items.map((item, itemIndex) => (
-              <li key={itemIndex} className="text-sm leading-relaxed flex items-start">
-                <span className="text-primary mr-2 mt-0.5 text-xs">•</span>
-                <span>{item.replace(/^[•\-\*]\s/, '')}</span>
-              </li>
-            ))}
-          </ul>
-        );
-      }
-
-      // Regular paragraph with enhanced formatting
-      const lines = trimmed.split('\n');
       return (
-        <div key={index} className="mb-3 last:mb-0">
-          {lines.map((line, lineIndex) => {
-            if (!line.trim()) return <br key={lineIndex} />;
-            
-            // Bold text formatting
-            const formattedLine = line.replace(/\*\*(.*?)\*\*/g, '<strong class="font-medium text-foreground">$1</strong>');
-            
-            return (
-              <p 
-                key={lineIndex} 
-                className="text-sm leading-relaxed mb-1 last:mb-0"
-                dangerouslySetInnerHTML={{ __html: formattedLine }}
-              />
-            );
-          })}
+        <div key={sectionIndex} className="mb-3">
+          {formatContent(trimmed)}
         </div>
       );
     }).filter(Boolean);
+  };
+
+  const formatContent = (text: string) => {
+    // Check for numbered lists (handle multi-line numbered items)
+    if (/^\d+\.\s/.test(text)) {
+      const items = text.split(/\n(?=\d+\.\s)/).filter(item => item.trim());
+      return (
+        <ol className="list-none space-y-2 mb-3">
+          {items.map((item, itemIndex) => {
+            const cleanItem = item.replace(/^\d+\.\s/, '').trim();
+            const formattedItem = cleanItem.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-foreground">$1</strong>');
+            return (
+              <li key={itemIndex} className="text-sm leading-relaxed flex items-start">
+                <span className="text-primary font-medium mr-3 mt-0.5 min-w-[1.5rem]">
+                  {itemIndex + 1}.
+                </span>
+                <div 
+                  className="flex-1"
+                  dangerouslySetInnerHTML={{ __html: formattedItem }}
+                />
+              </li>
+            );
+          })}
+        </ol>
+      );
+    }
+
+    // Check for bullet points
+    if (/^[•\-\*]\s/.test(text) || text.includes('\n• ') || text.includes('\n- ') || text.includes('\n* ')) {
+      const items = text.split(/\n(?=[•\-\*]\s)/).filter(item => item.trim());
+      return (
+        <ul className="list-none space-y-2 mb-3">
+          {items.map((item, itemIndex) => {
+            const cleanItem = item.replace(/^[•\-\*]\s/, '').trim();
+            const formattedItem = cleanItem.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-foreground">$1</strong>');
+            return (
+              <li key={itemIndex} className="text-sm leading-relaxed flex items-start">
+                <span className="text-primary mr-3 mt-1 text-xs">•</span>
+                <div 
+                  className="flex-1"
+                  dangerouslySetInnerHTML={{ __html: formattedItem }}
+                />
+              </li>
+            );
+          })}
+        </ul>
+      );
+    }
+
+    // Regular paragraph text
+    const lines = text.split('\n').filter(line => line.trim());
+    return lines.map((line, lineIndex) => {
+      const formattedLine = line.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-foreground">$1</strong>');
+      return (
+        <p 
+          key={lineIndex} 
+          className="text-sm leading-relaxed mb-2 last:mb-0"
+          dangerouslySetInnerHTML={{ __html: formattedLine }}
+        />
+      );
+    });
   };
 
   return (
