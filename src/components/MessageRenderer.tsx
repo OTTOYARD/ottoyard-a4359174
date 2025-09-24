@@ -8,10 +8,67 @@ interface MessageRendererProps {
 const MessageRenderer = memo(({ content, role }: MessageRendererProps) => {
   // Enhanced message formatting with proper headings, bullets, and spacing
   const formatMessage = (text: string) => {
-    // First, split by double line breaks to get main sections
-    const sections = text.split(/\n\s*\n/);
+    // First, identify and group consecutive numbered items together
+    const lines = text.split('\n');
+    const groupedSections = [];
+    let currentSection = [];
+    let inNumberedList = false;
     
-    return sections.map((section, sectionIndex) => {
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const isNumberedItem = /^\d+\.\s/.test(line.trim());
+      const isEmptyLine = !line.trim();
+      
+      if (isNumberedItem) {
+        if (!inNumberedList && currentSection.length > 0) {
+          // Start of numbered list, save previous section
+          groupedSections.push(currentSection.join('\n'));
+          currentSection = [];
+        }
+        inNumberedList = true;
+        currentSection.push(line);
+        
+        // Look ahead for continuation lines (indented content)
+        let j = i + 1;
+        while (j < lines.length && lines[j].trim() && !(/^\d+\.\s/.test(lines[j].trim()))) {
+          currentSection.push(lines[j]);
+          i = j; // Skip these lines in main loop
+          j++;
+        }
+      } else if (isEmptyLine && inNumberedList) {
+        // Empty line in numbered list - continue collecting
+        continue;
+      } else if (inNumberedList && !isNumberedItem && !isEmptyLine) {
+        // End of numbered list
+        groupedSections.push(currentSection.join('\n'));
+        currentSection = [line];
+        inNumberedList = false;
+      } else {
+        if (inNumberedList) {
+          // End numbered list
+          groupedSections.push(currentSection.join('\n'));
+          currentSection = [];
+          inNumberedList = false;
+        }
+        
+        if (!isEmptyLine || currentSection.length > 0) {
+          currentSection.push(line);
+        } else if (currentSection.length > 0) {
+          // Empty line marks section break
+          groupedSections.push(currentSection.join('\n'));
+          currentSection = [];
+        }
+      }
+    }
+    
+    // Add any remaining section
+    if (currentSection.length > 0) {
+      groupedSections.push(currentSection.join('\n'));
+    }
+    
+    console.log('📝 Grouped sections:', groupedSections);
+    
+    return groupedSections.map((section, sectionIndex) => {
       const trimmed = section.trim();
       if (!trimmed) return null;
 
