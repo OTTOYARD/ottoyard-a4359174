@@ -164,47 +164,45 @@ serve(async (req) => {
   // Enhanced system prompt for fleet intelligence
   const enhancedSystemPrompt = `You are OttoCommand AI — the definitive Fleet Operations Intelligence System for OTTOYARD.
 
-CURRENT OPERATIONAL STATUS:
+**CURRENT OPERATIONAL STATUS:**
 Region: ${locationInfo}
 Fleet Overview: ${derived.total} vehicles | Active: ${derived.active} | Charging: ${derived.charging} | Maintenance: ${derived.maint} | Idle: ${derived.idle}
 Average Battery: ${derived.avgBatt}%
 Vehicle Status: ${actualVehicles.slice(0, 10).map((v: any) => `${v.id}:${v.battery ?? v.soc * 100 | 0}%`).join(", ")}${actualVehicles.length > 10 ? "..." : ""}
 
-CORE EXPERTISE AREAS:
+**RESPONSE FORMAT REQUIREMENTS:**
+• Always format responses with clear headings using colons (e.g., "Fleet Analysis:")
+• Use bullet points (•) for lists and key insights
+• Use numbered lists (1. 2. 3.) for step-by-step recommendations
+• Be concise and professional - no unnecessary technical jargon
+• Lead with the most critical insights first
+• Use **bold** for emphasis on key metrics and vehicle IDs
+
+**CORE EXPERTISE AREAS:**
 • Fleet Optimization & Route Planning
-• Predictive Maintenance & Asset Health
-• Energy Management & Charging Strategies  
+• Predictive Maintenance & Asset Health  
+• Energy Management & Charging Strategies
 • Operational Efficiency & Cost Analysis
 • Risk Assessment & Safety Protocols
 • Real-time Decision Support
 
-ANALYSIS FRAMEWORK:
-1. IMMEDIATE ACTION PRIORITIES - Critical issues requiring immediate attention
-2. OPERATIONAL INSIGHTS - Data-driven observations with supporting metrics
-3. STRATEGIC RECOMMENDATIONS - Medium to long-term optimization opportunities
-4. RISK FACTORS - Potential issues and mitigation strategies
-5. PERFORMANCE BENCHMARKS - KPI analysis and trend identification
+**ANALYSIS PRIORITIES:**
+1. **Critical Issues:** Immediate attention required
+2. **Operational Insights:** Data-driven observations with metrics
+3. **Strategic Recommendations:** Optimization opportunities  
+4. **Risk Assessment:** Potential issues and mitigation
+5. **Performance Metrics:** KPI analysis and benchmarks
 
-RESPONSE PROTOCOLS:
-• Lead with actionable recommendations backed by data
-• Provide specific vehicle/asset IDs and quantified impacts
-• Include confidence levels for predictive insights
-• Suggest next steps and timeline for implementation
-• Flag any data gaps that limit analysis accuracy
+**OPERATIONAL CONSTRAINTS:**
+• Never compromise safety or regulatory compliance
+• Respect maintenance schedules and delivery commitments
+• Consider energy costs and grid capacity limitations
+• Account for weather, traffic, and seasonal factors
 
-OPERATIONAL CONSTRAINTS:
-• Never recommend actions that compromise safety
-• Respect maintenance schedules and regulatory requirements  
-• Consider energy grid capacity and cost optimization
-• Account for weather, traffic, and seasonal patterns
-• Maintain service level agreements and delivery commitments
+Provide actionable, data-driven insights with specific vehicle IDs and quantified impacts. Keep responses clean and professional.`;
 
-When tools are executed, provide ≤6 key insights + structured Action Block JSON.
-Be precise, data-driven, and operations-focused with specific asset identifiers.`;
-
-  // Determine if we should use Claude for this query
-  const isComplexAnalysis = /\b(analyz|optim|predict|recommend|insight|trend|efficien|perform|benchmark)\w*/i.test(message);
-  const shouldUseClaude = useClaudeForAnalysis && claudeApiKey && isComplexAnalysis;
+  // Use Claude for all coding and complex analysis queries
+  const shouldUseClaude = useClaudeForAnalysis && claudeApiKey;
 
   // Prepare messages for AI model
   const messages = [
@@ -242,10 +240,8 @@ Be precise, data-driven, and operations-focused with specific asset identifiers.
         
         return ok({
           success: true,
-          mode: "ops",
+          mode: "ops", 
           content: claudeContent,
-          action_block: actionBlock("none", "Claude analysis completed - no direct actions executed.", { model: claudeModel }),
-          ai_model: "claude",
           timestamp: new Date().toISOString(),
         });
       } else {
@@ -353,8 +349,10 @@ Be precise, data-driven, and operations-focused with specific asset identifiers.
       const errorText = await r2.text().catch(() => "");
       console.error("OpenAI API Error (ops r2):", r2.status, errorText);
       return ok({
-        success: true, mode: "ops", content: r1Choice?.message?.content ?? "(no content)",
-        function_calls: toolMessages.map((m) => m.content), timestamp: new Date().toISOString()
+        success: true, 
+        mode: "ops", 
+        content: r1Choice?.message?.content ?? "(no content)",
+        timestamp: new Date().toISOString()
       });
     }
     const r2Data = await r2.json();
@@ -369,11 +367,6 @@ Be precise, data-driven, and operations-focused with specific asset identifiers.
       success: true,
       mode: "ops",
       content: final,
-      action_block: actionBlock(action as any, "Executed tool calls based on plan.", {
-        ran,
-        results: toolMessages.map((m) => { try { return JSON.parse(m.content); } catch { return m.content; } }),
-      }),
-      function_calls: toolMessages.map((m) => { try { return JSON.parse(m.content); } catch { return m.content; } }),
       timestamp: new Date().toISOString(),
     });
   }
@@ -383,7 +376,6 @@ Be precise, data-driven, and operations-focused with specific asset identifiers.
     success: true,
     mode: "ops",
     content: r1Choice?.message?.content ?? "(no content)",
-    action_block: actionBlock("none", "No tools executed this turn."),
     timestamp: new Date().toISOString(),
   });
 });
