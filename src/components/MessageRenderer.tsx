@@ -16,9 +16,9 @@ const MessageRenderer = memo(({ content, role }: MessageRendererProps) => {
       if (!trimmed) return null;
 
       // Check for headings (text ending with :)
-      if (trimmed.endsWith(':') && trimmed.length < 60 && !trimmed.includes('\n')) {
+      if (trimmed.endsWith(':') && trimmed.length < 80 && !trimmed.includes('\n')) {
         return (
-          <h3 key={index} className="text-base font-semibold text-foreground mb-2 mt-3 first:mt-0">
+          <h3 key={index} className="text-lg font-bold text-primary mb-3 mt-4 first:mt-0 border-b border-border/30 pb-1">
             {trimmed}
           </h3>
         );

@@ -170,13 +170,38 @@ Fleet Overview: ${derived.total} vehicles | Active: ${derived.active} | Charging
 Average Battery: ${derived.avgBatt}%
 Vehicle Status: ${actualVehicles.slice(0, 10).map((v: any) => `${v.id}:${v.battery ?? v.soc * 100 | 0}%`).join(", ")}${actualVehicles.length > 10 ? "..." : ""}
 
-**RESPONSE FORMAT REQUIREMENTS:**
-• Always format responses with clear headings using colons (e.g., "Fleet Analysis:")
-• Use bullet points (•) for lists and key insights
-• Use numbered lists (1. 2. 3.) for step-by-step recommendations
-• Be concise and professional - no unnecessary technical jargon
-• Lead with the most critical insights first
-• Use **bold** for emphasis on key metrics and vehicle IDs
+**MANDATORY RESPONSE FORMAT - FOLLOW EXACTLY:**
+
+EVERY response must follow this exact structure:
+
+Fleet Status:
+• Start with a concise overview
+• Use bullet points (•) for all key insights
+• Keep lines short and scannable
+
+Critical Findings:
+• List urgent issues requiring immediate action
+• Use vehicle IDs in **bold** (e.g., **BUS07**)
+• Include specific metrics and percentages
+
+Recommendations:
+1. First action item with specific details
+2. Second action item with clear steps
+3. Third action item with timeline
+
+Performance Metrics:
+• Key performance indicators
+• Efficiency ratings and comparisons
+• Cost impact analysis
+
+FORMATTING RULES:
+- ALWAYS use section headers ending with colons
+- ALWAYS use bullet points (•) for lists
+- ALWAYS use numbered lists (1. 2. 3.) for sequential steps
+- ALWAYS bold vehicle IDs and key metrics with **bold**
+- Keep each bullet point to one line when possible
+- Use clear, professional language
+- NO technical jargon without explanation
 
 **CORE EXPERTISE AREAS:**
 • Fleet Optimization & Route Planning
@@ -186,20 +211,13 @@ Vehicle Status: ${actualVehicles.slice(0, 10).map((v: any) => `${v.id}:${v.batte
 • Risk Assessment & Safety Protocols
 • Real-time Decision Support
 
-**ANALYSIS PRIORITIES:**
-1. **Critical Issues:** Immediate attention required
-2. **Operational Insights:** Data-driven observations with metrics
-3. **Strategic Recommendations:** Optimization opportunities  
-4. **Risk Assessment:** Potential issues and mitigation
-5. **Performance Metrics:** KPI analysis and benchmarks
-
 **OPERATIONAL CONSTRAINTS:**
 • Never compromise safety or regulatory compliance
 • Respect maintenance schedules and delivery commitments
 • Consider energy costs and grid capacity limitations
 • Account for weather, traffic, and seasonal factors
 
-Provide actionable, data-driven insights with specific vehicle IDs and quantified impacts. Keep responses clean and professional.`;
+Provide actionable, data-driven insights with specific vehicle IDs and quantified impacts. ALWAYS follow the mandatory response format above.`;
 
   // Use Claude for all coding and complex analysis queries
   const shouldUseClaude = useClaudeForAnalysis && claudeApiKey;
