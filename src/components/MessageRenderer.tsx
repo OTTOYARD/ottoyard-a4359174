@@ -46,8 +46,12 @@ const MessageRenderer = memo(({ content, role }: MessageRendererProps) => {
   const formatContent = (text: string) => {
     // Check for numbered lists (handle multi-line numbered items)
     if (/^\d+\.\s/.test(text)) {
+      console.log('📝 Processing numbered list:', text);
+      
       // Split by lines and filter for numbered items
       const lines = text.split('\n');
+      console.log('📝 Lines:', lines);
+      
       const numberedItems = [];
       let currentItem = '';
       
@@ -56,6 +60,7 @@ const MessageRenderer = memo(({ content, role }: MessageRendererProps) => {
           // Start of a new numbered item
           if (currentItem) numberedItems.push(currentItem.trim());
           currentItem = line.replace(/^\d+\.\s/, '').trim();
+          console.log('📝 New numbered item:', currentItem);
         } else if (line.trim() && currentItem) {
           // Continuation of current item
           currentItem += ' ' + line.trim();
@@ -66,9 +71,12 @@ const MessageRenderer = memo(({ content, role }: MessageRendererProps) => {
       }
       if (currentItem) numberedItems.push(currentItem.trim());
       
+      console.log('📝 Final numbered items:', numberedItems);
+      
       return (
         <ol className="list-none space-y-2 mb-3">
           {numberedItems.map((item, itemIndex) => {
+            console.log('📝 Rendering item', itemIndex + 1, ':', item);
             const formattedItem = item.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-foreground">$1</strong>');
             return (
               <li key={itemIndex} className="text-sm leading-relaxed flex items-start">
