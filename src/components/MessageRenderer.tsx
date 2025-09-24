@@ -46,12 +46,30 @@ const MessageRenderer = memo(({ content, role }: MessageRendererProps) => {
   const formatContent = (text: string) => {
     // Check for numbered lists (handle multi-line numbered items)
     if (/^\d+\.\s/.test(text)) {
-      const items = text.split(/\n(?=\d+\.\s)/).filter(item => item.trim());
+      // Split by lines and filter for numbered items
+      const lines = text.split('\n');
+      const numberedItems = [];
+      let currentItem = '';
+      
+      for (const line of lines) {
+        if (/^\d+\.\s/.test(line.trim())) {
+          // Start of a new numbered item
+          if (currentItem) numberedItems.push(currentItem.trim());
+          currentItem = line.replace(/^\d+\.\s/, '').trim();
+        } else if (line.trim() && currentItem) {
+          // Continuation of current item
+          currentItem += ' ' + line.trim();
+        } else if (line.trim()) {
+          // Standalone line, treat as new item
+          currentItem = line.trim();
+        }
+      }
+      if (currentItem) numberedItems.push(currentItem.trim());
+      
       return (
         <ol className="list-none space-y-2 mb-3">
-          {items.map((item, itemIndex) => {
-            const cleanItem = item.replace(/^\d+\.\s/, '').trim();
-            const formattedItem = cleanItem.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-foreground">$1</strong>');
+          {numberedItems.map((item, itemIndex) => {
+            const formattedItem = item.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-foreground">$1</strong>');
             return (
               <li key={itemIndex} className="text-sm leading-relaxed flex items-start">
                 <span className="text-primary font-medium mr-3 mt-0.5 min-w-[1.5rem]">
