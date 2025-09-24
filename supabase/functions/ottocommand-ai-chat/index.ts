@@ -61,8 +61,14 @@ serve(async (req) => {
   if (!apiKey) return fail(500, "Missing OpenAI API key. Set OPENAI_API_KEY in Supabase secrets.");
   if (!(apiKey.startsWith("sk-") && apiKey.length >= 40)) return fail(500, "Invalid OpenAI API key format (must start with 'sk-').");
 
+  // AI Model Selection - Claude for advanced reasoning, OpenAI for general tasks
+  const useClaudeForAnalysis = Deno.env.get("USE_CLAUDE_ANALYSIS") !== "0"; // default true
   const model = Deno.env.get("OTTO_MODEL")?.trim() || "gpt-4o-mini";
+  const claudeModel = "claude-3-5-sonnet-20241022"; // Latest Claude for fleet analysis
   const DEMO = Deno.env.get("DEMO_MODE") === "1";
+  
+  // Get Claude API key for advanced analysis
+  const claudeApiKey = Deno.env.get("ANTHROPIC_API_KEY")?.trim();
 
   // Supabase (optional for ops mode)
   const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
@@ -154,13 +160,101 @@ serve(async (req) => {
   })();
 
   const locationInfo = currentCity ? `${currentCity.name}${currentCity.country ? ", " + currentCity.country : ""}` : "All Regions";
-  const systemPrompt = `You are OttoCommand AI — Fleet Intelligence.\nRegion: ${locationInfo}\nFLEET(${derived.total}): ACTIVE ${derived.active}, CHARGING ${derived.charging}, MAINT ${derived.maint}, IDLE ${derived.idle} | AvgBatt ${derived.avgBatt}%\nVehicles: ${actualVehicles.map((v: any) => v.id + ":" + (v.battery ?? "?") + "%").join(", ")}\nRules:\n1) Do not invent telemetry; state what's missing and propose next step.\n2) Optimize for low idle + energy cost while meeting SLAs.\n3) If tools run, return ≤6 bullets + Action Block JSON {action,reason,details}.\n4) Be crisp and ops-focused with specific IDs.`;
+  
+  // Enhanced system prompt for fleet intelligence
+  const enhancedSystemPrompt = `You are OttoCommand AI — the definitive Fleet Operations Intelligence System for OTTOYARD.
 
+CURRENT OPERATIONAL STATUS:
+Region: ${locationInfo}
+Fleet Overview: ${derived.total} vehicles | Active: ${derived.active} | Charging: ${derived.charging} | Maintenance: ${derived.maint} | Idle: ${derived.idle}
+Average Battery: ${derived.avgBatt}%
+Vehicle Status: ${actualVehicles.slice(0, 10).map((v: any) => `${v.id}:${v.battery ?? v.soc * 100 | 0}%`).join(", ")}${actualVehicles.length > 10 ? "..." : ""}
+
+CORE EXPERTISE AREAS:
+• Fleet Optimization & Route Planning
+• Predictive Maintenance & Asset Health
+• Energy Management & Charging Strategies  
+• Operational Efficiency & Cost Analysis
+• Risk Assessment & Safety Protocols
+• Real-time Decision Support
+
+ANALYSIS FRAMEWORK:
+1. IMMEDIATE ACTION PRIORITIES - Critical issues requiring immediate attention
+2. OPERATIONAL INSIGHTS - Data-driven observations with supporting metrics
+3. STRATEGIC RECOMMENDATIONS - Medium to long-term optimization opportunities
+4. RISK FACTORS - Potential issues and mitigation strategies
+5. PERFORMANCE BENCHMARKS - KPI analysis and trend identification
+
+RESPONSE PROTOCOLS:
+• Lead with actionable recommendations backed by data
+• Provide specific vehicle/asset IDs and quantified impacts
+• Include confidence levels for predictive insights
+• Suggest next steps and timeline for implementation
+• Flag any data gaps that limit analysis accuracy
+
+OPERATIONAL CONSTRAINTS:
+• Never recommend actions that compromise safety
+• Respect maintenance schedules and regulatory requirements  
+• Consider energy grid capacity and cost optimization
+• Account for weather, traffic, and seasonal patterns
+• Maintain service level agreements and delivery commitments
+
+When tools are executed, provide ≤6 key insights + structured Action Block JSON.
+Be precise, data-driven, and operations-focused with specific asset identifiers.`;
+
+  // Determine if we should use Claude for this query
+  const isComplexAnalysis = /\b(analyz|optim|predict|recommend|insight|trend|efficien|perform|benchmark)\w*/i.test(message);
+  const shouldUseClaude = useClaudeForAnalysis && claudeApiKey && isComplexAnalysis;
+
+  // Prepare messages for AI model
   const messages = [
-    { role: "system", content: systemPrompt },
+    { role: "system", content: enhancedSystemPrompt },
     ...conversationHistory.slice(-8).map((m: any) => ({ role: m.role === "assistant" ? "assistant" : "user", content: String(m.content) })),
     { role: "user", content: message },
   ];
+
+  // Enhanced Claude API call for complex fleet analysis
+  if (shouldUseClaude) {
+    console.log("Using Claude for advanced fleet analysis");
+    try {
+      const claudeResponse = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${claudeApiKey}`,
+          "Content-Type": "application/json",
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model: claudeModel,
+          max_tokens: 1500,
+          messages: messages.filter(m => m.role !== "system").map(m => ({
+            role: m.role,
+            content: m.content
+          })),
+          system: enhancedSystemPrompt,
+          temperature: 0.3,
+        }),
+      });
+
+      if (claudeResponse.ok) {
+        const claudeData = await claudeResponse.json();
+        const claudeContent = claudeData.content?.[0]?.text ?? "(no content)";
+        
+        return ok({
+          success: true,
+          mode: "ops",
+          content: claudeContent,
+          action_block: actionBlock("none", "Claude analysis completed - no direct actions executed.", { model: claudeModel }),
+          ai_model: "claude",
+          timestamp: new Date().toISOString(),
+        });
+      } else {
+        console.error("Claude API failed, falling back to OpenAI:", claudeResponse.status);
+      }
+    } catch (claudeError) {
+      console.error("Claude API error, falling back to OpenAI:", claudeError);
+    }
+  }
 
   const tools = [
     {
@@ -212,8 +306,15 @@ serve(async (req) => {
     },
   ] as const;
 
-  // Round 1 (tools if needed)
-  const basePayload = { model, messages, tools, tool_choice: "auto" as const, max_tokens: 1200, temperature: 0.2 };
+  // OpenAI API call with enhanced tools and fleet context
+  const basePayload = { 
+    model, 
+    messages: messages.map(m => ({ role: m.role, content: m.content })), 
+    tools, 
+    tool_choice: "auto" as const, 
+    max_tokens: 1500, 
+    temperature: 0.2 
+  };
   const r1 = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
