@@ -143,7 +143,7 @@ serve(async (req) => {
     console.error('Error in Smart Reporting:', error);
     return new Response(JSON.stringify({ 
       success: false, 
-      error: error.message 
+      error: String(error)
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -188,7 +188,7 @@ async function gatherFleetData(supabase: any, dateRange: any, vehicleIds: any) {
       routes: routes || [],
       summary: {
         total_vehicles: vehicles?.length || 0,
-        active_vehicles: vehicles?.filter(v => v.status === 'active').length || 0,
+        active_vehicles: vehicles?.filter((v: any) => v.status === 'active').length || 0,
         maintenance_records: maintenance?.length || 0,
         routes_tracked: routes?.length || 0
       }
@@ -206,7 +206,7 @@ async function gatherFleetData(supabase: any, dateRange: any, vehicleIds: any) {
 }
 
 function generateReportTitle(reportType: string): string {
-  const titles = {
+  const titles: Record<string, string> = {
     fleet_performance: 'Fleet Performance Analysis Report',
     cost_analysis: 'Fleet Cost Analysis Report',
     maintenance_summary: 'Maintenance Summary Report',

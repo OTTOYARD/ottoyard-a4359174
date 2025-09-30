@@ -166,7 +166,7 @@ serve(async (req) => {
     console.error('Error in Predictive Maintenance:', error);
     return new Response(JSON.stringify({ 
       success: false, 
-      error: error.message 
+      error: String(error)
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -222,7 +222,7 @@ function generateMaintenancePredictions(aiAnalysis: string, vehicle: any, mainte
 }
 
 function getMaintenanceType(component: string): string {
-  const types = {
+  const types: Record<string, string> = {
     'Engine': 'preventive',
     'Transmission': 'preventive',
     'Brakes': 'safety_critical',
@@ -243,7 +243,7 @@ function getPriorityLevel(confidence: number, daysUntil: number): string {
 }
 
 function getEstimatedCost(component: string): number {
-  const costs = {
+  const costs: Record<string, number> = {
     'Engine': Math.floor(Math.random() * 2000) + 800,
     'Transmission': Math.floor(Math.random() * 1500) + 600,
     'Brakes': Math.floor(Math.random() * 400) + 200,
@@ -300,7 +300,7 @@ function getComponentRecommendations(component: string): any[] {
 }
 
 function getDelayImpact(component: string): string {
-  const impacts = {
+  const impacts: Record<string, string> = {
     'Engine': 'Severe performance degradation, potential breakdown',
     'Transmission': 'Transmission failure, expensive repairs',
     'Brakes': 'Safety risk, potential accidents',
@@ -314,7 +314,7 @@ function getDelayImpact(component: string): string {
 }
 
 function generateMaintenanceSchedule(predictions: any[], predictDays: number): any {
-  const schedule = {};
+  const schedule: Record<string, any[]> = {};
   
   predictions.forEach(prediction => {
     const date = new Date(prediction.predicted_date).toISOString().split('T')[0];
