@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -162,6 +163,7 @@ const generateDepotsForCity = (city: City) => {
   return depots;
 };
 const Index = () => {
+  const navigate = useNavigate();
   const [selectedTab, setSelectedTab] = useState("overview");
   const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null);
   const [selectedDepot, setSelectedDepot] = useState<string | null>(null);
@@ -305,6 +307,13 @@ const Index = () => {
                 <TabsTrigger value="overview" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Overview</TabsTrigger>
                 <TabsTrigger value="fleet" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Fleet</TabsTrigger>
                 <TabsTrigger value="depots" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Depots</TabsTrigger>
+                <TabsTrigger 
+                  value="incidents" 
+                  className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0"
+                  onClick={() => navigate('/incidents')}
+                >
+                  Incidents
+                </TabsTrigger>
                 <TabsTrigger value="maintenance" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Maintenance</TabsTrigger>
                 <TabsTrigger value="analytics" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Analytics</TabsTrigger>
               </TabsList>
