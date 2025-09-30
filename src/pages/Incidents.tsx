@@ -9,6 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useIncidentsStore } from "@/stores/incidentsStore";
 import { IncidentCard } from "@/components/IncidentCard";
 import { IncidentDetails } from "@/components/IncidentDetails";
+import { OTTOWDispatchDialog } from "@/components/OTTOWDispatchDialog";
 import { IncidentStatus } from "@/data/incidents-mock";
 
 const allStatuses: IncidentStatus[] = ["Reported", "Dispatched", "Secured", "At Depot", "Closed"];
@@ -71,6 +72,8 @@ export default function Incidents() {
           <h1 className="text-2xl font-bold">Incidents</h1>
           
           <div className="flex items-center gap-2">
+            <OTTOWDispatchDialog />
+            
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline">
