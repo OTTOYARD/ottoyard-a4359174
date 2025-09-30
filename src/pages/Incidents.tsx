@@ -199,37 +199,40 @@ export default function Incidents() {
                 <p>No incidents match your filters.</p>
               </div>
             ) : (
-              sortedIncidents.map((incident) => (
-                <div 
-                  key={incident.incidentId} 
-                  className="scroll-mt-2"
-                  id={`incident-${incident.incidentId}`}
-                >
-                  <IncidentCard
-                    incident={incident}
-                    isSelected={incident.incidentId === selectedIncidentId}
-                    onSelect={() => {
-                      const newId = incident.incidentId === selectedIncidentId ? null : incident.incidentId;
-                      selectIncident(newId);
-                      // Scroll to selected incident after a brief delay
-                      if (newId) {
-                        setTimeout(() => {
-                          document.getElementById(`incident-${newId}`)?.scrollIntoView({ 
-                            behavior: 'smooth', 
-                            block: 'nearest' 
-                          });
-                        }, 100);
-                      }
-                    }}
-                  />
-                  {/* Show details inline on mobile when selected */}
-                  {incident.incidentId === selectedIncidentId && (
-                    <div className="mt-2 mb-3 bg-muted/30 rounded-lg">
-                      <IncidentDetails incident={incident} />
-                    </div>
-                  )}
-                </div>
-              ))
+              sortedIncidents.map((incident) => {
+                const isSelected = incident.incidentId === selectedIncidentId;
+                return (
+                  <div 
+                    key={incident.incidentId} 
+                    className="relative"
+                    id={`incident-${incident.incidentId}`}
+                  >
+                    <IncidentCard
+                      incident={incident}
+                      isSelected={isSelected}
+                      onSelect={() => {
+                        const newId = isSelected ? null : incident.incidentId;
+                        selectIncident(newId);
+                        // Scroll to selected incident after a brief delay
+                        if (newId) {
+                          setTimeout(() => {
+                            document.getElementById(`incident-${newId}`)?.scrollIntoView({ 
+                              behavior: 'smooth', 
+                              block: 'start' 
+                            });
+                          }, 150);
+                        }
+                      }}
+                    />
+                    {/* Show details inline on mobile when selected */}
+                    {isSelected && (
+                      <div className="mt-3 mb-4 border-l-4 border-primary pl-3 bg-background">
+                        <IncidentDetails incident={incident} />
+                      </div>
+                    )}
+                  </div>
+                );
+              })
             )}
           </div>
         </ScrollArea>
