@@ -66,6 +66,7 @@ const cityLocations = {
   Nashville: { lat: 36.1627, lon: -86.7816, addresses: ["123 Broadway", "456 Music Row", "789 Gulch Ave", "321 Honky Tonk Ln"] },
   Austin: { lat: 30.2672, lon: -97.7431, addresses: ["111 Congress Ave", "222 6th Street", "333 Rainey St", "444 South Lamar"] },
   LA: { lat: 34.0522, lon: -118.2437, addresses: ["555 Sunset Blvd", "666 Hollywood Blvd", "777 Venice Blvd", "888 Wilshire Blvd"] },
+  "San Francisco": { lat: 37.7749, lon: -122.4194, addresses: ["101 Market St", "202 Mission St", "303 Castro St", "404 Haight St"] },
 };
 
 const incidentTypes: IncidentType[] = ["collision", "malfunction", "interior", "vandalism"];

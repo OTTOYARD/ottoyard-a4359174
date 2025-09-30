@@ -563,15 +563,33 @@ For OTTOW dispatch requests, be conversational and guide users through the selec
     const final = r2Data.choices?.[0]?.message?.content ?? "(no content)";
     const ran = toolCalls.map((t: any) => t.function?.name);
     const action =
-      ran.includes("update_vehicle_status") ? "update_status"
+      ran.includes("dispatch_ottow_tow") ? "ottow_dispatched"
+      : ran.includes("update_vehicle_status") ? "update_status"
       : ran.includes("schedule_vehicle_task") ? "create_service_job"
       : ran.includes("create_optimization_plan") ? "none"
       : "none";
+    
+    // Check if OTTOW was dispatched successfully
+    const ottowResult = toolMessages.find(tm => {
+      try {
+        const parsed = JSON.parse(tm.content);
+        return parsed.action === 'ottow_dispatched' && parsed.success;
+      } catch {
+        return false;
+      }
+    });
+    
+    const actionBlock = ottowResult ? JSON.parse(ottowResult.content) : null;
+    
     return ok({
       success: true,
       mode: "ops",
       content: final,
       timestamp: new Date().toISOString(),
+      action_block: actionBlock ? {
+        action: 'ottow_dispatched',
+        details: actionBlock
+      } : undefined,
     });
   }
 

@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { MessageRenderer } from "./MessageRenderer";
 import { OTTOWDispatchDialog } from "./OTTOWDispatchDialog";
+import { useIncidentsStore } from "@/stores/incidentsStore";
 import { 
   Bot, 
   Send, 
@@ -104,6 +105,28 @@ export const AIAgentPopup = ({ open, onOpenChange, currentCity, vehicles = [], d
 
       // Enhanced content handling with action_block and function_calls fallback
       let content = data.content || data.reply || data.message || '';
+      
+      // Check if this was an OTTOW dispatch action and add to incidents store
+      if (data.action_block?.action === 'ottow_dispatched' || data.success === true) {
+        const details = data.action_block?.details || data;
+        if (details.incidentId && details.vehicleId && details.city) {
+          // Add the incident to the store
+          const dispatchOTTOW = useIncidentsStore.getState().dispatchOTTOW;
+          const incidentId = dispatchOTTOW(
+            details.vehicleId,
+            details.city,
+            details.type || 'malfunction',
+            details.summary || 'Incident reported via OttoCommand AI'
+          );
+          
+          // Show success toast
+          toast.success(`OTTOW dispatched! Incident ${incidentId} created.`, {
+            description: `Vehicle ${details.vehicleId} in ${details.city}`,
+          });
+          
+          console.log('OTTOW dispatch added to incidents:', incidentId);
+        }
+      }
       
       // If no content but we have actions or function calls, create a summary
       if (!content.trim() && (data.action_block || data.function_calls?.length)) {
