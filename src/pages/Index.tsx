@@ -17,6 +17,17 @@ import MetricsCard from "@/components/MetricsCard";
 import { AddVehiclePopup, TrackVehiclePopup, VehicleDetailsPopup, MaintenancePopup } from "@/components/VehiclePopups";
 import { AIAgentPopup } from "@/components/AIAgentPopup";
 import CartButton, { CartItem } from "@/components/CartButton";
+import { IncidentCard } from "@/components/IncidentCard";
+import { IncidentDetails } from "@/components/IncidentDetails";
+import { OTTOWDispatchDialog } from "@/components/OTTOWDispatchDialog";
+import { useIncidentsStore } from "@/stores/incidentsStore";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Filter, RefreshCw } from "lucide-react";
+import { IncidentStatus } from "@/data/incidents-mock";
 
 // Generate vehicles for specific city with unique 5-digit alphanumeric IDs
 const generateVehiclesForCity = (city: City) => {
@@ -162,6 +173,196 @@ const generateDepotsForCity = (city: City) => {
   
   return depots;
 };
+
+// Incidents Tab Component
+const allStatuses: IncidentStatus[] = ["Reported", "Dispatched", "Secured", "At Depot", "Closed"];
+
+const IncidentsTabContent = () => {
+  const {
+    incidents,
+    selectedIncidentId,
+    statusFilter,
+    cityFilter,
+    selectIncident,
+    setStatusFilter,
+    setCityFilter,
+    refreshIncidents,
+  } = useIncidentsStore();
+  
+  // Filter incidents
+  const filteredIncidents = incidents.filter((incident) => {
+    const matchesStatus = statusFilter.length === 0 || statusFilter.includes(incident.status);
+    const matchesCity = cityFilter === "All Cities" || incident.city === cityFilter;
+    return matchesStatus && matchesCity;
+  });
+  
+  // Sort: Open incidents first (by status priority then ETA), then Closed
+  const sortedIncidents = [...filteredIncidents].sort((a, b) => {
+    if (a.status === "Closed" && b.status !== "Closed") return 1;
+    if (a.status !== "Closed" && b.status === "Closed") return -1;
+    
+    const statusOrder = { "Reported": 1, "Dispatched": 2, "Secured": 3, "At Depot": 4, "Closed": 5 };
+    const aOrder = statusOrder[a.status];
+    const bOrder = statusOrder[b.status];
+    
+    if (aOrder !== bOrder) return aOrder - bOrder;
+    
+    // Within same status, sort by ETA (shortest first)
+    if (a.etaSeconds !== null && b.etaSeconds !== null) {
+      return a.etaSeconds - b.etaSeconds;
+    }
+    if (a.etaSeconds !== null) return -1;
+    if (b.etaSeconds !== null) return 1;
+    
+    return 0;
+  });
+  
+  const selectedIncident = incidents.find((i) => i.incidentId === selectedIncidentId);
+  
+  const toggleStatusFilter = (status: IncidentStatus) => {
+    if (statusFilter.includes(status)) {
+      setStatusFilter(statusFilter.filter((s) => s !== status));
+    } else {
+      setStatusFilter([...statusFilter, status]);
+    }
+  };
+  
+  return (
+    <div className="space-y-4">
+      {/* Header Bar */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">Incidents</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            {sortedIncidents.length} incident{sortedIncidents.length !== 1 ? 's' : ''} • Live auto-rotation active
+          </p>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <OTTOWDispatchDialog />
+          
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline">
+                <Filter className="w-4 h-4 mr-2" />
+                Filters
+                {(statusFilter.length > 0 || cityFilter !== "All Cities") && (
+                  <span className="ml-2 px-1.5 py-0.5 text-xs bg-primary text-primary-foreground rounded-full">
+                    {statusFilter.length + (cityFilter !== "All Cities" ? 1 : 0)}
+                  </span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80" align="end">
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-sm font-semibold mb-2 block">Status</Label>
+                  <div className="space-y-2">
+                    {allStatuses.map((status) => (
+                      <div key={status} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`status-${status}`}
+                          checked={statusFilter.includes(status)}
+                          onCheckedChange={() => toggleStatusFilter(status)}
+                        />
+                        <label
+                          htmlFor={`status-${status}`}
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                        >
+                          {status}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <Label className="text-sm font-semibold mb-2 block">City</Label>
+                  <Select value={cityFilter} onValueChange={setCityFilter}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="All Cities">All Cities</SelectItem>
+                      <SelectItem value="Nashville">Nashville</SelectItem>
+                      <SelectItem value="Austin">Austin</SelectItem>
+                      <SelectItem value="LA">Los Angeles</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    setStatusFilter([]);
+                    setCityFilter("All Cities");
+                  }}
+                >
+                  Clear Filters
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+          
+          <Button variant="outline" onClick={refreshIncidents}>
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Refresh
+          </Button>
+        </div>
+      </div>
+      
+      {/* Two Column Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Left: Incident Queue */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Incident Queue</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-[600px]">
+              <div className="space-y-3">
+                {sortedIncidents.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <p>No incidents match your filters.</p>
+                  </div>
+                ) : (
+                  sortedIncidents.map((incident) => (
+                    <IncidentCard
+                      key={incident.incidentId}
+                      incident={incident}
+                      isSelected={incident.incidentId === selectedIncidentId}
+                      onSelect={() => selectIncident(incident.incidentId)}
+                    />
+                  ))
+                )}
+              </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+        
+        {/* Right: Details Panel */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Incident Details</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-[600px]">
+              {selectedIncident ? (
+                <IncidentDetails incident={selectedIncident} />
+              ) : (
+                <div className="flex items-center justify-center h-full text-muted-foreground">
+                  <p>Select an incident to view details</p>
+                </div>
+              )}
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
 const Index = () => {
   const navigate = useNavigate();
   const [selectedTab, setSelectedTab] = useState("overview");
@@ -307,11 +508,7 @@ const Index = () => {
                 <TabsTrigger value="overview" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Overview</TabsTrigger>
                 <TabsTrigger value="fleet" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Fleet</TabsTrigger>
                 <TabsTrigger value="depots" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Depots</TabsTrigger>
-                <TabsTrigger 
-                  value="incidents" 
-                  className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0"
-                  onClick={() => navigate('/incidents')}
-                >
+                <TabsTrigger value="incidents" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">
                   Incidents
                 </TabsTrigger>
                 <TabsTrigger value="maintenance" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Maintenance</TabsTrigger>
@@ -1469,6 +1666,11 @@ const Index = () => {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          {/* Incidents Tab */}
+          <TabsContent value="incidents" className="space-y-6">
+            <IncidentsTabContent />
           </TabsContent>
         </Tabs>
         

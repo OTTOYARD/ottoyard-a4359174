@@ -108,16 +108,53 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
         </div>
       `);
 
-      // Add hover preview popup
+      // Add hover preview popup with improved timing
       const baseShadow = '0 2px 8px rgba(0,0,0,0.3)';
+      let showTimeout: NodeJS.Timeout | null = null;
+      let hideTimeout: NodeJS.Timeout | null = null;
+
+      const showPopup = () => {
+        if (hideTimeout) {
+          clearTimeout(hideTimeout);
+          hideTimeout = null;
+        }
+        showTimeout = setTimeout(() => {
+          popup.setLngLat([vehicle.location.lng, vehicle.location.lat]);
+          popup.addTo(map.current!);
+          
+          // Keep popup open when hovering over it
+          const popupEl = document.querySelector('.vehicle-preview-popup');
+          if (popupEl) {
+            popupEl.addEventListener('mouseenter', () => {
+              if (hideTimeout) {
+                clearTimeout(hideTimeout);
+                hideTimeout = null;
+              }
+            });
+            popupEl.addEventListener('mouseleave', () => {
+              hidePopup();
+            });
+          }
+        }, 150);
+      };
+
+      const hidePopup = () => {
+        if (showTimeout) {
+          clearTimeout(showTimeout);
+          showTimeout = null;
+        }
+        hideTimeout = setTimeout(() => {
+          popup.remove();
+        }, 300);
+      };
+
       markerEl.addEventListener('mouseenter', () => {
         markerEl.style.boxShadow = '0 4px 12px rgba(0,0,0,0.35)';
-        popup.setLngLat([vehicle.location.lng, vehicle.location.lat]);
-        popup.addTo(map.current!);
+        showPopup();
       });
       markerEl.addEventListener('mouseleave', () => {
         markerEl.style.boxShadow = baseShadow;
-        popup.remove();
+        hidePopup();
       });
 
       // Add click handler
@@ -189,16 +226,53 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
         </div>
       `);
 
-      // Add hover preview popup
+      // Add hover preview popup with improved timing
       const depotBaseShadow = '0 2px 8px rgba(0,0,0,0.3)';
+      let depotShowTimeout: NodeJS.Timeout | null = null;
+      let depotHideTimeout: NodeJS.Timeout | null = null;
+
+      const showDepotPopup = () => {
+        if (depotHideTimeout) {
+          clearTimeout(depotHideTimeout);
+          depotHideTimeout = null;
+        }
+        depotShowTimeout = setTimeout(() => {
+          depotPopup.setLngLat([depot.location.lng, depot.location.lat]);
+          depotPopup.addTo(map.current!);
+          
+          // Keep popup open when hovering over it
+          const popupEl = document.querySelector('.depot-preview-popup');
+          if (popupEl) {
+            popupEl.addEventListener('mouseenter', () => {
+              if (depotHideTimeout) {
+                clearTimeout(depotHideTimeout);
+                depotHideTimeout = null;
+              }
+            });
+            popupEl.addEventListener('mouseleave', () => {
+              hideDepotPopup();
+            });
+          }
+        }, 150);
+      };
+
+      const hideDepotPopup = () => {
+        if (depotShowTimeout) {
+          clearTimeout(depotShowTimeout);
+          depotShowTimeout = null;
+        }
+        depotHideTimeout = setTimeout(() => {
+          depotPopup.remove();
+        }, 300);
+      };
+
       markerEl.addEventListener('mouseenter', () => {
         markerEl.style.boxShadow = '0 4px 12px rgba(0,0,0,0.35)';
-        depotPopup.setLngLat([depot.location.lng, depot.location.lat]);
-        depotPopup.addTo(map.current!);
+        showDepotPopup();
       });
       markerEl.addEventListener('mouseleave', () => {
         markerEl.style.boxShadow = depotBaseShadow;
-        depotPopup.remove();
+        hideDepotPopup();
       });
 
       // Add click handler
