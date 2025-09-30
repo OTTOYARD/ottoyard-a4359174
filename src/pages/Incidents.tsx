@@ -69,12 +69,13 @@ export default function Incidents() {
       {/* Header */}
       <div className="border-b p-3 md:p-4">
         <div className="flex items-start justify-between gap-3 mb-2">
-          <h1 className="text-lg md:text-2xl font-bold">Incidents</h1>
+          <div className="flex-1">
+            <h1 className="text-lg md:text-2xl font-bold">Incidents</h1>
+          </div>
           
           {/* Buttons stacked vertically on the right */}
-          <div className="flex flex-col space-y-2 shrink-0">
+          <div className="flex flex-col gap-2 min-w-[120px]">
             <OTTOWDispatchDialog />
-            
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" size="sm" className="h-8 w-full">
@@ -138,7 +139,6 @@ export default function Incidents() {
                 </div>
               </PopoverContent>
             </Popover>
-            
             <Button variant="outline" size="sm" onClick={refreshIncidents} className="h-8 w-full">
               <RefreshCw className="w-3 h-3 md:mr-2" />
               <span className="hidden md:inline">Refresh</span>
