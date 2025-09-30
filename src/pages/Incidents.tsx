@@ -75,10 +75,10 @@ export default function Incidents() {
           <OTTOWDispatchDialog />
           
           {/* Filter and Refresh - Smaller, Below */}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col gap-2">
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="h-8 flex-1">
+                <Button variant="outline" size="sm" className="h-8 w-full">
                   <Filter className="w-3 h-3 mr-2" />
                   <span>Filters</span>
                   {(statusFilter.length > 0 || cityFilter !== "All Cities") && (
@@ -140,7 +140,7 @@ export default function Incidents() {
               </PopoverContent>
             </Popover>
             
-            <Button variant="outline" size="sm" onClick={refreshIncidents} className="h-8 flex-1">
+            <Button variant="outline" size="sm" onClick={refreshIncidents} className="h-8 w-full">
               <RefreshCw className="w-3 h-3 mr-2" />
               <span>Refresh</span>
             </Button>
