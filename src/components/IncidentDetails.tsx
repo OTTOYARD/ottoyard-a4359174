@@ -87,22 +87,22 @@ export function IncidentDetails({ incident }: IncidentDetailsProps) {
   };
   
   return (
-    <div className="space-y-4">
+    <div className="space-y-2 md:space-y-4">
       {/* Header */}
       <Card>
-        <CardHeader>
-          <div className="flex items-start justify-between">
-            <div>
-              <CardTitle className="text-lg">{incident.incidentId}</CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">
+        <CardHeader className="p-3 md:p-6">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <CardTitle className="text-sm md:text-lg truncate">{incident.incidentId}</CardTitle>
+              <p className="text-[10px] md:text-sm text-muted-foreground mt-0.5 md:mt-1 truncate">
                 Vehicle: <span className="font-semibold">{incident.vehicleId}</span> • {incident.city}
               </p>
             </div>
-            <Badge className={statusColors[incident.status]}>
+            <Badge className={`${statusColors[incident.status]} text-[9px] md:text-xs whitespace-nowrap`}>
               {incident.status}
             </Badge>
           </div>
-          <p className="text-xs text-muted-foreground mt-2">
+          <p className="text-[9px] md:text-xs text-muted-foreground mt-1 md:mt-2">
             Last updated: {formatTimestamp(incident.timestamps[
               incident.status === "Closed" ? "closedAt" :
               incident.status === "At Depot" ? "atDepotAt" :
@@ -114,29 +114,34 @@ export function IncidentDetails({ incident }: IncidentDetailsProps) {
         </CardHeader>
       </Card>
       
-      {/* Timeline */}
+      {/* Timeline - Simplified for mobile */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Timeline</CardTitle>
+        <CardHeader className="p-3 md:p-6">
+          <CardTitle className="text-xs md:text-base">Timeline</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {incident.timeline.map((entry, idx) => (
-              <div key={idx} className="flex gap-3">
-                <div className="flex-shrink-0 w-2 h-2 rounded-full bg-primary mt-1.5" />
+        <CardContent className="p-3 md:p-6 pt-0 md:pt-0">
+          <div className="space-y-2 md:space-y-3">
+            {incident.timeline.slice(0, 3).map((entry, idx) => (
+              <div key={idx} className="flex gap-2 md:gap-3">
+                <div className="flex-shrink-0 w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-primary mt-1 md:mt-1.5" />
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Badge variant="outline" className="text-xs">
+                  <div className="flex items-center gap-1 md:gap-2 mb-0.5 md:mb-1">
+                    <Badge variant="outline" className="text-[9px] md:text-xs whitespace-nowrap">
                       {entry.status}
                     </Badge>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-[9px] md:text-xs text-muted-foreground">
                       {formatTimestamp(entry.ts)}
                     </span>
                   </div>
-                  <p className="text-sm">{entry.note}</p>
+                  <p className="text-[10px] md:text-sm truncate md:whitespace-normal">{entry.note}</p>
                 </div>
               </div>
             ))}
+            {incident.timeline.length > 3 && (
+              <p className="text-[9px] md:text-xs text-muted-foreground pl-4 md:pl-5">
+                + {incident.timeline.length - 3} more events
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -144,14 +149,14 @@ export function IncidentDetails({ incident }: IncidentDetailsProps) {
       {/* Live Tow Tracker */}
       {incident.tow.assigned && incident.status !== "Closed" && (
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Live Tow Tracker</CardTitle>
+          <CardHeader className="p-3 md:p-6">
+            <CardTitle className="text-xs md:text-base">Live Tow Tracker</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-2 text-sm">
+          <CardContent className="p-3 md:p-6 pt-0 md:pt-0">
+            <div className="space-y-1 md:space-y-2 text-[10px] md:text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Driver:</span>
-                <span className="font-semibold">{incident.tow.driver}</span>
+                <span className="font-semibold truncate ml-2">{incident.tow.driver}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Truck ID:</span>
@@ -174,32 +179,32 @@ export function IncidentDetails({ incident }: IncidentDetailsProps) {
         </Card>
       )}
       
-      {/* Report Card */}
+      {/* Report Card - Simplified for mobile */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Incident Report</CardTitle>
+        <CardHeader className="p-3 md:p-6">
+          <CardTitle className="text-xs md:text-base">Incident Report</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+        <CardContent className="p-3 md:p-6 pt-0 md:pt-0 space-y-2 md:space-y-4">
+          <div className="grid grid-cols-2 gap-2 md:gap-4">
             <div>
-              <Label className="text-xs">Incident #</Label>
-              <Input value={incident.incidentId} disabled className="mt-1" />
+              <Label className="text-[9px] md:text-xs">Incident #</Label>
+              <Input value={incident.incidentId} disabled className="mt-1 h-7 md:h-10 text-[10px] md:text-sm" />
             </div>
             <div>
-              <Label className="text-xs">Time</Label>
-              <Input value={formatTimestamp(incident.timestamps.reportedAt)} disabled className="mt-1" />
+              <Label className="text-[9px] md:text-xs">Time</Label>
+              <Input value={formatTimestamp(incident.timestamps.reportedAt)} disabled className="mt-1 h-7 md:h-10 text-[10px] md:text-sm" />
             </div>
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-2 md:gap-4">
             <div>
-              <Label className="text-xs">Vehicle ID</Label>
-              <Input value={incident.vehicleId} disabled className="mt-1" />
+              <Label className="text-[9px] md:text-xs">Vehicle ID</Label>
+              <Input value={incident.vehicleId} disabled className="mt-1 h-7 md:h-10 text-[10px] md:text-sm" />
             </div>
             <div>
-              <Label className="text-xs">Type</Label>
+              <Label className="text-[9px] md:text-xs">Type</Label>
               <Select value={reportType} onValueChange={(val) => setReportType(val as any)}>
-                <SelectTrigger className="mt-1">
+                <SelectTrigger className="mt-1 h-7 md:h-10 text-[10px] md:text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -213,15 +218,15 @@ export function IncidentDetails({ incident }: IncidentDetailsProps) {
           </div>
           
           <div>
-            <Label className="text-xs">Short Summary</Label>
+            <Label className="text-[9px] md:text-xs">Summary</Label>
             <Input
               value={reportSummary}
               onChange={(e) => setReportSummary(e.target.value)}
-              className="mt-1"
+              className="mt-1 h-7 md:h-10 text-[10px] md:text-sm"
             />
           </div>
           
-          <div>
+          <div className="hidden md:block">
             <Label className="text-xs">Comments</Label>
             <Textarea
               value={reportComments}
@@ -233,28 +238,28 @@ export function IncidentDetails({ incident }: IncidentDetailsProps) {
           </div>
           
           <div>
-            <Label className="text-xs">Location</Label>
-            <div className="flex gap-2 mt-1">
-              <Input value={incident.location.addr} disabled />
-              <Button variant="outline" size="icon" onClick={handleCopyLocation}>
-                <Copy className="w-4 h-4" />
+            <Label className="text-[9px] md:text-xs">Location</Label>
+            <div className="flex gap-1 md:gap-2 mt-1">
+              <Input value={incident.location.addr} disabled className="h-7 md:h-10 text-[10px] md:text-sm" />
+              <Button variant="outline" size="icon" onClick={handleCopyLocation} className="h-7 w-7 md:h-10 md:w-10">
+                <Copy className="w-3 h-3 md:w-4 md:h-4" />
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-[9px] md:text-xs text-muted-foreground mt-0.5 md:mt-1">
               {incident.location.lat.toFixed(4)}, {incident.location.lon.toFixed(4)}
             </p>
           </div>
           
-          <Separator />
+          <Separator className="my-2 md:my-4" />
           
           <div className="flex gap-2">
-            <Button onClick={handleSaveReport} className="flex-1">
-              <Save className="w-4 h-4 mr-2" />
-              Save Report
+            <Button onClick={handleSaveReport} className="flex-1 h-7 md:h-10 text-[10px] md:text-sm">
+              <Save className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
+              Save
             </Button>
             {incident.status === "At Depot" && (
-              <Button onClick={handleMarkClosed} variant="outline" className="flex-1">
-                Mark Closed
+              <Button onClick={handleMarkClosed} variant="outline" className="flex-1 h-7 md:h-10 text-[10px] md:text-sm">
+                Close
               </Button>
             )}
           </div>

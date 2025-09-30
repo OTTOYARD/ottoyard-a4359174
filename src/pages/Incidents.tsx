@@ -67,20 +67,20 @@ export default function Incidents() {
   return (
     <div className="flex flex-col h-screen">
       {/* Header */}
-      <div className="border-b p-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Incidents</h1>
+      <div className="border-b p-3 md:p-4">
+        <div className="flex items-center justify-between gap-2">
+          <h1 className="text-lg md:text-2xl font-bold">Incidents</h1>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 md:gap-2">
             <OTTOWDispatchDialog />
             
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline">
-                  <Filter className="w-4 h-4 mr-2" />
-                  Filters
+                <Button variant="outline" size="sm" className="h-8 md:h-10">
+                  <Filter className="w-3 h-3 md:w-4 md:h-4 md:mr-2" />
+                  <span className="hidden md:inline">Filters</span>
                   {(statusFilter.length > 0 || cityFilter !== "All Cities") && (
-                    <span className="ml-2 px-1.5 py-0.5 text-xs bg-primary text-primary-foreground rounded-full">
+                    <span className="ml-1 md:ml-2 px-1 md:px-1.5 py-0.5 text-[10px] md:text-xs bg-primary text-primary-foreground rounded-full">
                       {statusFilter.length + (cityFilter !== "All Cities" ? 1 : 0)}
                     </span>
                   )}
@@ -138,54 +138,86 @@ export default function Incidents() {
               </PopoverContent>
             </Popover>
             
-            <Button variant="outline" onClick={refreshIncidents}>
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Refresh
+            <Button variant="outline" size="sm" onClick={refreshIncidents} className="h-8 md:h-10">
+              <RefreshCw className="w-3 h-3 md:w-4 md:h-4 md:mr-2" />
+              <span className="hidden md:inline">Refresh</span>
             </Button>
           </div>
         </div>
         
-        <p className="text-sm text-muted-foreground mt-2">
-          {sortedIncidents.length} incident{sortedIncidents.length !== 1 ? 's' : ''} • Live auto-rotation active
+        <p className="text-[10px] md:text-sm text-muted-foreground mt-1 md:mt-2">
+          {sortedIncidents.length} incident{sortedIncidents.length !== 1 ? 's' : ''} • Live auto-rotation
         </p>
       </div>
       
-      {/* Main Content: Two Column Layout */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Left: Incident Queue */}
-        <div className="w-1/2 border-r">
-          <ScrollArea className="h-full p-4">
-            <div className="space-y-3">
-              {sortedIncidents.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <p>No incidents match your filters.</p>
-                </div>
+      {/* Main Content: Responsive Layout */}
+      <div className="flex-1 overflow-hidden">
+        {/* Desktop: Two Column Layout */}
+        <div className="hidden md:flex h-full">
+          {/* Left: Incident Queue */}
+          <div className="w-1/2 border-r">
+            <ScrollArea className="h-full p-4">
+              <div className="space-y-3">
+                {sortedIncidents.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <p>No incidents match your filters.</p>
+                  </div>
+                ) : (
+                  sortedIncidents.map((incident) => (
+                    <IncidentCard
+                      key={incident.incidentId}
+                      incident={incident}
+                      isSelected={incident.incidentId === selectedIncidentId}
+                      onSelect={() => selectIncident(incident.incidentId)}
+                    />
+                  ))
+                )}
+              </div>
+            </ScrollArea>
+          </div>
+          
+          {/* Right: Details Panel */}
+          <div className="w-1/2">
+            <ScrollArea className="h-full p-4">
+              {selectedIncident ? (
+                <IncidentDetails incident={selectedIncident} />
               ) : (
-                sortedIncidents.map((incident) => (
-                  <IncidentCard
-                    key={incident.incidentId}
-                    incident={incident}
-                    isSelected={incident.incidentId === selectedIncidentId}
-                    onSelect={() => selectIncident(incident.incidentId)}
-                  />
-                ))
+                <div className="flex items-center justify-center h-full text-muted-foreground">
+                  <p>Select an incident to view details</p>
+                </div>
               )}
-            </div>
-          </ScrollArea>
+            </ScrollArea>
+          </div>
         </div>
         
-        {/* Right: Details Panel */}
-        <div className="w-1/2">
-          <ScrollArea className="h-full p-4">
-            {selectedIncident ? (
-              <IncidentDetails incident={selectedIncident} />
-            ) : (
-              <div className="flex items-center justify-center h-full text-muted-foreground">
-                <p>Select an incident to view details</p>
+        {/* Mobile: Single Column with Inline Details */}
+        <ScrollArea className="md:hidden h-full p-2">
+          <div className="space-y-2">
+            {sortedIncidents.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground text-sm">
+                <p>No incidents match your filters.</p>
               </div>
+            ) : (
+              sortedIncidents.map((incident) => (
+                <div key={incident.incidentId}>
+                  <IncidentCard
+                    incident={incident}
+                    isSelected={incident.incidentId === selectedIncidentId}
+                    onSelect={() => selectIncident(
+                      incident.incidentId === selectedIncidentId ? null : incident.incidentId
+                    )}
+                  />
+                  {/* Show details inline on mobile when selected */}
+                  {incident.incidentId === selectedIncidentId && (
+                    <div className="mt-2 mb-3">
+                      <IncidentDetails incident={incident} />
+                    </div>
+                  )}
+                </div>
+              ))
             )}
-          </ScrollArea>
-        </div>
+          </div>
+        </ScrollArea>
       </div>
     </div>
   );
