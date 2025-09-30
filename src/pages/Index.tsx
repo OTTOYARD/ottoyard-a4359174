@@ -230,24 +230,25 @@ const IncidentsTabContent = () => {
   return (
     <div className="space-y-4">
       {/* Header Bar */}
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
           <h2 className="text-2xl font-bold">Incidents</h2>
           <p className="text-sm text-muted-foreground mt-1">
             {sortedIncidents.length} incident{sortedIncidents.length !== 1 ? 's' : ''} • Live auto-rotation active
           </p>
         </div>
         
-        <div className="flex items-center gap-2">
+        {/* Buttons stacked vertically on the right */}
+        <div className="flex flex-col gap-2 min-w-[110px] shrink-0">
           <OTTOWDispatchDialog />
           
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline">
-                <Filter className="w-4 h-4 mr-2" />
-                Filters
+              <Button variant="outline" size="sm" className="h-6 w-full text-xs">
+                <Filter className="w-2.5 h-2.5 md:mr-2" />
+                <span className="hidden md:inline">Filters</span>
                 {(statusFilter.length > 0 || cityFilter !== "All Cities") && (
-                  <span className="ml-2 px-1.5 py-0.5 text-xs bg-primary text-primary-foreground rounded-full">
+                  <span className="ml-1 md:ml-2 px-1 md:px-1.5 py-0.5 text-[10px] md:text-xs bg-primary text-primary-foreground rounded-full">
                     {statusFilter.length + (cityFilter !== "All Cities" ? 1 : 0)}
                   </span>
                 )}
@@ -305,9 +306,9 @@ const IncidentsTabContent = () => {
             </PopoverContent>
           </Popover>
           
-          <Button variant="outline" onClick={refreshIncidents}>
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Refresh
+          <Button variant="outline" size="sm" onClick={refreshIncidents} className="h-6 w-full text-xs">
+            <RefreshCw className="w-2.5 h-2.5 md:mr-2" />
+            <span className="hidden md:inline">Refresh</span>
           </Button>
         </div>
       </div>
