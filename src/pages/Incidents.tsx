@@ -75,7 +75,7 @@ export default function Incidents() {
           <OTTOWDispatchDialog />
           
           {/* Filter and Refresh - Smaller, Below */}
-          <div className="flex flex-col gap-2">
+          <div className="space-y-2">
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" size="sm" className="h-8 w-full">
