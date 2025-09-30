@@ -72,12 +72,12 @@ export default function Incidents() {
           <h1 className="text-lg md:text-2xl font-bold">Incidents</h1>
           
           {/* Buttons stacked vertically on the right */}
-          <div className="flex flex-col gap-2 items-end">
+          <div className="flex flex-col space-y-2 shrink-0">
             <OTTOWDispatchDialog />
             
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="h-8">
+                <Button variant="outline" size="sm" className="h-8 w-full">
                   <Filter className="w-3 h-3 md:mr-2" />
                   <span className="hidden md:inline">Filters</span>
                   {(statusFilter.length > 0 || cityFilter !== "All Cities") && (
@@ -139,7 +139,7 @@ export default function Incidents() {
               </PopoverContent>
             </Popover>
             
-            <Button variant="outline" size="sm" onClick={refreshIncidents} className="h-8">
+            <Button variant="outline" size="sm" onClick={refreshIncidents} className="h-8 w-full">
               <RefreshCw className="w-3 h-3 md:mr-2" />
               <span className="hidden md:inline">Refresh</span>
             </Button>
