@@ -78,8 +78,8 @@ export default function Incidents() {
             <OTTOWDispatchDialog />
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="h-8 w-full">
-                  <Filter className="w-3 h-3 md:mr-2" />
+                <Button variant="outline" size="sm" className="h-6 w-full text-xs">
+                  <Filter className="w-2.5 h-2.5 md:mr-2" />
                   <span className="hidden md:inline">Filters</span>
                   {(statusFilter.length > 0 || cityFilter !== "All Cities") && (
                     <span className="ml-1 md:ml-2 px-1 md:px-1.5 py-0.5 text-[10px] md:text-xs bg-primary text-primary-foreground rounded-full">
@@ -139,8 +139,8 @@ export default function Incidents() {
                 </div>
               </PopoverContent>
             </Popover>
-            <Button variant="outline" size="sm" onClick={refreshIncidents} className="h-8 w-full">
-              <RefreshCw className="w-3 h-3 md:mr-2" />
+            <Button variant="outline" size="sm" onClick={refreshIncidents} className="h-6 w-full text-xs">
+              <RefreshCw className="w-2.5 h-2.5 md:mr-2" />
               <span className="hidden md:inline">Refresh</span>
             </Button>
           </div>
