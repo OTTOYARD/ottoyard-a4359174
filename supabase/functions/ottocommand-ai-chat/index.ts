@@ -264,10 +264,69 @@ For OTTOW dispatch requests, be conversational and guide users through the selec
     { role: "user", content: message },
   ];
 
-  // Enhanced Claude API call for complex fleet analysis
+  // Enhanced Claude API call with tool support for OTTOW dispatch and fleet analysis
   if (shouldUseClaude) {
-    console.log("Using Claude for advanced fleet analysis");
+    console.log("Using Claude for advanced fleet analysis with tool support");
     try {
+      // Convert tools to Claude format
+      const claudeTools = [
+        {
+          name: "dispatch_ottow_tow",
+          description: "Dispatch OTTOW tow service for a vehicle. Call without vehicleId first to get available vehicle options (A, B, C, D) in the city, then call again with the selected vehicleId based on user's choice.",
+          input_schema: {
+            type: "object",
+            properties: {
+              city: { 
+                type: "string", 
+                enum: ["Nashville", "Austin", "LA"], 
+                description: "City where the incident occurred" 
+              },
+              vehicleId: { 
+                type: "string", 
+                description: "Specific vehicle ID to dispatch for (optional on first call, required after user selects A/B/C/D)" 
+              },
+              type: { 
+                type: "string", 
+                enum: ["collision", "malfunction", "interior", "vandalism"], 
+                description: "Type of incident" 
+              },
+              summary: { 
+                type: "string", 
+                description: "Brief incident description" 
+              },
+            },
+            required: ["city"],
+          },
+        },
+        {
+          name: "schedule_vehicle_task",
+          description: "Schedule maintenance/ops tasks (maintenance, inspection, route_assignment, charging).",
+          input_schema: {
+            type: "object",
+            properties: {
+              vehicle_id: { type: "string" },
+              task_type: { type: "string", enum: ["maintenance", "inspection", "route_assignment", "charging"] },
+              description: { type: "string" },
+              scheduled_date: { type: "string", description: "ISO-8601 date/time" },
+              priority: { type: "string", enum: ["low", "medium", "high", "critical"] },
+            },
+            required: ["vehicle_id", "task_type", "description", "scheduled_date"],
+          },
+        },
+        {
+          name: "web_search",
+          description: "Search the web for real-time information, latest updates, or specific data.",
+          input_schema: {
+            type: "object",
+            properties: {
+              query: { type: "string", description: "Search query" },
+              focus_area: { type: "string", description: "Optional: fleet_operations, maintenance, safety, regulations" },
+            },
+            required: ["query"],
+          },
+        },
+      ];
+
       const claudeResponse = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: {
@@ -277,28 +336,107 @@ For OTTOW dispatch requests, be conversational and guide users through the selec
         },
         body: JSON.stringify({
           model: claudeModel,
-          max_tokens: 1500,
+          max_tokens: 2000,
           messages: messages.filter(m => m.role !== "system").map(m => ({
             role: m.role,
             content: m.content
           })),
           system: enhancedSystemPrompt,
+          tools: claudeTools,
           temperature: 0.3,
         }),
       });
 
       if (claudeResponse.ok) {
         const claudeData = await claudeResponse.json();
-        const claudeContent = claudeData.content?.[0]?.text ?? "(no content)";
+        console.log("Claude response:", JSON.stringify(claudeData, null, 2));
         
+        // Handle tool use
+        const content = claudeData.content;
+        let finalText = "";
+        const toolResults: any[] = [];
+
+        for (const block of content) {
+          if (block.type === "text") {
+            finalText += block.text;
+          } else if (block.type === "tool_use") {
+            console.log("Claude wants to use tool:", block.name, "with args:", block.input);
+            
+            try {
+              const result = await executeFunction(
+                { name: block.name, arguments: block.input } as any,
+                supabase
+              );
+              toolResults.push({
+                type: "tool_result",
+                tool_use_id: block.id,
+                content: JSON.stringify(result),
+              });
+            } catch (err) {
+              toolResults.push({
+                type: "tool_result",
+                tool_use_id: block.id,
+                content: JSON.stringify({ success: false, error: String(err) }),
+                is_error: true,
+              });
+            }
+          }
+        }
+
+        // If tools were used, make a follow-up call to Claude
+        if (toolResults.length > 0) {
+          const followUpResponse = await fetch("https://api.anthropic.com/v1/messages", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${claudeApiKey}`,
+              "Content-Type": "application/json",
+              "anthropic-version": "2023-06-01",
+            },
+            body: JSON.stringify({
+              model: claudeModel,
+              max_tokens: 2000,
+              messages: [
+                ...messages.filter(m => m.role !== "system").map(m => ({
+                  role: m.role,
+                  content: m.content
+                })),
+                {
+                  role: "assistant",
+                  content: content,
+                },
+                {
+                  role: "user",
+                  content: toolResults,
+                },
+              ],
+              system: enhancedSystemPrompt,
+              tools: claudeTools,
+              temperature: 0.3,
+            }),
+          });
+
+          if (followUpResponse.ok) {
+            const followUpData = await followUpResponse.json();
+            const followUpContent = followUpData.content?.find((c: any) => c.type === "text")?.text ?? finalText;
+            
+            return ok({
+              success: true,
+              mode: "ops",
+              content: followUpContent,
+              timestamp: new Date().toISOString(),
+            });
+          }
+        }
+
         return ok({
           success: true,
-          mode: "ops", 
-          content: claudeContent,
+          mode: "ops",
+          content: finalText || "(no content)",
           timestamp: new Date().toISOString(),
         });
       } else {
-        console.error("Claude API failed, falling back to OpenAI:", claudeResponse.status);
+        const errorText = await claudeResponse.text();
+        console.error("Claude API failed, falling back to OpenAI:", claudeResponse.status, errorText);
       }
     } catch (claudeError) {
       console.error("Claude API error, falling back to OpenAI:", claudeError);

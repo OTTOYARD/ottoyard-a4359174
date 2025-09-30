@@ -146,9 +146,60 @@ export const AIAgentPopup = ({ open, onOpenChange, currentCity, vehicles = [], d
     }
   };
 
-  const handleQuickAction = (action: string, isDialog?: boolean) => {
-    if (isDialog) {
-      setShowOTTOWDialog(true);
+  const handleQuickAction = async (action: string, isDialog?: boolean) => {
+    if (action === "ottow_dispatch") {
+      // Send message to AI to start OTTOW dispatch flow
+      const dispatchMessage = currentCity 
+        ? `I need to dispatch OTTOW in ${currentCity.name}` 
+        : "I need to dispatch OTTOW tow service";
+      
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        role: 'user',
+        content: dispatchMessage,
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, userMessage]);
+      setIsLoading(true);
+
+      try {
+        const { data, error } = await supabase.functions.invoke('ottocommand-ai-chat', {
+          body: {
+            message: dispatchMessage,
+            conversationHistory: messages.slice(-10),
+            currentCity,
+            vehicles,
+            depots
+          }
+        });
+
+        if (error) throw error;
+
+        const content = data?.content || 'I can help you dispatch OTTOW. Which city would you like to dispatch to?';
+
+        const assistantMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, assistantMessage]);
+
+      } catch (error) {
+        console.error('Error calling OttoCommand AI:', error);
+        toast.error('Failed to get AI response. Please try again.');
+        
+        const errorMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: 'I apologize, but I\'m experiencing technical difficulties. Please try again in a moment.',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, errorMessage]);
+      } finally {
+        setIsLoading(false);
+      }
     } else {
       setInputMessage(action);
     }
