@@ -68,21 +68,20 @@ export default function Incidents() {
     <div className="flex flex-col h-screen">
       {/* Header */}
       <div className="border-b p-3 md:p-4">
-        <div className="space-y-2">
+        <div className="flex items-start justify-between gap-3 mb-2">
           <h1 className="text-lg md:text-2xl font-bold">Incidents</h1>
           
-          {/* OTTOW Button - Large, Full Width */}
-          <OTTOWDispatchDialog />
-          
-          {/* Filter and Refresh - Smaller, Below */}
-          <div className="space-y-2">
+          {/* Buttons stacked vertically on the right */}
+          <div className="flex flex-col gap-2 items-end">
+            <OTTOWDispatchDialog />
+            
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="h-8 w-full">
-                  <Filter className="w-3 h-3 mr-2" />
-                  <span>Filters</span>
+                <Button variant="outline" size="sm" className="h-8">
+                  <Filter className="w-3 h-3 md:mr-2" />
+                  <span className="hidden md:inline">Filters</span>
                   {(statusFilter.length > 0 || cityFilter !== "All Cities") && (
-                    <span className="ml-2 px-1.5 py-0.5 text-xs bg-primary text-primary-foreground rounded-full">
+                    <span className="ml-1 md:ml-2 px-1 md:px-1.5 py-0.5 text-[10px] md:text-xs bg-primary text-primary-foreground rounded-full">
                       {statusFilter.length + (cityFilter !== "All Cities" ? 1 : 0)}
                     </span>
                   )}
@@ -140,16 +139,16 @@ export default function Incidents() {
               </PopoverContent>
             </Popover>
             
-            <Button variant="outline" size="sm" onClick={refreshIncidents} className="h-8 w-full">
-              <RefreshCw className="w-3 h-3 mr-2" />
-              <span>Refresh</span>
+            <Button variant="outline" size="sm" onClick={refreshIncidents} className="h-8">
+              <RefreshCw className="w-3 h-3 md:mr-2" />
+              <span className="hidden md:inline">Refresh</span>
             </Button>
           </div>
-          
-          <p className="text-[10px] md:text-sm text-muted-foreground">
-            {sortedIncidents.length} incident{sortedIncidents.length !== 1 ? 's' : ''} • Live auto-rotation
-          </p>
         </div>
+        
+        <p className="text-[10px] md:text-sm text-muted-foreground">
+          {sortedIncidents.length} incident{sortedIncidents.length !== 1 ? 's' : ''} • Live auto-rotation
+        </p>
       </div>
       
       {/* Main Content: Responsive Layout */}
