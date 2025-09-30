@@ -1,5 +1,126 @@
 // Function execution handler for OttoCommand AI agentic capabilities
 
+// Mock vehicle data for OTTOW dispatch
+const mockVehicles = [
+  // Nashville
+  { id: "WM-PAC-05", make: "Waymo", model: "Jaguar I-PACE", city: "Nashville", soc: 0.87, status: "idle" },
+  { id: "WM-PAC-12", make: "Waymo", model: "Jaguar I-PACE", city: "Nashville", soc: 0.45, status: "charging" },
+  { id: "ZX-GEN1-19", make: "Zoox", model: "Gen1", city: "Nashville", soc: 0.78, status: "idle" },
+  { id: "CR-ORG-27", make: "Cruise", model: "Origin", city: "Nashville", soc: 0.88, status: "idle" },
+  { id: "TE-MOD3-06", make: "Tesla", model: "Model 3", city: "Nashville", soc: 0.95, status: "idle" },
+  { id: "NR-R2-18", make: "Nuro", model: "R2", city: "Nashville", soc: 0.61, status: "idle" },
+  { id: "ZX-GEN2-33", make: "Zoox", model: "Gen2", city: "Nashville", soc: 0.41, status: "idle" },
+  { id: "WM-JAG-12", make: "Waymo", model: "Jaguar I-PACE", city: "Nashville", soc: 0.67, status: "idle" },
+  
+  // Austin
+  { id: "WM-PAC-03", make: "Waymo", model: "Jaguar I-PACE", city: "Austin", soc: 0.76, status: "idle" },
+  { id: "WM-ZKR-08", make: "Waymo", model: "Zeekr", city: "Austin", soc: 0.92, status: "idle" },
+  { id: "ZX-GEN1-07", make: "Zoox", model: "Gen1", city: "Austin", soc: 0.82, status: "idle" },
+  { id: "ZX-GEN2-25", make: "Zoox", model: "Gen2", city: "Austin", soc: 0.69, status: "idle" },
+  { id: "AU-XC90-31", make: "Aurora", model: "Volvo XC90", city: "Austin", soc: 0.42, status: "charging" },
+  { id: "MO-I5-42", make: "Motional", model: "Hyundai IONIQ 5", city: "Austin", soc: 0.49, status: "maintenance" },
+  { id: "TE-MOD3-04", make: "Tesla", model: "Model 3", city: "Austin", soc: 0.71, status: "idle" },
+  { id: "TE-MODY-19", make: "Tesla", model: "Model Y", city: "Austin", soc: 0.86, status: "idle" },
+  
+  // LA
+  { id: "WM-PAC-23", make: "Waymo", model: "Jaguar I-PACE", city: "LA", soc: 0.53, status: "charging" },
+  { id: "WM-ZKR-30", make: "Waymo", model: "Zeekr", city: "LA", soc: 0.89, status: "idle" },
+  { id: "ZX-GEN1-10", make: "Zoox", model: "Gen1", city: "LA", soc: 0.74, status: "idle" },
+  { id: "ZX-GEN2-26", make: "Zoox", model: "Gen2", city: "LA", soc: 0.46, status: "charging" },
+  { id: "CR-BLT-08", make: "Cruise", model: "Bolt EV", city: "LA", soc: 0.81, status: "idle" },
+  { id: "CR-ORG-15", make: "Cruise", model: "Origin", city: "LA", soc: 0.59, status: "idle" },
+  { id: "AU-SNA-11", make: "Aurora", model: "Toyota Sienna", city: "LA", soc: 0.92, status: "idle" },
+  { id: "AU-XC90-22", make: "Aurora", model: "Volvo XC90", city: "LA", soc: 0.38, status: "maintenance" },
+  { id: "TE-MOD3-14", make: "Tesla", model: "Model 3", city: "LA", soc: 0.65, status: "idle" },
+  { id: "TE-MODY-27", make: "Tesla", model: "Model Y", city: "LA", soc: 0.79, status: "charging" },
+];
+
+async function dispatchOTTOW(args: any) {
+  const { city, vehicleId, type = "malfunction", summary = "Incident reported via OttoCommand AI" } = args;
+  
+  console.log("OTTOW dispatch called:", { city, vehicleId, type, summary });
+  
+  // Filter vehicles by city and exclude those in maintenance
+  const cityVehicles = mockVehicles
+    .filter(v => v.city === city && v.status !== "maintenance")
+    .slice(0, 4) // Top 4 vehicles
+    .map((v, idx) => ({
+      id: v.id,
+      make: v.make,
+      model: v.model,
+      soc: v.soc,
+      label: String.fromCharCode(65 + idx), // A, B, C, D
+      distance: (Math.random() * 3).toFixed(1), // Mock distance in miles
+    }));
+  
+  // If no vehicle selected yet, return options
+  if (!vehicleId) {
+    const optionsText = cityVehicles
+      .map(v => `${v.label}) ${v.id} - ${v.make} ${v.model} (${v.distance} mi, ${Math.round(v.soc * 100)}% SOC)`)
+      .join('\n');
+    
+    return {
+      success: false,
+      requiresSelection: true,
+      city: city,
+      vehicles: cityVehicles,
+      message: `Available vehicles in ${city}:\n\n${optionsText}\n\nPlease reply with A, B, C, or D to select a vehicle.`,
+      instructions: "User should respond with just the letter (A, B, C, or D) to select their preferred vehicle."
+    };
+  }
+  
+  // Check if vehicleId is a letter selection (A, B, C, D)
+  if (vehicleId.length === 1 && /[A-D]/i.test(vehicleId)) {
+    const index = vehicleId.toUpperCase().charCodeAt(0) - 65;
+    if (index >= 0 && index < cityVehicles.length) {
+      const selectedVehicle = cityVehicles[index];
+      const vehicle = mockVehicles.find(v => v.id === selectedVehicle.id);
+      
+      // Generate incident ID
+      const incidentId = `INC-2025-${String(Math.floor(100000 + Math.random() * 900000))}`;
+      
+      return {
+        success: true,
+        action: 'ottow_dispatched',
+        incidentId: incidentId,
+        vehicleId: selectedVehicle.id,
+        vehicleDetails: `${vehicle?.make} ${vehicle?.model}`,
+        city: city,
+        type: type,
+        summary: summary,
+        eta: "6 min",
+        message: `✓ OTTOW dispatched for ${selectedVehicle.id} (${vehicle?.make} ${vehicle?.model})\n\nIncident ${incidentId} created\nETA: 6 minutes\n\nThe incident has been added to the queue and will appear in the Incidents tab.`
+      };
+    }
+  }
+  
+  // Direct vehicle ID provided
+  const vehicle = mockVehicles.find(v => v.id === vehicleId);
+  if (!vehicle) {
+    return {
+      success: false,
+      error: `Vehicle ${vehicleId} not found in ${city}`,
+      message: `Could not find vehicle ${vehicleId} in ${city}. Please try again.`
+    };
+  }
+  
+  // Generate incident ID
+  const incidentId = `INC-2025-${String(Math.floor(100000 + Math.random() * 900000))}`;
+  
+  return {
+    success: true,
+    action: 'ottow_dispatched',
+    incidentId: incidentId,
+    vehicleId: vehicle.id,
+    vehicleDetails: `${vehicle.make} ${vehicle.model}`,
+    city: city,
+    type: type,
+    summary: summary,
+    eta: "6 min",
+    message: `✓ OTTOW dispatched for ${vehicle.id} (${vehicle.make} ${vehicle.model})\n\nIncident ${incidentId} created\nETA: 6 minutes\n\nThe incident has been added to the queue and will appear in the Incidents tab.`
+  };
+}
+
 export async function executeFunction(functionCall: any, supabase: any) {
   const { name, arguments: rawArgs } = functionCall;
   
@@ -9,6 +130,9 @@ export async function executeFunction(functionCall: any, supabase: any) {
   console.log(`Executing function: ${name}`, parsedArgs);
 
   switch (name) {
+    case 'dispatch_ottow_tow':
+      return await dispatchOTTOW(parsedArgs);
+    
     case 'schedule_vehicle_task':
       return await scheduleVehicleTask(parsedArgs, supabase);
     

@@ -159,7 +159,6 @@ serve(async (req) => {
     return { total, active, charging, maint, idle, avgBatt };
   })();
 
-  const locationInfo = currentCity ? `${currentCity.name}${currentCity.country ? ", " + currentCity.country : ""}` : "All Regions";
   
   // Enhanced system prompt for fleet intelligence
   const enhancedSystemPrompt = `You are OttoCommand AI — the definitive Autonomous Fleet Operations Intelligence System for OTTOYARD's premium OEM partners.
@@ -174,6 +173,27 @@ Region: ${locationInfo}
 Fleet Overview: ${derived.total} autonomous vehicles | Active: ${derived.active} | Charging: ${derived.charging} | Maintenance: ${derived.maint} | Idle: ${derived.idle}
 Average Battery: ${derived.avgBatt}%
 Partner Vehicle Status: ${actualVehicles.slice(0, 8).map((v: any) => `${v.id}:${v.battery ?? v.soc * 100 | 0}%`).join(", ")}${actualVehicles.length > 8 ? "..." : ""}
+
+**OTTOW DISPATCH PROTOCOL:**
+When a user requests OTTOW dispatch (tow service):
+1. First, call the dispatch_ottow_tow tool with just the city parameter
+2. Present the vehicle options clearly with letters (A, B, C, D)
+3. Wait for user to respond with their choice (A, B, C, or D)
+4. Once they respond with a letter, call dispatch_ottow_tow again with:
+   - city: same city
+   - vehicleId: the LETTER they chose (A, B, C, or D)
+   - type: appropriate incident type based on context
+   - summary: brief description of the incident
+
+Example OTTOW conversation flow:
+User: "dispatch OTTOW for Nashville"
+You: [Call tool with city="Nashville", no vehicleId]
+Tool returns: List of vehicles A, B, C, D
+You: Present the options clearly to the user
+User: "B"
+You: [Call tool with city="Nashville", vehicleId="B", type="malfunction", summary="..."]
+Tool returns: Success with incident ID
+You: Confirm dispatch with incident details
 
 **MANDATORY RESPONSE FORMAT - FOLLOW EXACTLY:**
 
@@ -209,6 +229,7 @@ Performance Metrics:
 • Charging Infrastructure Strategy for 24/7 Operations
 • Regulatory Compliance & Safety Reporting
 • Cross-Partner Performance Benchmarking
+• OTTOW Incident Response & Tow Dispatch Coordination
 
 **PARTNER-SPECIFIC CONSIDERATIONS:**
 • Waymo: Focus on safety metrics, disengagement rates, operational reliability
@@ -230,7 +251,7 @@ Performance Metrics:
 • Weather and traffic impact autonomous systems differently
 • Charging schedules must account for 24/7 operations
 
-Provide executive-level insights with quantified business impact, safety implications, and partner-specific recommendations. ALWAYS follow the mandatory response format above.`;
+For OTTOW dispatch requests, be conversational and guide users through the selection process naturally. For all other queries, provide executive-level insights with quantified business impact, safety implications, and partner-specific recommendations. ALWAYS follow the mandatory response format above.`;
 
   // Use Claude for all coding and complex analysis queries
   const shouldUseClaude = useClaudeForAnalysis && claudeApiKey;
@@ -284,6 +305,24 @@ Provide executive-level insights with quantified business impact, safety implica
   }
 
   const tools = [
+    {
+      type: "function",
+      function: {
+        name: "dispatch_ottow_tow",
+        description: "Dispatch OTTOW tow service for a vehicle. Call without vehicleId first to get available vehicle options in the city, then call again with the selected vehicleId.",
+        parameters: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            city: { type: "string", enum: ["Nashville", "Austin", "LA"], description: "City where the incident occurred" },
+            vehicleId: { type: "string", description: "Specific vehicle ID to dispatch for (optional on first call)" },
+            type: { type: "string", enum: ["collision", "malfunction", "interior", "vandalism"], description: "Type of incident" },
+            summary: { type: "string", description: "Brief incident description" },
+          },
+          required: ["city"],
+        },
+      },
+    },
     {
       type: "function",
       function: {
