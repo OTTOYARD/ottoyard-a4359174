@@ -21,13 +21,9 @@ export function OTTOWDispatchDialog() {
   const [incidentType, setIncidentType] = useState<IncidentType>("collision");
   const [summary, setSummary] = useState("");
   
-  // Get vehicles for selected city
+  // Get vehicles for selected city using the city property
   const cityVehicles = vehicles
-    .filter((v) => {
-      const depotCity = v.currentDepotId.includes("nash") ? "Nashville" :
-                       v.currentDepotId.includes("austin") ? "Austin" : "LA";
-      return depotCity === selectedCity;
-    })
+    .filter((v: any) => v.city === selectedCity && v.status !== "maintenance")
     .slice(0, 20); // Limit to 20 for performance
   
   const handleSubmit = () => {
@@ -90,9 +86,9 @@ export function OTTOWDispatchDialog() {
                 <SelectValue placeholder="Select vehicle..." />
               </SelectTrigger>
               <SelectContent>
-                {cityVehicles.map((vehicle) => (
+                {cityVehicles.map((vehicle: any) => (
                   <SelectItem key={vehicle.id} value={vehicle.id}>
-                    {vehicle.id} — {((vehicle.soc || 0) * 100).toFixed(0)}% SOC
+                    {vehicle.id} — {vehicle.make} {vehicle.model} — {((vehicle.soc || 0) * 100).toFixed(0)}% SOC
                   </SelectItem>
                 ))}
               </SelectContent>

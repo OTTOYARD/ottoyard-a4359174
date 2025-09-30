@@ -28,10 +28,11 @@ export interface Vehicle {
   vehicleType?: string;
   make?: string;
   model?: string;
+  city?: string;
   licensePlate?: string;
   batteryCapacity?: number;
   maxRange?: number;
-  currentRoute?: string;
+  currentRoute?: string | null;
   lastLocationUpdate?: string;
   mileage?: number;
   engineHours?: number;

@@ -11,16 +11,14 @@ export function createOTTOWDispatchFromAI(params: {
 }): { success: boolean; incidentId?: string; message: string; vehicles?: any[] } {
   const { city, vehicleId, type = "malfunction", summary = "Incident reported via OttoCommand AI" } = params;
   
-  // Get city vehicles for selection
+  // Get city vehicles for selection - filter by city property
   const cityVehicles = vehicles
-    .filter((v) => {
-      const depotCity = v.currentDepotId?.includes("nash") ? "Nashville" :
-                       v.currentDepotId?.includes("austin") ? "Austin" : "LA";
-      return depotCity === city;
-    })
+    .filter((v: any) => v.city === city && v.status !== "maintenance")
     .slice(0, 4) // Return top 4
-    .map((v, idx) => ({
+    .map((v: any, idx: number) => ({
       id: v.id,
+      make: v.make,
+      model: v.model,
       soc: v.soc,
       label: String.fromCharCode(65 + idx), // A, B, C, D
       distance: (Math.random() * 3).toFixed(1), // Mock distance
@@ -30,8 +28,17 @@ export function createOTTOWDispatchFromAI(params: {
   if (!vehicleId) {
     return {
       success: false,
-      message: `Select a vehicle:\n${cityVehicles.map(v => `${v.label}) ${v.id} (${v.distance} mi)`).join('\n')}`,
+      message: `Select a vehicle:\n${cityVehicles.map(v => `${v.label}) ${v.id} - ${v.make} ${v.model} (${v.distance} mi, ${Math.round(v.soc * 100)}% SOC)`).join('\n')}`,
       vehicles: cityVehicles,
+    };
+  }
+  
+  // Find the vehicle to get its details
+  const vehicle = vehicles.find((v: any) => v.id === vehicleId);
+  if (!vehicle) {
+    return {
+      success: false,
+      message: `Vehicle ${vehicleId} not found.`,
     };
   }
   
@@ -41,7 +48,7 @@ export function createOTTOWDispatchFromAI(params: {
   return {
     success: true,
     incidentId,
-    message: `OTTOW dispatched for ${vehicleId}. Incident ${incidentId} created with ETA 6 min.`,
+    message: `OTTOW dispatched for ${vehicleId} (${vehicle.make} ${vehicle.model}). Incident ${incidentId} created with ETA 6 min.`,
   };
 }
 

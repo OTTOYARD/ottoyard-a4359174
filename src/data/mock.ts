@@ -118,148 +118,66 @@ export const stalls: Stall[] = [
   })),
 ];
 
-// Autonomous vehicle fleet with partner-specific configurations
+// Unified autonomous vehicle fleet across Nashville, Austin, and LA with multiple OEM brands
 export const vehicles: Vehicle[] = [
-  // Waymo Chrysler Pacifica Hybrid Fleet (Nashville) - L4 Robotaxis
-  ...Array.from({ length: 12 }, (_, i) => ({
-    id: `WM-PAC-${String(i + 1).padStart(2, '0')}`,
-    soc: Math.max(0.15, Math.min(0.95, 0.3 + (i % 8) * 0.08)),
-    status: (i % 7 === 0 ? "charging" : i % 6 === 0 ? "maintenance" : i % 4 === 0 ? "active" : "idle") as VehicleStatus,
-    currentDepotId: "depot-waymo-nash",
-    vehicleType: "robotaxi",
-    make: "Waymo",
-    model: "Chrysler Pacifica Hybrid",
-    licensePlate: `WM-${String(i + 100).slice(-2)}A`,
-    batteryCapacity: 85, // kWh
-    maxRange: 520, // km on hybrid system
-    currentRoute: `Nash-Route-${Math.floor(i / 3) + 1}`,
-    lastLocationUpdate: new Date(Date.now() - Math.random() * 1800000).toISOString(),
-    mileage: 25000 + Math.random() * 75000,
-    engineHours: 1200 + Math.random() * 3000,
-    nextMaintenanceDate: new Date(Date.now() + Math.random() * 30 * 86400000).toISOString(),
-    autonomyLevel: "L4" as const,
-    disengagementRate: 0.000076, // per mile
-    safetyScore: 98.7 + Math.random() * 1.2,
-    revenuePerDay: 280 + Math.random() * 120,
-    customerRating: 4.2 + Math.random() * 0.6,
-    location: {
-      lat: 36.1627 + (Math.random() - 0.5) * 0.05,
-      lng: -86.7816 + (Math.random() - 0.5) * 0.05,
-    },
-    operationalMetrics: {
-      avgDailyDistance: 180 + Math.random() * 120,
-      energyConsumption: 95 + Math.random() * 40,
-      utilizationRate: 0.75 + Math.random() * 0.2,
-      uptime: 0.92 + Math.random() * 0.07,
-      maintenanceCostPerKm: 0.08 + Math.random() * 0.04,
-    }
-  })),
+  // ===== NASHVILLE FLEET =====
+  // Waymo Fleet
+  { id: "WM-PAC-05", soc: 0.87, status: "idle" as VehicleStatus, currentDepotId: "depot-waymo-nash", vehicleType: "robotaxi", make: "Waymo", model: "Jaguar I-PACE", city: "Nashville", licensePlate: "WM-05A", batteryCapacity: 90, maxRange: 470, currentRoute: "Nash-Downtown", lastLocationUpdate: new Date().toISOString(), mileage: 45000, engineHours: 2100, nextMaintenanceDate: new Date(Date.now() + 20 * 86400000).toISOString(), autonomyLevel: "L4" as const, disengagementRate: 0.000076, safetyScore: 98.7, revenuePerDay: 280, customerRating: 4.4, location: { lat: 36.1627, lng: -86.7816 }, operationalMetrics: { avgDailyDistance: 180, energyConsumption: 95, utilizationRate: 0.85, uptime: 0.92, maintenanceCostPerKm: 0.08 }},
+  { id: "WM-PAC-12", soc: 0.45, status: "charging" as VehicleStatus, currentDepotId: "depot-waymo-nash", vehicleType: "robotaxi", make: "Waymo", model: "Jaguar I-PACE", city: "Nashville", licensePlate: "WM-12A", batteryCapacity: 90, maxRange: 470, currentRoute: "Nash-Midtown", lastLocationUpdate: new Date().toISOString(), mileage: 52000, engineHours: 2400, nextMaintenanceDate: new Date(Date.now() + 15 * 86400000).toISOString(), autonomyLevel: "L4" as const, disengagementRate: 0.000072, safetyScore: 98.9, revenuePerDay: 295, customerRating: 4.5, location: { lat: 36.1527, lng: -86.7716 }, operationalMetrics: { avgDailyDistance: 190, energyConsumption: 98, utilizationRate: 0.87, uptime: 0.94, maintenanceCostPerKm: 0.07 }},
+  { id: "WM-JAG-12", soc: 0.67, status: "idle" as VehicleStatus, currentDepotId: "depot-waymo-nash", vehicleType: "robotaxi", make: "Waymo", model: "Jaguar I-PACE", city: "Nashville", licensePlate: "WM-J12", batteryCapacity: 90, maxRange: 470, currentRoute: null, lastLocationUpdate: new Date().toISOString(), mileage: 38000, engineHours: 1800, nextMaintenanceDate: new Date(Date.now() + 25 * 86400000).toISOString(), autonomyLevel: "L4" as const, disengagementRate: 0.000078, safetyScore: 98.5, revenuePerDay: 270, customerRating: 4.3, location: { lat: 36.1727, lng: -86.7916 }, operationalMetrics: { avgDailyDistance: 175, energyConsumption: 92, utilizationRate: 0.83, uptime: 0.91, maintenanceCostPerKm: 0.09 }},
   
-  // Zoox Purpose-Built Robotaxis (Austin) - L5 Fully Autonomous
-  ...Array.from({ length: 15 }, (_, i) => ({
-    id: `ZX-GEN1-${String(i + 1).padStart(2, '0')}`,
-    soc: Math.max(0.2, Math.min(0.95, 0.25 + (i % 10) * 0.07)),
-    status: (i % 8 === 0 ? "charging" : i % 5 === 0 ? "maintenance" : i % 3 === 0 ? "active" : "idle") as VehicleStatus,
-    currentDepotId: "depot-zoox-austin",
-    vehicleType: "robotaxi",
-    make: "Zoox",
-    model: "Gen1 Robotaxi",
-    licensePlate: `ZX-${String(i + 200).slice(-2)}B`,
-    batteryCapacity: 133, // kWh
-    maxRange: 280, // km per charge
-    currentRoute: `Austin-Zone-${Math.floor(i / 4) + 1}`,
-    lastLocationUpdate: new Date(Date.now() - Math.random() * 900000).toISOString(),
-    mileage: 15000 + Math.random() * 45000,
-    engineHours: 800 + Math.random() * 2200,
-    nextMaintenanceDate: new Date(Date.now() + Math.random() * 25 * 86400000).toISOString(),
-    autonomyLevel: "L5" as const,
-    disengagementRate: 0.000011, // Exceptional L5 performance
-    safetyScore: 99.2 + Math.random() * 0.7,
-    revenuePerDay: 320 + Math.random() * 150,
-    customerRating: 4.3 + Math.random() * 0.5,
-    biDirectionalCharging: true,
-    location: {
-      lat: 30.2672 + (Math.random() - 0.5) * 0.06,
-      lng: -97.7431 + (Math.random() - 0.5) * 0.06,
-    },
-    operationalMetrics: {
-      avgDailyDistance: 220 + Math.random() * 100,
-      energyConsumption: 110 + Math.random() * 50,
-      utilizationRate: 0.82 + Math.random() * 0.15,
-      uptime: 0.94 + Math.random() * 0.05,
-      maintenanceCostPerKm: 0.06 + Math.random() * 0.03,
-    }
-  })),
+  // Zoox Fleet
+  { id: "ZX-GEN1-19", soc: 0.78, status: "idle" as VehicleStatus, currentDepotId: "depot-zoox-austin", vehicleType: "robotaxi", make: "Zoox", model: "Gen1", city: "Nashville", licensePlate: "ZX-19B", batteryCapacity: 133, maxRange: 280, currentRoute: "Nash-East", lastLocationUpdate: new Date().toISOString(), mileage: 28000, engineHours: 1400, nextMaintenanceDate: new Date(Date.now() + 18 * 86400000).toISOString(), autonomyLevel: "L5" as const, disengagementRate: 0.000011, safetyScore: 99.2, revenuePerDay: 320, customerRating: 4.6, location: { lat: 36.1627, lng: -86.7616 }, operationalMetrics: { avgDailyDistance: 220, energyConsumption: 110, utilizationRate: 0.89, uptime: 0.95, maintenanceCostPerKm: 0.06 }},
+  { id: "ZX-GEN2-33", soc: 0.41, status: "idle" as VehicleStatus, currentDepotId: "depot-zoox-austin", vehicleType: "robotaxi", make: "Zoox", model: "Gen2", city: "Nashville", licensePlate: "ZX-33B", batteryCapacity: 133, maxRange: 280, currentRoute: null, lastLocationUpdate: new Date().toISOString(), mileage: 15000, engineHours: 800, nextMaintenanceDate: new Date(Date.now() + 30 * 86400000).toISOString(), autonomyLevel: "L5" as const, disengagementRate: 0.000009, safetyScore: 99.4, revenuePerDay: 340, customerRating: 4.7, location: { lat: 36.1527, lng: -86.7916 }, operationalMetrics: { avgDailyDistance: 230, energyConsumption: 115, utilizationRate: 0.91, uptime: 0.96, maintenanceCostPerKm: 0.05 }},
+  
+  // Cruise Fleet
+  { id: "CR-ORG-27", soc: 0.88, status: "idle" as VehicleStatus, currentDepotId: "depot-waymo-nash", vehicleType: "robotaxi", make: "Cruise", model: "Origin", city: "Nashville", licensePlate: "CR-27C", batteryCapacity: 120, maxRange: 320, currentRoute: "Nash-West", lastLocationUpdate: new Date().toISOString(), mileage: 32000, engineHours: 1600, nextMaintenanceDate: new Date(Date.now() + 22 * 86400000).toISOString(), autonomyLevel: "L4" as const, disengagementRate: 0.000065, safetyScore: 98.8, revenuePerDay: 305, customerRating: 4.4, location: { lat: 36.1727, lng: -86.8016 }, operationalMetrics: { avgDailyDistance: 195, energyConsumption: 102, utilizationRate: 0.86, uptime: 0.93, maintenanceCostPerKm: 0.07 }},
+  
+  // Tesla Fleet
+  { id: "TE-MOD3-06", soc: 0.95, status: "idle" as VehicleStatus, currentDepotId: "depot-waymo-nash", vehicleType: "robotaxi", make: "Tesla", model: "Model 3", city: "Nashville", licensePlate: "TE-06D", batteryCapacity: 82, maxRange: 580, currentRoute: null, lastLocationUpdate: new Date().toISOString(), mileage: 41000, engineHours: 1950, nextMaintenanceDate: new Date(Date.now() + 12 * 86400000).toISOString(), autonomyLevel: "L3" as const, disengagementRate: 0.000092, safetyScore: 97.9, revenuePerDay: 260, customerRating: 4.2, location: { lat: 36.1427, lng: -86.7816 }, operationalMetrics: { avgDailyDistance: 165, energyConsumption: 88, utilizationRate: 0.81, uptime: 0.89, maintenanceCostPerKm: 0.10 }},
+  
+  // Nuro Fleet
+  { id: "NR-R2-18", soc: 0.61, status: "idle" as VehicleStatus, currentDepotId: "depot-waymo-nash", vehicleType: "delivery", make: "Nuro", model: "R2", city: "Nashville", licensePlate: "NR-18E", batteryCapacity: 45, maxRange: 240, currentRoute: "Nash-Delivery", lastLocationUpdate: new Date().toISOString(), mileage: 22000, engineHours: 1100, nextMaintenanceDate: new Date(Date.now() + 28 * 86400000).toISOString(), autonomyLevel: "L4" as const, disengagementRate: 0.000055, safetyScore: 99.1, revenuePerDay: 180, customerRating: 4.8, location: { lat: 36.1627, lng: -86.7716 }, operationalMetrics: { avgDailyDistance: 140, energyConsumption: 65, utilizationRate: 0.79, uptime: 0.94, maintenanceCostPerKm: 0.06 }},
 
-  // Uber ATG Volvo XC90 Fleet (Seattle) - L4 Rideshare
-  ...Array.from({ length: 10 }, (_, i) => ({
-    id: `UA-XC90-${String(i + 1).padStart(2, '0')}`,
-    soc: Math.max(0.1, Math.min(0.95, 0.4 + (i % 6) * 0.09)),
-    status: (i % 6 === 0 ? "charging" : i % 7 === 0 ? "maintenance" : i % 3 === 0 ? "active" : "idle") as VehicleStatus,
-    currentDepotId: "depot-uber-seattle",
-    vehicleType: "rideshare_av",
-    make: "Uber ATG",
-    model: "Volvo XC90",
-    licensePlate: `UA-${String(i + 300).slice(-2)}C`,
-    batteryCapacity: 107, // kWh
-    maxRange: 380, // km
-    currentRoute: `Seattle-Corridor-${Math.floor(i / 3) + 1}`,
-    lastLocationUpdate: new Date(Date.now() - Math.random() * 1200000).toISOString(),
-    mileage: 35000 + Math.random() * 85000,
-    engineHours: 1500 + Math.random() * 4000,
-    nextMaintenanceDate: new Date(Date.now() + Math.random() * 35 * 86400000).toISOString(),
-    autonomyLevel: "L4" as const,
-    disengagementRate: 0.000184, // Higher rate due to complex urban environment
-    safetyScore: 97.8 + Math.random() * 1.5,
-    revenuePerDay: 240 + Math.random() * 100,
-    customerRating: 3.9 + Math.random() * 0.8,
-    location: {
-      lat: 47.6062 + (Math.random() - 0.5) * 0.04,
-      lng: -122.3321 + (Math.random() - 0.5) * 0.04,
-    },
-    operationalMetrics: {
-      avgDailyDistance: 160 + Math.random() * 90,
-      energyConsumption: 85 + Math.random() * 35,
-      utilizationRate: 0.68 + Math.random() * 0.25,
-      uptime: 0.88 + Math.random() * 0.10,
-      maintenanceCostPerKm: 0.12 + Math.random() * 0.06,
-    }
-  })),
+  // ===== AUSTIN FLEET =====
+  // Waymo Fleet
+  { id: "WM-PAC-03", soc: 0.76, status: "idle" as VehicleStatus, currentDepotId: "depot-zoox-austin", vehicleType: "robotaxi", make: "Waymo", model: "Jaguar I-PACE", city: "Austin", licensePlate: "WM-03A", batteryCapacity: 90, maxRange: 470, currentRoute: "Austin-Downtown", lastLocationUpdate: new Date().toISOString(), mileage: 48000, engineHours: 2200, nextMaintenanceDate: new Date(Date.now() + 19 * 86400000).toISOString(), autonomyLevel: "L4" as const, disengagementRate: 0.000074, safetyScore: 98.6, revenuePerDay: 285, customerRating: 4.4, location: { lat: 30.2672, lng: -97.7431 }, operationalMetrics: { avgDailyDistance: 185, energyConsumption: 96, utilizationRate: 0.84, uptime: 0.92, maintenanceCostPerKm: 0.08 }},
+  { id: "WM-ZKR-08", soc: 0.92, status: "idle" as VehicleStatus, currentDepotId: "depot-zoox-austin", vehicleType: "robotaxi", make: "Waymo", model: "Zeekr", city: "Austin", licensePlate: "WM-08Z", batteryCapacity: 100, maxRange: 580, currentRoute: "Austin-North", lastLocationUpdate: new Date().toISOString(), mileage: 25000, engineHours: 1300, nextMaintenanceDate: new Date(Date.now() + 26 * 86400000).toISOString(), autonomyLevel: "L4" as const, disengagementRate: 0.000068, safetyScore: 99.0, revenuePerDay: 315, customerRating: 4.6, location: { lat: 30.3072, lng: -97.7531 }, operationalMetrics: { avgDailyDistance: 205, energyConsumption: 105, utilizationRate: 0.88, uptime: 0.95, maintenanceCostPerKm: 0.07 }},
+  
+  // Zoox Fleet  
+  { id: "ZX-GEN1-07", soc: 0.82, status: "idle" as VehicleStatus, currentDepotId: "depot-zoox-austin", vehicleType: "robotaxi", make: "Zoox", model: "Gen1", city: "Austin", licensePlate: "ZX-07B", batteryCapacity: 133, maxRange: 280, currentRoute: "Austin-Tech", lastLocationUpdate: new Date().toISOString(), mileage: 31000, engineHours: 1550, nextMaintenanceDate: new Date(Date.now() + 16 * 86400000).toISOString(), autonomyLevel: "L5" as const, disengagementRate: 0.000010, safetyScore: 99.3, revenuePerDay: 330, customerRating: 4.7, location: { lat: 30.2572, lng: -97.7331 }, operationalMetrics: { avgDailyDistance: 225, energyConsumption: 112, utilizationRate: 0.90, uptime: 0.96, maintenanceCostPerKm: 0.06 }},
+  { id: "ZX-GEN2-25", soc: 0.69, status: "idle" as VehicleStatus, currentDepotId: "depot-zoox-austin", vehicleType: "robotaxi", make: "Zoox", model: "Gen2", city: "Austin", licensePlate: "ZX-25B", batteryCapacity: 133, maxRange: 280, currentRoute: null, lastLocationUpdate: new Date().toISOString(), mileage: 18000, engineHours: 950, nextMaintenanceDate: new Date(Date.now() + 32 * 86400000).toISOString(), autonomyLevel: "L5" as const, disengagementRate: 0.000008, safetyScore: 99.5, revenuePerDay: 350, customerRating: 4.8, location: { lat: 30.2772, lng: -97.7631 }, operationalMetrics: { avgDailyDistance: 235, energyConsumption: 118, utilizationRate: 0.92, uptime: 0.97, maintenanceCostPerKm: 0.05 }},
+  
+  // Aurora Fleet
+  { id: "AU-XC90-31", soc: 0.42, status: "charging" as VehicleStatus, currentDepotId: "depot-zoox-austin", vehicleType: "rideshare_av", make: "Aurora", model: "Volvo XC90", city: "Austin", licensePlate: "AU-31F", batteryCapacity: 107, maxRange: 380, currentRoute: null, lastLocationUpdate: new Date().toISOString(), mileage: 44000, engineHours: 2050, nextMaintenanceDate: new Date(Date.now() + 14 * 86400000).toISOString(), autonomyLevel: "L4" as const, disengagementRate: 0.000088, safetyScore: 98.2, revenuePerDay: 270, customerRating: 4.3, location: { lat: 30.2472, lng: -97.7231 }, operationalMetrics: { avgDailyDistance: 175, energyConsumption: 93, utilizationRate: 0.82, uptime: 0.90, maintenanceCostPerKm: 0.09 }},
+  
+  // Motional Fleet
+  { id: "MO-I5-42", soc: 0.49, status: "maintenance" as VehicleStatus, currentDepotId: "depot-zoox-austin", vehicleType: "robotaxi", make: "Motional", model: "Hyundai IONIQ 5", city: "Austin", licensePlate: "MO-42G", batteryCapacity: 77.4, maxRange: 450, currentRoute: null, lastLocationUpdate: new Date().toISOString(), mileage: 36000, engineHours: 1750, nextMaintenanceDate: new Date(Date.now() + 2 * 86400000).toISOString(), autonomyLevel: "L4" as const, disengagementRate: 0.000081, safetyScore: 98.4, revenuePerDay: 280, customerRating: 4.4, location: { lat: 30.2872, lng: -97.7831 }, operationalMetrics: { avgDailyDistance: 180, energyConsumption: 95, utilizationRate: 0.83, uptime: 0.91, maintenanceCostPerKm: 0.08 }},
+  
+  // Tesla Fleet
+  { id: "TE-MOD3-04", soc: 0.71, status: "idle" as VehicleStatus, currentDepotId: "depot-zoox-austin", vehicleType: "robotaxi", make: "Tesla", model: "Model 3", city: "Austin", licensePlate: "TE-04D", batteryCapacity: 82, maxRange: 580, currentRoute: "Austin-South", lastLocationUpdate: new Date().toISOString(), mileage: 39000, engineHours: 1850, nextMaintenanceDate: new Date(Date.now() + 17 * 86400000).toISOString(), autonomyLevel: "L3" as const, disengagementRate: 0.000095, safetyScore: 97.8, revenuePerDay: 265, customerRating: 4.1, location: { lat: 30.2372, lng: -97.7131 }, operationalMetrics: { avgDailyDistance: 170, energyConsumption: 90, utilizationRate: 0.80, uptime: 0.88, maintenanceCostPerKm: 0.10 }},
+  { id: "TE-MODY-19", soc: 0.86, status: "idle" as VehicleStatus, currentDepotId: "depot-zoox-austin", vehicleType: "robotaxi", make: "Tesla", model: "Model Y", city: "Austin", licensePlate: "TE-19Y", batteryCapacity: 82, maxRange: 525, currentRoute: null, lastLocationUpdate: new Date().toISOString(), mileage: 27000, engineHours: 1350, nextMaintenanceDate: new Date(Date.now() + 24 * 86400000).toISOString(), autonomyLevel: "L3" as const, disengagementRate: 0.000091, safetyScore: 98.0, revenuePerDay: 275, customerRating: 4.2, location: { lat: 30.2972, lng: -97.7931 }, operationalMetrics: { avgDailyDistance: 178, energyConsumption: 94, utilizationRate: 0.82, uptime: 0.89, maintenanceCostPerKm: 0.09 }},
 
-  // Lyft Level 5 BMW iX Partnership Fleet (San Francisco) - L4 Premium Rideshare
-  ...Array.from({ length: 8 }, (_, i) => ({
-    id: `LY-BMW-${String(i + 1).padStart(2, '0')}`,
-    soc: Math.max(0.25, Math.min(0.95, 0.35 + (i % 5) * 0.12)),
-    status: (i % 5 === 0 ? "charging" : i % 8 === 0 ? "maintenance" : i % 2 === 0 ? "active" : "idle") as VehicleStatus,
-    currentDepotId: "depot-lyft-sf",
-    vehicleType: "premium_rideshare",
-    make: "Lyft",
-    model: "BMW iX Partner",
-    licensePlate: `LY-${String(i + 400).slice(-2)}D`,
-    batteryCapacity: 111.5, // kWh
-    maxRange: 425, // km
-    currentRoute: `SF-Premium-${Math.floor(i / 2) + 1}`,
-    lastLocationUpdate: new Date(Date.now() - Math.random() * 1000000).toISOString(),
-    mileage: 28000 + Math.random() * 65000,
-    engineHours: 1100 + Math.random() * 3200,
-    nextMaintenanceDate: new Date(Date.now() + Math.random() * 28 * 86400000).toISOString(),
-    autonomyLevel: "L4" as const,
-    disengagementRate: 0.000145,
-    safetyScore: 98.1 + Math.random() * 1.3,
-    revenuePerDay: 310 + Math.random() * 140,
-    customerRating: 4.0 + Math.random() * 0.7,
-    location: {
-      lat: 37.7749 + (Math.random() - 0.5) * 0.03,
-      lng: -122.4194 + (Math.random() - 0.5) * 0.03,
-    },
-    operationalMetrics: {
-      avgDailyDistance: 195 + Math.random() * 105,
-      energyConsumption: 100 + Math.random() * 45,
-      utilizationRate: 0.78 + Math.random() * 0.18,
-      uptime: 0.90 + Math.random() * 0.08,
-      maintenanceCostPerKm: 0.09 + Math.random() * 0.05,
-    }
-  })),
+  // ===== LA FLEET =====
+  // Waymo Fleet
+  { id: "WM-PAC-23", soc: 0.53, status: "charging" as VehicleStatus, currentDepotId: "depot-la-west", vehicleType: "robotaxi", make: "Waymo", model: "Jaguar I-PACE", city: "LA", licensePlate: "WM-23A", batteryCapacity: 90, maxRange: 470, currentRoute: null, lastLocationUpdate: new Date().toISOString(), mileage: 55000, engineHours: 2500, nextMaintenanceDate: new Date(Date.now() + 11 * 86400000).toISOString(), autonomyLevel: "L4" as const, disengagementRate: 0.000079, safetyScore: 98.3, revenuePerDay: 290, customerRating: 4.3, location: { lat: 34.0522, lng: -118.2437 }, operationalMetrics: { avgDailyDistance: 188, energyConsumption: 97, utilizationRate: 0.85, uptime: 0.91, maintenanceCostPerKm: 0.08 }},
+  { id: "WM-ZKR-30", soc: 0.89, status: "idle" as VehicleStatus, currentDepotId: "depot-la-west", vehicleType: "robotaxi", make: "Waymo", model: "Zeekr", city: "LA", licensePlate: "WM-30Z", batteryCapacity: 100, maxRange: 580, currentRoute: "LA-Hollywood", lastLocationUpdate: new Date().toISOString(), mileage: 29000, engineHours: 1450, nextMaintenanceDate: new Date(Date.now() + 27 * 86400000).toISOString(), autonomyLevel: "L4" as const, disengagementRate: 0.000070, safetyScore: 98.9, revenuePerDay: 310, customerRating: 4.5, location: { lat: 34.0922, lng: -118.3287 }, operationalMetrics: { avgDailyDistance: 202, energyConsumption: 104, utilizationRate: 0.87, uptime: 0.94, maintenanceCostPerKm: 0.07 }},
+  
+  // Zoox Fleet
+  { id: "ZX-GEN1-10", soc: 0.74, status: "idle" as VehicleStatus, currentDepotId: "depot-la-west", vehicleType: "robotaxi", make: "Zoox", model: "Gen1", city: "LA", licensePlate: "ZX-10B", batteryCapacity: 133, maxRange: 280, currentRoute: "LA-Downtown", lastLocationUpdate: new Date().toISOString(), mileage: 33000, engineHours: 1650, nextMaintenanceDate: new Date(Date.now() + 15 * 86400000).toISOString(), autonomyLevel: "L5" as const, disengagementRate: 0.000012, safetyScore: 99.2, revenuePerDay: 325, customerRating: 4.6, location: { lat: 34.0422, lng: -118.2537 }, operationalMetrics: { avgDailyDistance: 218, energyConsumption: 109, utilizationRate: 0.89, uptime: 0.95, maintenanceCostPerKm: 0.06 }},
+  { id: "ZX-GEN2-26", soc: 0.46, status: "charging" as VehicleStatus, currentDepotId: "depot-la-west", vehicleType: "robotaxi", make: "Zoox", model: "Gen2", city: "LA", licensePlate: "ZX-26B", batteryCapacity: 133, maxRange: 280, currentRoute: null, lastLocationUpdate: new Date().toISOString(), mileage: 19000, engineHours: 1000, nextMaintenanceDate: new Date(Date.now() + 31 * 86400000).toISOString(), autonomyLevel: "L5" as const, disengagementRate: 0.000009, safetyScore: 99.4, revenuePerDay: 345, customerRating: 4.7, location: { lat: 34.0622, lng: -118.2737 }, operationalMetrics: { avgDailyDistance: 232, energyConsumption: 116, utilizationRate: 0.91, uptime: 0.96, maintenanceCostPerKm: 0.05 }},
+  
+  // Cruise Fleet
+  { id: "CR-BLT-08", soc: 0.81, status: "idle" as VehicleStatus, currentDepotId: "depot-la-west", vehicleType: "robotaxi", make: "Cruise", model: "Bolt EV", city: "LA", licensePlate: "CR-08H", batteryCapacity: 66, maxRange: 417, currentRoute: "LA-Santa Monica", lastLocationUpdate: new Date().toISOString(), mileage: 42000, engineHours: 2000, nextMaintenanceDate: new Date(Date.now() + 13 * 86400000).toISOString(), autonomyLevel: "L4" as const, disengagementRate: 0.000085, safetyScore: 98.1, revenuePerDay: 255, customerRating: 4.1, location: { lat: 34.0322, lng: -118.4837 }, operationalMetrics: { avgDailyDistance: 168, energyConsumption: 89, utilizationRate: 0.79, uptime: 0.87, maintenanceCostPerKm: 0.11 }},
+  { id: "CR-ORG-15", soc: 0.59, status: "idle" as VehicleStatus, currentDepotId: "depot-la-west", vehicleType: "robotaxi", make: "Cruise", model: "Origin", city: "LA", licensePlate: "CR-15C", batteryCapacity: 120, maxRange: 320, currentRoute: null, lastLocationUpdate: new Date().toISOString(), mileage: 35000, engineHours: 1700, nextMaintenanceDate: new Date(Date.now() + 21 * 86400000).toISOString(), autonomyLevel: "L4" as const, disengagementRate: 0.000067, safetyScore: 98.7, revenuePerDay: 300, customerRating: 4.4, location: { lat: 34.0722, lng: -118.2337 }, operationalMetrics: { avgDailyDistance: 192, energyConsumption: 101, utilizationRate: 0.86, uptime: 0.92, maintenanceCostPerKm: 0.07 }},
+  
+  // Aurora Fleet
+  { id: "AU-SNA-11", soc: 0.92, status: "idle" as VehicleStatus, currentDepotId: "depot-la-west", vehicleType: "rideshare_av", make: "Aurora", model: "Toyota Sienna", city: "LA", licensePlate: "AU-11I", batteryCapacity: 18, maxRange: 600, currentRoute: "LA-Airport", lastLocationUpdate: new Date().toISOString(), mileage: 46000, engineHours: 2150, nextMaintenanceDate: new Date(Date.now() + 10 * 86400000).toISOString(), autonomyLevel: "L4" as const, disengagementRate: 0.000094, safetyScore: 97.6, revenuePerDay: 245, customerRating: 4.0, location: { lat: 33.9422, lng: -118.4081 }, operationalMetrics: { avgDailyDistance: 162, energyConsumption: 86, utilizationRate: 0.77, uptime: 0.86, maintenanceCostPerKm: 0.12 }},
+  { id: "AU-XC90-22", soc: 0.38, status: "maintenance" as VehicleStatus, currentDepotId: "depot-la-west", vehicleType: "rideshare_av", make: "Aurora", model: "Volvo XC90", city: "LA", licensePlate: "AU-22F", batteryCapacity: 107, maxRange: 380, currentRoute: null, lastLocationUpdate: new Date().toISOString(), mileage: 48000, engineHours: 2250, nextMaintenanceDate: new Date(Date.now() + 3 * 86400000).toISOString(), autonomyLevel: "L4" as const, disengagementRate: 0.000089, safetyScore: 98.0, revenuePerDay: 268, customerRating: 4.2, location: { lat: 34.0122, lng: -118.4937 }, operationalMetrics: { avgDailyDistance: 173, energyConsumption: 92, utilizationRate: 0.81, uptime: 0.88, maintenanceCostPerKm: 0.10 }},
+  
+  // Tesla Fleet
+  { id: "TE-MOD3-14", soc: 0.65, status: "idle" as VehicleStatus, currentDepotId: "depot-la-west", vehicleType: "robotaxi", make: "Tesla", model: "Model 3", city: "LA", licensePlate: "TE-14D", batteryCapacity: 82, maxRange: 580, currentRoute: "LA-Venice", lastLocationUpdate: new Date().toISOString(), mileage: 41000, engineHours: 1950, nextMaintenanceDate: new Date(Date.now() + 16 * 86400000).toISOString(), autonomyLevel: "L3" as const, disengagementRate: 0.000093, safetyScore: 97.9, revenuePerDay: 262, customerRating: 4.1, location: { lat: 33.9922, lng: -118.4637 }, operationalMetrics: { avgDailyDistance: 169, energyConsumption: 89, utilizationRate: 0.80, uptime: 0.88, maintenanceCostPerKm: 0.10 }},
+  { id: "TE-MODY-27", soc: 0.79, status: "charging" as VehicleStatus, currentDepotId: "depot-la-west", vehicleType: "robotaxi", make: "Tesla", model: "Model Y", city: "LA", licensePlate: "TE-27Y", batteryCapacity: 82, maxRange: 525, currentRoute: null, lastLocationUpdate: new Date().toISOString(), mileage: 30000, engineHours: 1500, nextMaintenanceDate: new Date(Date.now() + 23 * 86400000).toISOString(), autonomyLevel: "L3" as const, disengagementRate: 0.000090, safetyScore: 98.1, revenuePerDay: 278, customerRating: 4.3, location: { lat: 34.0822, lng: -118.2137 }, operationalMetrics: { avgDailyDistance: 176, energyConsumption: 93, utilizationRate: 0.82, uptime: 0.89, maintenanceCostPerKm: 0.09 }},
 ];
 
 // Partner-specific operational metrics for autonomous fleet management
