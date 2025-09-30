@@ -222,7 +222,7 @@ async function scheduleVehicleTask(args: any, supabase: any) {
     return {
       success: false,
       error: 'Failed to schedule task',
-      details: error.message
+      details: String(error)
     };
   }
 }
@@ -266,7 +266,7 @@ async function updateVehicleStatus(args: any, supabase: any) {
     return {
       success: false,
       error: 'Failed to update status',
-      details: error.message
+      details: String(error)
     };
   }
 }
@@ -312,7 +312,7 @@ async function performWebSearch(args: any) {
     return {
       success: false,
       error: 'Web search failed',
-      details: error.message
+      details: String(error)
     };
   }
 }
@@ -320,7 +320,7 @@ async function performWebSearch(args: any) {
 async function createOptimizationPlan(args: any) {
   const { focus_area, timeframe, goals } = args;
 
-  const optimizationPlans = {
+  const optimizationPlans: Record<string, Record<string, string[]>> = {
     routes: {
       immediate: [
         "Implement dynamic routing for delivery vehicles",

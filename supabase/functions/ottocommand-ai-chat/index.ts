@@ -159,6 +159,7 @@ serve(async (req) => {
     return { total, active, charging, maint, idle, avgBatt };
   })();
 
+  const locationInfo = currentCity ? `${currentCity.name}${currentCity.country ? ", " + currentCity.country : ""}` : "All Regions";
   
   // Enhanced system prompt for fleet intelligence
   const enhancedSystemPrompt = `You are OttoCommand AI — the definitive Autonomous Fleet Operations Intelligence System for OTTOYARD's premium OEM partners.
