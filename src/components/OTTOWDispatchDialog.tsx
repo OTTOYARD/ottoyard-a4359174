@@ -51,9 +51,9 @@ export function OTTOWDispatchDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" className="h-8 md:h-10">
-          <Truck className="w-3 h-3 md:w-4 md:h-4 md:mr-2" />
-          <span className="hidden md:inline">OTTOW Dispatch</span>
+        <Button className="w-full h-12 text-base">
+          <Truck className="w-5 h-5 mr-2" />
+          <span>OTTOW Dispatch</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
