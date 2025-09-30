@@ -200,17 +200,31 @@ export default function Incidents() {
               </div>
             ) : (
               sortedIncidents.map((incident) => (
-                <div key={incident.incidentId}>
+                <div 
+                  key={incident.incidentId} 
+                  className="scroll-mt-2"
+                  id={`incident-${incident.incidentId}`}
+                >
                   <IncidentCard
                     incident={incident}
                     isSelected={incident.incidentId === selectedIncidentId}
-                    onSelect={() => selectIncident(
-                      incident.incidentId === selectedIncidentId ? null : incident.incidentId
-                    )}
+                    onSelect={() => {
+                      const newId = incident.incidentId === selectedIncidentId ? null : incident.incidentId;
+                      selectIncident(newId);
+                      // Scroll to selected incident after a brief delay
+                      if (newId) {
+                        setTimeout(() => {
+                          document.getElementById(`incident-${newId}`)?.scrollIntoView({ 
+                            behavior: 'smooth', 
+                            block: 'nearest' 
+                          });
+                        }, 100);
+                      }
+                    }}
                   />
                   {/* Show details inline on mobile when selected */}
                   {incident.incidentId === selectedIncidentId && (
-                    <div className="mt-2 mb-3">
+                    <div className="mt-2 mb-3 bg-muted/30 rounded-lg">
                       <IncidentDetails incident={incident} />
                     </div>
                   )}
