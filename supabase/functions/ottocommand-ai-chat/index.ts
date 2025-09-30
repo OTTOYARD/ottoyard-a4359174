@@ -175,26 +175,25 @@ Fleet Overview: ${derived.total} autonomous vehicles | Active: ${derived.active}
 Average Battery: ${derived.avgBatt}%
 Partner Vehicle Status: ${actualVehicles.slice(0, 8).map((v: any) => `${v.id}:${v.battery ?? v.soc * 100 | 0}%`).join(", ")}${actualVehicles.length > 8 ? "..." : ""}
 
-**OTTOW DISPATCH PROTOCOL:**
-When a user requests OTTOW dispatch (tow service):
-1. First, call the dispatch_ottow_tow tool with just the city parameter
-2. Present the vehicle options clearly with letters (A, B, C, D)
-3. Wait for user to respond with their choice (A, B, C, or D)
-4. Once they respond with a letter, call dispatch_ottow_tow again with:
+**OTTOW DISPATCH PROTOCOL (HIGHEST PRIORITY):**
+When a user mentions "OTTOW", "dispatch", "tow", or uses the OTTOW quick action:
+1. **IMMEDIATELY** call the dispatch_ottow_tow tool with just the city parameter (use currentCity if available)
+2. The tool will return a list of available vehicles with labels A, B, C, D
+3. Present the vehicle options in a clear, concise format:
+   "Available vehicles in [City]:
+   A) [ID] - [Make] [Model] ([distance] mi, [SOC]% battery)
+   B) [ID] - [Make] [Model] ([distance] mi, [SOC]% battery)
+   ... etc
+   
+   Which vehicle would you like to dispatch? (Reply A, B, C, or D)"
+4. When user responds with a letter (A/B/C/D), **IMMEDIATELY** call dispatch_ottow_tow again with:
    - city: same city
-   - vehicleId: the LETTER they chose (A, B, C, or D)
-   - type: appropriate incident type based on context
-   - summary: brief description of the incident
+   - vehicleId: the letter they chose (pass the letter as-is: "A", "B", "C", or "D")
+   - type: "malfunction" (or appropriate incident type)
+   - summary: brief description based on context
+5. Confirm the dispatch with incident details from the tool response
 
-Example OTTOW conversation flow:
-User: "dispatch OTTOW for Nashville"
-You: [Call tool with city="Nashville", no vehicleId]
-Tool returns: List of vehicles A, B, C, D
-You: Present the options clearly to the user
-User: "B"
-You: [Call tool with city="Nashville", vehicleId="B", type="malfunction", summary="..."]
-Tool returns: Success with incident ID
-You: Confirm dispatch with incident details
+**CRITICAL:** Do NOT provide fleet status analysis when OTTOW is mentioned. Go straight to the dispatch flow.
 
 **MANDATORY RESPONSE FORMAT - FOLLOW EXACTLY:**
 
@@ -276,11 +275,7 @@ For OTTOW dispatch requests, be conversational and guide users through the selec
           input_schema: {
             type: "object",
             properties: {
-              city: { 
-                type: "string", 
-                enum: ["Nashville", "Austin", "LA"], 
-                description: "City where the incident occurred" 
-              },
+              city: { type: "string", description: "City where the incident occurred (e.g., Nashville, Austin, LA, San Francisco)" },
               vehicleId: { 
                 type: "string", 
                 description: "Specific vehicle ID to dispatch for (optional on first call, required after user selects A/B/C/D)" 
@@ -453,7 +448,7 @@ For OTTOW dispatch requests, be conversational and guide users through the selec
           type: "object",
           additionalProperties: false,
           properties: {
-            city: { type: "string", enum: ["Nashville", "Austin", "LA"], description: "City where the incident occurred" },
+            city: { type: "string", description: "City where the incident occurred (e.g., Nashville, Austin, LA, San Francisco)" },
             vehicleId: { type: "string", description: "Specific vehicle ID to dispatch for (optional on first call)" },
             type: { type: "string", enum: ["collision", "malfunction", "interior", "vandalism"], description: "Type of incident" },
             summary: { type: "string", description: "Brief incident description" },

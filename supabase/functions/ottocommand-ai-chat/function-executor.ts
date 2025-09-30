@@ -33,6 +33,14 @@ const mockVehicles = [
   { id: "AU-XC90-22", make: "Aurora", model: "Volvo XC90", city: "LA", soc: 0.38, status: "maintenance" },
   { id: "TE-MOD3-14", make: "Tesla", model: "Model 3", city: "LA", soc: 0.65, status: "idle" },
   { id: "TE-MODY-27", make: "Tesla", model: "Model Y", city: "LA", soc: 0.79, status: "charging" },
+
+  // San Francisco
+  { id: "WM-PAC-45", make: "Waymo", model: "Jaguar I-PACE", city: "San Francisco", soc: 0.72, status: "idle" },
+  { id: "ZX-GEN2-51", make: "Zoox", model: "Gen2", city: "San Francisco", soc: 0.88, status: "idle" },
+  { id: "CR-ORG-63", make: "Cruise", model: "Origin", city: "San Francisco", soc: 0.65, status: "idle" },
+  { id: "AU-XC90-77", make: "Aurora", model: "Volvo XC90", city: "San Francisco", soc: 0.91, status: "idle" },
+  { id: "TE-MOD3-82", make: "Tesla", model: "Model 3", city: "San Francisco", soc: 0.54, status: "charging" },
+  { id: "MO-I5-94", make: "Motional", model: "Hyundai IONIQ 5", city: "San Francisco", soc: 0.79, status: "idle" },
 ];
 
 async function dispatchOTTOW(args: any) {
