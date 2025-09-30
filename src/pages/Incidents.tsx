@@ -74,7 +74,7 @@ export default function Incidents() {
           </div>
           
           {/* Buttons stacked vertically on the right */}
-          <div className="flex flex-col gap-2 min-w-[120px]">
+          <div className="flex flex-col gap-2 min-w-[100px] items-stretch">
             <OTTOWDispatchDialog />
             <Popover>
               <PopoverTrigger asChild>
