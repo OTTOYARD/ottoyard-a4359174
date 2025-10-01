@@ -237,7 +237,13 @@ const IncidentsTabContent = () => {
             <p className="text-sm text-muted-foreground">
               {sortedIncidents.length} incident{sortedIncidents.length !== 1 ? 's' : ''}
             </p>
-            <Badge className="bg-success text-white border-0 animate-pulse glow-soft text-xs px-2 py-0.5">
+            <Badge 
+              className="bg-success text-white border-0 text-xs px-2 py-0.5"
+              style={{
+                animation: 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                opacity: 0.95
+              }}
+            >
               <Activity className="h-3 w-3 mr-1" />
               LIVE
             </Badge>
