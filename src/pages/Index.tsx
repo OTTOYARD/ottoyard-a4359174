@@ -465,7 +465,7 @@ const Index = () => {
               </div>
               <div className="min-w-0">
                 <h1 className="text-xl sm:text-3xl font-bold text-foreground truncate text-center neon-text">OTTOYARD</h1>
-                <p className="text-sm sm:text-base text-cyan-400/80 truncate text-center">Fleet Command</p>
+                <p className="text-sm sm:text-base text-slate-400 truncate text-center">Fleet Command</p>
               </div>
             </div>
             <div className="flex flex-col items-end space-y-2 flex-shrink-0">
