@@ -313,53 +313,53 @@ const IncidentsTabContent = () => {
         </div>
       </div>
       
-      {/* Two Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Left: Incident Queue */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Incident Queue</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[600px]">
-              <div className="space-y-3">
-                {sortedIncidents.length === 0 ? (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <p>No incidents match your filters.</p>
-                  </div>
-                ) : (
-                  sortedIncidents.map((incident) => (
-                    <IncidentCard
-                      key={incident.incidentId}
-                      incident={incident}
-                      isSelected={incident.incidentId === selectedIncidentId}
-                      onSelect={() => selectIncident(incident.incidentId)}
-                    />
-                  ))
-                )}
-              </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
-        
-        {/* Right: Details Panel */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Incident Details</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[600px]">
-              {selectedIncident ? (
-                <IncidentDetails incident={selectedIncident} />
-              ) : (
-                <div className="flex items-center justify-center h-full text-muted-foreground">
-                  <p>Select an incident to view details</p>
+      {/* Single Column Layout with Inline Details */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Incident Queue</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ScrollArea className="h-[600px]">
+            <div className="space-y-3">
+              {sortedIncidents.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <p>No incidents match your filters.</p>
                 </div>
+              ) : (
+                sortedIncidents.map((incident) => {
+                  const isSelected = incident.incidentId === selectedIncidentId;
+                  return (
+                    <div key={incident.incidentId} id={`incident-${incident.incidentId}`}>
+                      <IncidentCard
+                        incident={incident}
+                        isSelected={isSelected}
+                        onSelect={() => {
+                          const newId = isSelected ? null : incident.incidentId;
+                          selectIncident(newId);
+                          if (newId) {
+                            setTimeout(() => {
+                              document.getElementById(`incident-${newId}`)?.scrollIntoView({ 
+                                behavior: 'smooth', 
+                                block: 'start' 
+                              });
+                            }, 150);
+                          }
+                        }}
+                      />
+                      {/* Show details inline when selected */}
+                      {isSelected && (
+                        <div className="mt-3 p-4 border-l-4 border-primary bg-card/50 rounded-r-lg animate-accordion-down">
+                          <IncidentDetails incident={incident} />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
               )}
-            </ScrollArea>
-          </CardContent>
-        </Card>
-      </div>
+            </div>
+          </ScrollArea>
+        </CardContent>
+      </Card>
     </div>
   );
 };

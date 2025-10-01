@@ -41,7 +41,7 @@ export function IncidentCard({ incident, isSelected, onSelect }: IncidentCardPro
   return (
     <Card
       className={`p-2 md:p-4 cursor-pointer transition-all hover:shadow-md ${
-        isSelected ? "ring-2 ring-primary" : ""
+        isSelected ? "ring-2 ring-primary glow-border animate-pulse-border" : ""
       }`}
       onClick={onSelect}
     >
