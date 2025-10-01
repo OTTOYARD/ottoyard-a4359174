@@ -627,9 +627,9 @@ const Index = () => {
                           </div>
                           
                           <div className="space-y-2 text-sm mb-4">
-                            <p><span className="font-medium">Active:</span> {activeVehicles} vehicles on deliveries</p>
-                            <p><span className="font-medium">Charging:</span> {chargingVehicles} vehicles at depots</p>
-                            <p><span className="font-medium">Maintenance:</span> {maintenanceVehicles} vehicle{maintenanceVehicles !== 1 ? 's' : ''} scheduled</p>
+                            <p><span className="font-medium text-success">Active:</span> {activeVehicles} vehicles on deliveries</p>
+                            <p><span className="font-medium text-primary">Charging:</span> {chargingVehicles} vehicles at depots</p>
+                            <p><span className="font-medium text-warning">Maintenance:</span> {maintenanceVehicles} vehicle{maintenanceVehicles !== 1 ? 's' : ''} scheduled</p>
                           </div>
                           
                           <div className="flex gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
