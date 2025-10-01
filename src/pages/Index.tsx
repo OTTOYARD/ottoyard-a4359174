@@ -233,9 +233,15 @@ const IncidentsTabContent = () => {
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <h2 className="text-2xl font-bold">Incidents</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            {sortedIncidents.length} incident{sortedIncidents.length !== 1 ? 's' : ''} • Live auto-rotation active
-          </p>
+          <div className="flex items-center gap-2 mt-1">
+            <p className="text-sm text-muted-foreground">
+              {sortedIncidents.length} incident{sortedIncidents.length !== 1 ? 's' : ''}
+            </p>
+            <Badge className="bg-success text-white border-0 animate-pulse glow-soft text-xs px-2 py-0.5">
+              <Activity className="h-3 w-3 mr-1" />
+              LIVE
+            </Badge>
+          </div>
         </div>
         
         {/* Buttons stacked vertically on the right */}
