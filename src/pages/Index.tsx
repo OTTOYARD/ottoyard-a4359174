@@ -513,16 +513,16 @@ const Index = () => {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
-          <div className="px-2">
-            <TabsList className="w-full h-10 md:h-12 justify-center">
-              <TabsTrigger value="overview" className="flex-1 text-xs md:text-base">Overview</TabsTrigger>
-              <TabsTrigger value="fleet" className="flex-1 text-xs md:text-base">Fleet</TabsTrigger>
-              <TabsTrigger value="depots" className="flex-1 text-xs md:text-base">Depots</TabsTrigger>
-              <TabsTrigger value="incidents" className="flex-1 text-xs md:text-base">
+          <div className="flex justify-center">
+            <TabsList className="w-full md:w-auto h-10 md:h-12 justify-center">
+              <TabsTrigger value="overview" className="flex-1 md:flex-none text-xs md:text-base">Overview</TabsTrigger>
+              <TabsTrigger value="fleet" className="flex-1 md:flex-none text-xs md:text-base">Fleet</TabsTrigger>
+              <TabsTrigger value="depots" className="flex-1 md:flex-none text-xs md:text-base">Depots</TabsTrigger>
+              <TabsTrigger value="incidents" className="flex-1 md:flex-none text-xs md:text-base">
                 Incidents
               </TabsTrigger>
-              <TabsTrigger value="maintenance" className="flex-1 text-xs md:text-base">Maint.</TabsTrigger>
-              <TabsTrigger value="analytics" className="flex-1 text-xs md:text-base">Analytics</TabsTrigger>
+              <TabsTrigger value="maintenance" className="flex-1 md:flex-none text-xs md:text-base">Maint.</TabsTrigger>
+              <TabsTrigger value="analytics" className="flex-1 md:flex-none text-xs md:text-base">Analytics</TabsTrigger>
             </TabsList>
           </div>
 
