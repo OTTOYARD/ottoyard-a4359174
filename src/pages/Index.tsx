@@ -515,15 +515,15 @@ const Index = () => {
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
           <div className="flex justify-center">
             <div className="overflow-x-auto scrollbar-hide pb-2 md:overflow-visible">
-              <TabsList className="inline-flex w-max h-8 md:h-10 min-w-full md:min-w-0 md:w-auto justify-start md:justify-center">
-                <TabsTrigger value="overview" className="whitespace-nowrap px-2 sm:px-5 text-xs md:text-base flex-shrink-0">Overview</TabsTrigger>
-                <TabsTrigger value="fleet" className="whitespace-nowrap px-2 sm:px-5 text-xs md:text-base flex-shrink-0">Fleet</TabsTrigger>
-                <TabsTrigger value="depots" className="whitespace-nowrap px-2 sm:px-5 text-xs md:text-base flex-shrink-0">Depots</TabsTrigger>
-                <TabsTrigger value="incidents" className="whitespace-nowrap px-2 sm:px-5 text-xs md:text-base flex-shrink-0">
+              <TabsList className="inline-flex w-full md:w-auto h-8 md:h-10 justify-center">
+                <TabsTrigger value="overview" className="flex-1 md:flex-none">Overview</TabsTrigger>
+                <TabsTrigger value="fleet" className="flex-1 md:flex-none">Fleet</TabsTrigger>
+                <TabsTrigger value="depots" className="flex-1 md:flex-none">Depots</TabsTrigger>
+                <TabsTrigger value="incidents" className="flex-1 md:flex-none">
                   Incidents
                 </TabsTrigger>
-                <TabsTrigger value="maintenance" className="whitespace-nowrap px-2 sm:px-5 text-xs md:text-base flex-shrink-0">Maintenance</TabsTrigger>
-                <TabsTrigger value="analytics" className="whitespace-nowrap px-2 sm:px-5 text-xs md:text-base flex-shrink-0">Analytics</TabsTrigger>
+                <TabsTrigger value="maintenance" className="flex-1 md:flex-none">Maint.</TabsTrigger>
+                <TabsTrigger value="analytics" className="flex-1 md:flex-none">Analytics</TabsTrigger>
               </TabsList>
             </div>
           </div>
