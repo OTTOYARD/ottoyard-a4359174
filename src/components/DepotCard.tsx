@@ -61,7 +61,7 @@ const DepotCard = ({ depot, compact = false }: DepotCardProps) => {
             </div>
             <div className="text-xs text-muted-foreground">Grid Return</div>
           </div>
-          <Badge variant="outline" className={getStatusColor(depot.status)}>
+          <Badge variant="outline" className="bg-yellow-200 text-white border-yellow-300">
             {depot.status}
           </Badge>
         </div>
