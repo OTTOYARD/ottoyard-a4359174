@@ -36,6 +36,8 @@ const DepotCard = ({ depot, compact = false }: DepotCardProps) => {
     switch (status) {
       case "optimal":
         return "bg-success/10 text-success border-success/20";
+      case "maintenance":
+        return "bg-yellow-200/20 text-yellow-600 border-yellow-400/30";
       case "warning":
         return "bg-warning/10 text-warning border-warning/20";
       case "critical":
@@ -61,7 +63,7 @@ const DepotCard = ({ depot, compact = false }: DepotCardProps) => {
             </div>
             <div className="text-xs text-muted-foreground">Grid Return</div>
           </div>
-          <Badge variant="outline" className="bg-yellow-200 text-white border-yellow-300">
+          <Badge variant="outline" className={getStatusColor(depot.status)}>
             {depot.status}
           </Badge>
         </div>
