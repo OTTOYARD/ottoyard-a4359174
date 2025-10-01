@@ -238,10 +238,10 @@ const IncidentsTabContent = () => {
               {sortedIncidents.length} incident{sortedIncidents.length !== 1 ? 's' : ''}
             </p>
             <Badge 
-              className="bg-success text-white border-0 text-xs px-2 py-0.5"
+              className="bg-success text-white border-0 text-xs px-2 py-0.5 relative"
               style={{
-                animation: 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                opacity: 0.95
+                boxShadow: '0 0 8px rgba(34, 197, 94, 0.6), 0 0 16px rgba(34, 197, 94, 0.3)',
+                animation: 'glow-pulse 3s ease-in-out infinite'
               }}
             >
               <Activity className="h-3 w-3 mr-1" />
