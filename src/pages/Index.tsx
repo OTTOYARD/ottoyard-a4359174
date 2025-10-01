@@ -505,15 +505,15 @@ const Index = () => {
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
           <div className="flex justify-center">
             <div className="overflow-x-auto scrollbar-hide pb-2 md:overflow-visible">
-              <TabsList className="inline-flex w-max h-12 min-w-full md:min-w-0 md:w-auto justify-start md:justify-center">
-                <TabsTrigger value="overview" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Overview</TabsTrigger>
-                <TabsTrigger value="fleet" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Fleet</TabsTrigger>
-                <TabsTrigger value="depots" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Depots</TabsTrigger>
-                <TabsTrigger value="incidents" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">
+              <TabsList className="inline-flex w-max h-8 md:h-10 min-w-full md:min-w-0 md:w-auto justify-start md:justify-center">
+                <TabsTrigger value="overview" className="whitespace-nowrap px-2 sm:px-5 text-xs md:text-base flex-shrink-0">Overview</TabsTrigger>
+                <TabsTrigger value="fleet" className="whitespace-nowrap px-2 sm:px-5 text-xs md:text-base flex-shrink-0">Fleet</TabsTrigger>
+                <TabsTrigger value="depots" className="whitespace-nowrap px-2 sm:px-5 text-xs md:text-base flex-shrink-0">Depots</TabsTrigger>
+                <TabsTrigger value="incidents" className="whitespace-nowrap px-2 sm:px-5 text-xs md:text-base flex-shrink-0">
                   Incidents
                 </TabsTrigger>
-                <TabsTrigger value="maintenance" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Maintenance</TabsTrigger>
-                <TabsTrigger value="analytics" className="whitespace-nowrap px-4 sm:px-5 text-base flex-shrink-0">Analytics</TabsTrigger>
+                <TabsTrigger value="maintenance" className="whitespace-nowrap px-2 sm:px-5 text-xs md:text-base flex-shrink-0">Maintenance</TabsTrigger>
+                <TabsTrigger value="analytics" className="whitespace-nowrap px-2 sm:px-5 text-xs md:text-base flex-shrink-0">Analytics</TabsTrigger>
               </TabsList>
             </div>
           </div>
