@@ -515,14 +515,14 @@ const Index = () => {
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
           <div className="px-2">
             <TabsList className="w-full h-10 md:h-12 justify-center">
-              <TabsTrigger value="overview" className="flex-1 text-sm md:text-base">Overview</TabsTrigger>
-              <TabsTrigger value="fleet" className="flex-1 text-sm md:text-base">Fleet</TabsTrigger>
-              <TabsTrigger value="depots" className="flex-1 text-sm md:text-base">Depots</TabsTrigger>
-              <TabsTrigger value="incidents" className="flex-1 text-sm md:text-base">
+              <TabsTrigger value="overview" className="flex-1 text-xs md:text-base">Overview</TabsTrigger>
+              <TabsTrigger value="fleet" className="flex-1 text-xs md:text-base">Fleet</TabsTrigger>
+              <TabsTrigger value="depots" className="flex-1 text-xs md:text-base">Depots</TabsTrigger>
+              <TabsTrigger value="incidents" className="flex-1 text-xs md:text-base">
                 Incidents
               </TabsTrigger>
-              <TabsTrigger value="maintenance" className="flex-1 text-sm md:text-base">Maint.</TabsTrigger>
-              <TabsTrigger value="analytics" className="flex-1 text-sm md:text-base">Analytics</TabsTrigger>
+              <TabsTrigger value="maintenance" className="flex-1 text-xs md:text-base">Maint.</TabsTrigger>
+              <TabsTrigger value="analytics" className="flex-1 text-xs md:text-base">Analytics</TabsTrigger>
             </TabsList>
           </div>
 
