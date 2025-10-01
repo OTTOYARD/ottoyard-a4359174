@@ -456,7 +456,7 @@ const Index = () => {
               </div>
               <div className="min-w-0">
                 <h1 className="text-xl sm:text-3xl font-bold text-foreground truncate text-center neon-text">OTTOYARD</h1>
-                <p className="text-sm sm:text-base truncate text-center bg-gradient-to-b from-slate-300 to-slate-600 bg-clip-text font-medium text-[#617fa5]">Fleet Command</p>
+                <p className="text-sm truncate text-center bg-gradient-to-b from-slate-300 to-slate-600 bg-clip-text text-[#617fa5] font-medium sm:text-lg">Fleet Command</p>
               </div>
             </div>
             <div className="flex flex-col items-end space-y-2 flex-shrink-0">
