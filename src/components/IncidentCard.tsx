@@ -103,7 +103,7 @@ export function IncidentCard({ incident, isSelected, onSelect }: IncidentCardPro
         </div>
         
         {/* Right: ETA */}
-        <div className="flex-shrink-0 text-right">
+        <div className="flex-shrink-0 text-right pr-2 md:pr-3">
           <div className="text-sm md:text-lg font-mono font-semibold">
             {formatETA(incident.etaSeconds)}
           </div>
