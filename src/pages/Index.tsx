@@ -521,7 +521,10 @@ const Index = () => {
               <TabsTrigger value="incidents" className="flex-1 md:flex-none text-xs md:text-base">
                 Incidents
               </TabsTrigger>
-              <TabsTrigger value="maintenance" className="flex-1 md:flex-none text-xs md:text-base">Maint.</TabsTrigger>
+              <TabsTrigger value="maintenance" className="flex-1 md:flex-none text-xs md:text-base">
+                <span className="md:hidden">Maint.</span>
+                <span className="hidden md:inline">Maintenance</span>
+              </TabsTrigger>
               <TabsTrigger value="analytics" className="flex-1 md:flex-none text-xs md:text-base">Analytics</TabsTrigger>
             </TabsList>
           </div>
