@@ -35,22 +35,52 @@ const generateVehiclesForCity = (city: City) => {
   const routes = ['Downtown Delivery', 'Warehouse Route A', 'Port Transfer', 'Industrial Zone B', 'Airport Cargo', 'Highway Distribution', 'City Center Loop', 'Suburban Route', 'Cross-town Express', 'Harbor District', 'Tech Park Circuit', 'Mall Complex', 'University Campus', 'Hospital Route', 'Financial District'];
   const avCompanies = ['Waymo', 'Zoox', 'Tensor', 'Cruise', 'Aurora', 'Argo AI', 'Nuro', 'Mobileye', 'Motional', 'Waymo'];
   const vehicles = [];
-  
+
   // City-specific vehicle counts and characteristics
   const cityProfiles = {
-    'San Francisco': { count: [35, 45], batteryRange: [70, 95], activeRatio: 0.6 },
-    'New York': { count: [45, 60], batteryRange: [60, 90], activeRatio: 0.7 },
-    'Los Angeles': { count: [40, 55], batteryRange: [65, 85], activeRatio: 0.65 },
-    'Chicago': { count: [30, 42], batteryRange: [55, 80], activeRatio: 0.5 },
-    'Austin': { count: [25, 35], batteryRange: [75, 95], activeRatio: 0.8 },
-    'Seattle': { count: [28, 38], batteryRange: [80, 95], activeRatio: 0.75 },
-    'Miami': { count: [32, 42], batteryRange: [70, 90], activeRatio: 0.7 },
-    'Denver': { count: [22, 32], batteryRange: [65, 85], activeRatio: 0.6 }
+    'San Francisco': {
+      count: [35, 45],
+      batteryRange: [70, 95],
+      activeRatio: 0.6
+    },
+    'New York': {
+      count: [45, 60],
+      batteryRange: [60, 90],
+      activeRatio: 0.7
+    },
+    'Los Angeles': {
+      count: [40, 55],
+      batteryRange: [65, 85],
+      activeRatio: 0.65
+    },
+    'Chicago': {
+      count: [30, 42],
+      batteryRange: [55, 80],
+      activeRatio: 0.5
+    },
+    'Austin': {
+      count: [25, 35],
+      batteryRange: [75, 95],
+      activeRatio: 0.8
+    },
+    'Seattle': {
+      count: [28, 38],
+      batteryRange: [80, 95],
+      activeRatio: 0.75
+    },
+    'Miami': {
+      count: [32, 42],
+      batteryRange: [70, 90],
+      activeRatio: 0.7
+    },
+    'Denver': {
+      count: [22, 32],
+      batteryRange: [65, 85],
+      activeRatio: 0.6
+    }
   };
-
   const profile = cityProfiles[city.name] || cityProfiles['San Francisco'];
   const vehicleCount = Math.floor(Math.random() * (profile.count[1] - profile.count[0])) + profile.count[0];
-
   for (let i = 0; i < vehicleCount; i++) {
     // Generate unique 5-digit alphanumeric ID
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -58,7 +88,7 @@ const generateVehiclesForCity = (city: City) => {
     for (let j = 0; j < 5; j++) {
       id += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-    
+
     // Determine status based on city profile
     let status;
     if (Math.random() < profile.activeRatio) {
@@ -66,7 +96,6 @@ const generateVehiclesForCity = (city: City) => {
     } else {
       status = statuses[Math.floor(Math.random() * (statuses.length - 1)) + 1]; // Exclude 'active' from random
     }
-    
     const battery = Math.floor(Math.random() * (profile.batteryRange[1] - profile.batteryRange[0])) + profile.batteryRange[0];
     const route = routes[Math.floor(Math.random() * routes.length)];
     const company = avCompanies[Math.floor(Math.random() * avCompanies.length)];
@@ -143,10 +172,8 @@ const generateDepotsForCity = (city: City) => {
       stallRange: [26, 38]
     }
   };
-
   const profile = depotProfiles[city.name] || depotProfiles['San Francisco'];
   const depots = [];
-
   for (let i = 0; i < profile.count; i++) {
     const energyGenerated = Math.floor(Math.random() * (profile.energyRange[1] - profile.energyRange[0])) + profile.energyRange[0];
     const energyReturned = Math.floor(energyGenerated * (0.4 + Math.random() * 0.3)); // 40-70% return rate
@@ -170,13 +197,11 @@ const generateDepotsForCity = (city: City) => {
       status
     });
   }
-  
   return depots;
 };
 
 // Incidents Tab Component
 const allStatuses: IncidentStatus[] = ["Reported", "Dispatched", "Secured", "At Depot", "Closed"];
-
 const IncidentsTabContent = () => {
   const {
     incidents,
@@ -186,49 +211,48 @@ const IncidentsTabContent = () => {
     selectIncident,
     setStatusFilter,
     setCityFilter,
-    refreshIncidents,
+    refreshIncidents
   } = useIncidentsStore();
-  
+
   // Filter incidents
-  const filteredIncidents = incidents.filter((incident) => {
+  const filteredIncidents = incidents.filter(incident => {
     const matchesStatus = statusFilter.length === 0 || statusFilter.includes(incident.status);
     const matchesCity = cityFilter === "All Cities" || incident.city === cityFilter;
     return matchesStatus && matchesCity;
   });
-  
+
   // Sort: Open incidents first (by status priority then ETA), then Closed
   const sortedIncidents = [...filteredIncidents].sort((a, b) => {
     if (a.status === "Closed" && b.status !== "Closed") return 1;
     if (a.status !== "Closed" && b.status === "Closed") return -1;
-    
-    const statusOrder = { "Reported": 1, "Dispatched": 2, "Secured": 3, "At Depot": 4, "Closed": 5 };
+    const statusOrder = {
+      "Reported": 1,
+      "Dispatched": 2,
+      "Secured": 3,
+      "At Depot": 4,
+      "Closed": 5
+    };
     const aOrder = statusOrder[a.status];
     const bOrder = statusOrder[b.status];
-    
     if (aOrder !== bOrder) return aOrder - bOrder;
-    
+
     // Within same status, sort by ETA (shortest first)
     if (a.etaSeconds !== null && b.etaSeconds !== null) {
       return a.etaSeconds - b.etaSeconds;
     }
     if (a.etaSeconds !== null) return -1;
     if (b.etaSeconds !== null) return 1;
-    
     return 0;
   });
-  
-  const selectedIncident = incidents.find((i) => i.incidentId === selectedIncidentId);
-  
+  const selectedIncident = incidents.find(i => i.incidentId === selectedIncidentId);
   const toggleStatusFilter = (status: IncidentStatus) => {
     if (statusFilter.includes(status)) {
-      setStatusFilter(statusFilter.filter((s) => s !== status));
+      setStatusFilter(statusFilter.filter(s => s !== status));
     } else {
       setStatusFilter([...statusFilter, status]);
     }
   };
-  
-  return (
-    <div className="space-y-4">
+  return <div className="space-y-4">
       {/* Header Bar */}
       <div className="flex items-start justify-between">
         <div className="flex-1">
@@ -236,13 +260,10 @@ const IncidentsTabContent = () => {
           <p className="text-sm text-muted-foreground mt-1">
             {sortedIncidents.length} incident{sortedIncidents.length !== 1 ? 's' : ''}
           </p>
-          <Badge 
-            className="bg-success text-white border-0 text-xs px-2 py-0.5 relative mt-2 inline-flex items-center w-fit"
-            style={{
-              boxShadow: '0 0 8px rgba(34, 197, 94, 0.6), 0 0 16px rgba(34, 197, 94, 0.3)',
-              animation: 'glow-pulse 3s ease-in-out infinite'
-            }}
-          >
+          <Badge className="bg-success text-white border-0 text-xs px-2 py-0.5 relative mt-2 inline-flex items-center w-fit" style={{
+          boxShadow: '0 0 8px rgba(34, 197, 94, 0.6), 0 0 16px rgba(34, 197, 94, 0.3)',
+          animation: 'glow-pulse 3s ease-in-out infinite'
+        }}>
             <Activity className="h-3 w-3 mr-1" />
             LIVE
           </Badge>
@@ -257,11 +278,9 @@ const IncidentsTabContent = () => {
               <Button variant="outline" size="sm" className="h-6 w-full text-xs">
                 <Filter className="w-2.5 h-2.5 md:mr-2" />
                 <span className="hidden md:inline">Filters</span>
-                {(statusFilter.length > 0 || cityFilter !== "All Cities") && (
-                  <span className="ml-1 md:ml-2 px-1 md:px-1.5 py-0.5 text-[10px] md:text-xs bg-primary text-primary-foreground rounded-full">
+                {(statusFilter.length > 0 || cityFilter !== "All Cities") && <span className="ml-1 md:ml-2 px-1 md:px-1.5 py-0.5 text-[10px] md:text-xs bg-primary text-primary-foreground rounded-full">
                     {statusFilter.length + (cityFilter !== "All Cities" ? 1 : 0)}
-                  </span>
-                )}
+                  </span>}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-80" align="end">
@@ -269,21 +288,12 @@ const IncidentsTabContent = () => {
                 <div>
                   <Label className="text-sm font-semibold mb-2 block">Status</Label>
                   <div className="space-y-2">
-                    {allStatuses.map((status) => (
-                      <div key={status} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`status-${status}`}
-                          checked={statusFilter.includes(status)}
-                          onCheckedChange={() => toggleStatusFilter(status)}
-                        />
-                        <label
-                          htmlFor={`status-${status}`}
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                        >
+                    {allStatuses.map(status => <div key={status} className="flex items-center space-x-2">
+                        <Checkbox id={`status-${status}`} checked={statusFilter.includes(status)} onCheckedChange={() => toggleStatusFilter(status)} />
+                        <label htmlFor={`status-${status}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer">
                           {status}
                         </label>
-                      </div>
-                    ))}
+                      </div>)}
                   </div>
                 </div>
                 
@@ -302,14 +312,10 @@ const IncidentsTabContent = () => {
                   </Select>
                 </div>
                 
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => {
-                    setStatusFilter([]);
-                    setCityFilter("All Cities");
-                  }}
-                >
+                <Button variant="outline" className="w-full" onClick={() => {
+                setStatusFilter([]);
+                setCityFilter("All Cities");
+              }}>
                   Clear Filters
                 </Button>
               </div>
@@ -331,49 +337,35 @@ const IncidentsTabContent = () => {
         <CardContent>
           <ScrollArea className="h-[600px]">
             <div className="space-y-3">
-              {sortedIncidents.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
+              {sortedIncidents.length === 0 ? <div className="text-center py-12 text-muted-foreground">
                   <p>No incidents match your filters.</p>
-                </div>
-              ) : (
-                sortedIncidents.map((incident) => {
-                  const isSelected = incident.incidentId === selectedIncidentId;
-                  return (
-                    <div key={incident.incidentId} id={`incident-${incident.incidentId}`}>
-                      <IncidentCard
-                        incident={incident}
-                        isSelected={isSelected}
-                        onSelect={() => {
-                          const newId = isSelected ? null : incident.incidentId;
-                          selectIncident(newId);
-                          if (newId) {
-                            setTimeout(() => {
-                              document.getElementById(`incident-${newId}`)?.scrollIntoView({ 
-                                behavior: 'smooth', 
-                                block: 'start' 
-                              });
-                            }, 150);
-                          }
-                        }}
-                      />
+                </div> : sortedIncidents.map(incident => {
+              const isSelected = incident.incidentId === selectedIncidentId;
+              return <div key={incident.incidentId} id={`incident-${incident.incidentId}`}>
+                      <IncidentCard incident={incident} isSelected={isSelected} onSelect={() => {
+                  const newId = isSelected ? null : incident.incidentId;
+                  selectIncident(newId);
+                  if (newId) {
+                    setTimeout(() => {
+                      document.getElementById(`incident-${newId}`)?.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                      });
+                    }, 150);
+                  }
+                }} />
                       {/* Show details inline when selected */}
-                      {isSelected && (
-                        <div className="mt-3 p-4 border-l-4 border-primary bg-card/50 rounded-r-lg animate-accordion-down">
+                      {isSelected && <div className="mt-3 p-4 border-l-4 border-primary bg-card/50 rounded-r-lg animate-accordion-down">
                           <IncidentDetails incident={incident} />
-                        </div>
-                      )}
-                    </div>
-                  );
-                })
-              )}
+                        </div>}
+                    </div>;
+            })}
             </div>
           </ScrollArea>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 };
-
 const Index = () => {
   const navigate = useNavigate();
   const [selectedTab, setSelectedTab] = useState("overview");
@@ -419,21 +411,17 @@ const Index = () => {
     setPopupVehicle(vehicle);
     setMaintenanceOpen(true);
   };
-
   const handleSendToOtto = (vehicle: typeof vehicles[0]) => {
     // Add logic to send vehicle to OTTOYARD depot
     console.log(`Sending ${vehicle.name} to OTTOYARD depot for charging/staging`);
     // You could add a toast notification here
   };
-
   const handleAddToCart = (items: CartItem[]) => {
     setCartItems(prev => [...prev, ...items]);
   };
-
   const handleRemoveFromCart = (itemId: string) => {
     setCartItems(prev => prev.filter(item => item.id !== itemId));
   };
-
   const handleCheckout = () => {
     console.log('Processing checkout for items:', cartItems);
     // Add checkout logic here
@@ -453,19 +441,22 @@ const Index = () => {
   const totalEnergyReturned = depots.reduce((sum, depot) => sum + depot.energyReturned, 0);
   const totalStalls = depots.reduce((sum, depot) => sum + depot.totalStalls, 0);
   const availableStalls = depots.reduce((sum, depot) => sum + depot.availableStalls, 0);
-  const occupancyRate = Math.round(((totalStalls - availableStalls) / totalStalls) * 100);
+  const occupancyRate = Math.round((totalStalls - availableStalls) / totalStalls * 100);
   return <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 sm:py-6 py-[18px]">
           <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1 cursor-pointer hover-neon transition-all duration-300" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+            <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1 cursor-pointer hover-neon transition-all duration-300" onClick={() => window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+          })}>
               <div className="w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center flex-shrink-0">
                 <img src="/lovable-uploads/0802aeb6-e42e-4389-8e93-c10d17cf963e.png" alt="Fleet Command Logo" className="h-18 w-18 sm:h-24 sm:w-24" />
               </div>
               <div className="min-w-0">
                 <h1 className="text-xl sm:text-3xl font-bold text-foreground truncate text-center neon-text">OTTOYARD</h1>
-                <p className="text-sm sm:text-base truncate text-center bg-gradient-to-b from-slate-300 to-slate-600 bg-clip-text text-transparent font-medium">Fleet Command</p>
+                <p className="text-sm sm:text-base truncate text-center bg-gradient-to-b from-slate-300 to-slate-600 bg-clip-text font-medium text-[#617fa5]">Fleet Command</p>
               </div>
             </div>
             <div className="flex flex-col items-end space-y-2 flex-shrink-0">
@@ -476,21 +467,12 @@ const Index = () => {
                     <Settings className="h-4 w-4" />
                   </Button>
                 </SettingsDialog>
-                <CartButton 
-                  cartItems={cartItems}
-                  onRemoveItem={handleRemoveFromCart}
-                  onCheckout={handleCheckout}
-                />
+                <CartButton cartItems={cartItems} onRemoveItem={handleRemoveFromCart} onCheckout={handleCheckout} />
               </div>
               
               {/* Second Row: AI Button */}
               <div className="flex items-center">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setAiAgentOpen(true)} 
-                  className="bg-gradient-primary text-white border-0 hover:bg-gradient-primary/90 px-3"
-                >
+                <Button variant="outline" size="sm" onClick={() => setAiAgentOpen(true)} className="bg-gradient-primary text-white border-0 hover:bg-gradient-primary/90 px-3">
                   <Bot className="h-4 w-4 mr-1 hidden sm:inline" />
                   <span className="sm:hidden">OttoCommand</span>
                   <span className="hidden sm:inline">OttoCommand AI</span>
@@ -590,37 +572,27 @@ const Index = () => {
                   <h2 className="text-xl font-semibold text-foreground neon-text">Quick Glance</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="relative">
-                      <MetricsCard 
-                        title="Active Vehicles" 
-                        value={activeVehicles.toString()} 
-                        change={`+${Math.floor(activeVehicles * 0.1)}`} 
-                        trend="up" 
-                        icon={Truck} 
-                        onClick={() => setSelectedQuickGlanceTile(selectedQuickGlanceTile === 'vehicles' ? null : 'vehicles')} 
-                      />
-                      {selectedQuickGlanceTile === 'vehicles' && (
-                        <div 
-                          className="absolute top-full left-0 right-0 mt-2 p-4 bg-card border border-border rounded-lg shadow-lg z-10 animate-fade-in"
-                          onClick={() => setSelectedQuickGlanceTile(null)}
-                        >
+                      <MetricsCard title="Active Vehicles" value={activeVehicles.toString()} change={`+${Math.floor(activeVehicles * 0.1)}`} trend="up" icon={Truck} onClick={() => setSelectedQuickGlanceTile(selectedQuickGlanceTile === 'vehicles' ? null : 'vehicles')} />
+                      {selectedQuickGlanceTile === 'vehicles' && <div className="absolute top-full left-0 right-0 mt-2 p-4 bg-card border border-border rounded-lg shadow-lg z-10 animate-fade-in" onClick={() => setSelectedQuickGlanceTile(null)}>
                           <h4 className="font-semibold mb-3">Fleet Status Overview</h4>
                           
                           {/* Vehicle Status Chart */}
                           <div className="h-32 mb-4">
                             <ResponsiveContainer width="100%" height="100%">
                               <PieChart>
-                                 <Pie
-                                  data={[
-                                    { name: 'Active', value: activeVehicles, fill: 'hsl(var(--success))' },
-                                    { name: 'Charging', value: chargingVehicles, fill: 'hsl(var(--primary))' },
-                                    { name: 'Maintenance', value: maintenanceVehicles, fill: 'hsl(var(--warning))' }
-                                  ]}
-                                  cx="50%"
-                                  cy="50%"
-                                  innerRadius={25}
-                                  outerRadius={50}
-                                  dataKey="value"
-                                />
+                                 <Pie data={[{
+                            name: 'Active',
+                            value: activeVehicles,
+                            fill: 'hsl(var(--success))'
+                          }, {
+                            name: 'Charging',
+                            value: chargingVehicles,
+                            fill: 'hsl(var(--primary))'
+                          }, {
+                            name: 'Maintenance',
+                            value: maintenanceVehicles,
+                            fill: 'hsl(var(--warning))'
+                          }]} cx="50%" cy="50%" innerRadius={25} outerRadius={50} dataKey="value" />
                                 <Tooltip />
                               </PieChart>
                             </ResponsiveContainer>
@@ -632,55 +604,68 @@ const Index = () => {
                             <p><span className="font-medium text-warning">Maintenance:</span> {maintenanceVehicles} vehicle{maintenanceVehicles !== 1 ? 's' : ''} scheduled</p>
                           </div>
                           
-                          <div className="flex gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
-                            <Button size="sm" variant="outline" onClick={() => {setSelectedTab('fleet'); setSelectedQuickGlanceTile(null);}}>
+                          <div className="flex gap-2 flex-wrap" onClick={e => e.stopPropagation()}>
+                            <Button size="sm" variant="outline" onClick={() => {
+                        setSelectedTab('fleet');
+                        setSelectedQuickGlanceTile(null);
+                      }}>
                               View All Vehicles
                             </Button>
-                            <Button size="sm" variant="outline" onClick={() => {setSelectedTab('depots'); setSelectedQuickGlanceTile(null);}}>
+                            <Button size="sm" variant="outline" onClick={() => {
+                        setSelectedTab('depots');
+                        setSelectedQuickGlanceTile(null);
+                      }}>
                               Charging Status
                             </Button>
-                            <Button size="sm" variant="outline" onClick={() => {setSelectedTab('maintenance'); setSelectedQuickGlanceTile(null);}}>
+                            <Button size="sm" variant="outline" onClick={() => {
+                        setSelectedTab('maintenance');
+                        setSelectedQuickGlanceTile(null);
+                      }}>
                               Schedule Service
                             </Button>
                           </div>
-                        </div>
-                      )}
+                        </div>}
                     </div>
                     
                     <div className="relative">
-                      <MetricsCard 
-                        title="Energy & Grid" 
-                        value={`${(totalEnergyGenerated / 1000).toFixed(1)} MWh`} 
-                        change={`+${Math.round((totalEnergyReturned / totalEnergyGenerated) * 100)}%`} 
-                        trend="up" 
-                        icon={Zap} 
-                        secondaryValue={`${(totalEnergyReturned / 1000).toFixed(1)} MWh returned`} 
-                        secondaryLabel="Grid Return" 
-                        onClick={() => setSelectedQuickGlanceTile(selectedQuickGlanceTile === 'energy' ? null : 'energy')} 
-                      />
-                      {selectedQuickGlanceTile === 'energy' && (
-                        <div 
-                          className="absolute top-full left-0 right-0 mt-2 p-4 bg-card border border-border rounded-lg shadow-lg z-10 animate-fade-in"
-                          onClick={() => setSelectedQuickGlanceTile(null)}
-                        >
+                      <MetricsCard title="Energy & Grid" value={`${(totalEnergyGenerated / 1000).toFixed(1)} MWh`} change={`+${Math.round(totalEnergyReturned / totalEnergyGenerated * 100)}%`} trend="up" icon={Zap} secondaryValue={`${(totalEnergyReturned / 1000).toFixed(1)} MWh returned`} secondaryLabel="Grid Return" onClick={() => setSelectedQuickGlanceTile(selectedQuickGlanceTile === 'energy' ? null : 'energy')} />
+                      {selectedQuickGlanceTile === 'energy' && <div className="absolute top-full left-0 right-0 mt-2 p-4 bg-card border border-border rounded-lg shadow-lg z-10 animate-fade-in" onClick={() => setSelectedQuickGlanceTile(null)}>
                           <h4 className="font-semibold mb-3">Energy Management</h4>
                           
                           {/* Energy Flow Chart */}
                           <div className="h-32 mb-4">
                             <ResponsiveContainer width="100%" height="100%">
-                              <AreaChart
-                                data={[
-                                  { time: '6AM', consumed: 0.3, returned: 0.1 },
-                                  { time: '9AM', consumed: 0.8, returned: 0.2 },
-                                  { time: '12PM', consumed: 1.2, returned: 0.6 },
-                                  { time: '3PM', consumed: 0.9, returned: 0.8 },
-                                  { time: '6PM', consumed: 1.0, returned: 0.4 }
-                                ]}
-                              >
+                              <AreaChart data={[{
+                          time: '6AM',
+                          consumed: 0.3,
+                          returned: 0.1
+                        }, {
+                          time: '9AM',
+                          consumed: 0.8,
+                          returned: 0.2
+                        }, {
+                          time: '12PM',
+                          consumed: 1.2,
+                          returned: 0.6
+                        }, {
+                          time: '3PM',
+                          consumed: 0.9,
+                          returned: 0.8
+                        }, {
+                          time: '6PM',
+                          consumed: 1.0,
+                          returned: 0.4
+                        }]}>
                                 <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="time" tick={{ fill: '#2563eb' }} />
+                                <XAxis dataKey="time" tick={{
+                            fill: '#2563eb'
+                          }} />
                                 <YAxis />
-                                <Tooltip contentStyle={{ color: '#2563eb' }} labelStyle={{ color: '#2563eb' }} />
+                                <Tooltip contentStyle={{
+                            color: '#2563eb'
+                          }} labelStyle={{
+                            color: '#2563eb'
+                          }} />
                                 <Area type="monotone" dataKey="consumed" stackId="1" stroke="hsl(var(--destructive))" fill="hsl(var(--destructive))" fillOpacity={0.3} />
                                 <Area type="monotone" dataKey="returned" stackId="2" stroke="hsl(var(--success))" fill="hsl(var(--success))" fillOpacity={0.3} />
                               </AreaChart>
@@ -693,53 +678,68 @@ const Index = () => {
                             <p><span className="font-medium">Peak Hours:</span> 12PM-3PM optimal return</p>
                           </div>
                           
-                          <div className="flex gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
-                            <Button size="sm" variant="outline" onClick={() => {setSelectedTab('analytics'); setSelectedQuickGlanceTile(null);}}>
+                          <div className="flex gap-2 flex-wrap" onClick={e => e.stopPropagation()}>
+                            <Button size="sm" variant="outline" onClick={() => {
+                        setSelectedTab('analytics');
+                        setSelectedQuickGlanceTile(null);
+                      }}>
                               Energy Analytics
                             </Button>
-                            <Button size="sm" variant="outline" onClick={() => {setSelectedTab('depots'); setSelectedQuickGlanceTile(null);}}>
+                            <Button size="sm" variant="outline" onClick={() => {
+                        setSelectedTab('depots');
+                        setSelectedQuickGlanceTile(null);
+                      }}>
                               Depot Status
                             </Button>
-                            <Button size="sm" variant="outline" onClick={() => {setSelectedTab('analytics'); setSelectedQuickGlanceTile(null);}}>
+                            <Button size="sm" variant="outline" onClick={() => {
+                        setSelectedTab('analytics');
+                        setSelectedQuickGlanceTile(null);
+                      }}>
                               Grid Return Report
                             </Button>
                           </div>
-                        </div>
-                      )}
+                        </div>}
                     </div>
                     
                     <div className="relative">
-                      <MetricsCard 
-                        title="Fleet Efficiency" 
-                        value={`${Math.round(85 + (occupancyRate * 0.15))}%`} 
-                        change={`+${Math.round(Math.random() * 5)}%`} 
-                        trend="up" 
-                        icon={Activity} 
-                        onClick={() => setSelectedQuickGlanceTile(selectedQuickGlanceTile === 'efficiency' ? null : 'efficiency')} 
-                      />
-                      {selectedQuickGlanceTile === 'efficiency' && (
-                        <div 
-                          className="absolute top-full left-0 right-0 mt-2 p-4 bg-card border border-border rounded-lg shadow-lg z-10 animate-fade-in"
-                          onClick={() => setSelectedQuickGlanceTile(null)}
-                        >
+                      <MetricsCard title="Fleet Efficiency" value={`${Math.round(85 + occupancyRate * 0.15)}%`} change={`+${Math.round(Math.random() * 5)}%`} trend="up" icon={Activity} onClick={() => setSelectedQuickGlanceTile(selectedQuickGlanceTile === 'efficiency' ? null : 'efficiency')} />
+                      {selectedQuickGlanceTile === 'efficiency' && <div className="absolute top-full left-0 right-0 mt-2 p-4 bg-card border border-border rounded-lg shadow-lg z-10 animate-fade-in" onClick={() => setSelectedQuickGlanceTile(null)}>
                           <h4 className="font-semibold mb-3">Performance Metrics</h4>
                           
                           {/* Efficiency Trend Chart */}
                           <div className="h-32 mb-4">
                             <ResponsiveContainer width="100%" height="100%">
-                              <LineChart
-                                data={[
-                                  { day: 'Mon', efficiency: 91.2, delivery: 95.8 },
-                                  { day: 'Tue', efficiency: 92.5, delivery: 97.1 },
-                                  { day: 'Wed', efficiency: 93.1, delivery: 96.9 },
-                                  { day: 'Thu', efficiency: 94.2, delivery: 97.8 },
-                                  { day: 'Fri', efficiency: 94.2, delivery: 98.1 }
-                                ]}
-                              >
+                              <LineChart data={[{
+                          day: 'Mon',
+                          efficiency: 91.2,
+                          delivery: 95.8
+                        }, {
+                          day: 'Tue',
+                          efficiency: 92.5,
+                          delivery: 97.1
+                        }, {
+                          day: 'Wed',
+                          efficiency: 93.1,
+                          delivery: 96.9
+                        }, {
+                          day: 'Thu',
+                          efficiency: 94.2,
+                          delivery: 97.8
+                        }, {
+                          day: 'Fri',
+                          efficiency: 94.2,
+                          delivery: 98.1
+                        }]}>
                                 <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="day" tick={{ fill: '#2563eb' }} />
+                                <XAxis dataKey="day" tick={{
+                            fill: '#2563eb'
+                          }} />
                                 <YAxis domain={[90, 100]} />
-                                <Tooltip contentStyle={{ color: '#2563eb' }} labelStyle={{ color: '#2563eb' }} />
+                                <Tooltip contentStyle={{
+                            color: '#2563eb'
+                          }} labelStyle={{
+                            color: '#2563eb'
+                          }} />
                                 <Line type="monotone" dataKey="efficiency" stroke="hsl(var(--primary))" strokeWidth={2} />
                                 <Line type="monotone" dataKey="delivery" stroke="hsl(var(--success))" strokeWidth={2} />
                               </LineChart>
@@ -752,54 +752,68 @@ const Index = () => {
                             <p><span className="font-medium">Energy Optimization:</span> 12% below target</p>
                           </div>
                           
-                          <div className="flex gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
-                            <Button size="sm" variant="outline" onClick={() => {setSelectedTab('analytics'); setSelectedQuickGlanceTile(null);}}>
+                          <div className="flex gap-2 flex-wrap" onClick={e => e.stopPropagation()}>
+                            <Button size="sm" variant="outline" onClick={() => {
+                        setSelectedTab('analytics');
+                        setSelectedQuickGlanceTile(null);
+                      }}>
                               Performance Analytics
                             </Button>
-                            <Button size="sm" variant="outline" onClick={() => {setSelectedTab('fleet'); setSelectedQuickGlanceTile(null);}}>
+                            <Button size="sm" variant="outline" onClick={() => {
+                        setSelectedTab('fleet');
+                        setSelectedQuickGlanceTile(null);
+                      }}>
                               Vehicle Performance
                             </Button>
-                            <Button size="sm" variant="outline" onClick={() => {setSelectedTab('analytics'); setSelectedQuickGlanceTile(null);}}>
+                            <Button size="sm" variant="outline" onClick={() => {
+                        setSelectedTab('analytics');
+                        setSelectedQuickGlanceTile(null);
+                      }}>
                               Efficiency Reports
                             </Button>
                           </div>
-                        </div>
-                      )}
+                        </div>}
                     </div>
                     
                     <div className="relative">
-                      <MetricsCard 
-                        title="Scheduled Services" 
-                        value={maintenanceVehicles.toString()} 
-                        change={`+${Math.floor(maintenanceVehicles * 0.3)}`} 
-                        trend="up" 
-                        icon={Wrench} 
-                        secondaryValue={`${Math.min(maintenanceVehicles, 2)} today`} 
-                        secondaryLabel="Due Today" 
-                        onClick={() => setSelectedQuickGlanceTile(selectedQuickGlanceTile === 'maintenance' ? null : 'maintenance')} 
-                      />
-                      {selectedQuickGlanceTile === 'maintenance' && (
-                        <div 
-                          className="absolute top-full left-0 right-0 mt-2 p-4 bg-card border border-border rounded-lg shadow-lg z-10 animate-fade-in"
-                          onClick={() => setSelectedQuickGlanceTile(null)}
-                        >
+                      <MetricsCard title="Scheduled Services" value={maintenanceVehicles.toString()} change={`+${Math.floor(maintenanceVehicles * 0.3)}`} trend="up" icon={Wrench} secondaryValue={`${Math.min(maintenanceVehicles, 2)} today`} secondaryLabel="Due Today" onClick={() => setSelectedQuickGlanceTile(selectedQuickGlanceTile === 'maintenance' ? null : 'maintenance')} />
+                      {selectedQuickGlanceTile === 'maintenance' && <div className="absolute top-full left-0 right-0 mt-2 p-4 bg-card border border-border rounded-lg shadow-lg z-10 animate-fade-in" onClick={() => setSelectedQuickGlanceTile(null)}>
                           <h4 className="font-semibold mb-3">Maintenance Schedule</h4>
                           
                           {/* Maintenance Priority Chart */}
                           <div className="h-32 mb-4">
                             <ResponsiveContainer width="100%" height="100%">
-                              <BarChart
-                                data={[
-                                  { type: 'Battery', today: 2, week: 3, urgent: 0 },
-                                  { type: 'Brake', today: 0, week: 2, urgent: 1 },
-                                  { type: 'Tire', today: 0, week: 2, urgent: 0 },
-                                  { type: 'Software', today: 0, week: 1, urgent: 0 }
-                                ]}
-                              >
+                              <BarChart data={[{
+                          type: 'Battery',
+                          today: 2,
+                          week: 3,
+                          urgent: 0
+                        }, {
+                          type: 'Brake',
+                          today: 0,
+                          week: 2,
+                          urgent: 1
+                        }, {
+                          type: 'Tire',
+                          today: 0,
+                          week: 2,
+                          urgent: 0
+                        }, {
+                          type: 'Software',
+                          today: 0,
+                          week: 1,
+                          urgent: 0
+                        }]}>
                                 <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="type" tick={{ fill: '#2563eb' }} />
+                                <XAxis dataKey="type" tick={{
+                            fill: '#2563eb'
+                          }} />
                                 <YAxis />
-                                <Tooltip contentStyle={{ color: '#2563eb' }} labelStyle={{ color: '#2563eb' }} />
+                                <Tooltip contentStyle={{
+                            color: '#2563eb'
+                          }} labelStyle={{
+                            color: '#2563eb'
+                          }} />
                                 <Bar dataKey="today" fill="hsl(var(--destructive))" />
                                 <Bar dataKey="week" fill="hsl(var(--warning))" />
                                 <Bar dataKey="urgent" fill="hsl(var(--primary))" />
@@ -813,19 +827,27 @@ const Index = () => {
                             <p><span className="font-medium">Urgent:</span> {Math.max(1, Math.floor(maintenanceVehicles * 0.2))} brake inspection{Math.floor(maintenanceVehicles * 0.2) !== 1 ? 's' : ''}</p>
                           </div>
                           
-                          <div className="flex gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
-                            <Button size="sm" variant="outline" onClick={() => {setSelectedTab('maintenance'); setSelectedQuickGlanceTile(null);}}>
+                          <div className="flex gap-2 flex-wrap" onClick={e => e.stopPropagation()}>
+                            <Button size="sm" variant="outline" onClick={() => {
+                        setSelectedTab('maintenance');
+                        setSelectedQuickGlanceTile(null);
+                      }}>
                               Maintenance Schedule
                             </Button>
-                            <Button size="sm" variant="outline" onClick={() => {setSelectedTab('fleet'); setSelectedQuickGlanceTile(null);}}>
+                            <Button size="sm" variant="outline" onClick={() => {
+                        setSelectedTab('fleet');
+                        setSelectedQuickGlanceTile(null);
+                      }}>
                               Vehicle Status
                             </Button>
-                            <Button size="sm" variant="outline" onClick={() => {setSelectedTab('maintenance'); setSelectedQuickGlanceTile(null);}}>
+                            <Button size="sm" variant="outline" onClick={() => {
+                        setSelectedTab('maintenance');
+                        setSelectedQuickGlanceTile(null);
+                      }}>
                               Schedule Service
                             </Button>
                           </div>
-                        </div>
-                      )}
+                        </div>}
                     </div>
                   </div>
                 </div>
@@ -839,7 +861,13 @@ const Index = () => {
                           <Car className="h-5 w-5 mr-2 text-accent" />
                           Active Vehicles
                         </span>
-                        <Button variant="ghost" size="sm" onClick={() => {setOverviewView('vehicles'); window.scrollTo({ top: 0, behavior: 'smooth' });}}>
+                        <Button variant="ghost" size="sm" onClick={() => {
+                      setOverviewView('vehicles');
+                      window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                      });
+                    }}>
                           View All <ChevronRight className="h-4 w-4 ml-1" />
                         </Button>
                       </CardTitle>
@@ -873,7 +901,13 @@ const Index = () => {
                           <Zap className="h-5 w-5 mr-2 text-energy-grid" />
                           Available Depots
                         </span>
-                        <Button variant="ghost" size="sm" onClick={() => {setSelectedTab('depots'); window.scrollTo({ top: 0, behavior: 'smooth' });}}>
+                        <Button variant="ghost" size="sm" onClick={() => {
+                      setSelectedTab('depots');
+                      window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                      });
+                    }}>
                           View All <ChevronRight className="h-4 w-4 ml-1" />
                         </Button>
                       </CardTitle>
@@ -969,40 +1003,41 @@ const Index = () => {
                     </div>
                     <div className="h-64">
                       <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={[
-                          { time: '6AM', generated: 2.1, consumed: 1.8 },
-                          { time: '9AM', generated: 3.2, consumed: 2.1 },
-                          { time: '12PM', generated: 4.8, consumed: 2.9 },
-                          { time: '3PM', generated: 5.2, consumed: 3.1 },
-                          { time: '6PM', generated: 3.7, consumed: 2.7 },
-                          { time: '9PM', generated: 2.4, consumed: 2.2 },
-                        ]}>
+                        <AreaChart data={[{
+                      time: '6AM',
+                      generated: 2.1,
+                      consumed: 1.8
+                    }, {
+                      time: '9AM',
+                      generated: 3.2,
+                      consumed: 2.1
+                    }, {
+                      time: '12PM',
+                      generated: 4.8,
+                      consumed: 2.9
+                    }, {
+                      time: '3PM',
+                      generated: 5.2,
+                      consumed: 3.1
+                    }, {
+                      time: '6PM',
+                      generated: 3.7,
+                      consumed: 2.7
+                    }, {
+                      time: '9PM',
+                      generated: 2.4,
+                      consumed: 2.2
+                    }]}>
                           <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                           <XAxis dataKey="time" className="text-xs" />
                           <YAxis className="text-xs" />
-                          <Tooltip 
-                            contentStyle={{ 
-                              backgroundColor: 'hsl(var(--card))',
-                              border: '1px solid hsl(var(--border))',
-                              borderRadius: '8px'
-                            }}
-                          />
-                          <Area 
-                            type="monotone" 
-                            dataKey="generated" 
-                            stackId="1"
-                            stroke="hsl(var(--energy-high))" 
-                            fill="hsl(var(--energy-high) / 0.3)" 
-                            name="Generated (MWh)"
-                          />
-                          <Area 
-                            type="monotone" 
-                            dataKey="consumed" 
-                            stackId="2"
-                            stroke="hsl(var(--energy-medium))" 
-                            fill="hsl(var(--energy-medium) / 0.3)" 
-                            name="Consumed (MWh)"
-                          />
+                          <Tooltip contentStyle={{
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px'
+                      }} />
+                          <Area type="monotone" dataKey="generated" stackId="1" stroke="hsl(var(--energy-high))" fill="hsl(var(--energy-high) / 0.3)" name="Generated (MWh)" />
+                          <Area type="monotone" dataKey="consumed" stackId="2" stroke="hsl(var(--energy-medium))" fill="hsl(var(--energy-medium) / 0.3)" name="Consumed (MWh)" />
                         </AreaChart>
                       </ResponsiveContainer>
                     </div>
@@ -1044,44 +1079,50 @@ const Index = () => {
                     </div>
                     <div className="h-64">
                       <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={[
-                          { time: '6AM', returned: 0.3, revenue: 45 },
-                          { time: '9AM', returned: 1.1, revenue: 165 },
-                          { time: '12PM', returned: 1.9, revenue: 285 },
-                          { time: '3PM', returned: 2.1, revenue: 315 },
-                          { time: '6PM', returned: 1.0, revenue: 150 },
-                          { time: '9PM', returned: 0.2, revenue: 30 },
-                        ]}>
+                        <LineChart data={[{
+                      time: '6AM',
+                      returned: 0.3,
+                      revenue: 45
+                    }, {
+                      time: '9AM',
+                      returned: 1.1,
+                      revenue: 165
+                    }, {
+                      time: '12PM',
+                      returned: 1.9,
+                      revenue: 285
+                    }, {
+                      time: '3PM',
+                      returned: 2.1,
+                      revenue: 315
+                    }, {
+                      time: '6PM',
+                      returned: 1.0,
+                      revenue: 150
+                    }, {
+                      time: '9PM',
+                      returned: 0.2,
+                      revenue: 30
+                    }]}>
                           <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                           <XAxis dataKey="time" className="text-xs" />
                           <YAxis yAxisId="left" className="text-xs" />
                           <YAxis yAxisId="right" orientation="right" className="text-xs" />
-                          <Tooltip 
-                            contentStyle={{ 
-                              backgroundColor: 'hsl(var(--card))',
-                              border: '1px solid hsl(var(--border))',
-                              borderRadius: '8px'
-                            }}
-                          />
-                          <Line 
-                            yAxisId="left"
-                            type="monotone" 
-                            dataKey="returned" 
-                            stroke="hsl(var(--accent))" 
-                            strokeWidth={3}
-                            name="Returned (MWh)"
-                            dot={{ fill: 'hsl(var(--accent))', strokeWidth: 2, r: 4 }}
-                          />
-                          <Line 
-                            yAxisId="right"
-                            type="monotone" 
-                            dataKey="revenue" 
-                            stroke="hsl(var(--success))" 
-                            strokeWidth={2}
-                            strokeDasharray="5 5"
-                            name="Revenue ($)"
-                            dot={{ fill: 'hsl(var(--success))', strokeWidth: 2, r: 3 }}
-                          />
+                          <Tooltip contentStyle={{
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px'
+                      }} />
+                          <Line yAxisId="left" type="monotone" dataKey="returned" stroke="hsl(var(--accent))" strokeWidth={3} name="Returned (MWh)" dot={{
+                        fill: 'hsl(var(--accent))',
+                        strokeWidth: 2,
+                        r: 4
+                      }} />
+                          <Line yAxisId="right" type="monotone" dataKey="revenue" stroke="hsl(var(--success))" strokeWidth={2} strokeDasharray="5 5" name="Revenue ($)" dot={{
+                        fill: 'hsl(var(--success))',
+                        strokeWidth: 2,
+                        r: 3
+                      }} />
                         </LineChart>
                       </ResponsiveContainer>
                     </div>
@@ -1123,36 +1164,41 @@ const Index = () => {
                     </div>
                     <div className="h-64">
                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={[
-                          { vehicle: 'Fleet A', efficiency: 96.8, uptime: 99.2 },
-                          { vehicle: 'Fleet B', efficiency: 94.2, uptime: 98.7 },
-                          { vehicle: 'Fleet C', efficiency: 92.1, uptime: 97.5 },
-                          { vehicle: 'Fleet D', efficiency: 95.7, uptime: 98.9 },
-                          { vehicle: 'Fleet E', efficiency: 91.3, uptime: 96.8 },
-                          { vehicle: 'Fleet F', efficiency: 97.2, uptime: 99.5 },
-                        ]}>
+                        <BarChart data={[{
+                      vehicle: 'Fleet A',
+                      efficiency: 96.8,
+                      uptime: 99.2
+                    }, {
+                      vehicle: 'Fleet B',
+                      efficiency: 94.2,
+                      uptime: 98.7
+                    }, {
+                      vehicle: 'Fleet C',
+                      efficiency: 92.1,
+                      uptime: 97.5
+                    }, {
+                      vehicle: 'Fleet D',
+                      efficiency: 95.7,
+                      uptime: 98.9
+                    }, {
+                      vehicle: 'Fleet E',
+                      efficiency: 91.3,
+                      uptime: 96.8
+                    }, {
+                      vehicle: 'Fleet F',
+                      efficiency: 97.2,
+                      uptime: 99.5
+                    }]}>
                           <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                           <XAxis dataKey="vehicle" className="text-xs" />
                           <YAxis className="text-xs" />
-                          <Tooltip 
-                            contentStyle={{ 
-                              backgroundColor: 'hsl(var(--card))',
-                              border: '1px solid hsl(var(--border))',
-                              borderRadius: '8px'
-                            }}
-                          />
-                          <Bar 
-                            dataKey="efficiency" 
-                            fill="hsl(var(--success) / 0.8)" 
-                            name="Efficiency (%)"
-                            radius={[4, 4, 0, 0]}
-                          />
-                          <Bar 
-                            dataKey="uptime" 
-                            fill="hsl(var(--primary) / 0.6)" 
-                            name="Uptime (%)"
-                            radius={[4, 4, 0, 0]}
-                          />
+                          <Tooltip contentStyle={{
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px'
+                      }} />
+                          <Bar dataKey="efficiency" fill="hsl(var(--success) / 0.8)" name="Efficiency (%)" radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="uptime" fill="hsl(var(--primary) / 0.6)" name="Uptime (%)" radius={[4, 4, 0, 0]} />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
@@ -1228,20 +1274,13 @@ const Index = () => {
             
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 w-full max-w-3xl mx-auto">
-              <Button 
-                variant="outline" 
-                className="bg-warning/5 border-warning/30 text-warning hover:bg-warning/10 w-full sm:w-80 md:w-96 h-10 sm:h-14 md:h-16 text-sm sm:text-base" 
-                onClick={() => setShowDueSoonSummary(true)}
-              >
+              <Button variant="outline" className="bg-warning/5 border-warning/30 text-warning hover:bg-warning/10 w-full sm:w-80 md:w-96 h-10 sm:h-14 md:h-16 text-sm sm:text-base" onClick={() => setShowDueSoonSummary(true)}>
                 <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 mr-2" />
                 Due Soon Summary ({vehicles.slice(0, 3).length} vehicles)
                 <Eye className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 ml-2" />
               </Button>
               
-              <Button 
-                className="bg-gradient-primary hover:bg-primary-hover w-full sm:w-80 md:w-96 h-10 sm:h-14 md:h-16 text-sm sm:text-base" 
-                onClick={() => handleMaintenanceSchedule(vehicles[0])}
-              >
+              <Button className="bg-gradient-primary hover:bg-primary-hover w-full sm:w-80 md:w-96 h-10 sm:h-14 md:h-16 text-sm sm:text-base" onClick={() => handleMaintenanceSchedule(vehicles[0])}>
                 <Wrench className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 mr-2" />
                 Schedule Maintenance
               </Button>
@@ -1405,9 +1444,9 @@ const Index = () => {
                     }]}>
                         <defs>
                           <linearGradient id="efficiencyGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
-                            <stop offset="50%" stopColor="hsl(var(--destructive))" stopOpacity={0.6}/>
-                            <stop offset="100%" stopColor="hsl(var(--destructive))" stopOpacity={0.2}/>
+                            <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.8} />
+                            <stop offset="50%" stopColor="hsl(var(--destructive))" stopOpacity={0.6} />
+                            <stop offset="100%" stopColor="hsl(var(--destructive))" stopOpacity={0.2} />
                           </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" />
@@ -1439,14 +1478,7 @@ const Index = () => {
                         marginBottom: '4px'
                       }} />
                         <Legend />
-                        <Area 
-                          type="monotone" 
-                          dataKey="efficiency" 
-                          stroke="hsl(var(--primary))" 
-                          strokeWidth={2} 
-                          fill="url(#efficiencyGradient)" 
-                          name="Fleet Efficiency" 
-                        />
+                        <Area type="monotone" dataKey="efficiency" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#efficiencyGradient)" name="Fleet Efficiency" />
                       </AreaChart>
                     </ResponsiveContainer>
                   </div>
@@ -1691,13 +1723,7 @@ const Index = () => {
         <TrackVehiclePopup open={trackVehicleOpen} onOpenChange={setTrackVehicleOpen} vehicle={popupVehicle} />
         <VehicleDetailsPopup open={vehicleDetailsOpen} onOpenChange={setVehicleDetailsOpen} vehicle={popupVehicle} />
         <MaintenancePopup open={maintenanceOpen} onOpenChange={setMaintenanceOpen} vehicle={popupVehicle} depots={depots} onAddToCart={handleAddToCart} />
-          <AIAgentPopup 
-            open={aiAgentOpen} 
-            onOpenChange={setAiAgentOpen}
-            currentCity={currentCity}
-            vehicles={vehicles}
-            depots={depots}
-          />
+          <AIAgentPopup open={aiAgentOpen} onOpenChange={setAiAgentOpen} currentCity={currentCity} vehicles={vehicles} depots={depots} />
 
         {/* Due Soon Summary Dialog */}
         <Dialog open={showDueSoonSummary} onOpenChange={setShowDueSoonSummary}>
