@@ -92,6 +92,9 @@ export const OTTOQDepotView = ({ selectedCityName }: OTTOQDepotViewProps) => {
 
   useEffect(() => {
     if (selectedCity) {
+      // Clear depot selection and resources when city changes
+      setSelectedDepot("");
+      setDepotResources(null);
       fetchDepotsForCity(selectedCity);
     }
   }, [selectedCity]);
