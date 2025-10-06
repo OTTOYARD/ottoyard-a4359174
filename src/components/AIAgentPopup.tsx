@@ -46,7 +46,7 @@ export const AIAgentPopup = ({ open, onOpenChange, currentCity, vehicles = [], d
     {
       id: '1',
       role: 'assistant',
-      content: 'Hello! I\'m OttoCommand AI, your GPT-5 powered fleet assistant. I can help with:\n\n• Scheduling & maintenance\n• Data analysis & reporting\n• Voice commands & reservations\n• OTTOW dispatch services',
+      content: 'Hello! I\'m OttoCommand AI, your intelligent fleet assistant. I can help with:\n\n• Scheduling & maintenance\n• Data analysis & reporting\n• Voice commands & reservations\n• OTTOW dispatch services',
       timestamp: new Date()
     }
   ]);
@@ -88,7 +88,7 @@ export const AIAgentPopup = ({ open, onOpenChange, currentCity, vehicles = [], d
     setIsLoading(true);
 
     try {
-      // Call GPT-5 through our edge function
+      // Call AI assistant through our edge function
       const { data, error } = await supabase.functions.invoke('ottocommand-ai-chat', {
         body: {
           message: text,
@@ -240,7 +240,7 @@ export const AIAgentPopup = ({ open, onOpenChange, currentCity, vehicles = [], d
                 </div>
                 <div>
                   <span className="text-base font-semibold sm:text-lg">OttoCommand</span>
-                  <p className="text-xs text-muted-foreground">Powered by GPT-5</p>
+                  <p className="text-xs text-muted-foreground">AI-Powered Assistant</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">

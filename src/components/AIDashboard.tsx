@@ -248,7 +248,7 @@ const AIDashboard: React.FC = () => {
           <Card>
             <CardHeader>
               <CardTitle>Recent AI Analysis</CardTitle>
-              <CardDescription>Latest insights from GPT-5 fleet analysis</CardDescription>
+              <CardDescription>Latest insights from AI fleet analysis</CardDescription>
             </CardHeader>
             <CardContent>
               {insights.length === 0 ? (
