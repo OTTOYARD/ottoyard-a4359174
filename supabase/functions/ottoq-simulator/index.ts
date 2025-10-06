@@ -259,6 +259,46 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         }
       );
+    } else if (action === 'update_vehicles_now') {
+      // Immediately update all vehicles with new OEM names
+      const oems = ['Waymo', 'Zoox', 'Motional'];
+      const { data: vehicles } = await supabase
+        .from('ottoq_vehicles')
+        .select('id')
+        .limit(1000);
+
+      let updateCount = 0;
+      for (const vehicle of vehicles || []) {
+        const randomOEM = oems[Math.floor(Math.random() * oems.length)];
+        
+        // Generate alphanumeric serial like "575VX", "839ZD"
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let serial = '';
+        for (let i = 0; i < 3; i++) {
+          serial += Math.floor(Math.random() * 10);
+        }
+        for (let i = 0; i < 2; i++) {
+          serial += chars.charAt(Math.floor(Math.random() * 26));
+        }
+        
+        await supabase
+          .from('ottoq_vehicles')
+          .update({
+            oem: randomOEM,
+            external_ref: `${randomOEM} ${serial}`,
+          })
+          .eq('id', vehicle.id);
+        
+        updateCount++;
+      }
+
+      return new Response(
+        JSON.stringify({ success: true, message: `Updated ${updateCount} vehicles with new OEM names` }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     } else if (action === 'check_reset') {
       // Check if reset is needed
       const lastReset = state?.last_reset_at ? new Date(state.last_reset_at) : new Date();

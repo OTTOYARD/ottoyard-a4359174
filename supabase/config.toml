@@ -84,3 +84,6 @@ verify_jwt = false
 
 [functions.ottoq-simulator]
 verify_jwt = false
+
+[functions.update-vehicle-oems]
+verify_jwt = false
