@@ -57,3 +57,30 @@ verify_jwt = false
 
 [functions.ottocommand-ai-chat]
 verify_jwt = false
+
+[functions.ottoq-vehicles-telemetry]
+verify_jwt = false
+
+[functions.ottoq-jobs-request]
+verify_jwt = false
+
+[functions.ottoq-depots-resources]
+verify_jwt = false
+
+[functions.ottoq-vehicles-status]
+verify_jwt = false
+
+[functions.ottoq-jobs-cancel]
+verify_jwt = false
+
+[functions.ottoq-schedules-upsert]
+verify_jwt = false
+
+[functions.ottoq-config]
+verify_jwt = false
+
+[functions.ottoq-scheduler]
+verify_jwt = false
+
+[functions.ottoq-simulator]
+verify_jwt = false
