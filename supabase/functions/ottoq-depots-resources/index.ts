@@ -150,6 +150,27 @@ Deno.serve(async (req) => {
       };
     });
 
+    // Generate mock energy analytics based on depot activity
+    const occupiedCount = formattedResources.filter(r => r.status === 'OCCUPIED').length;
+    const totalResources = formattedResources.length;
+    const utilizationRate = totalResources > 0 ? occupiedCount / totalResources : 0;
+    
+    // Base values scaled by depot size and current utilization
+    const baseConsumption = 8500 + (totalResources * 45);
+    const energyConsumed = Math.round(baseConsumption * (0.7 + utilizationRate * 0.6));
+    const energyRegenerated = Math.round(energyConsumed * (0.35 + Math.random() * 0.15));
+    const efficiency = Math.round(75 + Math.random() * 15);
+    const peakDemand = Math.round((energyConsumed / 24) * (1.4 + Math.random() * 0.3));
+    const carbonOffset = Math.round(energyConsumed * 0.42);
+
+    const energyAnalytics = {
+      energyConsumed,
+      energyRegenerated,
+      efficiency,
+      peakDemand,
+      carbonOffset,
+    };
+
     return new Response(
       JSON.stringify({
         depot_id: depot.id,
@@ -157,6 +178,7 @@ Deno.serve(async (req) => {
         city: depot.ottoq_cities?.name,
         branding: depot.config_jsonb?.ottoq_branding || 'Powered by OTTOQ Technology',
         resources: formattedResources,
+        energyAnalytics,
         updated_at: new Date().toISOString(),
       }),
       {

@@ -12,6 +12,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { Building2, Zap, RefreshCw, Battery, Wrench, Sparkles, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
+import { EnergyAnalyticsCard } from "./EnergyAnalyticsCard";
 
 interface Resource {
   type: string;
@@ -21,12 +22,21 @@ interface Resource {
   job_id: string | null;
 }
 
+interface EnergyAnalytics {
+  energyConsumed: number;
+  energyRegenerated: number;
+  efficiency: number;
+  peakDemand: number;
+  carbonOffset: number;
+}
+
 interface DepotResources {
   depot_id: string;
   depot_name: string;
   city: string;
   branding: string;
   resources: Resource[];
+  energyAnalytics: EnergyAnalytics;
   updated_at: string;
 }
 
@@ -251,61 +261,65 @@ export const OTTOQDepotView = ({ selectedCityName }: OTTOQDepotViewProps) => {
               <RefreshCw className="w-8 h-8 animate-spin text-primary" />
             </div>
           ) : depotResources ? (
-            <div className="space-y-6">
-                <Card className="futuristic-card border-primary/20">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="flex items-center">
-                        <Building2 className="w-5 h-5 mr-2 text-primary" />
-                        {depotResources.depot_name}
-                      </CardTitle>
-                      <Badge variant="outline" className="border-primary/40 text-primary">
-                        {depotResources.city}
-                      </Badge>
-                    </div>
-                    {depotResources.branding && (
-                      <p className="text-xs text-muted-foreground italic">
-                        {depotResources.branding}
-                      </p>
-                    )}
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-3 gap-4 text-center">
-                      <div className="p-3 rounded-lg bg-success/10 border border-success/20">
-                        <div className="text-2xl font-bold text-success">
-                          {
-                            depotResources.resources.filter(
-                              (r) => r.status === "AVAILABLE"
-                            ).length
-                          }
-                        </div>
-                        <div className="text-xs text-muted-foreground mt-1">Available</div>
+            <div className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Card className="futuristic-card border-primary/20">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center text-lg">
+                          <Building2 className="w-5 h-5 mr-2 text-primary" />
+                          {depotResources.depot_name}
+                        </CardTitle>
+                        <Badge variant="outline" className="border-primary/40 text-primary">
+                          {depotResources.city}
+                        </Badge>
                       </div>
-                      <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
-                        <div className="text-2xl font-bold text-primary">
-                          {
-                            depotResources.resources.filter(
-                              (r) => r.status === "OCCUPIED"
-                            ).length
-                          }
+                      {depotResources.branding && (
+                        <p className="text-xs text-muted-foreground italic">
+                          {depotResources.branding}
+                        </p>
+                      )}
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-3 gap-3 text-center">
+                        <div className="p-2.5 rounded-lg bg-success/10 border border-success/20">
+                          <div className="text-xl font-bold text-success">
+                            {
+                              depotResources.resources.filter(
+                                (r) => r.status === "AVAILABLE"
+                              ).length
+                            }
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-0.5">Available</div>
                         </div>
-                        <div className="text-xs text-muted-foreground mt-1">Occupied</div>
+                        <div className="p-2.5 rounded-lg bg-primary/10 border border-primary/20">
+                          <div className="text-xl font-bold text-primary">
+                            {
+                              depotResources.resources.filter(
+                                (r) => r.status === "OCCUPIED"
+                              ).length
+                            }
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-0.5">Occupied</div>
+                        </div>
+                        <div className="p-2.5 rounded-lg bg-destructive/10 border border-destructive/20">
+                          <div className="text-xl font-bold text-destructive">
+                            {
+                              depotResources.resources.filter(
+                                (r) => r.status === "OUT_OF_SERVICE"
+                              ).length
+                            }
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-0.5">
+                            Out of Service
+                          </div>
+                        </div>
                       </div>
-                      <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
-                        <div className="text-2xl font-bold text-destructive">
-                          {
-                            depotResources.resources.filter(
-                              (r) => r.status === "OUT_OF_SERVICE"
-                            ).length
-                          }
-                        </div>
-                        <div className="text-xs text-muted-foreground mt-1">
-                          Out of Service
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+
+                  <EnergyAnalyticsCard data={depotResources.energyAnalytics} />
+                </div>
 
                 <ScrollArea className="h-[500px]">
                   <div className="space-y-4 pr-4">
