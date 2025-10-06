@@ -377,19 +377,19 @@ const Index = () => {
   const [selectedQuickGlanceTile, setSelectedQuickGlanceTile] = useState<string | null>(null);
   const [chartPeriod, setChartPeriod] = useState<'week' | 'month' | 'year'>('week');
   const [currentCity, setCurrentCity] = useState<City>({
-    name: "San Francisco",
-    coordinates: [-122.4194, 37.7749],
+    name: "Nashville",
+    coordinates: [-86.7816, 36.1627],
     country: "USA"
   });
-  const [selectedCityForOTTOQ, setSelectedCityForOTTOQ] = useState<string>("San Francisco");
+  const [selectedCityForOTTOQ, setSelectedCityForOTTOQ] = useState<string>("Nashville");
   const [vehicles, setVehicles] = useState(() => generateVehiclesForCity({
-    name: "San Francisco",
-    coordinates: [-122.4194, 37.7749],
+    name: "Nashville",
+    coordinates: [-86.7816, 36.1627],
     country: "USA"
   }));
   const [depots, setDepots] = useState(() => generateDepotsForCity({
-    name: "San Francisco",
-    coordinates: [-122.4194, 37.7749],
+    name: "Nashville",
+    coordinates: [-86.7816, 36.1627],
     country: "USA"
   }));
 
@@ -430,9 +430,28 @@ const Index = () => {
     // Add checkout logic here
     setCartItems([]);
   };
+  // Map any city to available OTTOQ cities (Austin, LA, Nashville)
+  const mapToOTTOQCity = (cityName: string): string => {
+    const cityMap: { [key: string]: string } = {
+      'Nashville': 'Nashville',
+      'Austin': 'Austin',
+      'Los Angeles': 'LA',
+      'LA': 'LA',
+      // Map other cities to the closest OTTOQ city
+      'San Francisco': 'LA',
+      'New York': 'Nashville',
+      'Chicago': 'Nashville',
+      'Seattle': 'LA',
+      'Miami': 'Nashville',
+      'Denver': 'Austin'
+    };
+    return cityMap[cityName] || 'Nashville'; // Default to Nashville
+  };
+
   const handleCitySelect = (city: City) => {
     setCurrentCity(city);
-    setSelectedCityForOTTOQ(city.name); // Sync OTTOQ city with map city
+    const ottoqCity = mapToOTTOQCity(city.name);
+    setSelectedCityForOTTOQ(ottoqCity); // Map to available OTTOQ city
     setVehicles(generateVehiclesForCity(city));
     setDepots(generateDepotsForCity(city));
   };
