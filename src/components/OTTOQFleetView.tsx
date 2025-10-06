@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
-import { Battery, Zap, Wrench, MapPin, Activity, RefreshCw, Car } from "lucide-react";
+import { Battery, Zap, Wrench, MapPin, Activity, RefreshCw, Car, Calendar } from "lucide-react";
 import { toast } from "sonner";
+import { OTTOQScheduleDialog } from "./OTTOQScheduleDialog";
 
 interface Vehicle {
   id: string;
@@ -55,6 +56,8 @@ export const OTTOQFleetView = ({ selectedCityName }: OTTOQFleetViewProps) => {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
 
   useEffect(() => {
     fetchCities();
@@ -237,6 +240,18 @@ export const OTTOQFleetView = ({ selectedCityName }: OTTOQFleetViewProps) => {
     return `${minutes}m`;
   };
 
+  const handleScheduleClick = (vehicle: Vehicle) => {
+    setSelectedVehicle(vehicle);
+    setScheduleDialogOpen(true);
+  };
+
+  const handleScheduleSuccess = () => {
+    // Refresh vehicles after successful scheduling
+    if (selectedCity) {
+      fetchVehiclesForCity(selectedCity);
+    }
+  };
+
   const currentCity = cities.find(c => c.id === selectedCity);
 
   return (
@@ -377,6 +392,17 @@ export const OTTOQFleetView = ({ selectedCityName }: OTTOQFleetViewProps) => {
                             </span>
                           </div>
                         </div>
+
+                        {/* Schedule Button */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full mt-3"
+                          onClick={() => handleScheduleClick(vehicle)}
+                        >
+                          <Calendar className="w-4 h-4 mr-2" />
+                          Schedule Service
+                        </Button>
                       </CardContent>
                     </Card>
                   ))}
@@ -385,6 +411,15 @@ export const OTTOQFleetView = ({ selectedCityName }: OTTOQFleetViewProps) => {
             )}
           </div>
         )}
+
+        {/* Schedule Dialog */}
+        <OTTOQScheduleDialog
+          vehicle={selectedVehicle}
+          open={scheduleDialogOpen}
+          onOpenChange={setScheduleDialogOpen}
+          cityId={selectedCity}
+          onSuccess={handleScheduleSuccess}
+        />
     </div>
   );
 };
