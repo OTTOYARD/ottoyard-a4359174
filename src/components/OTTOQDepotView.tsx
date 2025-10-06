@@ -57,9 +57,19 @@ export const OTTOQDepotView = ({ selectedCityName }: OTTOQDepotViewProps) => {
 
   useEffect(() => {
     if (selectedCityName && cities.length > 0) {
-      const city = cities.find(c => c.name === selectedCityName);
+      // Try exact match first, then case-insensitive partial match
+      let city = cities.find(c => c.name === selectedCityName);
+      if (!city) {
+        city = cities.find(c => 
+          c.name.toLowerCase().includes(selectedCityName.toLowerCase()) ||
+          selectedCityName.toLowerCase().includes(c.name.toLowerCase())
+        );
+      }
       if (city) {
+        console.log('OTTOQDepotView: Syncing to city:', city.name, 'from prop:', selectedCityName);
         setSelectedCity(city.id);
+      } else {
+        console.warn('OTTOQDepotView: No matching city found for:', selectedCityName, 'Available cities:', cities.map(c => c.name));
       }
     }
   }, [selectedCityName, cities]);
