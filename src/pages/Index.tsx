@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { MapPin, Battery, Zap, Truck, Calendar, TrendingUp, Activity, Settings, ChevronRight, ChevronLeft, AlertTriangle, CheckCircle2, Wrench, Bot, Eye, Radio, Car } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, AreaChart, Area } from 'recharts';
 import FleetMap from "@/components/FleetMap";
 import MapboxMap from "@/components/MapboxMap";
@@ -382,16 +384,9 @@ const Index = () => {
     country: "USA"
   });
   const [selectedCityForOTTOQ, setSelectedCityForOTTOQ] = useState<string>("Nashville");
-  const [vehicles, setVehicles] = useState(() => generateVehiclesForCity({
-    name: "Nashville",
-    coordinates: [-86.7816, 36.1627],
-    country: "USA"
-  }));
-  const [depots, setDepots] = useState(() => generateDepotsForCity({
-    name: "Nashville",
-    coordinates: [-86.7816, 36.1627],
-    country: "USA"
-  }));
+  const [vehicles, setVehicles] = useState<any[]>([]);
+  const [depots, setDepots] = useState<any[]>([]);
+  const [loadingData, setLoadingData] = useState(false);
 
   // Popup states
   const [addVehicleOpen, setAddVehicleOpen] = useState(false);
@@ -448,12 +443,108 @@ const Index = () => {
     return cityMap[cityName] || 'Nashville'; // Default to Nashville
   };
 
+  // Fetch real vehicles and depots from database
+  const fetchCityData = async (cityName: string) => {
+    setLoadingData(true);
+    try {
+      // Get city ID
+      const { data: cityData, error: cityError } = await supabase
+        .from("ottoq_cities")
+        .select("id, name")
+        .eq("name", cityName)
+        .maybeSingle();
+
+      if (cityError) throw cityError;
+      if (!cityData) {
+        console.warn(`City ${cityName} not found in database`);
+        setVehicles([]);
+        setDepots([]);
+        return;
+      }
+
+      // Fetch vehicles for this city
+      const { data: vehiclesData, error: vehiclesError } = await supabase.rpc('get_random_vehicles_for_city', {
+        p_city_id: cityData.id,
+        p_limit: 50
+      });
+
+      if (vehiclesError) throw vehiclesError;
+
+      // Transform vehicles to match the format expected by Overview
+      const transformedVehicles = (vehiclesData || []).map((v: any) => ({
+        id: v.external_ref?.split(' ')[1] || v.id.slice(0, 5),
+        name: v.external_ref || v.id.slice(0, 8),
+        status: v.status.toLowerCase(),
+        battery: Math.round(v.soc * 100),
+        location: {
+          lat: 36.1627 + (Math.random() - 0.5) * 0.2, // Mock location near city
+          lng: -86.7816 + (Math.random() - 0.5) * 0.3
+        },
+        route: 'Downtown Delivery',
+        chargingTime: v.status === 'CHARGING' ? `${Math.floor(Math.random() * 3) + 1}h ${Math.floor(Math.random() * 60)}m` : 'N/A',
+        nextMaintenance: v.status === 'MAINTENANCE' ? 'In Progress' : `2025-${Math.random() < 0.5 ? '10' : '12'}-${Math.floor(Math.random() * 28) + 1}`
+      }));
+
+      setVehicles(transformedVehicles);
+
+      // Fetch depots for this city
+      const { data: depotsData, error: depotsError } = await supabase
+        .from("ottoq_depots")
+        .select("id, name, address, lat, lon, config_jsonb")
+        .eq("city_id", cityData.id);
+
+      if (depotsError) throw depotsError;
+
+      // Fetch resources for each depot to calculate stalls
+      const depotsWithResources = await Promise.all(
+        (depotsData || []).map(async (depot: any) => {
+          const { data: resourcesData } = await supabase
+            .from("ottoq_resources")
+            .select("status")
+            .eq("depot_id", depot.id);
+
+          const totalStalls = resourcesData?.length || 0;
+          const occupiedStalls = resourcesData?.filter((r: any) => r.status === 'OCCUPIED').length || 0;
+          const availableStalls = totalStalls - occupiedStalls;
+
+          return {
+            id: depot.id,
+            name: depot.name,
+            location: {
+              lat: depot.lat || (36.1627 + (Math.random() - 0.5) * 0.05),
+              lng: depot.lon || (-86.7816 + (Math.random() - 0.5) * 0.08)
+            },
+            energyGenerated: Math.floor(1400 + Math.random() * 800),
+            energyReturned: Math.floor((1400 + Math.random() * 800) * 0.5),
+            vehiclesCharging: occupiedStalls,
+            totalStalls,
+            availableStalls,
+            status: Math.random() > 0.85 ? 'maintenance' : 'optimal'
+          };
+        })
+      );
+
+      setDepots(depotsWithResources);
+    } catch (error) {
+      console.error("Error fetching city data:", error);
+      toast.error("Failed to load city data");
+      setVehicles([]);
+      setDepots([]);
+    } finally {
+      setLoadingData(false);
+    }
+  };
+
+  // Load initial data
+  useEffect(() => {
+    fetchCityData("Nashville");
+  }, []);
+
   const handleCitySelect = (city: City) => {
     setCurrentCity(city);
     const ottoqCity = mapToOTTOQCity(city.name);
-    setSelectedCityForOTTOQ(ottoqCity); // Map to available OTTOQ city
-    setVehicles(generateVehiclesForCity(city));
-    setDepots(generateDepotsForCity(city));
+    setSelectedCityForOTTOQ(ottoqCity);
+    fetchCityData(ottoqCity); // Fetch real data for the mapped OTTOQ city
   };
 
   // Calculate city-specific metrics
