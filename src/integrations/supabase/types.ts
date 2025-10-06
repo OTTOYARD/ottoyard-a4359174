@@ -669,6 +669,25 @@ export type Database = {
         Args: { depot_uuid: string }
         Returns: undefined
       }
+      get_random_vehicles_for_city: {
+        Args: { p_city_id: string; p_limit?: number }
+        Returns: {
+          city_id: string
+          city_name: string
+          created_at: string
+          external_ref: string
+          health_jsonb: Json
+          id: string
+          last_telemetry_at: string
+          odometer_km: number
+          oem: string
+          plate: string
+          soc: number
+          status: string
+          updated_at: string
+          vin: string
+        }[]
+      }
     }
     Enums: {
       ottoq_entity_type:

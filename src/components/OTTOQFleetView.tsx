@@ -105,23 +105,20 @@ export const OTTOQFleetView = ({ selectedCityName }: OTTOQFleetViewProps) => {
   const fetchVehiclesForCity = async (cityId: string) => {
     setLoading(true);
     try {
-      const { data: vehiclesData, error } = await supabase
-        .from("ottoq_vehicles")
-        .select(`
-          *,
-          ottoq_cities(name)
-        `)
-        .eq("city_id", cityId)
-        .order("external_ref");
+      // Fetch with random ordering to show mix of OEMs
+      const { data: vehiclesData, error } = await supabase.rpc('get_random_vehicles_for_city', {
+        p_city_id: cityId,
+        p_limit: 50
+      });
 
       if (error) throw error;
 
-      // Fetch status for each vehicle
+      // Fetch status for each vehicle with cache busting
       const vehiclesWithStatus = await Promise.all(
         (vehiclesData || []).map(async (v) => {
           try {
             const { data: statusData } = await supabase.functions.invoke(
-              `ottoq-vehicles-status/${v.id}`,
+              `ottoq-vehicles-status/${v.id}?t=${Date.now()}`,
               { method: "GET" }
             );
 
@@ -135,7 +132,7 @@ export const OTTOQFleetView = ({ selectedCityName }: OTTOQFleetViewProps) => {
               odometer_km: v.odometer_km,
               status: v.status,
               last_telemetry_at: v.last_telemetry_at,
-              city: v.ottoq_cities?.name || "Unknown",
+              city: v.city_name || "Unknown",
               assignment: statusData?.assignment || null,
             };
           } catch (err) {
@@ -149,15 +146,15 @@ export const OTTOQFleetView = ({ selectedCityName }: OTTOQFleetViewProps) => {
               odometer_km: v.odometer_km,
               status: v.status,
               last_telemetry_at: v.last_telemetry_at,
-              city: v.ottoq_cities?.name || "Unknown",
+              city: v.city_name || "Unknown",
               assignment: null,
             };
           }
         })
       );
 
-      // Limit to 50 vehicles max per city
-      setVehicles(vehiclesWithStatus.slice(0, 50));
+      // Already limited to 50 from the function
+      setVehicles(vehiclesWithStatus);
     } catch (error) {
       console.error("Error fetching vehicles:", error);
       toast.error("Failed to load vehicles");
