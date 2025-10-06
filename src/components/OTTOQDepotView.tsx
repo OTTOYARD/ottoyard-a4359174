@@ -3,9 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { supabase } from "@/integrations/supabase/client";
-import { Building2, Zap, RefreshCw, Battery, Wrench, Sparkles } from "lucide-react";
+import { Building2, Zap, RefreshCw, Battery, Wrench, Sparkles, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 
 interface Resource {
@@ -50,6 +55,7 @@ export const OTTOQDepotView = ({ selectedCityName }: OTTOQDepotViewProps) => {
   const [depotResources, setDepotResources] = useState<DepotResources | null>(null);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [expandedCategories, setExpandedCategories] = useState<{ [key: string]: boolean }>({});
 
   useEffect(() => {
     fetchCities();
@@ -198,6 +204,15 @@ export const OTTOQDepotView = ({ selectedCityName }: OTTOQDepotViewProps) => {
     }
   };
 
+  const toggleCategory = (type: string) => {
+    setExpandedCategories(prev => ({
+      ...prev,
+      [type]: !prev[type]
+    }));
+  };
+
+  const INITIAL_DISPLAY_COUNT = 8;
+
   const currentCity = cities.find(c => c.id === selectedCity);
 
   return (
@@ -299,66 +314,112 @@ export const OTTOQDepotView = ({ selectedCityName }: OTTOQDepotViewProps) => {
                 </Card>
 
                 <ScrollArea className="h-[500px]">
-                  <div className="space-y-6 pr-4">
-                    {Object.entries(groupResourcesByType(depotResources.resources)).map(
-                      ([type, resources]) => (
-                        <Card key={type} className="futuristic-card">
-                          <CardHeader>
-                            <CardTitle className="text-lg flex items-center">
-                              {getResourceIcon(type)}
-                              <span className="ml-2">{getResourceTypeName(type)}</span>
-                              <Badge variant="outline" className="ml-auto">
-                                {resources.length} Total
-                              </Badge>
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                              {resources.map((resource) => (
-                                <div
-                                  key={`${resource.type}-${resource.index}`}
-                                  className={`p-3 rounded-lg border transition-all ${getResourceColor(
-                                    resource.status
-                                  )} ${
-                                    resource.status === "OCCUPIED"
-                                      ? "pulse-border"
-                                      : ""
-                                  }`}
-                                >
-                                  <div className="flex items-center justify-between mb-2">
-                                    <span className="font-medium text-sm">
-                                      {resource.type === "CHARGE_STALL"
-                                        ? `Stall ${resource.index}`
-                                        : resource.type === "MAINTENANCE_BAY"
-                                        ? `Bay ${resource.index}`
-                                        : `Stall ${resource.index}`}
-                                    </span>
-                                    {getResourceIcon(resource.type)}
+                  <div className="space-y-4 pr-4">
+                    <Accordion type="multiple" defaultValue={["CHARGE_STALL", "CLEAN_DETAIL_STALL", "MAINTENANCE_BAY"]} className="space-y-4">
+                      {Object.entries(groupResourcesByType(depotResources.resources)).map(
+                        ([type, resources]) => {
+                          const isExpanded = expandedCategories[type];
+                          const displayedResources = isExpanded ? resources : resources.slice(0, INITIAL_DISPLAY_COUNT);
+                          const hasMore = resources.length > INITIAL_DISPLAY_COUNT;
+                          const availableCount = resources.filter(r => r.status === "AVAILABLE").length;
+                          const occupiedCount = resources.filter(r => r.status === "OCCUPIED").length;
+
+                          return (
+                            <AccordionItem key={type} value={type} className="border-none">
+                              <Card className="futuristic-card">
+                                <AccordionTrigger className="hover:no-underline px-6 py-4">
+                                  <div className="flex items-center justify-between w-full pr-4">
+                                    <div className="flex items-center gap-2">
+                                      {getResourceIcon(type)}
+                                      <span className="text-lg font-semibold">{getResourceTypeName(type)}</span>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                      <Badge variant="outline" className="border-success/40 text-success">
+                                        {availableCount} Available
+                                      </Badge>
+                                      <Badge variant="outline" className="border-primary/40 text-primary">
+                                        {occupiedCount} Occupied
+                                      </Badge>
+                                      <Badge variant="outline">
+                                        {resources.length} Total
+                                      </Badge>
+                                    </div>
                                   </div>
-                                  <div className="text-xs">
-                                    {resource.status === "AVAILABLE" ? (
-                                      <span className="text-success font-medium">
-                                        Available
-                                      </span>
-                                    ) : resource.status === "OUT_OF_SERVICE" ? (
-                                      <span className="text-destructive font-medium">
-                                        Out of Service
-                                      </span>
-                                    ) : (
-                                      <div className="space-y-1">
-                                        <div className="font-medium line-clamp-2">
-                                          {resource.label}
+                                </AccordionTrigger>
+                                <AccordionContent>
+                                  <CardContent className="pt-0">
+                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                                      {displayedResources.map((resource) => (
+                                        <div
+                                          key={`${resource.type}-${resource.index}`}
+                                          className={`p-3 rounded-lg border transition-all ${getResourceColor(
+                                            resource.status
+                                          )} ${
+                                            resource.status === "OCCUPIED"
+                                              ? "pulse-border"
+                                              : ""
+                                          }`}
+                                        >
+                                          <div className="flex items-center justify-between mb-2">
+                                            <span className="font-medium text-sm">
+                                              {resource.type === "CHARGE_STALL"
+                                                ? `Stall ${resource.index}`
+                                                : resource.type === "MAINTENANCE_BAY"
+                                                ? `Bay ${resource.index}`
+                                                : `Stall ${resource.index}`}
+                                            </span>
+                                            {getResourceIcon(resource.type)}
+                                          </div>
+                                          <div className="text-xs">
+                                            {resource.status === "AVAILABLE" ? (
+                                              <span className="text-success font-medium">
+                                                Available
+                                              </span>
+                                            ) : resource.status === "OUT_OF_SERVICE" ? (
+                                              <span className="text-destructive font-medium">
+                                                Out of Service
+                                              </span>
+                                            ) : (
+                                              <div className="space-y-1">
+                                                <div className="font-medium line-clamp-2">
+                                                  {resource.label}
+                                                </div>
+                                              </div>
+                                            )}
+                                          </div>
                                         </div>
+                                      ))}
+                                    </div>
+                                    {hasMore && (
+                                      <div className="mt-4 flex justify-center">
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => toggleCategory(type)}
+                                          className="w-full sm:w-auto"
+                                        >
+                                          {isExpanded ? (
+                                            <>
+                                              <ChevronDown className="w-4 h-4 mr-2 rotate-180" />
+                                              Show Less
+                                            </>
+                                          ) : (
+                                            <>
+                                              <ChevronDown className="w-4 h-4 mr-2" />
+                                              Show More ({resources.length - INITIAL_DISPLAY_COUNT} more)
+                                            </>
+                                          )}
+                                        </Button>
                                       </div>
                                     )}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      )
-                    )}
+                                  </CardContent>
+                                </AccordionContent>
+                              </Card>
+                            </AccordionItem>
+                          );
+                        }
+                      )}
+                    </Accordion>
                   </div>
               </ScrollArea>
             </div>
