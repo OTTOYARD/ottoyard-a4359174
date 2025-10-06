@@ -241,28 +241,28 @@ export function createIncident(
   };
 }
 
-// Seed initial incidents using actual fleet vehicles
+// Seed initial incidents using fleet vehicle naming convention
 export function seedIncidents(): Incident[] {
   const incidents: Incident[] = [];
   
   // 2 × Reported
-  incidents.push(createIncident("WM-PAC-05", "Nashville", "interior", "Reported"));
-  incidents.push(createIncident("ZX-GEN1-19", "Nashville", "malfunction", "Reported"));
+  incidents.push(createIncident("Waymo 3KP9L", "Nashville", "interior", "Reported"));
+  incidents.push(createIncident("Zoox 4MN2Q", "Nashville", "malfunction", "Reported"));
   
   // 3 × Dispatched
-  incidents.push(createIncident("CR-ORG-27", "Nashville", "collision", "Dispatched"));
-  incidents.push(createIncident("AU-XC90-31", "Austin", "vandalism", "Dispatched"));
-  incidents.push(createIncident("MO-I5-42", "Austin", "malfunction", "Dispatched"));
+  incidents.push(createIncident("Cruise 8RP5T", "Nashville", "collision", "Dispatched"));
+  incidents.push(createIncident("Aurora 2VX7K", "Austin", "vandalism", "Dispatched"));
+  incidents.push(createIncident("Motional 9WJ4B", "Austin", "malfunction", "Dispatched"));
   
   // 2 × Secured
-  incidents.push(createIncident("WM-JAG-12", "LA", "collision", "Secured"));
-  incidents.push(createIncident("ZX-GEN2-33", "Nashville", "malfunction", "Secured"));
+  incidents.push(createIncident("Waymo 6TL8D", "LA", "collision", "Secured"));
+  incidents.push(createIncident("Zoox 1HF9M", "Nashville", "malfunction", "Secured"));
   
   // 1 × At Depot
-  incidents.push(createIncident("TE-MOD3-06", "Nashville", "interior", "At Depot"));
+  incidents.push(createIncident("Tensor 5CG3N", "Nashville", "interior", "At Depot"));
   
   // 1 × Closed
-  incidents.push(createIncident("NR-R2-18", "Nashville", "collision", "Closed", "Minor scratch - resolved"));
+  incidents.push(createIncident("Nuro 7YZ2P", "Nashville", "collision", "Closed", "Minor scratch - resolved"));
   
   return incidents;
 }

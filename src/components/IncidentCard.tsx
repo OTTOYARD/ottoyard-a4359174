@@ -49,7 +49,7 @@ export function IncidentCard({ incident, isSelected, onSelect }: IncidentCardPro
         {/* Left: Vehicle Avatar */}
         <div className="flex-shrink-0">
           <div className="w-8 h-8 md:w-12 md:h-12 rounded-full bg-primary/10 flex items-center justify-center text-[10px] md:text-sm font-semibold text-primary">
-            {incident.vehicleId.split('-')[0]}
+            {incident.vehicleId.split(' ')[0].substring(0, 2)}
           </div>
         </div>
         
