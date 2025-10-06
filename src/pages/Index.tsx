@@ -28,6 +28,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Filter, RefreshCw } from "lucide-react";
 import { IncidentStatus } from "@/data/incidents-mock";
+import { OTTOQFleetView } from "@/components/OTTOQFleetView";
+import { OTTOQDepotView } from "@/components/OTTOQDepotView";
 
 // Generate vehicles for specific city with unique 5-digit alphanumeric IDs
 const generateVehiclesForCity = (city: City) => {
@@ -1208,63 +1210,11 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="fleet" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-3xl font-bold text-foreground">Fleet Management</h2>
-               <Button className="bg-gradient-primary hover:bg-primary-hover sm:px-6 px-3 sm:text-base text-sm" onClick={() => setAddVehicleOpen(true)}>
-                 <Truck className="h-4 w-4 sm:mr-2 mr-1" />
-                 <span className="sm:inline hidden">Add Vehicle</span>
-                 <span className="sm:hidden inline">Add</span>
-               </Button>
-            </div>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-              {vehicles.map(vehicle => <div key={vehicle.id} id={`vehicle-${vehicle.id}`} className={`cursor-pointer transition-all duration-200 ${selectedVehicle === vehicle.id ? 'ring-2 ring-primary' : ''}`} onClick={() => setSelectedVehicle(selectedVehicle === vehicle.id ? null : vehicle.id)}>
-                  <VehicleCard vehicle={vehicle} onTrack={handleTrackVehicle} onDetails={handleVehicleDetails} onSchedule={handleMaintenanceSchedule} onSendToOtto={handleSendToOtto} />
-                  {selectedVehicle === vehicle.id && <div className="mt-2 p-3 bg-card border border-border rounded-lg">
-                      <h4 className="font-semibold mb-2">Vehicle Details</h4>
-                      <div className="space-y-2 text-sm">
-                        <p><span className="font-medium">Location:</span> {vehicle.location.lat.toFixed(4)}, {vehicle.location.lng.toFixed(4)}</p>
-                        <p><span className="font-medium">Last Service:</span> 2024-07-15</p>
-                        <p><span className="font-medium">Total Miles:</span> {Math.floor(Math.random() * 50000 + 10000)} mi</p>
-                        <div className="flex gap-2 mt-3">
-                          <Button size="sm" variant="outline" onClick={() => handleMaintenanceSchedule(vehicle)}>
-                            Schedule Maintenance
-                          </Button>
-                          <Button size="sm" variant="outline">Schedule Detailing</Button>
-                        </div>
-                      </div>
-                    </div>}
-                </div>)}
-            </div>
+            <OTTOQFleetView />
           </TabsContent>
 
           <TabsContent value="depots" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-3xl font-bold text-foreground">Energy Depots</h2>
-               <Button className="bg-gradient-energy hover:bg-accent-hover sm:px-6 px-3 sm:text-base text-sm">
-                 <Zap className="h-4 w-4 sm:mr-2 mr-1" />
-                 <span className="sm:inline hidden">Add Depot</span>
-                 <span className="sm:hidden inline">Add</span>
-               </Button>
-            </div>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {depots.map(depot => <div key={depot.id} id={`depot-${depot.id}`} className={`cursor-pointer transition-all duration-200 ${selectedDepot === depot.id ? 'ring-2 ring-primary' : ''}`} onClick={() => setSelectedDepot(selectedDepot === depot.id ? null : depot.id)}>
-                  <DepotCard depot={depot} />
-                  {selectedDepot === depot.id && <div className="mt-2 p-3 bg-card border border-border rounded-lg">
-                      <h4 className="font-semibold mb-2">Depot Actions</h4>
-                      <div className="space-y-2 text-sm">
-                        <p><span className="font-medium">Available Stalls:</span> {depot.availableStalls}/{depot.totalStalls}</p>
-                        <p><span className="font-medium">Current Charging:</span> {depot.vehiclesCharging} vehicles</p>
-                        <p><span className="font-medium">Daily Revenue:</span> ${Math.floor(depot.energyReturned * 0.12 * 100)}</p>
-                        <div className="flex gap-2 mt-3">
-                          <Button size="sm" variant="outline">Reserve Stall</Button>
-                          <Button size="sm" variant="outline">Schedule Maintenance</Button>
-                        </div>
-                      </div>
-                    </div>}
-                </div>)}
-            </div>
+            <OTTOQDepotView />
           </TabsContent>
 
           <TabsContent value="maintenance" className="space-y-6">
