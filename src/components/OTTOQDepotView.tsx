@@ -217,13 +217,7 @@ export const OTTOQDepotView = ({ selectedCityName }: OTTOQDepotViewProps) => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">OTTOYARD Depots - {currentCity?.name || ''}</h2>
-          <p className="text-sm text-muted-foreground">
-            Real-time depot resource monitoring
-          </p>
-        </div>
+      <div className="flex justify-end">
         <Button
           variant="outline"
           size="sm"
