@@ -217,33 +217,33 @@ export const OTTOQDepotView = ({ selectedCityName }: OTTOQDepotViewProps) => {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleRefresh}
-          disabled={refreshing}
-        >
-          <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? "animate-spin" : ""}`} />
-          Refresh
-        </Button>
-      </div>
-
       {selectedCity && (
         <div className="space-y-4">
-            <div className="flex space-x-2 overflow-x-auto pb-2">
-              {depots.map((depot) => (
-                <Button
-                  key={depot.id}
-                  variant={selectedDepot === depot.id ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSelectedDepot(depot.id)}
-                  className="whitespace-nowrap"
-                >
-                  <Building2 className="w-4 h-4 mr-2" />
-                  {depot.name}
-                </Button>
-              ))}
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex space-x-2 overflow-x-auto pb-2">
+                {depots.map((depot) => (
+                  <Button
+                    key={depot.id}
+                    variant={selectedDepot === depot.id ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSelectedDepot(depot.id)}
+                    className="whitespace-nowrap"
+                  >
+                    <Building2 className="w-4 h-4 mr-2" />
+                    {depot.name}
+                  </Button>
+                ))}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="shrink-0"
+              >
+                <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? "animate-spin" : ""}`} />
+                Refresh
+              </Button>
             </div>
 
           {loading ? (
