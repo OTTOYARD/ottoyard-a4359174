@@ -37,7 +37,7 @@ async function resetSimulator(supabase: any) {
     .neq('status', 'OUT_OF_SERVICE');
 
   // Reset vehicles to IDLE with randomized SOC and varied OEM names
-  const oems = ['Waymo', 'Zoox', 'Cruise', 'Aurora', 'Argo AI', 'Nuro', 'Motional', 'Tesla', 'Mercedes', 'BMW'];
+  const oems = ['Waymo', 'Zoox', 'Motional'];
   const { data: vehicles } = await supabase
     .from('ottoq_vehicles')
     .select('id, city_id, external_ref')
