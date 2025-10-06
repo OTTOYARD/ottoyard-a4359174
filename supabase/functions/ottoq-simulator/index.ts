@@ -36,19 +36,34 @@ async function resetSimulator(supabase: any) {
     .update({ status: 'AVAILABLE', current_job_id: null })
     .neq('status', 'OUT_OF_SERVICE');
 
-  // Reset vehicles to IDLE with randomized SOC
+  // Reset vehicles to IDLE with randomized SOC and varied OEM names
+  const oems = ['Waymo', 'Zoox', 'Cruise', 'Aurora', 'Argo AI', 'Nuro', 'Motional', 'Tesla', 'Mercedes', 'BMW'];
   const { data: vehicles } = await supabase
     .from('ottoq_vehicles')
-    .select('id')
+    .select('id, city_id, external_ref')
     .limit(1000);
 
   for (const vehicle of vehicles || []) {
     const newSoc = 0.15 + Math.random() * 0.85;
+    const randomOEM = oems[Math.floor(Math.random() * oems.length)];
+    
+    // Generate alphanumeric serial like "575VX", "839ZD"
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let serial = '';
+    for (let i = 0; i < 3; i++) {
+      serial += Math.floor(Math.random() * 10);
+    }
+    for (let i = 0; i < 2; i++) {
+      serial += chars.charAt(Math.floor(Math.random() * 26));
+    }
+    
     await supabase
       .from('ottoq_vehicles')
       .update({
         status: 'IDLE',
         soc: newSoc,
+        oem: randomOEM,
+        external_ref: `${randomOEM} ${serial}`,
         odometer_km: Math.floor(Math.random() * 50000),
       })
       .eq('id', vehicle.id);

@@ -381,7 +381,7 @@ const Index = () => {
     coordinates: [-122.4194, 37.7749],
     country: "USA"
   });
-  const [selectedCityForOTTOQ, setSelectedCityForOTTOQ] = useState<string>("Austin");
+  const [selectedCityForOTTOQ, setSelectedCityForOTTOQ] = useState<string>("San Francisco");
   const [vehicles, setVehicles] = useState(() => generateVehiclesForCity({
     name: "San Francisco",
     coordinates: [-122.4194, 37.7749],
@@ -432,6 +432,7 @@ const Index = () => {
   };
   const handleCitySelect = (city: City) => {
     setCurrentCity(city);
+    setSelectedCityForOTTOQ(city.name); // Sync OTTOQ city with map city
     setVehicles(generateVehiclesForCity(city));
     setDepots(generateDepotsForCity(city));
   };

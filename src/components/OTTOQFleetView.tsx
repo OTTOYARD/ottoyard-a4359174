@@ -146,7 +146,8 @@ export const OTTOQFleetView = ({ selectedCityName }: OTTOQFleetViewProps) => {
         })
       );
 
-      setVehicles(vehiclesWithStatus);
+      // Limit to 50 vehicles max per city
+      setVehicles(vehiclesWithStatus.slice(0, 50));
     } catch (error) {
       console.error("Error fetching vehicles:", error);
       toast.error("Failed to load vehicles");
