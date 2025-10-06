@@ -2,8 +2,10 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, AreaChart, Area } from 'recharts';
-import { TrendingUp, Battery, Zap, Activity } from "lucide-react";
+import { TrendingUp, Battery, Zap, Activity, Radio } from "lucide-react";
+import { DepotStallInfo } from "./DepotStallInfo";
 
 interface Depot {
   id: string;
@@ -81,7 +83,20 @@ const DepotAnalytics = ({ depot, open, onOpenChange }: DepotAnalyticsProps) => {
           </DialogTitle>
         </DialogHeader>
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
+        <Tabs defaultValue="analytics" className="mt-4">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="analytics">
+              <Activity className="h-4 w-4 mr-2" />
+              Energy Analytics
+            </TabsTrigger>
+            <TabsTrigger value="stalls">
+              <Radio className="h-4 w-4 mr-2" />
+              OTTOQ Stall Status
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="analytics">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
           {/* Energy Generation Chart */}
           <Card className="shadow-fleet-md">
             <CardHeader>
@@ -289,6 +304,14 @@ const DepotAnalytics = ({ depot, open, onOpenChange }: DepotAnalyticsProps) => {
             </CardContent>
           </Card>
         </div>
+          </TabsContent>
+
+          <TabsContent value="stalls">
+            <div className="mt-4">
+              <DepotStallInfo depotId={depot.id} />
+            </div>
+          </TabsContent>
+        </Tabs>
 
         <div className="mt-6 flex justify-end">
           <Button variant="outline" onClick={() => onOpenChange(false)}>

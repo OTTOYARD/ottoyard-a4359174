@@ -381,6 +381,7 @@ const Index = () => {
     coordinates: [-122.4194, 37.7749],
     country: "USA"
   });
+  const [selectedCityForOTTOQ, setSelectedCityForOTTOQ] = useState<string>("Austin");
   const [vehicles, setVehicles] = useState(() => generateVehiclesForCity({
     name: "San Francisco",
     coordinates: [-122.4194, 37.7749],
@@ -1210,11 +1211,11 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="fleet" className="space-y-6">
-            <OTTOQFleetView />
+            <OTTOQFleetView selectedCityName={selectedCityForOTTOQ} />
           </TabsContent>
 
           <TabsContent value="depots" className="space-y-6">
-            <OTTOQDepotView />
+            <OTTOQDepotView selectedCityName={selectedCityForOTTOQ} />
           </TabsContent>
 
           <TabsContent value="maintenance" className="space-y-6">

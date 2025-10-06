@@ -45,7 +45,11 @@ interface City {
   tz: string;
 }
 
-export const OTTOQFleetView = () => {
+interface OTTOQFleetViewProps {
+  selectedCityName?: string;
+}
+
+export const OTTOQFleetView = ({ selectedCityName }: OTTOQFleetViewProps) => {
   const [cities, setCities] = useState<City[]>([]);
   const [selectedCity, setSelectedCity] = useState<string>("");
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -55,6 +59,15 @@ export const OTTOQFleetView = () => {
   useEffect(() => {
     fetchCities();
   }, []);
+
+  useEffect(() => {
+    if (selectedCityName && cities.length > 0) {
+      const city = cities.find(c => c.name === selectedCityName);
+      if (city) {
+        setSelectedCity(city.id);
+      }
+    }
+  }, [selectedCityName, cities]);
 
   useEffect(() => {
     if (selectedCity) {
@@ -216,13 +229,15 @@ export const OTTOQFleetView = () => {
     return `${minutes}m`;
   };
 
+  const currentCity = cities.find(c => c.id === selectedCity);
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">OTTOQ Fleet</h2>
+          <h2 className="text-2xl font-bold">OTTOQ Fleet - {currentCity?.name || ''}</h2>
           <p className="text-sm text-muted-foreground">
-            {vehicles.length} vehicles across {cities.length} cities
+            {vehicles.length} vehicles
           </p>
         </div>
         <Button
@@ -236,24 +251,15 @@ export const OTTOQFleetView = () => {
         </Button>
       </div>
 
-      <Tabs value={selectedCity} onValueChange={setSelectedCity}>
-        <TabsList className="w-full justify-start">
-          {cities.map((city) => (
-            <TabsTrigger key={city.id} value={city.id}>
-              {city.name}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-
-        {cities.map((city) => (
-          <TabsContent key={city.id} value={city.id} className="space-y-4">
-            {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <RefreshCw className="w-8 h-8 animate-spin text-primary" />
-              </div>
-            ) : (
-              <ScrollArea className="h-[600px]">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pr-4">
+      {selectedCity && (
+        <div className="space-y-4">
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <RefreshCw className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <ScrollArea className="h-[600px]">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pr-4">
                   {vehicles.map((vehicle) => (
                     <Card
                       key={vehicle.id}
@@ -369,9 +375,8 @@ export const OTTOQFleetView = () => {
                 </div>
               </ScrollArea>
             )}
-          </TabsContent>
-        ))}
-      </Tabs>
+          </div>
+        )}
     </div>
   );
 };

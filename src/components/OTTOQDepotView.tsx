@@ -38,7 +38,11 @@ interface Depot {
   address: string | null;
 }
 
-export const OTTOQDepotView = () => {
+interface OTTOQDepotViewProps {
+  selectedCityName?: string;
+}
+
+export const OTTOQDepotView = ({ selectedCityName }: OTTOQDepotViewProps) => {
   const [cities, setCities] = useState<City[]>([]);
   const [selectedCity, setSelectedCity] = useState<string>("");
   const [depots, setDepots] = useState<Depot[]>([]);
@@ -50,6 +54,15 @@ export const OTTOQDepotView = () => {
   useEffect(() => {
     fetchCities();
   }, []);
+
+  useEffect(() => {
+    if (selectedCityName && cities.length > 0) {
+      const city = cities.find(c => c.name === selectedCityName);
+      if (city) {
+        setSelectedCity(city.id);
+      }
+    }
+  }, [selectedCityName, cities]);
 
   useEffect(() => {
     if (selectedCity) {
@@ -175,11 +188,13 @@ export const OTTOQDepotView = () => {
     }
   };
 
+  const currentCity = cities.find(c => c.id === selectedCity);
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">OTTOYARD Depots</h2>
+          <h2 className="text-2xl font-bold">OTTOYARD Depots - {currentCity?.name || ''}</h2>
           <p className="text-sm text-muted-foreground">
             Real-time depot resource monitoring
           </p>
@@ -195,17 +210,8 @@ export const OTTOQDepotView = () => {
         </Button>
       </div>
 
-      <Tabs value={selectedCity} onValueChange={setSelectedCity}>
-        <TabsList className="w-full justify-start">
-          {cities.map((city) => (
-            <TabsTrigger key={city.id} value={city.id}>
-              {city.name}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-
-        {cities.map((city) => (
-          <TabsContent key={city.id} value={city.id} className="space-y-4">
+      {selectedCity && (
+        <div className="space-y-4">
             <div className="flex space-x-2 overflow-x-auto pb-2">
               {depots.map((depot) => (
                 <Button
@@ -221,12 +227,12 @@ export const OTTOQDepotView = () => {
               ))}
             </div>
 
-            {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <RefreshCw className="w-8 h-8 animate-spin text-primary" />
-              </div>
-            ) : depotResources ? (
-              <div className="space-y-6">
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <RefreshCw className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : depotResources ? (
+            <div className="space-y-6">
                 <Card className="futuristic-card border-primary/20">
                   <CardHeader>
                     <div className="flex items-center justify-between">
@@ -344,12 +350,11 @@ export const OTTOQDepotView = () => {
                       )
                     )}
                   </div>
-                </ScrollArea>
-              </div>
-            ) : null}
-          </TabsContent>
-        ))}
-      </Tabs>
+              </ScrollArea>
+            </div>
+          ) : null}
+        </div>
+      )}
     </div>
   );
 };

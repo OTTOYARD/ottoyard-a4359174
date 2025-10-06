@@ -43,23 +43,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Get all resources with active jobs
+    // Get all resources for this depot
     const { data: resources, error: resourcesError } = await supabase
       .from('ottoq_resources')
-      .select(`
-        *,
-        ottoq_jobs!ottoq_resources_current_job_id_fkey(
-          id,
-          vehicle_id,
-          job_type,
-          state,
-          scheduled_start_at,
-          started_at,
-          eta_seconds,
-          metadata_jsonb,
-          ottoq_vehicles(external_ref)
-        )
-      `)
+      .select('*')
       .eq('depot_id', depot_id)
       .order('resource_type')
       .order('index');
@@ -72,6 +59,34 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Get job IDs from resources
+    const jobIds = resources
+      .filter(r => r.current_job_id)
+      .map(r => r.current_job_id);
+
+    // Fetch jobs separately if there are any
+    let jobsMap = new Map();
+    if (jobIds.length > 0) {
+      const { data: jobs, error: jobsError } = await supabase
+        .from('ottoq_jobs')
+        .select(`
+          id,
+          vehicle_id,
+          job_type,
+          state,
+          scheduled_start_at,
+          started_at,
+          eta_seconds,
+          metadata_jsonb,
+          ottoq_vehicles(external_ref)
+        `)
+        .in('id', jobIds);
+
+      if (!jobsError && jobs) {
+        jobs.forEach(job => jobsMap.set(job.id, job));
+      }
+    }
+
     // Format resources with labels
     const formattedResources = resources.map((r) => {
       let label = '';
@@ -80,8 +95,8 @@ Deno.serve(async (req) => {
         label = 'Available';
       } else if (r.status === 'OUT_OF_SERVICE') {
         label = 'Out of Service';
-      } else if (r.ottoq_jobs) {
-        const job = r.ottoq_jobs;
+      } else if (r.current_job_id && jobsMap.has(r.current_job_id)) {
+        const job = jobsMap.get(r.current_job_id);
         const vehicleRef = job.ottoq_vehicles?.external_ref || job.vehicle_id.substring(0, 8);
         
         let jobLabel = '';
