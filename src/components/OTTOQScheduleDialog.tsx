@@ -160,8 +160,8 @@ export const OTTOQScheduleDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] flex flex-col p-0">
-        <div className="p-6 pb-0">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] p-0 gap-0">
+        <div className="p-6 pb-4 border-b">
           <DialogHeader>
             <DialogTitle>Schedule OTTOYARD Service</DialogTitle>
             <DialogDescription>
@@ -171,7 +171,7 @@ export const OTTOQScheduleDialog = ({
           </DialogHeader>
         </div>
 
-        <ScrollArea className="flex-1 px-6">
+        <div className="overflow-y-auto px-6" style={{ maxHeight: 'calc(90vh - 200px)' }}>
           <div className="space-y-6 py-4">
             {/* Vehicle Info */}
             <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
@@ -262,9 +262,9 @@ export const OTTOQScheduleDialog = ({
               </RadioGroup>
             </div>
           </div>
-        </ScrollArea>
+        </div>
 
-        <div className="flex gap-3 p-6 pt-4 border-t bg-background">
+        <div className="flex gap-3 p-6 pt-4 border-t bg-background shrink-0">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
