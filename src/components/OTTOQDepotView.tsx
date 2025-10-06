@@ -224,6 +224,7 @@ export const OTTOQDepotView = ({ selectedCityName }: OTTOQDepotViewProps) => {
   const INITIAL_DISPLAY_COUNT = 8;
 
   const currentCity = cities.find(c => c.id === selectedCity);
+  const currentDepot = depots.find(d => d.id === selectedDepot);
 
   return (
     <div className="space-y-4">
@@ -268,10 +269,10 @@ export const OTTOQDepotView = ({ selectedCityName }: OTTOQDepotViewProps) => {
                       <div className="flex items-center justify-between">
                         <CardTitle className="flex items-center text-lg">
                           <Building2 className="w-5 h-5 mr-2 text-primary" />
-                          {depotResources.depot_name}
+                          {currentDepot?.name || depotResources.depot_name}
                         </CardTitle>
                         <Badge variant="outline" className="border-primary/40 text-primary">
-                          {depotResources.city}
+                          {currentCity?.name || depotResources.city}
                         </Badge>
                       </div>
                       {depotResources.branding && (
