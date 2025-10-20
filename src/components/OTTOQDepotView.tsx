@@ -341,18 +341,18 @@ export const OTTOQDepotView = ({ selectedCityName }: OTTOQDepotViewProps) => {
                               <Card className="futuristic-card">
                                 <AccordionTrigger className="hover:no-underline px-6 py-4">
                                   <div className="flex items-center justify-between w-full pr-4">
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 min-w-0">
                                       {getResourceIcon(type)}
-                                      <span className="text-lg font-semibold">{getResourceTypeName(type)}</span>
+                                      <span className="text-sm sm:text-lg font-semibold truncate">{getResourceTypeName(type)}</span>
                                     </div>
-                                    <div className="flex items-center gap-3">
-                                      <Badge variant="outline" className="border-success/40 text-success">
-                                        {availableCount} Available
+                                    <div className="flex items-center gap-2 flex-wrap justify-end">
+                                      <Badge variant="outline" className="border-success/40 text-success text-xs whitespace-nowrap">
+                                        {availableCount} Avail
                                       </Badge>
-                                      <Badge variant="outline" className="border-primary/40 text-primary">
-                                        {occupiedCount} Occupied
+                                      <Badge variant="outline" className="border-primary/40 text-primary text-xs whitespace-nowrap">
+                                        {occupiedCount} Occ
                                       </Badge>
-                                      <Badge variant="outline">
+                                      <Badge variant="outline" className="text-xs whitespace-nowrap hidden sm:inline-flex">
                                         {resources.length} Total
                                       </Badge>
                                     </div>
@@ -360,7 +360,7 @@ export const OTTOQDepotView = ({ selectedCityName }: OTTOQDepotViewProps) => {
                                 </AccordionTrigger>
                                 <AccordionContent>
                                   <CardContent className="pt-0">
-                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                                       {displayedResources.map((resource) => (
                                         <div
                                           key={`${resource.type}-${resource.index}`}
@@ -372,15 +372,15 @@ export const OTTOQDepotView = ({ selectedCityName }: OTTOQDepotViewProps) => {
                                               : ""
                                           }`}
                                         >
-                                          <div className="flex items-center justify-between mb-2">
-                                            <span className="font-medium text-sm">
+                                          <div className="flex items-center justify-between gap-2 mb-2">
+                                            <span className="font-medium text-sm truncate flex-1">
                                               {resource.type === "CHARGE_STALL"
                                                 ? `Stall ${resource.index}`
                                                 : resource.type === "MAINTENANCE_BAY"
                                                 ? `Bay ${resource.index}`
                                                 : `Stall ${resource.index}`}
                                             </span>
-                                            {getResourceIcon(resource.type)}
+                                            <span className="flex-shrink-0">{getResourceIcon(resource.type)}</span>
                                           </div>
                                           <div className="text-xs">
                                             {resource.status === "AVAILABLE" ? (
