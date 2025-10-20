@@ -340,19 +340,19 @@ export const OTTOQDepotView = ({ selectedCityName }: OTTOQDepotViewProps) => {
                             <AccordionItem key={type} value={type} className="border-none">
                               <Card className="futuristic-card">
                                 <AccordionTrigger className="hover:no-underline px-6 py-4">
-                                  <div className="flex items-center justify-between w-full pr-4">
-                                    <div className="flex items-center gap-2 min-w-0">
+                                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full pr-4 gap-2">
+                                    <div className="flex items-center gap-2">
                                       {getResourceIcon(type)}
-                                      <span className="text-sm sm:text-lg font-semibold truncate">{getResourceTypeName(type)}</span>
+                                      <span className="text-sm sm:text-base font-semibold">{getResourceTypeName(type)}</span>
                                     </div>
-                                    <div className="flex items-center gap-2 flex-wrap justify-end">
-                                      <Badge variant="outline" className="border-success/40 text-success text-xs whitespace-nowrap">
-                                        {availableCount} Avail
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <Badge variant="outline" className="border-success/40 text-success text-xs">
+                                        {availableCount} Available
                                       </Badge>
-                                      <Badge variant="outline" className="border-primary/40 text-primary text-xs whitespace-nowrap">
-                                        {occupiedCount} Occ
+                                      <Badge variant="outline" className="border-primary/40 text-primary text-xs">
+                                        {occupiedCount} Occupied
                                       </Badge>
-                                      <Badge variant="outline" className="text-xs whitespace-nowrap hidden sm:inline-flex">
+                                      <Badge variant="outline" className="text-xs">
                                         {resources.length} Total
                                       </Badge>
                                     </div>
@@ -373,7 +373,7 @@ export const OTTOQDepotView = ({ selectedCityName }: OTTOQDepotViewProps) => {
                                           }`}
                                         >
                                           <div className="flex items-center justify-between gap-2 mb-2">
-                                            <span className="font-medium text-sm truncate flex-1">
+                                            <span className="font-medium text-xs">
                                               {resource.type === "CHARGE_STALL"
                                                 ? `Stall ${resource.index}`
                                                 : resource.type === "MAINTENANCE_BAY"
@@ -382,23 +382,23 @@ export const OTTOQDepotView = ({ selectedCityName }: OTTOQDepotViewProps) => {
                                             </span>
                                             <span className="flex-shrink-0">{getResourceIcon(resource.type)}</span>
                                           </div>
-                                          <div className="text-xs">
-                                            {resource.status === "AVAILABLE" ? (
-                                              <span className="text-success font-medium">
-                                                Available
-                                              </span>
-                                            ) : resource.status === "OUT_OF_SERVICE" ? (
-                                              <span className="text-destructive font-medium">
-                                                Out of Service
-                                              </span>
-                                            ) : (
-                                              <div className="space-y-1">
-                                                <div className="font-medium line-clamp-2">
-                                                  {resource.label}
-                                                </div>
-                                              </div>
-                                            )}
-                                          </div>
+                                           <div className="text-[10px] leading-tight">
+                                             {resource.status === "AVAILABLE" ? (
+                                               <span className="text-success font-medium">
+                                                 Available
+                                               </span>
+                                             ) : resource.status === "OUT_OF_SERVICE" ? (
+                                               <span className="text-destructive font-medium">
+                                                 Out of Service
+                                               </span>
+                                             ) : (
+                                               <div className="space-y-0.5">
+                                                 <div className="font-medium break-words">
+                                                   {resource.label}
+                                                 </div>
+                                               </div>
+                                             )}
+                                           </div>
                                         </div>
                                       ))}
                                     </div>
