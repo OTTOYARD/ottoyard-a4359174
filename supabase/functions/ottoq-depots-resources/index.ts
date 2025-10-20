@@ -176,7 +176,7 @@ Deno.serve(async (req) => {
         depot_id: depot.id,
         depot_name: depot.name,
         city: depot.ottoq_cities?.name,
-        branding: depot.config_jsonb?.ottoq_branding || 'Powered by OTTOQ Technology',
+        branding: depot.config_jsonb?.ottoq_branding || 'Powered by OTTO-Q Technology',
         resources: formattedResources,
         energyAnalytics,
         updated_at: new Date().toISOString(),

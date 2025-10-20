@@ -91,7 +91,7 @@ const DepotAnalytics = ({ depot, open, onOpenChange }: DepotAnalyticsProps) => {
             </TabsTrigger>
             <TabsTrigger value="stalls">
               <Radio className="h-4 w-4 mr-2" />
-              OTTOQ Stall Status
+              OTTO-Q Stall Status
             </TabsTrigger>
           </TabsList>
 

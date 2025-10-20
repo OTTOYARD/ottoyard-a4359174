@@ -1,8 +1,8 @@
-# OTTOQ - Vehicle-to-Depot Queuing & Reservation System
+# OTTO-Q - Vehicle-to-Depot Queuing & Reservation System
 
-**Powered by OTTOQ Technology**
+**Powered by OTTO-Q Technology**
 
-OTTOQ is a production-ready backend system for managing electric vehicle charging, maintenance, and detailing reservations across multi-city depot networks.
+OTTO-Q is a production-ready backend system for managing electric vehicle charging, maintenance, and detailing reservations across multi-city depot networks.
 
 ## 🏗️ Architecture
 
@@ -294,7 +294,7 @@ resources
   }));
 
 // Show branding
-console.log(branding); // "Powered by OTTOQ Technology"
+console.log(branding); // "Powered by OTTO-Q Technology"
 ```
 
 ### Vehicle Card
@@ -344,7 +344,7 @@ See inline JSDoc in each Edge Function for detailed parameters and response sche
 
 ## 🤝 Contributing
 
-OTTOQ is designed for easy OEM integration:
+OTTO-Q is designed for easy OEM integration:
 1. Replace mock telemetry with real vehicle data streams
 2. Swap simulator with actual vehicle events
 3. No schema changes required

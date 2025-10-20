@@ -255,14 +255,14 @@ const Index = () => {
     // Add checkout logic here
     setCartItems([]);
   };
-  // Map any city to available OTTOQ cities (Austin, LA, Nashville)
+  // Map any city to available OTTO-Q cities (Austin, LA, Nashville)
   const mapToOTTOQCity = (cityName: string): string => {
     const cityMap: { [key: string]: string } = {
       'Nashville': 'Nashville',
       'Austin': 'Austin',
       'Los Angeles': 'LA',
       'LA': 'LA',
-      // Map other cities to the closest OTTOQ city
+      // Map other cities to the closest OTTO-Q city
       'San Francisco': 'LA',
       'New York': 'Nashville',
       'Chicago': 'Nashville',
@@ -374,7 +374,7 @@ const Index = () => {
     setCurrentCity(city);
     const ottoqCity = mapToOTTOQCity(city.name);
     setSelectedCityForOTTOQ(ottoqCity);
-    fetchCityData(ottoqCity); // Fetch real data for the mapped OTTOQ city
+    fetchCityData(ottoqCity); // Fetch real data for the mapped OTTO-Q city
   };
 
   // Calculate city-specific metrics

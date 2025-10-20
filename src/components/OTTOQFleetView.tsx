@@ -74,10 +74,10 @@ export const OTTOQFleetView = ({ selectedCityName }: OTTOQFleetViewProps) => {
         );
       }
       if (city) {
-        console.log('OTTOQFleetView: Syncing to city:', city.name, 'from prop:', selectedCityName);
+        console.log('OTTO-Q FleetView: Syncing to city:', city.name, 'from prop:', selectedCityName);
         setSelectedCity(city.id);
       } else {
-        console.warn('OTTOQFleetView: No matching city found for:', selectedCityName, 'Available cities:', cities.map(c => c.name));
+        console.warn('OTTO-Q FleetView: No matching city found for:', selectedCityName, 'Available cities:', cities.map(c => c.name));
       }
     }
   }, [selectedCityName, cities]);
@@ -258,7 +258,7 @@ export const OTTOQFleetView = ({ selectedCityName }: OTTOQFleetViewProps) => {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">OTTOQ Fleet - {currentCity?.name || ''}</h2>
+          <h2 className="text-2xl font-bold">OTTO-Q Fleet - {currentCity?.name || ''}</h2>
           <p className="text-sm text-muted-foreground">
             {vehicles.length} vehicles
           </p>

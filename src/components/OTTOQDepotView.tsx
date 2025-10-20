@@ -82,10 +82,10 @@ export const OTTOQDepotView = ({ selectedCityName }: OTTOQDepotViewProps) => {
         );
       }
       if (city) {
-        console.log('OTTOQDepotView: Syncing to city:', city.name, 'from prop:', selectedCityName);
+        console.log('OTTO-Q DepotView: Syncing to city:', city.name, 'from prop:', selectedCityName);
         setSelectedCity(city.id);
       } else {
-        console.warn('OTTOQDepotView: No matching city found for:', selectedCityName, 'Available cities:', cities.map(c => c.name));
+        console.warn('OTTO-Q DepotView: No matching city found for:', selectedCityName, 'Available cities:', cities.map(c => c.name));
       }
     }
   }, [selectedCityName, cities]);

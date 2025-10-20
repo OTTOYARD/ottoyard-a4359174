@@ -1,4 +1,4 @@
-# OTTOQ Test Scenarios
+# OTTO-Q Test Scenarios
 
 ## Test 1: Vehicle Telemetry & Auto-Charging
 
@@ -82,7 +82,7 @@ curl http://localhost:54321/functions/v1/ottoq-depots-resources/$DEPOT_ID | jq
 - 10 CLEAN_DETAIL_STALL resources (index 41-50)
 - 2 MAINTENANCE_BAY resources (index 1-2)
 - Labels show vehicle IDs and time remaining for BUSY resources
-- Branding: "Powered by OTTOQ Technology"
+- Branding: "Powered by OTTO-Q Technology"
 
 ---
 

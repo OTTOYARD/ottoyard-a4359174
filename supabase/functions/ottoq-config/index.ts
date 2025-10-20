@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
       .single();
 
     const config = {
-      branding: 'Powered by OTTOQ Technology',
+      branding: 'Powered by OTTO-Q Technology',
       cities: cities?.map((city) => ({
         id: city.id,
         name: city.name,
