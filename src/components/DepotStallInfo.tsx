@@ -165,7 +165,7 @@ export const DepotStallInfo = ({ depotId }: DepotStallInfoProps) => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pb-3">
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {resources.map((resource) => (
                       <div
                         key={`${resource.type}-${resource.index}`}
@@ -177,15 +177,15 @@ export const DepotStallInfo = ({ depotId }: DepotStallInfoProps) => {
                             : ""
                         }`}
                       >
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="font-medium">
+                        <div className="flex items-center justify-between gap-1 mb-1">
+                          <span className="font-medium truncate flex-1">
                             {resource.type === "CHARGE_STALL"
                               ? `Stall ${resource.index}`
                               : resource.type === "MAINTENANCE_BAY"
                               ? `Bay ${resource.index}`
                               : `Stall ${resource.index}`}
                           </span>
-                          {getResourceIcon(resource.type)}
+                          <span className="flex-shrink-0">{getResourceIcon(resource.type)}</span>
                         </div>
                         <div className="text-[10px]">
                           {resource.status === "AVAILABLE" ? (
