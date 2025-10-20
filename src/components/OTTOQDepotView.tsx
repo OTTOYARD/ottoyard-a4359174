@@ -327,7 +327,7 @@ export const OTTOQDepotView = ({ selectedCityName }: OTTOQDepotViewProps) => {
 
                 <ScrollArea className="h-[500px]">
                   <div className="space-y-4 pr-4">
-                    <Accordion type="multiple" defaultValue={["CHARGE_STALL", "CLEAN_DETAIL_STALL", "MAINTENANCE_BAY"]} className="space-y-4">
+                    <Accordion type="multiple" className="space-y-4">
                       {Object.entries(groupResourcesByType(depotResources.resources)).map(
                         ([type, resources]) => {
                           const isExpanded = expandedCategories[type];
