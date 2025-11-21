@@ -5,12 +5,14 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
-import { Battery, Zap, Wrench, MapPin, Activity, RefreshCw, Car, Calendar, Heart } from "lucide-react";
+import { Battery, Zap, Wrench, MapPin, Activity, RefreshCw, Car, Calendar, Heart, Download } from "lucide-react";
 import { toast } from "sonner";
 import { OTTOQScheduleDialog } from "./OTTOQScheduleDialog";
 import { VehicleHealthCard } from "./VehicleHealthCard";
 import { useVehicleHealth } from "@/hooks/useVehicleHealth";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 interface Vehicle {
   id: string;
@@ -263,6 +265,140 @@ export const OTTOQFleetView = ({ selectedCityName }: OTTOQFleetViewProps) => {
     await fetchHealthScore(vehicle.id);
   };
 
+  const handleExportHealthReport = () => {
+    if (!healthData?.health_score || !selectedVehicle) return;
+
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    
+    // Header
+    doc.setFontSize(20);
+    doc.setTextColor(40, 40, 40);
+    doc.text("OTTO-Q Vehicle Health Report", pageWidth / 2, 20, { align: "center" });
+    
+    // Vehicle Info
+    doc.setFontSize(12);
+    doc.setTextColor(100, 100, 100);
+    const vehicleInfo = `Vehicle: ${selectedVehicle.external_ref || selectedVehicle.id.slice(0, 8)} | ${selectedVehicle.oem || "Unknown OEM"}`;
+    doc.text(vehicleInfo, pageWidth / 2, 30, { align: "center" });
+    doc.text(`Report Date: ${new Date().toLocaleDateString()}`, pageWidth / 2, 37, { align: "center" });
+    
+    // Overall Health Score
+    doc.setFontSize(16);
+    doc.setTextColor(40, 40, 40);
+    doc.text("Overall Health Score", 14, 50);
+    
+    doc.setFontSize(32);
+    const scoreColor = healthData.health_score.overall_score >= 90 ? [34, 197, 94] :
+                       healthData.health_score.overall_score >= 75 ? [34, 197, 94] :
+                       healthData.health_score.overall_score >= 60 ? [234, 179, 8] : [239, 68, 68];
+    doc.setTextColor(scoreColor[0], scoreColor[1], scoreColor[2]);
+    doc.text(`${healthData.health_score.overall_score}`, 14, 65);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Status: ${healthData.health_score.status.toUpperCase()}`, 14, 72);
+    
+    // Active Alerts Section
+    let yPosition = 85;
+    if (healthData.health_score.alerts.length > 0) {
+      doc.setFontSize(14);
+      doc.setTextColor(40, 40, 40);
+      doc.text("Active Alerts", 14, yPosition);
+      yPosition += 7;
+      
+      const alertsData = healthData.health_score.alerts.map(alert => [
+        alert.component,
+        alert.severity.toUpperCase(),
+        alert.message
+      ]);
+      
+      autoTable(doc, {
+        startY: yPosition,
+        head: [["Component", "Severity", "Message"]],
+        body: alertsData,
+        theme: "striped",
+        headStyles: { fillColor: [239, 68, 68] },
+        styles: { fontSize: 9 },
+        columnStyles: {
+          0: { cellWidth: 40 },
+          1: { cellWidth: 25 },
+          2: { cellWidth: 'auto' }
+        }
+      });
+      
+      yPosition = (doc as any).lastAutoTable.finalY + 10;
+    }
+    
+    // Component Health Section
+    doc.setFontSize(14);
+    doc.setTextColor(40, 40, 40);
+    doc.text("Component Health Details", 14, yPosition);
+    yPosition += 7;
+    
+    const componentsData = healthData.health_score.components.map(comp => [
+      comp.component,
+      `${comp.score}%`,
+      comp.status.toUpperCase(),
+      comp.trend.toUpperCase(),
+      comp.next_service_km ? `${comp.next_service_km.toLocaleString()} km` : "N/A"
+    ]);
+    
+    autoTable(doc, {
+      startY: yPosition,
+      head: [["Component", "Score", "Status", "Trend", "Next Service"]],
+      body: componentsData,
+      theme: "striped",
+      headStyles: { fillColor: [59, 130, 246] },
+      styles: { fontSize: 9 }
+    });
+    
+    yPosition = (doc as any).lastAutoTable.finalY + 10;
+    
+    // Cost Projections Section
+    if (healthData.cost_projections && yPosition < 250) {
+      doc.setFontSize(14);
+      doc.setTextColor(40, 40, 40);
+      doc.text("Cost Projections", 14, yPosition);
+      yPosition += 7;
+      
+      doc.setFontSize(11);
+      doc.setTextColor(60, 60, 60);
+      doc.text(`Total Estimated Cost: $${healthData.cost_projections.total_estimated_cost}`, 14, yPosition);
+      yPosition += 7;
+      
+      if (healthData.cost_projections.breakdown) {
+        const breakdownData = Object.entries(healthData.cost_projections.breakdown).map(([key, value]) => [
+          key,
+          `$${value}`
+        ]);
+        
+        autoTable(doc, {
+          startY: yPosition,
+          head: [["Item", "Cost"]],
+          body: breakdownData,
+          theme: "plain",
+          styles: { fontSize: 9 },
+          columnStyles: {
+            0: { cellWidth: 100 },
+            1: { cellWidth: 'auto', halign: 'right' }
+          }
+        });
+      }
+    }
+    
+    // Footer
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text("Generated by OTTO-Q Fleet Management System", pageWidth / 2, 285, { align: "center" });
+    
+    // Save the PDF
+    const fileName = `health-report-${selectedVehicle.external_ref || selectedVehicle.id.slice(0, 8)}-${new Date().toISOString().split('T')[0]}.pdf`;
+    doc.save(fileName);
+    
+    toast.success("Health report exported successfully");
+  };
+
   const currentCity = cities.find(c => c.id === selectedCity);
 
   return (
@@ -445,9 +581,21 @@ export const OTTOQFleetView = ({ selectedCityName }: OTTOQFleetViewProps) => {
         <Dialog open={healthDialogOpen} onOpenChange={setHealthDialogOpen}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>
-                Vehicle Health Analysis - {selectedVehicle?.external_ref || selectedVehicle?.id.slice(0, 8)}
-              </DialogTitle>
+              <div className="flex items-center justify-between">
+                <DialogTitle>
+                  Vehicle Health Analysis - {selectedVehicle?.external_ref || selectedVehicle?.id.slice(0, 8)}
+                </DialogTitle>
+                {healthData?.health_score && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleExportHealthReport}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Export PDF
+                  </Button>
+                )}
+              </div>
             </DialogHeader>
             {healthLoading ? (
               <div className="flex items-center justify-center py-12">
