@@ -443,13 +443,13 @@ export const OTTOQFleetView = ({ selectedCityName }: OTTOQFleetViewProps) => {
 
         {/* Health Score Dialog */}
         <Dialog open={healthDialogOpen} onOpenChange={setHealthDialogOpen}>
-          <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
-            <DialogHeader>
+          <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
+            <DialogHeader className="flex-shrink-0">
               <DialogTitle>
                 Vehicle Health Analysis - {selectedVehicle?.external_ref || selectedVehicle?.id.slice(0, 8)}
               </DialogTitle>
             </DialogHeader>
-            <ScrollArea className="flex-1 pr-4">
+            <ScrollArea className="flex-1 max-h-[calc(85vh-8rem)] pr-4">
               {healthLoading ? (
                 <div className="flex items-center justify-center py-12">
                   <RefreshCw className="w-8 h-8 animate-spin text-primary" />
