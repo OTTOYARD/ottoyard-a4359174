@@ -12,7 +12,6 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import FleetMap from "@/components/FleetMap";
 import MapboxMap from "@/components/MapboxMap";
 import CitySearchBar, { City } from "@/components/CitySearchBar";
-import SettingsDialog from "@/components/SettingsDialog";
 import VehicleCard from "@/components/VehicleCard";
 import DepotCard from "@/components/DepotCard";
 import MetricsCard from "@/components/MetricsCard";
@@ -405,13 +404,11 @@ const Index = () => {
               </div>
             </div>
             <div className="flex flex-col items-end space-y-2 flex-shrink-0">
-              {/* Top Row: Settings + Cart */}
+              {/* Top Row: Profile + Cart */}
               <div className="flex items-center space-x-2">
-                <SettingsDialog>
-                  <Button variant="outline" size="sm">
-                    <Settings className="h-4 w-4" />
-                  </Button>
-                </SettingsDialog>
+                <Button variant="outline" size="sm" onClick={() => navigate("/profile")}>
+                  <Settings className="h-4 w-4" />
+                </Button>
                 <CartButton cartItems={cartItems} onRemoveItem={handleRemoveFromCart} onCheckout={handleCheckout} />
               </div>
               

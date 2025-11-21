@@ -480,28 +480,37 @@ export type Database = {
       }
       profiles: {
         Row: {
+          company_name: string | null
           created_at: string
           full_name: string | null
           id: string
           phone: string | null
+          preferences: Json | null
           updated_at: string
           user_id: string
+          username: string | null
         }
         Insert: {
+          company_name?: string | null
           created_at?: string
           full_name?: string | null
           id?: string
           phone?: string | null
+          preferences?: Json | null
           updated_at?: string
           user_id: string
+          username?: string | null
         }
         Update: {
+          company_name?: string | null
           created_at?: string
           full_name?: string | null
           id?: string
           phone?: string | null
+          preferences?: Json | null
           updated_at?: string
           user_id?: string
+          username?: string | null
         }
         Relationships: []
       }
@@ -563,6 +572,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
       }
       vehicles: {
         Row: {
@@ -688,8 +718,16 @@ export type Database = {
           vin: string
         }[]
       }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
+      app_role: "admin" | "moderator" | "user"
       ottoq_entity_type:
         | "VEHICLE"
         | "DEPOT"
@@ -847,6 +885,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "moderator", "user"],
       ottoq_entity_type: [
         "VEHICLE",
         "DEPOT",
