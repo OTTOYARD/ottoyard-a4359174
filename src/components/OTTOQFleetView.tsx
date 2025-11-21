@@ -5,9 +5,12 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
-import { Battery, Zap, Wrench, MapPin, Activity, RefreshCw, Car, Calendar } from "lucide-react";
+import { Battery, Zap, Wrench, MapPin, Activity, RefreshCw, Car, Calendar, Heart } from "lucide-react";
 import { toast } from "sonner";
 import { OTTOQScheduleDialog } from "./OTTOQScheduleDialog";
+import { VehicleHealthCard } from "./VehicleHealthCard";
+import { useVehicleHealth } from "@/hooks/useVehicleHealth";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface Vehicle {
   id: string;
@@ -57,7 +60,9 @@ export const OTTOQFleetView = ({ selectedCityName }: OTTOQFleetViewProps) => {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
+  const [healthDialogOpen, setHealthDialogOpen] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const { loading: healthLoading, healthData, fetchHealthScore } = useVehicleHealth();
 
   useEffect(() => {
     fetchCities();
@@ -252,6 +257,12 @@ export const OTTOQFleetView = ({ selectedCityName }: OTTOQFleetViewProps) => {
     }
   };
 
+  const handleHealthClick = async (vehicle: Vehicle) => {
+    setSelectedVehicle(vehicle);
+    setHealthDialogOpen(true);
+    await fetchHealthScore(vehicle.id);
+  };
+
   const currentCity = cities.find(c => c.id === selectedCity);
 
   return (
@@ -393,16 +404,25 @@ export const OTTOQFleetView = ({ selectedCityName }: OTTOQFleetViewProps) => {
                           </div>
                         </div>
 
-                        {/* Schedule Button */}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full mt-3"
-                          onClick={() => handleScheduleClick(vehicle)}
-                        >
-                          <Calendar className="w-4 h-4 mr-2" />
-                          Schedule Service
-                        </Button>
+                        {/* Action Buttons */}
+                        <div className="grid grid-cols-2 gap-2 mt-3">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleHealthClick(vehicle)}
+                          >
+                            <Heart className="w-4 h-4 mr-2" />
+                            Health
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleScheduleClick(vehicle)}
+                          >
+                            <Calendar className="w-4 h-4 mr-2" />
+                            Schedule
+                          </Button>
+                        </div>
                       </CardContent>
                     </Card>
                   ))}
@@ -420,6 +440,58 @@ export const OTTOQFleetView = ({ selectedCityName }: OTTOQFleetViewProps) => {
           cityId={selectedCity}
           onSuccess={handleScheduleSuccess}
         />
+
+        {/* Health Score Dialog */}
+        <Dialog open={healthDialogOpen} onOpenChange={setHealthDialogOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>
+                Vehicle Health Analysis - {selectedVehicle?.external_ref || selectedVehicle?.id.slice(0, 8)}
+              </DialogTitle>
+            </DialogHeader>
+            {healthLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <RefreshCw className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : healthData?.health_score ? (
+              <div className="space-y-4">
+                <VehicleHealthCard
+                  overallScore={healthData.health_score.overall_score}
+                  status={healthData.health_score.status}
+                  components={healthData.health_score.components}
+                  alerts={healthData.health_score.alerts}
+                />
+                
+                {/* Cost Projections */}
+                {healthData.cost_projections && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Cost Projections</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Total Estimated Cost:</span>
+                        <span className="font-medium">${healthData.cost_projections.total_estimated_cost}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Preventive Maintenance:</span>
+                        <span className="font-medium">${healthData.cost_projections.preventive_maintenance_cost}</span>
+                      </div>
+                      <div className="flex justify-between text-success">
+                        <span>Potential Savings:</span>
+                        <span className="font-medium">${healthData.cost_projections.potential_savings}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-8">
+                No health data available
+              </p>
+            )}
+          </DialogContent>
+        </Dialog>
     </div>
   );
 };
