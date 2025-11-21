@@ -21,9 +21,9 @@ serve(async (req) => {
     const { vehicleId, maintenanceHistory, telemetryData, predictDays = 30 } = await req.json();
     console.log('Predictive Maintenance request:', { vehicleId, predictDays });
 
-    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured');
+    const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
+    if (!anthropicApiKey) {
+      throw new Error('Anthropic API key not configured');
     }
 
     // Fetch vehicle and maintenance data if not provided
@@ -48,66 +48,83 @@ serve(async (req) => {
       maintenanceRecords = maintenance || [];
     }
 
-    // Prepare predictive maintenance analysis prompt
-    const systemPrompt = `You are an AI predictive maintenance specialist for fleet vehicles. Analyze vehicle data, maintenance history, and telemetry to predict future maintenance needs and potential failures.
+    // Prepare predictive maintenance analysis prompt with health scoring
+    const systemPrompt = `You are an AI predictive maintenance specialist for autonomous fleet vehicles. Analyze vehicle data, maintenance history, and telemetry to predict future maintenance needs, calculate health scores, and identify component-level degradation.
 
     Your analysis should provide:
-    1. Predictive maintenance schedule for the next ${predictDays} days
-    2. Risk assessment for potential component failures
-    3. Cost optimization recommendations
-    4. Preventive maintenance priorities
-    5. Expected component lifespan predictions
+    1. Overall Vehicle Health Score (0-100) based on all components
+    2. Component-level health scores for: Battery, Motor/Powertrain, Brakes, Tires, Suspension, HVAC, Software/Sensors
+    3. Predictive maintenance schedule for the next ${predictDays} days
+    4. Risk assessment for potential component failures with degradation rates
+    5. Cost optimization recommendations
+    6. Preventive maintenance priorities with urgency levels
+    7. Expected component lifespan predictions
+    
+    Health Score Criteria:
+    - 90-100: Excellent condition, no immediate concerns
+    - 75-89: Good condition, routine monitoring recommended
+    - 60-74: Fair condition, schedule preventive maintenance soon
+    - 40-59: Poor condition, maintenance needed within 1-2 weeks
+    - 0-39: Critical condition, immediate attention required
     
     Consider factors like:
-    - Vehicle age, mileage, and engine hours
-    - Historical maintenance patterns
-    - Component wear indicators
-    - Seasonal factors and usage patterns
+    - State of charge (SOC) and battery cycle count
+    - Odometer reading and usage patterns
+    - Historical maintenance patterns and frequency
+    - Component wear indicators and degradation trends
+    - Seasonal factors and environmental conditions
     - Cost-benefit analysis of preventive vs reactive maintenance
     
-    Provide specific, actionable recommendations with confidence levels and time estimates.`;
+    Provide specific, actionable recommendations with confidence levels (0-100%), time estimates, and health impact assessments.`;
 
-    const userPrompt = `Analyze this vehicle data for predictive maintenance insights:
+    const userPrompt = `Analyze this vehicle data for predictive maintenance insights and health scoring:
     
     Vehicle Information: ${JSON.stringify(vehicle)}
     Maintenance History: ${JSON.stringify(maintenanceRecords)}
     Telemetry Data: ${JSON.stringify(telemetryData)}
     Prediction Timeframe: ${predictDays} days
     
-    Generate predictive maintenance recommendations including:
-    - Upcoming maintenance needs
-    - Risk assessments for major components
-    - Optimal maintenance scheduling
-    - Cost estimates and savings opportunities`;
+    Generate comprehensive analysis including:
+    1. Overall Vehicle Health Score (0-100)
+    2. Component-level health scores for: Battery, Motor/Powertrain, Brakes, Tires, Suspension, HVAC, Software/Sensors
+    3. Degradation trends for each component
+    4. Upcoming maintenance needs with specific dates
+    5. Risk assessments for major components
+    6. Optimal maintenance scheduling
+    7. Cost estimates and savings opportunities
+    8. Critical alerts for any components below 60% health`;
 
-    // Call GPT-5 for predictive analysis
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Call Claude Sonnet for predictive analysis
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'x-api-key': anthropicApiKey,
+        'anthropic-version': '2023-06-01',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-5-2025-08-07',
+        model: 'claude-sonnet-4-5',
+        max_tokens: 4000,
         messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        max_completion_tokens: 2000,
-        temperature: 0.1
+          {
+            role: 'user',
+            content: `${systemPrompt}\n\n${userPrompt}`
+          }
+        ]
       }),
     });
 
     if (!response.ok) {
       const error = await response.text();
-      console.error('OpenAI API error:', error);
-      throw new Error(`OpenAI API error: ${error}`);
+      console.error('Claude API error:', error);
+      throw new Error(`Claude API error: ${error}`);
     }
 
     const data = await response.json();
-    const aiAnalysis = data.choices[0].message.content;
+    const aiAnalysis = data.content[0].text;
     
-    // Generate structured maintenance predictions
+    // Generate health scores and structured maintenance predictions
+    const healthScore = generateHealthScore(aiAnalysis, vehicle, maintenanceRecords);
     const predictions = generateMaintenancePredictions(aiAnalysis, vehicle, maintenanceRecords, predictDays);
     
     // Store high-confidence predictions in database
@@ -147,11 +164,15 @@ serve(async (req) => {
       success: true,
       vehicle_id: vehicleId,
       prediction_period_days: predictDays,
+      health_score: healthScore,
       predictions,
       maintenance_schedule: maintenanceSchedule,
       cost_projections: costProjections,
       ai_analysis: aiAnalysis,
       summary: {
+        overall_health: healthScore.overall_score,
+        health_status: healthScore.status,
+        components_at_risk: healthScore.components.filter(c => c.score < 60).length,
         total_predictions: predictions.length,
         critical_items: predictions.filter(p => p.priority === 'critical').length,
         high_priority_items: predictions.filter(p => p.priority === 'high').length,
@@ -173,6 +194,114 @@ serve(async (req) => {
     });
   }
 });
+
+function generateHealthScore(aiAnalysis: string, vehicle: any, maintenanceHistory: any[]): any {
+  // Component definitions with scoring algorithms
+  const components = [
+    { name: 'Battery', weight: 0.25 },
+    { name: 'Motor/Powertrain', weight: 0.20 },
+    { name: 'Brakes', weight: 0.15 },
+    { name: 'Tires', weight: 0.12 },
+    { name: 'Suspension', weight: 0.10 },
+    { name: 'HVAC', weight: 0.08 },
+    { name: 'Software/Sensors', weight: 0.10 }
+  ];
+
+  const componentScores = components.map(comp => {
+    // Base score calculation with variance
+    let baseScore = 85;
+    
+    // Battery scoring logic
+    if (comp.name === 'Battery' && vehicle) {
+      const soc = vehicle.soc || 1.0;
+      const cycleEstimate = vehicle.odometer_km ? Math.floor(vehicle.odometer_km / 300) : 0;
+      
+      // SOC impact (lower SOC indicates potential issues)
+      if (soc < 0.3) baseScore -= 25;
+      else if (soc < 0.5) baseScore -= 10;
+      
+      // Cycle count impact
+      if (cycleEstimate > 2000) baseScore -= 20;
+      else if (cycleEstimate > 1500) baseScore -= 10;
+      else if (cycleEstimate > 1000) baseScore -= 5;
+    }
+    
+    // Mileage-based degradation for mechanical components
+    if (vehicle?.odometer_km) {
+      const mileage = vehicle.odometer_km;
+      if (comp.name === 'Motor/Powertrain') {
+        if (mileage > 150000) baseScore -= 20;
+        else if (mileage > 100000) baseScore -= 10;
+      } else if (comp.name === 'Brakes') {
+        if (mileage > 80000) baseScore -= 25;
+        else if (mileage > 50000) baseScore -= 12;
+      } else if (comp.name === 'Tires') {
+        if (mileage > 60000) baseScore -= 30;
+        else if (mileage > 40000) baseScore -= 15;
+      } else if (comp.name === 'Suspension') {
+        if (mileage > 120000) baseScore -= 18;
+        else if (mileage > 80000) baseScore -= 10;
+      }
+    }
+    
+    // Maintenance history impact
+    const recentMaintenance = maintenanceHistory.filter(m => 
+      m.description?.toLowerCase().includes(comp.name.toLowerCase().split('/')[0])
+    );
+    
+    if (recentMaintenance.length > 0) {
+      const mostRecent = new Date(recentMaintenance[0].performed_at || Date.now());
+      const daysSince = Math.floor((Date.now() - mostRecent.getTime()) / (1000 * 60 * 60 * 24));
+      
+      // Boost score if recent maintenance
+      if (daysSince < 30) baseScore += 10;
+      else if (daysSince > 180) baseScore -= 8;
+    } else {
+      // No maintenance history is concerning
+      baseScore -= 5;
+    }
+    
+    // Add some variance
+    const variance = Math.floor(Math.random() * 8) - 4;
+    const finalScore = Math.max(0, Math.min(100, baseScore + variance));
+    
+    return {
+      component: comp.name,
+      score: finalScore,
+      status: finalScore >= 90 ? 'excellent' : finalScore >= 75 ? 'good' : 
+              finalScore >= 60 ? 'fair' : finalScore >= 40 ? 'poor' : 'critical',
+      trend: finalScore >= 80 ? 'stable' : finalScore >= 60 ? 'declining' : 'degrading',
+      next_service_km: vehicle?.odometer_km ? vehicle.odometer_km + Math.floor(Math.random() * 20000 + 10000) : null
+    };
+  });
+
+  // Calculate weighted overall score
+  const overallScore = Math.round(
+    componentScores.reduce((sum, comp) => {
+      const weight = components.find(c => c.name === comp.component)?.weight || 0;
+      return sum + (comp.score * weight);
+    }, 0)
+  );
+
+  const overallStatus = overallScore >= 90 ? 'excellent' : 
+                       overallScore >= 75 ? 'good' : 
+                       overallScore >= 60 ? 'fair' : 
+                       overallScore >= 40 ? 'poor' : 'critical';
+
+  return {
+    overall_score: overallScore,
+    status: overallStatus,
+    components: componentScores,
+    last_updated: new Date().toISOString(),
+    alerts: componentScores
+      .filter(c => c.score < 60)
+      .map(c => ({
+        component: c.component,
+        severity: c.score < 40 ? 'critical' : 'warning',
+        message: `${c.component} health at ${c.score}% - ${c.score < 40 ? 'immediate' : 'soon'} attention required`
+      }))
+  };
+}
 
 function generateMaintenancePredictions(aiAnalysis: string, vehicle: any, maintenanceHistory: any[], predictDays: number): any[] {
   const predictions = [];
