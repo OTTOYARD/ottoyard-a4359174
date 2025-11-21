@@ -443,58 +443,56 @@ export const OTTOQFleetView = ({ selectedCityName }: OTTOQFleetViewProps) => {
 
         {/* Health Score Dialog */}
         <Dialog open={healthDialogOpen} onOpenChange={setHealthDialogOpen}>
-          <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
-            <DialogHeader className="flex-shrink-0">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
               <DialogTitle>
                 Vehicle Health Analysis - {selectedVehicle?.external_ref || selectedVehicle?.id.slice(0, 8)}
               </DialogTitle>
             </DialogHeader>
-            <ScrollArea className="flex-1 max-h-[calc(85vh-8rem)] pr-4">
-              {healthLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <RefreshCw className="w-8 h-8 animate-spin text-primary" />
-                </div>
-              ) : healthData?.health_score ? (
-                <div className="space-y-4">
-                  <VehicleHealthCard
-                    overallScore={healthData.health_score.overall_score}
-                    status={healthData.health_score.status}
-                    components={healthData.health_score.components}
-                    alerts={healthData.health_score.alerts}
-                  />
-                  
-                  {/* Cost Projections */}
-                  {healthData.cost_projections && (
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-base">Cost Projections</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Total Estimated Cost:</span>
-                          <span className="font-medium">${healthData.cost_projections.total_estimated_cost}</span>
+            {healthLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <RefreshCw className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : healthData?.health_score ? (
+              <div className="space-y-4 pb-4">
+                <VehicleHealthCard
+                  overallScore={healthData.health_score.overall_score}
+                  status={healthData.health_score.status}
+                  components={healthData.health_score.components}
+                  alerts={healthData.health_score.alerts}
+                />
+                
+                {/* Cost Projections */}
+                {healthData.cost_projections && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Cost Projections</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Total Estimated Cost:</span>
+                        <span className="font-medium">${healthData.cost_projections.total_estimated_cost}</span>
+                      </div>
+                      {healthData.cost_projections.breakdown && (
+                        <div className="space-y-1 mt-3">
+                          <p className="text-xs text-muted-foreground font-medium">Breakdown:</p>
+                          {Object.entries(healthData.cost_projections.breakdown).map(([key, value]) => (
+                            <div key={key} className="flex justify-between text-xs pl-3">
+                              <span className="text-muted-foreground">{key}:</span>
+                              <span>${value as number}</span>
+                            </div>
+                          ))}
                         </div>
-                        {healthData.cost_projections.breakdown && (
-                          <div className="space-y-1 mt-3">
-                            <p className="text-xs text-muted-foreground font-medium">Breakdown:</p>
-                            {Object.entries(healthData.cost_projections.breakdown).map(([key, value]) => (
-                              <div key={key} className="flex justify-between text-xs pl-3">
-                                <span className="text-muted-foreground">{key}:</span>
-                                <span>${value as number}</span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  )}
-                </div>
-              ) : (
-                <p className="text-center text-muted-foreground py-8">
-                  No health data available
-                </p>
-              )}
-            </ScrollArea>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-8">
+                No health data available
+              </p>
+            )}
           </DialogContent>
         </Dialog>
     </div>
