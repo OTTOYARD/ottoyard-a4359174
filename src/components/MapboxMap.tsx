@@ -67,7 +67,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
 
     // Add vehicle markers - show all vehicles for the city
     vehicles.forEach((vehicle) => {
-      const markerColor = getStatusColor(vehicle.status);
+      const markerColor = getVehicleHealthColor(vehicle.battery, vehicle.status);
       
       // Create custom marker element
       const markerEl = document.createElement('div');
@@ -78,9 +78,9 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
         border-radius: 50%;
         background-color: ${markerColor};
         border: 3px solid white;
-        box-shadow: 0 3px 12px rgba(0,0,0,0.5), 0 0 20px ${markerColor}80;
+        box-shadow: 0 3px 12px rgba(0,0,0,0.5), 0 0 20px ${markerColor}cc;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: box-shadow 0.2s, filter 0.2s;
         pointer-events: auto;
         z-index: 10;
       `;
@@ -111,7 +111,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
       `);
 
       // Add hover preview popup with improved timing
-      const baseShadow = `0 3px 12px rgba(0,0,0,0.5), 0 0 20px ${markerColor}80`;
+      const baseShadow = `0 3px 12px rgba(0,0,0,0.5), 0 0 20px ${markerColor}cc`;
       let showTimeout: NodeJS.Timeout | null = null;
       let hideTimeout: NodeJS.Timeout | null = null;
 
@@ -151,13 +151,13 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
       };
 
       markerEl.addEventListener('mouseenter', () => {
-        markerEl.style.boxShadow = `0 5px 16px rgba(0,0,0,0.6), 0 0 30px ${markerColor}`;
-        markerEl.style.transform = 'scale(1.15)';
+        markerEl.style.boxShadow = `0 5px 20px rgba(0,0,0,0.7), 0 0 40px ${markerColor}`;
+        markerEl.style.filter = 'brightness(1.2)';
         showPopup();
       });
       markerEl.addEventListener('mouseleave', () => {
         markerEl.style.boxShadow = baseShadow;
-        markerEl.style.transform = 'scale(1)';
+        markerEl.style.filter = 'brightness(1)';
         hidePopup();
       });
 
@@ -275,13 +275,13 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
       };
 
       markerEl.addEventListener('mouseenter', () => {
-        markerEl.style.boxShadow = '0 5px 16px rgba(0,0,0,0.6), 0 0 30px rgba(239, 68, 68, 0.8)';
-        markerEl.style.transform = 'scale(1.15)';
+        markerEl.style.boxShadow = '0 5px 20px rgba(0,0,0,0.7), 0 0 40px rgba(239, 68, 68, 1)';
+        markerEl.style.filter = 'brightness(1.2)';
         showDepotPopup();
       });
       markerEl.addEventListener('mouseleave', () => {
         markerEl.style.boxShadow = depotBaseShadow;
-        markerEl.style.transform = 'scale(1)';
+        markerEl.style.filter = 'brightness(1)';
         hideDepotPopup();
       });
 
@@ -296,6 +296,26 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
         .setLngLat([depot.location.lng, depot.location.lat])
         .addTo(map.current!);
     });
+  };
+
+  const getVehicleHealthColor = (battery: number, status: string): string => {
+    // Health-based bright colors matching the vehicle health card system
+    if (status === 'maintenance' || status === 'in_service') {
+      return '#ff3b30'; // Bright red for maintenance/critical
+    }
+    if (battery >= 80) {
+      return '#34c759'; // Bright green for excellent health
+    }
+    if (battery >= 60) {
+      return '#30d158'; // Bright lime green for good health
+    }
+    if (battery >= 40) {
+      return '#ffd60a'; // Bright yellow for fair health
+    }
+    if (battery >= 20) {
+      return '#ff9f0a'; // Bright orange for poor health
+    }
+    return '#ff3b30'; // Bright red for critical
   };
 
   const getStatusColor = (status: string): string => {
