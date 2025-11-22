@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import ottoyardLogo from "@/assets/ottoyard-logo.png";
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -158,12 +159,13 @@ export default function Auth() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
         <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="text-2xl">Reset Password</CardTitle>
-            <CardDescription>
-              Enter your email to receive a password reset link
-            </CardDescription>
-          </CardHeader>
+        <CardHeader className="flex flex-col items-center text-center">
+          <img src={ottoyardLogo} alt="OTTOYARD" className="w-32 h-32 mb-4" />
+          <CardTitle className="text-2xl">Reset Password</CardTitle>
+          <CardDescription>
+            Enter your email to receive a password reset link
+          </CardDescription>
+        </CardHeader>
           <CardContent>
             <form onSubmit={handleForgotPassword} className="space-y-4">
               <div className="space-y-2">
@@ -202,8 +204,9 @@ export default function Auth() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
       <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl">OTTOYARD Fleet Command Dashboard</CardTitle>
+        <CardHeader className="flex flex-col items-center text-center">
+          <img src={ottoyardLogo} alt="OTTOYARD" className="w-32 h-32 mb-4" />
+          <CardTitle className="text-2xl">Fleet Command Dashboard</CardTitle>
           <CardDescription>
             Sign in to manage your fleet operations
           </CardDescription>
