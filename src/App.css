@@ -40,3 +40,13 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Mapbox popup z-index overrides */
+.mapboxgl-popup {
+  z-index: 1000 !important;
+}
+
+.vehicle-preview-popup,
+.depot-preview-popup {
+  z-index: 1000 !important;
+}
