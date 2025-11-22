@@ -82,7 +82,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
         cursor: pointer;
         transition: box-shadow 0.2s, filter 0.2s;
         pointer-events: auto;
-        z-index: 10;
+        position: relative;
       `;
 
       // Create popup content
@@ -196,7 +196,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
         justify-content: center;
         transition: all 0.2s;
         pointer-events: auto;
-        z-index: 10;
+        position: relative;
       `;
 
       // Add inner square
