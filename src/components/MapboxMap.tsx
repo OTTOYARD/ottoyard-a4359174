@@ -92,7 +92,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
         closeOnClick: false,
         className: 'vehicle-preview-popup'
       }).setHTML(`
-        <div class="p-4 bg-card text-card-foreground rounded-lg border shadow-lg min-w-52">
+        <div class="p-4 bg-card text-card-foreground rounded-lg border shadow-lg min-w-52" style="position: relative; z-index: 1000;">
           <div class="flex items-center justify-between mb-2">
             <h3 class="font-semibold text-sm text-foreground">${vehicle.name}</h3>
             <span class="px-2 py-1 text-xs rounded-full ${vehicle.status === 'active' ? 'bg-success/20 text-success' : vehicle.status === 'charging' ? 'bg-warning/20 text-warning' : 'bg-destructive/20 text-destructive'}">${vehicle.status}</span>
@@ -216,7 +216,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
         closeOnClick: false,
         className: 'depot-preview-popup'
       }).setHTML(`
-        <div class="p-4 bg-card text-card-foreground rounded-lg border shadow-lg min-w-52">
+        <div class="p-4 bg-card text-card-foreground rounded-lg border shadow-lg min-w-52" style="position: relative; z-index: 1000;">
           <div class="flex items-center justify-between mb-2">
             <h3 class="font-semibold text-sm text-foreground">${depot.name}</h3>
             <span class="px-2 py-1 text-xs rounded-full bg-primary/20 text-primary">Depot</span>
