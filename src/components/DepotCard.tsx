@@ -49,7 +49,7 @@ const DepotCard = ({ depot, compact = false }: DepotCardProps) => {
 
   if (compact) {
     return (
-      <div className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/50 transition-colors">
+      <div className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/50 transition-colors select-none">
         <div className="flex items-center space-x-3">
           <div className="flex items-center space-x-2">
             <Zap className="h-4 w-4 text-energy-grid" />
@@ -72,7 +72,7 @@ const DepotCard = ({ depot, compact = false }: DepotCardProps) => {
   }
 
   return (
-    <Card className="shadow-fleet-md hover:shadow-fleet-lg transition-shadow duration-200">
+    <Card className="shadow-fleet-md hover:shadow-fleet-lg transition-shadow duration-200 select-none">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center">
