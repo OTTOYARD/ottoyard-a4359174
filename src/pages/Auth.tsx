@@ -203,39 +203,41 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="flex flex-col items-center text-center">
-          <img src={ottoyardLogo} alt="OTTOYARD" className="w-44 h-44 mb-0" />
-          <CardTitle className="text-2xl">Fleet Command Dashboard</CardTitle>
-          <CardDescription>
+      <Card className="w-full max-w-sm">
+        <CardHeader className="flex flex-col items-center text-center pb-4">
+          <img src={ottoyardLogo} alt="OTTOYARD" className="w-32 h-32 mb-0" />
+          <CardTitle className="text-xl">Fleet Command Dashboard</CardTitle>
+          <CardDescription className="text-sm">
             Sign in to manage your fleet operations
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-4 pb-4">
           <Tabs value={isSignUp ? "signup" : "signin"} onValueChange={(v) => setIsSignUp(v === "signup")}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="signin">Sign In</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 h-9">
+              <TabsTrigger value="signin" className="text-sm">Sign In</TabsTrigger>
+              <TabsTrigger value="signup" className="text-sm">Sign Up</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="signin">
-              <form onSubmit={handleEmailAuth} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signin-email">Email</Label>
+            <TabsContent value="signin" className="space-y-3 mt-3">
+              <form onSubmit={handleEmailAuth} className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="signin-email" className="text-sm">Email</Label>
                   <Input
                     id="signin-email"
                     name="email"
                     type="email"
                     placeholder="you@example.com"
+                    className="h-9 text-sm"
                     required
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signin-password">Password</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="signin-password" className="text-sm">Password</Label>
                   <Input
                     id="signin-password"
                     name="password"
                     type="password"
+                    className="h-9 text-sm"
                     required
                   />
                 </div>
@@ -245,20 +247,20 @@ export default function Auth() {
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                    className="h-3.5 w-3.5 rounded border-border text-primary focus:ring-primary"
                   />
-                  <Label htmlFor="remember-me" className="text-sm font-normal cursor-pointer">
+                  <Label htmlFor="remember-me" className="text-xs font-normal cursor-pointer">
                     Remember me
                   </Label>
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                <Button type="submit" className="w-full h-9 text-sm" disabled={loading}>
+                  {loading ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : null}
                   Sign In
                 </Button>
                 <Button
                   type="button"
                   variant="link"
-                  className="w-full text-sm"
+                  className="w-full text-xs h-auto py-1"
                   onClick={() => setShowForgotPassword(true)}
                 >
                   Forgot password?
@@ -266,65 +268,70 @@ export default function Auth() {
               </form>
             </TabsContent>
 
-            <TabsContent value="signup">
-              <form onSubmit={handleEmailAuth} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signup-name">Full Name</Label>
+            <TabsContent value="signup" className="space-y-3 mt-3">
+              <form onSubmit={handleEmailAuth} className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="signup-name" className="text-sm">Full Name</Label>
                   <Input
                     id="signup-name"
                     name="fullName"
                     type="text"
                     placeholder="John Doe"
+                    className="h-9 text-sm"
                     required
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-username">Username</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="signup-username" className="text-sm">Username</Label>
                   <Input
                     id="signup-username"
                     name="username"
                     type="text"
                     placeholder="johndoe"
+                    className="h-9 text-sm"
                     required
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="signup-email" className="text-sm">Email</Label>
                   <Input
                     id="signup-email"
                     name="email"
                     type="email"
                     placeholder="you@example.com"
+                    className="h-9 text-sm"
                     required
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-password">Password</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="signup-password" className="text-sm">Password</Label>
                   <Input
                     id="signup-password"
                     name="password"
                     type="password"
+                    className="h-9 text-sm"
                     required
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-company">Company Name (Optional)</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="signup-company" className="text-sm">Company Name (Optional)</Label>
                   <Input
                     id="signup-company"
                     name="companyName"
                     type="text"
                     placeholder="Acme Inc."
+                    className="h-9 text-sm"
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                <Button type="submit" className="w-full h-9 text-sm" disabled={loading}>
+                  {loading ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : null}
                   Create Account
                 </Button>
               </form>
             </TabsContent>
           </Tabs>
 
-          <div className="relative my-4">
+          <div className="relative my-3">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
             </div>
@@ -336,11 +343,11 @@ export default function Auth() {
           <Button
             type="button"
             variant="outline"
-            className="w-full"
+            className="w-full h-9 text-sm"
             onClick={handleGoogleAuth}
             disabled={loading}
           >
-            <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+            <svg className="mr-2 h-3.5 w-3.5" viewBox="0 0 24 24">
               <path
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                 fill="#4285F4"
