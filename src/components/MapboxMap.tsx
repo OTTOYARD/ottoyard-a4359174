@@ -81,6 +81,8 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
         box-shadow: 0 3px 12px rgba(0,0,0,0.5), 0 0 20px ${markerColor}80;
         cursor: pointer;
         transition: all 0.2s;
+        pointer-events: auto;
+        z-index: 10;
       `;
 
       // Create popup content
@@ -160,7 +162,9 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
       });
 
       // Add click handler
-      markerEl.addEventListener('click', () => {
+      markerEl.addEventListener('click', (e) => {
+        e.stopPropagation();
+        console.log('Vehicle clicked:', vehicle.id);
         onVehicleClick?.(vehicle.id);
       });
 
@@ -191,6 +195,8 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
         align-items: center;
         justify-content: center;
         transition: all 0.2s;
+        pointer-events: auto;
+        z-index: 10;
       `;
 
       // Add inner square
@@ -280,7 +286,9 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
       });
 
       // Add click handler
-      markerEl.addEventListener('click', () => {
+      markerEl.addEventListener('click', (e) => {
+        e.stopPropagation();
+        console.log('Depot clicked:', depot.id);
         onDepotClick?.(depot.id);
       });
 
