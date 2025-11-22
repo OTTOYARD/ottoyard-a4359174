@@ -41,8 +41,27 @@
   color: #888;
 }
 
-/* Ensure Mapbox popups render above markers without affecting position */
+/* Mapbox popup z-index overrides - ensure popups are always on top */
 .mapboxgl-popup {
-  z-index: 1000 !important;
+  z-index: 10000 !important;
 }
 
+.mapboxgl-popup-content {
+  z-index: 10001 !important;
+  position: relative;
+}
+
+.vehicle-preview-popup .mapboxgl-popup-content,
+.depot-preview-popup .mapboxgl-popup-content {
+  z-index: 10001 !important;
+}
+
+.mapboxgl-marker {
+  z-index: 1 !important;
+}
+
+.vehicle-marker,
+.depot-marker {
+  position: relative;
+  z-index: 1 !important;
+}
