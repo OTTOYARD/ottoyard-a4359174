@@ -74,7 +74,7 @@ const VehicleCard = ({ vehicle, compact = false, onTrack, onDetails, onSchedule,
 
   if (compact) {
     return (
-      <div className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/50 transition-colors">
+      <div className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/50 transition-colors select-none">
         <div className="flex items-center space-x-3">
           <div className="flex items-center space-x-2">
             <div className={`w-3 h-3 rounded-full ${vehicle.status === 'active' ? 'bg-success' : vehicle.status === 'charging' ? 'bg-warning animate-pulse-energy' : 'bg-destructive'}`} />
@@ -92,7 +92,7 @@ const VehicleCard = ({ vehicle, compact = false, onTrack, onDetails, onSchedule,
   }
 
   return (
-    <Card className="shadow-fleet-md hover:shadow-fleet-lg transition-shadow duration-200">
+    <Card className="shadow-fleet-md hover:shadow-fleet-lg transition-shadow duration-200 select-none">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg">{vehicle.name}</CardTitle>
