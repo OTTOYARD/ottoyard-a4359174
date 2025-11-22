@@ -344,24 +344,26 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
     }
   };
 
-  // Initialize map once
+  // Initialize map and markers once
   useEffect(() => {
-    if (isTokenSet && mapboxToken) {
+    if (isTokenSet && mapboxToken && !map.current) {
       initializeMap();
+      
+      // Wait for map to load before adding markers
+      if (map.current) {
+        map.current.on('load', () => {
+          updateMarkers();
+        });
+      }
     }
+    
     return () => {
       vehicleMarkersRef.current.forEach(marker => marker.remove());
       depotMarkersRef.current.forEach(marker => marker.remove());
       map.current?.remove();
+      map.current = null;
     };
   }, [isTokenSet, mapboxToken]);
-
-  // Update markers when vehicles or depots change
-  useEffect(() => {
-    if (map.current && isTokenSet) {
-      updateMarkers();
-    }
-  }, [vehicles, depots]);
 
   // Update map center when city changes
   useEffect(() => {
