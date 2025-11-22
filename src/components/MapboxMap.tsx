@@ -55,7 +55,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
     
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
+      style: 'mapbox://styles/mapbox/satellite-streets-v12',
       center: city?.coordinates || [-122.4194, 37.7749], // Default to San Francisco
       zoom: 12,
     });
@@ -73,14 +73,14 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
       const markerEl = document.createElement('div');
       markerEl.className = 'vehicle-marker';
       markerEl.style.cssText = `
-        width: 24px;
-        height: 24px;
+        width: 28px;
+        height: 28px;
         border-radius: 50%;
         background-color: ${markerColor};
-        border: 2px solid white;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        border: 3px solid white;
+        box-shadow: 0 3px 12px rgba(0,0,0,0.5), 0 0 20px ${markerColor}80;
         cursor: pointer;
-        transition: box-shadow 0.2s;
+        transition: all 0.2s;
       `;
 
       // Create popup content
@@ -109,7 +109,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
       `);
 
       // Add hover preview popup with improved timing
-      const baseShadow = '0 2px 8px rgba(0,0,0,0.3)';
+      const baseShadow = `0 3px 12px rgba(0,0,0,0.5), 0 0 20px ${markerColor}80`;
       let showTimeout: NodeJS.Timeout | null = null;
       let hideTimeout: NodeJS.Timeout | null = null;
 
@@ -149,11 +149,13 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
       };
 
       markerEl.addEventListener('mouseenter', () => {
-        markerEl.style.boxShadow = '0 4px 12px rgba(0,0,0,0.35)';
+        markerEl.style.boxShadow = `0 5px 16px rgba(0,0,0,0.6), 0 0 30px ${markerColor}`;
+        markerEl.style.transform = 'scale(1.15)';
         showPopup();
       });
       markerEl.addEventListener('mouseleave', () => {
         markerEl.style.boxShadow = baseShadow;
+        markerEl.style.transform = 'scale(1)';
         hidePopup();
       });
 
@@ -178,17 +180,17 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
       const markerEl = document.createElement('div');
       markerEl.className = 'depot-marker';
       markerEl.style.cssText = `
-        width: 32px;
-        height: 32px;
+        width: 36px;
+        height: 36px;
         border-radius: 8px;
-        background-color: hsl(var(--primary));
-        border: 2px solid white;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        background-color: #ef4444;
+        border: 3px solid white;
+        box-shadow: 0 3px 12px rgba(0,0,0,0.5), 0 0 20px rgba(239, 68, 68, 0.6);
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: box-shadow 0.2s;
+        transition: all 0.2s;
       `;
 
       // Add inner square
@@ -227,7 +229,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
       `);
 
       // Add hover preview popup with improved timing
-      const depotBaseShadow = '0 2px 8px rgba(0,0,0,0.3)';
+      const depotBaseShadow = '0 3px 12px rgba(0,0,0,0.5), 0 0 20px rgba(239, 68, 68, 0.6)';
       let depotShowTimeout: NodeJS.Timeout | null = null;
       let depotHideTimeout: NodeJS.Timeout | null = null;
 
@@ -267,11 +269,13 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
       };
 
       markerEl.addEventListener('mouseenter', () => {
-        markerEl.style.boxShadow = '0 4px 12px rgba(0,0,0,0.35)';
+        markerEl.style.boxShadow = '0 5px 16px rgba(0,0,0,0.6), 0 0 30px rgba(239, 68, 68, 0.8)';
+        markerEl.style.transform = 'scale(1.15)';
         showDepotPopup();
       });
       markerEl.addEventListener('mouseleave', () => {
         markerEl.style.boxShadow = depotBaseShadow;
+        markerEl.style.transform = 'scale(1)';
         hideDepotPopup();
       });
 
