@@ -87,8 +87,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
 
       // Create popup content
       const popup = new mapboxgl.Popup({ 
-        offset: [0, -30],
-        anchor: 'bottom',
+        offset: 25,
         closeButton: false, 
         closeOnClick: false,
         className: 'vehicle-preview-popup'
@@ -212,8 +211,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
 
       // Create popup content
       const depotPopup = new mapboxgl.Popup({ 
-        offset: [0, -34],
-        anchor: 'bottom',
+        offset: 25,
         closeButton: false, 
         closeOnClick: false,
         className: 'depot-preview-popup'
