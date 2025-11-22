@@ -14,6 +14,7 @@ export default function Auth() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
 
   // Check if user is already logged in
   useEffect(() => {
@@ -73,6 +74,13 @@ export default function Auth() {
 
         if (error) throw error;
 
+        // Handle remember me preference
+        if (rememberMe) {
+          localStorage.setItem('rememberMe', 'true');
+        } else {
+          localStorage.removeItem('rememberMe');
+        }
+
         toast({
           title: "Welcome back!",
           description: "Successfully logged in.",
@@ -93,6 +101,9 @@ export default function Auth() {
   const handleGoogleAuth = async () => {
     setLoading(true);
     try {
+      // Google OAuth always remembers the user
+      localStorage.setItem('rememberMe', 'true');
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
@@ -147,6 +158,18 @@ export default function Auth() {
                     type="password"
                     required
                   />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    id="remember-me"
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                  />
+                  <Label htmlFor="remember-me" className="text-sm font-normal cursor-pointer">
+                    Remember me
+                  </Label>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}

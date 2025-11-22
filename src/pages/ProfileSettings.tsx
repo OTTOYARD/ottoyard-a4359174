@@ -120,6 +120,7 @@ export default function ProfileSettings() {
   };
 
   const handleSignOut = async () => {
+    localStorage.removeItem('rememberMe');
     await supabase.auth.signOut();
     navigate("/auth");
   };
