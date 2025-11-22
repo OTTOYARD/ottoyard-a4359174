@@ -158,45 +158,46 @@ export default function Auth() {
   if (showForgotPassword) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
-        <Card className="w-full max-w-md">
-        <CardHeader className="flex flex-col items-center text-center">
-          <img src={ottoyardLogo} alt="OTTOYARD" className="w-44 h-44 mb-0" />
-          <CardTitle className="text-2xl">Reset Password</CardTitle>
-          <CardDescription>
+      <Card className="w-full max-w-sm">
+        <CardHeader className="flex flex-col items-center text-center pb-4">
+          <img src={ottoyardLogo} alt="OTTOYARD" className="w-32 h-32 mb-0" />
+          <CardTitle className="text-xl">Reset Password</CardTitle>
+          <CardDescription className="text-sm">
             Enter your email to receive a password reset link
           </CardDescription>
         </CardHeader>
-          <CardContent>
-            <form onSubmit={handleForgotPassword} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="reset-email">Email</Label>
-                <Input
-                  id="reset-email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={resetEmail}
-                  onChange={(e) => setResetEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Send Reset Link
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                className="w-full"
-                onClick={() => {
-                  setShowForgotPassword(false);
-                  setResetEmail("");
-                }}
-              >
-                Back to Sign In
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+        <CardContent className="px-4 pb-4">
+          <form onSubmit={handleForgotPassword} className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="reset-email" className="text-sm">Email</Label>
+              <Input
+                id="reset-email"
+                type="email"
+                placeholder="you@example.com"
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+                className="h-9 text-sm"
+                required
+              />
+            </div>
+            <Button type="submit" className="w-full h-9 text-sm" disabled={loading}>
+              {loading ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : null}
+              Send Reset Link
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              className="w-full h-9 text-sm"
+              onClick={() => {
+                setShowForgotPassword(false);
+                setResetEmail("");
+              }}
+            >
+              Back to Sign In
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
       </div>
     );
   }
