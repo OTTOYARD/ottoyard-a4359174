@@ -158,16 +158,16 @@ export default function Auth() {
   if (showForgotPassword) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
-        <Card className="w-full max-w-md">
-        <CardHeader className="flex flex-col items-center text-center">
-          <img src={ottoyardLogo} alt="OTTOYARD" className="w-44 h-44 mb-0" />
-          <CardTitle className="text-2xl">Reset Password</CardTitle>
-          <CardDescription>
+        <Card className="w-full max-w-sm">
+        <CardHeader className="flex flex-col items-center text-center pb-4">
+          <img src={ottoyardLogo} alt="OTTOYARD" className="w-32 h-32 mb-0" />
+          <CardTitle className="text-xl">Reset Password</CardTitle>
+          <CardDescription className="text-sm">
             Enter your email to receive a password reset link
           </CardDescription>
         </CardHeader>
-          <CardContent>
-            <form onSubmit={handleForgotPassword} className="space-y-4">
+          <CardContent className="px-4">
+            <form onSubmit={handleForgotPassword} className="space-y-3">
               <div className="space-y-2">
                 <Label htmlFor="reset-email">Email</Label>
                 <Input
@@ -179,14 +179,14 @@ export default function Auth() {
                   required
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              <Button type="submit" className="w-full h-9 text-sm" disabled={loading}>
+                {loading ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : null}
                 Send Reset Link
               </Button>
               <Button
                 type="button"
                 variant="ghost"
-                className="w-full"
+                className="w-full h-9 text-sm"
                 onClick={() => {
                   setShowForgotPassword(false);
                   setResetEmail("");
@@ -203,15 +203,15 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="flex flex-col items-center text-center">
-          <img src={ottoyardLogo} alt="OTTOYARD" className="w-44 h-44 mb-0" />
-          <CardTitle className="text-2xl">Fleet Command Dashboard</CardTitle>
-          <CardDescription>
+      <Card className="w-full max-w-sm">
+        <CardHeader className="flex flex-col items-center text-center pb-4">
+          <img src={ottoyardLogo} alt="OTTOYARD" className="w-32 h-32 mb-0" />
+          <CardTitle className="text-xl">Fleet Command Dashboard</CardTitle>
+          <CardDescription className="text-sm">
             Sign in to manage your fleet operations
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-4">
           <Tabs value={isSignUp ? "signup" : "signin"} onValueChange={(v) => setIsSignUp(v === "signup")}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="signin">Sign In</TabsTrigger>
@@ -219,7 +219,7 @@ export default function Auth() {
             </TabsList>
 
             <TabsContent value="signin">
-              <form onSubmit={handleEmailAuth} className="space-y-4">
+              <form onSubmit={handleEmailAuth} className="space-y-3">
                 <div className="space-y-2">
                   <Label htmlFor="signin-email">Email</Label>
                   <Input
@@ -251,8 +251,8 @@ export default function Auth() {
                     Remember me
                   </Label>
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                <Button type="submit" className="w-full h-9 text-sm" disabled={loading}>
+                  {loading ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : null}
                   Sign In
                 </Button>
                 <Button
@@ -267,7 +267,7 @@ export default function Auth() {
             </TabsContent>
 
             <TabsContent value="signup">
-              <form onSubmit={handleEmailAuth} className="space-y-4">
+              <form onSubmit={handleEmailAuth} className="space-y-3">
                 <div className="space-y-2">
                   <Label htmlFor="signup-name">Full Name</Label>
                   <Input
@@ -316,15 +316,15 @@ export default function Auth() {
                     placeholder="Acme Inc."
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                <Button type="submit" className="w-full h-9 text-sm" disabled={loading}>
+                  {loading ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : null}
                   Create Account
                 </Button>
               </form>
             </TabsContent>
           </Tabs>
 
-          <div className="relative my-4">
+          <div className="relative my-3">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
             </div>
@@ -336,11 +336,11 @@ export default function Auth() {
           <Button
             type="button"
             variant="outline"
-            className="w-full"
+            className="w-full h-9 text-sm"
             onClick={handleGoogleAuth}
             disabled={loading}
           >
-            <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+            <svg className="mr-2 h-3.5 w-3.5" viewBox="0 0 24 24">
               <path
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                 fill="#4285F4"
