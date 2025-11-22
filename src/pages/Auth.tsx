@@ -207,7 +207,7 @@ export default function Auth() {
         <CardHeader className="flex flex-col items-center text-center pb-4">
           <img src={ottoyardLogo} alt="OTTOYARD" className="w-32 h-32 mb-0" />
           <CardTitle className="text-xl">
-            <span className="text-energy-grid">Fleet Command</span> Dashboard
+            <span className="text-[#617fa5]">Fleet Command</span> Dashboard
           </CardTitle>
           <CardDescription className="text-sm">
             Sign in to manage your fleet operations
