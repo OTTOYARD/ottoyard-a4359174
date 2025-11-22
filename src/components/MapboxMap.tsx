@@ -38,6 +38,8 @@ interface MapboxMapProps {
 const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicleClick, onDepotClick }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
+  const vehicleMarkersRef = useRef<mapboxgl.Marker[]>([]);
+  const depotMarkersRef = useRef<mapboxgl.Marker[]>([]);
   const [mapboxToken, setMapboxToken] = useState('pk.eyJ1Ijoib3R0b3lhcmQiLCJhIjoiY21lZWY5cjduMGtsdzJpb2wxNWpweGg4NCJ9.NfsLzQ2-o8wEHOfRrPO5WQ');
   const [isTokenSet, setIsTokenSet] = useState(true);
 
@@ -49,7 +51,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
   };
 
   const initializeMap = () => {
-    if (!mapContainer.current || !mapboxToken) return;
+    if (!mapContainer.current || !mapboxToken || map.current) return;
 
     mapboxgl.accessToken = mapboxToken;
     
@@ -62,8 +64,18 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
 
     // Add navigation controls
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+  };
 
-    // Use the passed depot data
+  const updateMarkers = () => {
+    if (!map.current) return;
+
+    // Clear existing vehicle markers
+    vehicleMarkersRef.current.forEach(marker => marker.remove());
+    vehicleMarkersRef.current = [];
+
+    // Clear existing depot markers
+    depotMarkersRef.current.forEach(marker => marker.remove());
+    depotMarkersRef.current = [];
 
     // Add vehicle markers - show all vehicles for the city
     vehicles.forEach((vehicle) => {
@@ -168,9 +180,11 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
         onVehicleClick?.(vehicle.id);
       });
 
-      new mapboxgl.Marker({ element: markerEl, anchor: 'center', offset: [0, 0] })
+      const marker = new mapboxgl.Marker({ element: markerEl, anchor: 'center', offset: [0, 0] })
         .setLngLat([vehicle.location.lng, vehicle.location.lat])
         .addTo(map.current!);
+      
+      vehicleMarkersRef.current.push(marker);
     });
 
     // Add depot markers with null checks
@@ -292,9 +306,11 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
         onDepotClick?.(depot.id);
       });
 
-      new mapboxgl.Marker({ element: markerEl, anchor: 'center', offset: [0, 0] })
+      const marker = new mapboxgl.Marker({ element: markerEl, anchor: 'center', offset: [0, 0] })
         .setLngLat([depot.location.lng, depot.location.lat])
         .addTo(map.current!);
+      
+      depotMarkersRef.current.push(marker);
     });
   };
 
@@ -328,14 +344,31 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
     }
   };
 
+  // Initialize map once
   useEffect(() => {
     if (isTokenSet && mapboxToken) {
       initializeMap();
     }
     return () => {
+      vehicleMarkersRef.current.forEach(marker => marker.remove());
+      depotMarkersRef.current.forEach(marker => marker.remove());
       map.current?.remove();
     };
-  }, [isTokenSet, mapboxToken, vehicles, depots, city]);
+  }, [isTokenSet, mapboxToken]);
+
+  // Update markers when vehicles or depots change
+  useEffect(() => {
+    if (map.current && isTokenSet) {
+      updateMarkers();
+    }
+  }, [vehicles, depots]);
+
+  // Update map center when city changes
+  useEffect(() => {
+    if (map.current && city?.coordinates) {
+      map.current.setCenter(city.coordinates);
+    }
+  }, [city]);
 
   if (!isTokenSet) {
     return (
