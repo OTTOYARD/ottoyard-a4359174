@@ -14,7 +14,16 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   useEffect(() => {
     // Check initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setAuthenticated(!!session);
+      // Check remember me preference
+      const rememberMe = localStorage.getItem('rememberMe');
+      
+      if (session && rememberMe !== 'true') {
+        // User didn't want to be remembered, sign them out
+        supabase.auth.signOut();
+        setAuthenticated(false);
+      } else {
+        setAuthenticated(!!session);
+      }
       setLoading(false);
     });
 
