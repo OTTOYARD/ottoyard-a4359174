@@ -203,7 +203,7 @@ export default function Auth() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl">Welcome to OTTOQ</CardTitle>
+          <CardTitle className="text-2xl">OTTOYARD Fleet Command Dashboard</CardTitle>
           <CardDescription>
             Sign in to manage your fleet operations
           </CardDescription>
