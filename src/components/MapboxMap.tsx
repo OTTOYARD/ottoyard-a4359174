@@ -346,38 +346,40 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
     };
 
     // Add route lines for vehicles with route paths (single continuous line per vehicle)
-    const routeFeatures = vehicles
-      .filter((vehicle: any) => vehicle.routePath?.pickup && vehicle.routePath?.dropoff)
-      .map((vehicle: any) => {
-        // Create one continuous curved path: vehicle -> pickup -> dropoff
-        const startToPickup = createCurvedPath(
-          [vehicle.location.lng, vehicle.location.lat],
-          [vehicle.routePath.pickup.lng, vehicle.routePath.pickup.lat],
-          2
-        );
-        const pickupToDropoff = createCurvedPath(
-          [vehicle.routePath.pickup.lng, vehicle.routePath.pickup.lat],
-          [vehicle.routePath.dropoff.lng, vehicle.routePath.dropoff.lat],
-          3
-        );
-        
-        // Combine into single path (remove duplicate pickup point)
-        const fullPath = [...startToPickup, ...pickupToDropoff.slice(1)];
-        
-        return {
-          type: 'Feature' as const,
-          properties: {
-            vehicleId: vehicle.id,
-            color: getVehicleHealthColor(vehicle.battery, vehicle.status)
-          },
-          geometry: {
-            type: 'LineString' as const,
-            coordinates: fullPath
-          }
-        };
-      });
+    const vehiclesWithRoutes = vehicles.filter((vehicle: any) => vehicle.routePath?.pickup && vehicle.routePath?.dropoff);
+    console.log(`🛣️ Found ${vehiclesWithRoutes.length} vehicles with route paths out of ${vehicles.length} total vehicles`);
+    
+    const routeFeatures = vehiclesWithRoutes.map((vehicle: any) => {
+      // Create one continuous curved path: vehicle -> pickup -> dropoff
+      const startToPickup = createCurvedPath(
+        [vehicle.location.lng, vehicle.location.lat],
+        [vehicle.routePath.pickup.lng, vehicle.routePath.pickup.lat],
+        2
+      );
+      const pickupToDropoff = createCurvedPath(
+        [vehicle.routePath.pickup.lng, vehicle.routePath.pickup.lat],
+        [vehicle.routePath.dropoff.lng, vehicle.routePath.dropoff.lat],
+        3
+      );
+      
+      // Combine into single path (remove duplicate pickup point)
+      const fullPath = [...startToPickup, ...pickupToDropoff.slice(1)];
+      
+      return {
+        type: 'Feature' as const,
+        properties: {
+          vehicleId: vehicle.id,
+          color: getVehicleHealthColor(vehicle.battery, vehicle.status)
+        },
+        geometry: {
+          type: 'LineString' as const,
+          coordinates: fullPath
+        }
+      };
+    });
 
     if (routeFeatures.length > 0) {
+      console.log(`✅ Adding ${routeFeatures.length} route lines to map`);
       map.current.addSource('routes', {
         type: 'geojson',
         data: {
@@ -400,6 +402,8 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
           'line-opacity': 0.6
         }
       });
+    } else {
+      console.log('⚠️ No route features to display');
     }
 
     // Summary logging
