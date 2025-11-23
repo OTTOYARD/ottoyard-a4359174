@@ -59,7 +59,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/satellite-streets-v12',
       center: city?.coordinates || [-122.4194, 37.7749], // Default to San Francisco
-      zoom: 12,
+      zoom: 13,
     });
 
     // Add navigation controls
@@ -76,6 +76,14 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
     // Clear existing depot markers
     depotMarkersRef.current.forEach(marker => marker.remove());
     depotMarkersRef.current = [];
+
+    // Remove existing route layers and sources
+    if (map.current.getLayer('routes')) {
+      map.current.removeLayer('routes');
+    }
+    if (map.current.getSource('routes')) {
+      map.current.removeSource('routes');
+    }
 
     // Add vehicle markers - show all vehicles for the city
     vehicles.forEach((vehicle, index) => {
@@ -315,8 +323,70 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
       depotMarkersRef.current.push(marker);
     });
     
+    // Add route lines for vehicles with route paths
+    const routeFeatures = vehicles
+      .filter((vehicle: any) => vehicle.routePath?.pickup && vehicle.routePath?.dropoff)
+      .flatMap((vehicle: any) => {
+        // Create route line from vehicle -> pickup -> dropoff
+        return [
+          {
+            type: 'Feature' as const,
+            properties: {
+              vehicleId: vehicle.id,
+              color: getVehicleHealthColor(vehicle.battery, vehicle.status)
+            },
+            geometry: {
+              type: 'LineString' as const,
+              coordinates: [
+                [vehicle.location.lng, vehicle.location.lat],
+                [vehicle.routePath.pickup.lng, vehicle.routePath.pickup.lat]
+              ]
+            }
+          },
+          {
+            type: 'Feature' as const,
+            properties: {
+              vehicleId: vehicle.id,
+              color: getVehicleHealthColor(vehicle.battery, vehicle.status)
+            },
+            geometry: {
+              type: 'LineString' as const,
+              coordinates: [
+                [vehicle.routePath.pickup.lng, vehicle.routePath.pickup.lat],
+                [vehicle.routePath.dropoff.lng, vehicle.routePath.dropoff.lat]
+              ]
+            }
+          }
+        ];
+      });
+
+    if (routeFeatures.length > 0) {
+      map.current.addSource('routes', {
+        type: 'geojson',
+        data: {
+          type: 'FeatureCollection',
+          features: routeFeatures
+        }
+      });
+
+      map.current.addLayer({
+        id: 'routes',
+        type: 'line',
+        source: 'routes',
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'round'
+        },
+        paint: {
+          'line-color': ['get', 'color'],
+          'line-width': 1.5,
+          'line-opacity': 0.6
+        }
+      });
+    }
+
     // Summary logging
-    console.log(`✅ MapboxMap: Rendered ${vehicleMarkersRef.current.length} vehicle markers and ${depotMarkersRef.current.length} depot markers`);
+    console.log(`✅ MapboxMap: Rendered ${vehicleMarkersRef.current.length} vehicle markers, ${depotMarkersRef.current.length} depot markers, and ${routeFeatures.length / 2} routes`);
   };
 
   const getVehicleHealthColor = (battery: number, status: string): string => {
