@@ -323,41 +323,58 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
       depotMarkersRef.current.push(marker);
     });
     
-    // Add route lines for vehicles with route paths
+    // Helper function to create curved path between points (simulating street patterns)
+    const createCurvedPath = (start: [number, number], end: [number, number], waypoints: number = 3) => {
+      const coordinates: [number, number][] = [start];
+      
+      // Add intermediate waypoints with slight offsets to simulate street turns
+      for (let i = 1; i < waypoints; i++) {
+        const ratio = i / waypoints;
+        const baseLng = start[0] + (end[0] - start[0]) * ratio;
+        const baseLat = start[1] + (end[1] - start[1]) * ratio;
+        
+        // Add perpendicular offset to create curves
+        const offsetMagnitude = 0.002 * Math.sin(ratio * Math.PI);
+        const perpOffsetLng = -(end[1] - start[1]) * offsetMagnitude;
+        const perpOffsetLat = (end[0] - start[0]) * offsetMagnitude;
+        
+        coordinates.push([baseLng + perpOffsetLng, baseLat + perpOffsetLat]);
+      }
+      
+      coordinates.push(end);
+      return coordinates;
+    };
+
+    // Add route lines for vehicles with route paths (single continuous line per vehicle)
     const routeFeatures = vehicles
       .filter((vehicle: any) => vehicle.routePath?.pickup && vehicle.routePath?.dropoff)
-      .flatMap((vehicle: any) => {
-        // Create route line from vehicle -> pickup -> dropoff
-        return [
-          {
-            type: 'Feature' as const,
-            properties: {
-              vehicleId: vehicle.id,
-              color: getVehicleHealthColor(vehicle.battery, vehicle.status)
-            },
-            geometry: {
-              type: 'LineString' as const,
-              coordinates: [
-                [vehicle.location.lng, vehicle.location.lat],
-                [vehicle.routePath.pickup.lng, vehicle.routePath.pickup.lat]
-              ]
-            }
+      .map((vehicle: any) => {
+        // Create one continuous curved path: vehicle -> pickup -> dropoff
+        const startToPickup = createCurvedPath(
+          [vehicle.location.lng, vehicle.location.lat],
+          [vehicle.routePath.pickup.lng, vehicle.routePath.pickup.lat],
+          2
+        );
+        const pickupToDropoff = createCurvedPath(
+          [vehicle.routePath.pickup.lng, vehicle.routePath.pickup.lat],
+          [vehicle.routePath.dropoff.lng, vehicle.routePath.dropoff.lat],
+          3
+        );
+        
+        // Combine into single path (remove duplicate pickup point)
+        const fullPath = [...startToPickup, ...pickupToDropoff.slice(1)];
+        
+        return {
+          type: 'Feature' as const,
+          properties: {
+            vehicleId: vehicle.id,
+            color: getVehicleHealthColor(vehicle.battery, vehicle.status)
           },
-          {
-            type: 'Feature' as const,
-            properties: {
-              vehicleId: vehicle.id,
-              color: getVehicleHealthColor(vehicle.battery, vehicle.status)
-            },
-            geometry: {
-              type: 'LineString' as const,
-              coordinates: [
-                [vehicle.routePath.pickup.lng, vehicle.routePath.pickup.lat],
-                [vehicle.routePath.dropoff.lng, vehicle.routePath.dropoff.lat]
-              ]
-            }
+          geometry: {
+            type: 'LineString' as const,
+            coordinates: fullPath
           }
-        ];
+        };
       });
 
     if (routeFeatures.length > 0) {
@@ -386,7 +403,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
     }
 
     // Summary logging
-    console.log(`✅ MapboxMap: Rendered ${vehicleMarkersRef.current.length} vehicle markers, ${depotMarkersRef.current.length} depot markers, and ${routeFeatures.length / 2} routes`);
+    console.log(`✅ MapboxMap: Rendered ${vehicleMarkersRef.current.length} vehicle markers, ${depotMarkersRef.current.length} depot markers, and ${routeFeatures.length} routes`);
   };
 
   const getVehicleHealthColor = (battery: number, status: string): string => {
