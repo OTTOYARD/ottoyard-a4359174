@@ -272,10 +272,21 @@ const Index = () => {
     return cityMap[cityName] || 'Nashville'; // Default to Nashville
   };
 
-  // Fetch real vehicles and depots from database
+  // Enhanced city coordinates mapping
+  const cityCoordinates: { [key: string]: { lat: number; lng: number } } = {
+    'Nashville': { lat: 36.1627, lng: -86.7816 },
+    'Austin': { lat: 30.2672, lng: -97.7431 },
+    'LA': { lat: 34.0522, lng: -118.2437 },
+    'Los Angeles': { lat: 34.0522, lng: -118.2437 }
+  };
+
+  // Fetch real vehicles and depots from database with enhanced fallbacks
   const fetchCityData = async (cityName: string) => {
     setLoadingData(true);
     try {
+      // Get city coordinates
+      const cityCenter = cityCoordinates[cityName] || { lat: 36.1627, lng: -86.7816 };
+      
       // Get city ID
       const { data: cityData, error: cityError } = await supabase
         .from("ottoq_cities")
@@ -299,21 +310,24 @@ const Index = () => {
 
       if (vehiclesError) throw vehiclesError;
 
-      // Transform vehicles to match the format expected by Overview
-      const transformedVehicles = (vehiclesData || []).map((v: any) => ({
+      // Transform vehicles to match the format expected by Overview with city-specific locations
+      const transformedVehicles = (vehiclesData || []).map((v: any, index: number) => ({
         id: v.external_ref?.split(' ')[1] || v.id.slice(0, 5),
         name: v.external_ref || v.id.slice(0, 8),
         status: v.status.toLowerCase(),
         battery: Math.round(v.soc * 100),
         location: {
-          lat: 36.1627 + (Math.random() - 0.5) * 0.2, // Mock location near city
-          lng: -86.7816 + (Math.random() - 0.5) * 0.3
+          // Spread vehicles around the city center in a realistic pattern
+          lat: cityCenter.lat + (Math.random() - 0.5) * 0.15,
+          lng: cityCenter.lng + (Math.random() - 0.5) * 0.20
         },
-        route: 'Downtown Delivery',
-        chargingTime: v.status === 'CHARGING' ? `${Math.floor(Math.random() * 3) + 1}h ${Math.floor(Math.random() * 60)}m` : 'N/A',
-        nextMaintenance: v.status === 'MAINTENANCE' ? 'In Progress' : `2025-${Math.random() < 0.5 ? '10' : '12'}-${Math.floor(Math.random() * 28) + 1}`
+        route: ['Downtown Route', 'Express Line', 'Airport Shuttle', 'City Loop', 'Suburban Connect'][index % 5],
+        chargingTime: v.status === 'CHARGING' || v.status === 'at_depot' ? `${Math.floor(Math.random() * 3) + 1}h ${Math.floor(Math.random() * 60)}m` : 'N/A',
+        nextMaintenance: v.status === 'MAINTENANCE' || v.status === 'in_service' ? 'In Progress' : `2025-${Math.random() < 0.5 ? '11' : '12'}-${Math.floor(Math.random() * 28) + 1}`,
+        city: cityName
       }));
 
+      console.log(`Loaded ${transformedVehicles.length} vehicles for ${cityName}`);
       setVehicles(transformedVehicles);
 
       // Fetch depots for this city
@@ -324,35 +338,46 @@ const Index = () => {
 
       if (depotsError) throw depotsError;
 
-      // Fetch resources for each depot to calculate stalls
+      // Fetch resources for each depot to calculate stalls - ensure we always have valid depot locations
       const depotsWithResources = await Promise.all(
-        (depotsData || []).map(async (depot: any) => {
+        (depotsData || []).map(async (depot: any, index: number) => {
           const { data: resourcesData } = await supabase
             .from("ottoq_resources")
             .select("status")
             .eq("depot_id", depot.id);
 
-          const totalStalls = resourcesData?.length || 0;
-          const occupiedStalls = resourcesData?.filter((r: any) => r.status === 'OCCUPIED').length || 0;
-          const availableStalls = totalStalls - occupiedStalls;
+          const totalStalls = resourcesData?.length || 12;
+          const occupiedStalls = resourcesData?.filter((r: any) => r.status === 'BUSY' || r.status === 'RESERVED').length || 0;
+          const availableStalls = Math.max(0, totalStalls - occupiedStalls);
+
+          // Ensure every depot has valid coordinates - place strategically around city
+          const depotOffsets = [
+            { lat: 0.02, lng: 0.03 },   // North
+            { lat: -0.02, lng: -0.03 },  // South
+            { lat: 0.01, lng: -0.04 },   // West
+            { lat: -0.01, lng: 0.04 }    // East
+          ];
+          const offset = depotOffsets[index % depotOffsets.length];
 
           return {
             id: depot.id,
             name: depot.name,
             location: {
-              lat: depot.lat || (36.1627 + (Math.random() - 0.5) * 0.05),
-              lng: depot.lon || (-86.7816 + (Math.random() - 0.5) * 0.08)
+              lat: depot.lat && typeof depot.lat === 'number' ? depot.lat : cityCenter.lat + offset.lat,
+              lng: depot.lon && typeof depot.lon === 'number' ? depot.lon : cityCenter.lng + offset.lng
             },
-            energyGenerated: Math.floor(1400 + Math.random() * 800),
-            energyReturned: Math.floor((1400 + Math.random() * 800) * 0.5),
+            energyGenerated: Math.floor(1500 + Math.random() * 1000),
+            energyReturned: Math.floor(800 + Math.random() * 600),
             vehiclesCharging: occupiedStalls,
             totalStalls,
             availableStalls,
-            status: Math.random() > 0.85 ? 'maintenance' : 'optimal'
+            status: availableStalls > 2 ? 'optimal' : availableStalls > 0 ? 'busy' : 'full',
+            city: cityName
           };
         })
       );
 
+      console.log(`Loaded ${depotsWithResources.length} depots for ${cityName}:`, depotsWithResources.map(d => ({ name: d.name, location: d.location })));
       setDepots(depotsWithResources);
     } catch (error) {
       console.error("Error fetching city data:", error);
@@ -370,8 +395,10 @@ const Index = () => {
   }, []);
 
   const handleCitySelect = (city: City) => {
+    console.log(`🌍 City selected: ${city.name} at coordinates`, city.coordinates);
     setCurrentCity(city);
     const ottoqCity = mapToOTTOQCity(city.name);
+    console.log(`📍 Mapped to OTTO-Q city: ${ottoqCity}`);
     setSelectedCityForOTTOQ(ottoqCity);
     fetchCityData(ottoqCity); // Fetch real data for the mapped OTTO-Q city
   };
@@ -385,7 +412,9 @@ const Index = () => {
   const totalEnergyReturned = depots.reduce((sum, depot) => sum + depot.energyReturned, 0);
   const totalStalls = depots.reduce((sum, depot) => sum + depot.totalStalls, 0);
   const availableStalls = depots.reduce((sum, depot) => sum + depot.availableStalls, 0);
-  const occupancyRate = Math.round((totalStalls - availableStalls) / totalStalls * 100);
+  const occupancyRate = totalStalls > 0 ? Math.round((totalStalls - availableStalls) / totalStalls * 100) : 0;
+  
+  console.log(`📊 ${currentCity.name} Metrics: ${vehicles.length} vehicles (${activeVehicles} active), ${depots.length} depots (${availableStalls}/${totalStalls} stalls available)`);
   return <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">

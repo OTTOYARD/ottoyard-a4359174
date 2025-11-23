@@ -78,7 +78,8 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
     depotMarkersRef.current = [];
 
     // Add vehicle markers - show all vehicles for the city
-    vehicles.forEach((vehicle) => {
+    vehicles.forEach((vehicle, index) => {
+      console.log(`Rendering vehicle ${index + 1}/${vehicles.length}:`, vehicle.name, vehicle.location);
       const markerColor = getVehicleHealthColor(vehicle.battery, vehicle.status);
       
       // Create custom marker element
@@ -189,13 +190,10 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
       vehicleMarkersRef.current.push(marker);
     });
 
-    // Add depot markers with null checks
-    depots.forEach((depot) => {
-      // Skip depots without location data
-      if (!depot.location || typeof depot.location.lat !== 'number' || typeof depot.location.lng !== 'number') {
-        console.warn('Skipping depot without valid location:', depot);
-        return;
-      }
+    // Add depot markers - all depots now have guaranteed valid locations
+    depots.forEach((depot, index) => {
+      console.log(`Rendering depot ${index + 1}/${depots.length}:`, depot.name, depot.location);
+      
       // Create custom depot marker element
       const markerEl = document.createElement('div');
       markerEl.className = 'depot-marker';
@@ -316,6 +314,9 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
       
       depotMarkersRef.current.push(marker);
     });
+    
+    // Summary logging
+    console.log(`✅ MapboxMap: Rendered ${vehicleMarkersRef.current.length} vehicle markers and ${depotMarkersRef.current.length} depot markers`);
   };
 
   const getVehicleHealthColor = (battery: number, status: string): string => {
@@ -410,6 +411,24 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
   return (
     <div className="relative w-full h-full min-h-[400px]">
       <div ref={mapContainer} className="absolute inset-0 rounded-lg" />
+      
+      {/* City Stats Overlay */}
+      <div className="absolute top-4 left-4 bg-card/95 backdrop-blur-sm border border-border rounded-lg shadow-lg p-3 space-y-2 z-10">
+        <div className="flex items-center gap-2 text-sm font-medium text-card-foreground">
+          <MapPin className="h-4 w-4 text-primary" />
+          <span>{city?.name || 'Loading...'}</span>
+        </div>
+        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded-full bg-success border border-white"></div>
+            <span>{vehicles.length} Vehicles</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded-sm bg-primary border border-white"></div>
+            <span>{depots.length} Depots</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
