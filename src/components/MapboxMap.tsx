@@ -99,9 +99,11 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
 
       // Create popup content
       const popup = new mapboxgl.Popup({ 
-        offset: 15, 
+        offset: [0, -32],
+        anchor: 'bottom',
         closeButton: false, 
         closeOnClick: false,
+        closeOnMove: false,
         className: 'vehicle-preview-popup'
       }).setHTML(`
         <div class="p-4 bg-card text-card-foreground rounded-lg border shadow-lg min-w-52" style="position: relative; z-index: 1000;">
@@ -225,9 +227,11 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
 
       // Create popup content
       const depotPopup = new mapboxgl.Popup({ 
-        offset: 15, 
+        offset: [0, -36], 
+        anchor: 'bottom',
         closeButton: false, 
         closeOnClick: false,
+        closeOnMove: false,
         className: 'depot-preview-popup'
       }).setHTML(`
         <div class="p-4 bg-card text-card-foreground rounded-lg border shadow-lg min-w-52" style="position: relative; z-index: 1000;">
