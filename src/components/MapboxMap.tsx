@@ -98,82 +98,15 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
         position: relative;
       `;
 
-      // Create popup content
-      const popup = new mapboxgl.Popup({ 
-        offset: [0, -32],
-        anchor: 'bottom',
-        closeButton: false, 
-        closeOnClick: false,
-        closeOnMove: false,
-        className: 'vehicle-preview-popup'
-      }).setHTML(`
-        <div class="p-4 bg-card text-card-foreground rounded-lg border shadow-lg min-w-52" style="position: relative; z-index: 1000;">
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="font-semibold text-sm text-foreground">${vehicle.name}</h3>
-            <span class="px-2 py-1 text-xs rounded-full ${vehicle.status === 'active' ? 'bg-success/20 text-success' : vehicle.status === 'charging' ? 'bg-warning/20 text-warning' : 'bg-destructive/20 text-destructive'}">${vehicle.status}</span>
-          </div>
-          <div class="space-y-1">
-            <div class="flex items-center justify-between text-xs">
-              <span class="text-muted-foreground">Battery:</span>
-              <span class="font-medium ${vehicle.battery > 60 ? 'text-success' : vehicle.battery > 30 ? 'text-warning' : 'text-destructive'}">${vehicle.battery}%</span>
-            </div>
-            <div class="flex items-center justify-between text-xs">
-              <span class="text-muted-foreground">Route:</span>
-              <span class="font-medium text-foreground">${vehicle.route}</span>
-            </div>
-          </div>
-        </div>
-      `);
-
-      // Add hover preview popup with improved timing
+      // Add hover effect
       const baseShadow = `0 3px 12px rgba(0,0,0,0.5), 0 0 20px ${markerColor}cc`;
-      let showTimeout: NodeJS.Timeout | null = null;
-      let hideTimeout: NodeJS.Timeout | null = null;
-
-      const showPopup = () => {
-        if (hideTimeout) {
-          clearTimeout(hideTimeout);
-          hideTimeout = null;
-        }
-        showTimeout = setTimeout(() => {
-          popup.setLngLat([vehicle.location.lng, vehicle.location.lat]);
-          popup.addTo(map.current!);
-          
-          // Keep popup open when hovering over it
-          const popupEl = document.querySelector('.vehicle-preview-popup');
-          if (popupEl) {
-            popupEl.addEventListener('mouseenter', () => {
-              if (hideTimeout) {
-                clearTimeout(hideTimeout);
-                hideTimeout = null;
-              }
-            });
-            popupEl.addEventListener('mouseleave', () => {
-              hidePopup();
-            });
-          }
-        }, 150);
-      };
-
-      const hidePopup = () => {
-        if (showTimeout) {
-          clearTimeout(showTimeout);
-          showTimeout = null;
-        }
-        hideTimeout = setTimeout(() => {
-          popup.remove();
-        }, 300);
-      };
-
       markerEl.addEventListener('mouseenter', () => {
         markerEl.style.boxShadow = `0 5px 20px rgba(0,0,0,0.7), 0 0 40px ${markerColor}`;
         markerEl.style.filter = 'brightness(1.2)';
-        showPopup();
       });
       markerEl.addEventListener('mouseleave', () => {
         markerEl.style.boxShadow = baseShadow;
         markerEl.style.filter = 'brightness(1)';
-        hidePopup();
       });
 
       // Add click handler
