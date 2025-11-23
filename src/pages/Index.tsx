@@ -311,21 +311,39 @@ const Index = () => {
       if (vehiclesError) throw vehiclesError;
 
       // Transform vehicles to match the format expected by Overview with city-specific locations
-      const transformedVehicles = (vehiclesData || []).map((v: any, index: number) => ({
-        id: v.external_ref?.split(' ')[1] || v.id.slice(0, 5),
-        name: v.external_ref || v.id.slice(0, 8),
-        status: v.status.toLowerCase(),
-        battery: Math.round(v.soc * 100),
-        location: {
-          // Spread vehicles around the city center in a realistic pattern
-          lat: cityCenter.lat + (Math.random() - 0.5) * 0.15,
-          lng: cityCenter.lng + (Math.random() - 0.5) * 0.20
-        },
-        route: ['Downtown Route', 'Express Line', 'Airport Shuttle', 'City Loop', 'Suburban Connect'][index % 5],
-        chargingTime: v.status === 'CHARGING' || v.status === 'at_depot' ? `${Math.floor(Math.random() * 3) + 1}h ${Math.floor(Math.random() * 60)}m` : 'N/A',
-        nextMaintenance: v.status === 'MAINTENANCE' || v.status === 'in_service' ? 'In Progress' : `2025-${Math.random() < 0.5 ? '11' : '12'}-${Math.floor(Math.random() * 28) + 1}`,
-        city: cityName
-      }));
+      const transformedVehicles = (vehiclesData || []).map((v: any, index: number) => {
+        const vehicleLat = cityCenter.lat + (Math.random() - 0.5) * 0.15;
+        const vehicleLng = cityCenter.lng + (Math.random() - 0.5) * 0.20;
+        
+        // Generate random pickup and dropoff locations within city bounds
+        const pickupLocation = {
+          lat: cityCenter.lat + (Math.random() - 0.5) * 0.12,
+          lng: cityCenter.lng + (Math.random() - 0.5) * 0.18
+        };
+        const dropoffLocation = {
+          lat: cityCenter.lat + (Math.random() - 0.5) * 0.12,
+          lng: cityCenter.lng + (Math.random() - 0.5) * 0.18
+        };
+        
+        return {
+          id: v.external_ref?.split(' ')[1] || v.id.slice(0, 5),
+          name: v.external_ref || v.id.slice(0, 8),
+          status: v.status.toLowerCase(),
+          battery: Math.round(v.soc * 100),
+          location: {
+            lat: vehicleLat,
+            lng: vehicleLng
+          },
+          route: ['Downtown Route', 'Express Line', 'Airport Shuttle', 'City Loop', 'Suburban Connect'][index % 5],
+          chargingTime: v.status === 'CHARGING' || v.status === 'at_depot' ? `${Math.floor(Math.random() * 3) + 1}h ${Math.floor(Math.random() * 60)}m` : 'N/A',
+          nextMaintenance: v.status === 'MAINTENANCE' || v.status === 'in_service' ? 'In Progress' : `2025-${Math.random() < 0.5 ? '11' : '12'}-${Math.floor(Math.random() * 28) + 1}`,
+          city: cityName,
+          routePath: {
+            pickup: pickupLocation,
+            dropoff: dropoffLocation
+          }
+        };
+      });
 
       console.log(`Loaded ${transformedVehicles.length} vehicles for ${cityName}`);
       setVehicles(transformedVehicles);
