@@ -316,11 +316,12 @@ const Index = () => {
         const vehicleLng = cityCenter.lng + (Math.random() - 0.5) * 0.20;
         const status = v.status.toLowerCase();
         
-        // Only generate routes for active vehicles (not idle, charging, at_depot, maintenance, or in_service)
-        const isActiveVehicle = status === 'on_trip' || status === 'enroute_depot';
+        // Generate routes for active vehicles (not idle, at_depot, or in_service)
+        const isActiveVehicle = status === 'on_trip' || status === 'enroute_depot' || status === 'idle';
         let routePath = undefined;
         
-        if (isActiveVehicle && Math.random() > 0.6) { // Only 40% of active vehicles have visible routes
+        // Show routes for ~30% of vehicles total
+        if (isActiveVehicle && index % 3 === 0) {
           // Generate random pickup and dropoff locations within city bounds
           routePath = {
             pickup: {
