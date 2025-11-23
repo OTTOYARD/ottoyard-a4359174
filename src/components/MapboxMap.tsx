@@ -77,14 +77,6 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
     depotMarkersRef.current.forEach(marker => marker.remove());
     depotMarkersRef.current = [];
 
-    // Remove existing route layers and sources
-    if (map.current.getLayer('routes')) {
-      map.current.removeLayer('routes');
-    }
-    if (map.current.getSource('routes')) {
-      map.current.removeSource('routes');
-    }
-
     // Add vehicle markers - show all vehicles for the city
     vehicles.forEach((vehicle, index) => {
       console.log(`Rendering vehicle ${index + 1}/${vehicles.length}:`, vehicle.name, vehicle.location);
@@ -323,91 +315,8 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
       depotMarkersRef.current.push(marker);
     });
     
-    // Helper function to create curved path between points (simulating street patterns)
-    const createCurvedPath = (start: [number, number], end: [number, number], waypoints: number = 3) => {
-      const coordinates: [number, number][] = [start];
-      
-      // Add intermediate waypoints with slight offsets to simulate street turns
-      for (let i = 1; i < waypoints; i++) {
-        const ratio = i / waypoints;
-        const baseLng = start[0] + (end[0] - start[0]) * ratio;
-        const baseLat = start[1] + (end[1] - start[1]) * ratio;
-        
-        // Add perpendicular offset to create curves
-        const offsetMagnitude = 0.002 * Math.sin(ratio * Math.PI);
-        const perpOffsetLng = -(end[1] - start[1]) * offsetMagnitude;
-        const perpOffsetLat = (end[0] - start[0]) * offsetMagnitude;
-        
-        coordinates.push([baseLng + perpOffsetLng, baseLat + perpOffsetLat]);
-      }
-      
-      coordinates.push(end);
-      return coordinates;
-    };
-
-    // Add route lines for vehicles with route paths (single continuous line per vehicle)
-    const vehiclesWithRoutes = vehicles.filter((vehicle: any) => vehicle.routePath?.pickup && vehicle.routePath?.dropoff);
-    console.log(`🛣️ Found ${vehiclesWithRoutes.length} vehicles with route paths out of ${vehicles.length} total vehicles`);
-    
-    const routeFeatures = vehiclesWithRoutes.map((vehicle: any) => {
-      // Create one continuous curved path: vehicle -> pickup -> dropoff
-      const startToPickup = createCurvedPath(
-        [vehicle.location.lng, vehicle.location.lat],
-        [vehicle.routePath.pickup.lng, vehicle.routePath.pickup.lat],
-        2
-      );
-      const pickupToDropoff = createCurvedPath(
-        [vehicle.routePath.pickup.lng, vehicle.routePath.pickup.lat],
-        [vehicle.routePath.dropoff.lng, vehicle.routePath.dropoff.lat],
-        3
-      );
-      
-      // Combine into single path (remove duplicate pickup point)
-      const fullPath = [...startToPickup, ...pickupToDropoff.slice(1)];
-      
-      return {
-        type: 'Feature' as const,
-        properties: {
-          vehicleId: vehicle.id,
-          color: getVehicleHealthColor(vehicle.battery, vehicle.status)
-        },
-        geometry: {
-          type: 'LineString' as const,
-          coordinates: fullPath
-        }
-      };
-    });
-
-    if (routeFeatures.length > 0) {
-      console.log(`✅ Adding ${routeFeatures.length} route lines to map`);
-      map.current.addSource('routes', {
-        type: 'geojson',
-        data: {
-          type: 'FeatureCollection',
-          features: routeFeatures
-        }
-      });
-
-      map.current.addLayer({
-        id: 'routes',
-        type: 'line',
-        source: 'routes',
-        layout: {
-          'line-join': 'round',
-          'line-cap': 'round'
-        },
-        paint: {
-          'line-color': ['get', 'color'],
-          'line-width': 1.5,
-          'line-opacity': 0.6
-        }
-      });
-    } else {
-      console.log('⚠️ No route features to display');
-    }
-
     // Summary logging
-    console.log(`✅ MapboxMap: Rendered ${vehicleMarkersRef.current.length} vehicle markers, ${depotMarkersRef.current.length} depot markers, and ${routeFeatures.length} routes`);
+    console.log(`✅ MapboxMap: Rendered ${vehicleMarkersRef.current.length} vehicle markers and ${depotMarkersRef.current.length} depot markers`);
   };
 
   const getVehicleHealthColor = (battery: number, status: string): string => {

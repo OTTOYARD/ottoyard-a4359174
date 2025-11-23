@@ -314,31 +314,11 @@ const Index = () => {
       const transformedVehicles = (vehiclesData || []).map((v: any, index: number) => {
         const vehicleLat = cityCenter.lat + (Math.random() - 0.5) * 0.15;
         const vehicleLng = cityCenter.lng + (Math.random() - 0.5) * 0.20;
-        const status = v.status.toLowerCase();
-        
-        // Generate routes for active vehicles (not idle, at_depot, or in_service)
-        const isActiveVehicle = status === 'on_trip' || status === 'enroute_depot' || status === 'idle';
-        let routePath = undefined;
-        
-        // Show routes for ~30% of vehicles total
-        if (isActiveVehicle && index % 3 === 0) {
-          // Generate random pickup and dropoff locations within city bounds
-          routePath = {
-            pickup: {
-              lat: cityCenter.lat + (Math.random() - 0.5) * 0.10,
-              lng: cityCenter.lng + (Math.random() - 0.5) * 0.15
-            },
-            dropoff: {
-              lat: cityCenter.lat + (Math.random() - 0.5) * 0.10,
-              lng: cityCenter.lng + (Math.random() - 0.5) * 0.15
-            }
-          };
-        }
         
         return {
           id: v.external_ref?.split(' ')[1] || v.id.slice(0, 5),
           name: v.external_ref || v.id.slice(0, 8),
-          status,
+          status: v.status.toLowerCase(),
           battery: Math.round(v.soc * 100),
           location: {
             lat: vehicleLat,
@@ -347,8 +327,7 @@ const Index = () => {
           route: ['Downtown Route', 'Express Line', 'Airport Shuttle', 'City Loop', 'Suburban Connect'][index % 5],
           chargingTime: v.status === 'CHARGING' || v.status === 'at_depot' ? `${Math.floor(Math.random() * 3) + 1}h ${Math.floor(Math.random() * 60)}m` : 'N/A',
           nextMaintenance: v.status === 'MAINTENANCE' || v.status === 'in_service' ? 'In Progress' : `2025-${Math.random() < 0.5 ? '11' : '12'}-${Math.floor(Math.random() * 28) + 1}`,
-          city: cityName,
-          routePath
+          city: cityName
         };
       });
 
