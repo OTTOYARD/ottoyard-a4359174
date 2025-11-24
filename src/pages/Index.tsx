@@ -509,30 +509,59 @@ const Index = () => {
                     setSelectedTab('fleet');
                     setHighlightedVehicleId(vehicleId);
                     setTimeout(() => setHighlightedVehicleId(null), 3000);
-                    // Add a delay to ensure tab switches first
+                    // Add a longer delay to ensure tab switches and content renders
                     setTimeout(() => {
                       const element = document.getElementById(`vehicle-${vehicleId}`);
                       if (element) {
-                        element.scrollIntoView({
-                          behavior: 'smooth',
-                          block: 'center'
-                        });
+                        // Find the parent ScrollArea viewport
+                        const scrollArea = element.closest('[data-radix-scroll-area-viewport]');
+                        if (scrollArea) {
+                          // Calculate the scroll position to center the element
+                          const elementTop = element.offsetTop;
+                          const scrollAreaHeight = scrollArea.clientHeight;
+                          const elementHeight = element.clientHeight;
+                          const scrollTop = elementTop - (scrollAreaHeight / 2) + (elementHeight / 2);
+                          scrollArea.scrollTo({
+                            top: scrollTop,
+                            behavior: 'smooth'
+                          });
+                        } else {
+                          // Fallback to regular scrollIntoView
+                          element.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                          });
+                        }
                       }
-                    }, 100);
+                    }, 300);
                   }} onDepotClick={depotId => {
                     setSelectedTab('depots');
                     setHighlightedDepotId(depotId);
                     setTimeout(() => setHighlightedDepotId(null), 3000);
-                    // Add a delay to ensure tab switches first
+                    // Add a longer delay to ensure tab switches and content renders
                     setTimeout(() => {
                       const element = document.getElementById(`depot-${depotId}`);
                       if (element) {
+                        // Scroll the button container horizontally if needed
+                        const buttonContainer = element.closest('.overflow-x-auto');
+                        if (buttonContainer) {
+                          const elementLeft = element.offsetLeft;
+                          const containerWidth = buttonContainer.clientWidth;
+                          const elementWidth = element.clientWidth;
+                          const scrollLeft = elementLeft - (containerWidth / 2) + (elementWidth / 2);
+                          buttonContainer.scrollTo({
+                            left: scrollLeft,
+                            behavior: 'smooth'
+                          });
+                        }
+                        // Also scroll into view vertically
                         element.scrollIntoView({
                           behavior: 'smooth',
-                          block: 'center'
+                          block: 'center',
+                          inline: 'center'
                         });
                       }
-                    }, 100);
+                    }, 300);
                   }} />
                     </div>
                   </CardContent>
