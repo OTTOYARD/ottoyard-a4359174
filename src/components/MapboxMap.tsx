@@ -109,10 +109,13 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
         markerEl.style.filter = 'brightness(1)';
       });
 
-      // Add click handler
+      // Add click handler with URL param for highlighting
       markerEl.addEventListener('click', (e) => {
         e.stopPropagation();
         console.log('Vehicle clicked:', vehicle.id);
+        const url = new URL(window.location.href);
+        url.searchParams.set('selectedVehicle', vehicle.id);
+        window.history.pushState({}, '', url);
         onVehicleClick?.(vehicle.id);
       });
 
@@ -234,10 +237,13 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
         hideDepotPopup();
       });
 
-      // Add click handler
+      // Add click handler with URL param for highlighting
       markerEl.addEventListener('click', (e) => {
         e.stopPropagation();
         console.log('Depot clicked:', depot.id);
+        const url = new URL(window.location.href);
+        url.searchParams.set('selectedDepot', depot.id);
+        window.history.pushState({}, '', url);
         onDepotClick?.(depot.id);
       });
 
