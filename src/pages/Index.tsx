@@ -216,6 +216,8 @@ const Index = () => {
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [depots, setDepots] = useState<any[]>([]);
   const [loadingData, setLoadingData] = useState(false);
+  const [highlightedVehicleId, setHighlightedVehicleId] = useState<string | null>(null);
+  const [highlightedDepotId, setHighlightedDepotId] = useState<string | null>(null);
 
   // Popup states
   const [addVehicleOpen, setAddVehicleOpen] = useState(false);
@@ -505,6 +507,8 @@ const Index = () => {
                     <div className="h-[500px] scanning-line">
                       <MapboxMap vehicles={vehicles} depots={depots} city={currentCity} onVehicleClick={vehicleId => {
                     setSelectedTab('fleet');
+                    setHighlightedVehicleId(vehicleId);
+                    setTimeout(() => setHighlightedVehicleId(null), 3000);
                     // Add a delay to ensure tab switches first
                     setTimeout(() => {
                       const element = document.getElementById(`vehicle-${vehicleId}`);
@@ -513,15 +517,12 @@ const Index = () => {
                           behavior: 'smooth',
                           block: 'center'
                         });
-                        // Highlight the selected vehicle temporarily
-                        element.style.backgroundColor = 'hsl(var(--primary) / 0.1)';
-                        setTimeout(() => {
-                          element.style.backgroundColor = '';
-                        }, 2000);
                       }
                     }, 100);
                   }} onDepotClick={depotId => {
                     setSelectedTab('depots');
+                    setHighlightedDepotId(depotId);
+                    setTimeout(() => setHighlightedDepotId(null), 3000);
                     // Add a delay to ensure tab switches first
                     setTimeout(() => {
                       const element = document.getElementById(`depot-${depotId}`);
@@ -530,11 +531,6 @@ const Index = () => {
                           behavior: 'smooth',
                           block: 'center'
                         });
-                        // Highlight the selected depot temporarily
-                        element.style.backgroundColor = 'hsl(var(--primary) / 0.1)';
-                        setTimeout(() => {
-                          element.style.backgroundColor = '';
-                        }, 2000);
                       }
                     }, 100);
                   }} />
@@ -1183,11 +1179,11 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="fleet" className="space-y-6">
-            <OTTOQFleetView selectedCityName={selectedCityForOTTOQ} />
+            <OTTOQFleetView selectedCityName={selectedCityForOTTOQ} highlightedVehicleId={highlightedVehicleId} />
           </TabsContent>
 
           <TabsContent value="depots" className="space-y-6">
-            <OTTOQDepotView selectedCityName={selectedCityForOTTOQ} />
+            <OTTOQDepotView selectedCityName={selectedCityForOTTOQ} highlightedDepotId={highlightedDepotId} />
           </TabsContent>
 
           <TabsContent value="maintenance" className="space-y-6">
