@@ -53,9 +53,10 @@ interface City {
 
 interface OTTOQFleetViewProps {
   selectedCityName?: string;
+  highlightedVehicleId?: string | null;
 }
 
-export const OTTOQFleetView = ({ selectedCityName }: OTTOQFleetViewProps) => {
+export const OTTOQFleetView = ({ selectedCityName, highlightedVehicleId }: OTTOQFleetViewProps) => {
   const [cities, setCities] = useState<City[]>([]);
   const [selectedCity, setSelectedCity] = useState<string>("");
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -433,7 +434,10 @@ export const OTTOQFleetView = ({ selectedCityName }: OTTOQFleetViewProps) => {
                   {vehicles.map((vehicle) => (
                     <Card
                       key={vehicle.id}
-                      className="hover:shadow-glow transition-all duration-300 border-border/50 futuristic-card"
+                      id={`vehicle-${vehicle.id}`}
+                      className={`hover:shadow-glow transition-all duration-500 border-border/50 futuristic-card ${
+                        highlightedVehicleId === vehicle.id ? 'ring-4 ring-primary shadow-fleet-xl bg-primary/5' : ''
+                      }`}
                     >
                       <CardHeader className="pb-3">
                         <div className="flex items-start justify-between">

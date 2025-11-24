@@ -55,9 +55,10 @@ interface Depot {
 
 interface OTTOQDepotViewProps {
   selectedCityName?: string;
+  highlightedDepotId?: string | null;
 }
 
-export const OTTOQDepotView = ({ selectedCityName }: OTTOQDepotViewProps) => {
+export const OTTOQDepotView = ({ selectedCityName, highlightedDepotId }: OTTOQDepotViewProps) => {
   const [cities, setCities] = useState<City[]>([]);
   const [selectedCity, setSelectedCity] = useState<string>("");
   const [depots, setDepots] = useState<Depot[]>([]);
@@ -234,14 +235,17 @@ export const OTTOQDepotView = ({ selectedCityName }: OTTOQDepotViewProps) => {
       {selectedCity && (
         <div className="space-y-4">
             <div className="flex items-center justify-between gap-2">
-              <div className="flex space-x-2 overflow-x-auto pb-2">
+                <div className="flex space-x-2 overflow-x-auto pb-2">
                 {depots.map((depot) => (
                   <Button
                     key={depot.id}
+                    id={`depot-${depot.id}`}
                     variant={selectedDepot === depot.id ? "default" : "outline"}
                     size="sm"
                     onClick={() => setSelectedDepot(depot.id)}
-                    className="whitespace-nowrap"
+                    className={`whitespace-nowrap transition-all duration-500 ${
+                      highlightedDepotId === depot.id ? 'ring-4 ring-primary shadow-lg' : ''
+                    }`}
                   >
                     <Building2 className="w-4 h-4 mr-2" />
                     {depot.name}
