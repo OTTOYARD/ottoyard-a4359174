@@ -36,9 +36,10 @@ interface VehicleCardProps {
   onDetails?: (vehicle: Vehicle) => void;
   onSchedule?: (vehicle: Vehicle) => void;
   onSendToOtto?: (vehicle: Vehicle) => void;
+  highlighted?: boolean;
 }
 
-const VehicleCard = ({ vehicle, compact = false, onTrack, onDetails, onSchedule, onSendToOtto }: VehicleCardProps) => {
+const VehicleCard = ({ vehicle, compact = false, onTrack, onDetails, onSchedule, onSendToOtto, highlighted = false }: VehicleCardProps) => {
   const [showDetails, setShowDetails] = useState(false);
   const getStatusVariant = (status: string) => {
     switch (status) {
@@ -92,7 +93,9 @@ const VehicleCard = ({ vehicle, compact = false, onTrack, onDetails, onSchedule,
   }
 
   return (
-    <Card className="shadow-fleet-md hover:shadow-fleet-lg transition-shadow duration-200 select-none">
+    <Card className={`shadow-fleet-md hover:shadow-fleet-lg transition-all duration-300 select-none ${
+      highlighted ? 'ring-4 ring-primary/60 shadow-[0_0_30px_rgba(var(--primary),0.5)] scale-[1.02]' : ''
+    }`}>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg">{vehicle.name}</CardTitle>

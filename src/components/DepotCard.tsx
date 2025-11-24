@@ -26,9 +26,10 @@ interface Depot {
 interface DepotCardProps {
   depot: Depot;
   compact?: boolean;
+  highlighted?: boolean;
 }
 
-const DepotCard = ({ depot, compact = false }: DepotCardProps) => {
+const DepotCard = ({ depot, compact = false, highlighted = false }: DepotCardProps) => {
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
   const efficiencyRate = (depot.energyReturned / depot.energyGenerated) * 100;
 
@@ -72,7 +73,9 @@ const DepotCard = ({ depot, compact = false }: DepotCardProps) => {
   }
 
   return (
-    <Card className="shadow-fleet-md hover:shadow-fleet-lg transition-shadow duration-200 select-none">
+    <Card className={`shadow-fleet-md hover:shadow-fleet-lg transition-all duration-300 select-none ${
+      highlighted ? 'ring-4 ring-energy-grid/60 shadow-[0_0_30px_rgba(var(--energy-grid),0.5)] scale-[1.02]' : ''
+    }`}>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center">
