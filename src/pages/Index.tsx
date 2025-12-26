@@ -31,6 +31,7 @@ import { Filter, RefreshCw } from "lucide-react";
 import { IncidentStatus } from "@/data/incidents-mock";
 import { OTTOQFleetView } from "@/components/OTTOQFleetView";
 import { OTTOQDepotView } from "@/components/OTTOQDepotView";
+import { NotificationsPanel } from "@/components/NotificationsPanel";
 
 
 // Incidents Tab Component
@@ -439,8 +440,9 @@ const Index = () => {
               </div>
             </div>
             <div className="flex flex-col items-end space-y-2 flex-shrink-0">
-              {/* Top Row: Profile + Cart */}
+              {/* Top Row: Notifications + Profile + Cart */}
               <div className="flex items-center space-x-2">
+                <NotificationsPanel />
                 <Button variant="outline" size="sm" onClick={() => navigate("/profile")}>
                   <Settings className="h-4 w-4" />
                 </Button>
