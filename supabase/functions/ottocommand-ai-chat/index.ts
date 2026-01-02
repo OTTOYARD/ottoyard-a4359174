@@ -632,6 +632,41 @@ For OTTOW dispatch requests, be conversational and guide users through the selec
     {
       type: "function",
       function: {
+        name: "query_incidents",
+        description: "Query incident status, history, and details.",
+        parameters: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            status: { type: "string", enum: ["Reported", "Dispatched", "Secured", "Closed"], description: "Filter by incident status" },
+            type: { type: "string", description: "Filter by incident type (collision, malfunction, vandalism, etc.)" },
+            city: { type: "string", description: "Filter by city name" },
+            limit: { type: "number", description: "Max results to return" },
+          },
+          required: [],
+        },
+      },
+    },
+    {
+      type: "function",
+      function: {
+        name: "compare_performance",
+        description: "Compare performance between cities, depots, or vehicles.",
+        parameters: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            compare_type: { type: "string", enum: ["cities", "depots", "vehicles"], description: "Type of comparison" },
+            entity_a: { type: "string", description: "First entity to compare (city name, depot id, or vehicle id)" },
+            entity_b: { type: "string", description: "Second entity to compare" },
+          },
+          required: ["compare_type", "entity_a", "entity_b"],
+        },
+      },
+    },
+    {
+      type: "function",
+      function: {
         name: "schedule_vehicle_task",
         description: "Schedule maintenance/ops tasks (maintenance, inspection, route_assignment, charging).",
         parameters: {
