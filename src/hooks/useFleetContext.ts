@@ -278,9 +278,9 @@ export function useFleetContext(): FleetContext {
   // Calculate incident metrics
   const incidentMetrics: IncidentMetrics = {
     totalIncidents: incidents.length,
-    activeIncidents: incidents.filter((i) => i.status === "enRoute" || i.status === "onSite").length,
-    pendingIncidents: incidents.filter((i) => i.status === "dispatched").length,
-    closedIncidents: incidents.filter((i) => i.status === "resolved").length,
+    activeIncidents: incidents.filter((i) => i.status === "Dispatched" || i.status === "Secured").length,
+    pendingIncidents: incidents.filter((i) => i.status === "Reported").length,
+    closedIncidents: incidents.filter((i) => i.status === "Closed").length,
     incidentsByType: incidents.reduce((acc, i) => {
       acc[i.type] = (acc[i.type] || 0) + 1;
       return acc;
