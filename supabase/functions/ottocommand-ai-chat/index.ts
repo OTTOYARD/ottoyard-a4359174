@@ -53,6 +53,7 @@ serve(async (req) => {
     currentCity = null,
     vehicles = [],
     depots = [],
+    fleetContext = null, // NEW: Real-time fleet context from client
   } = payload ?? {};
   if (!message || typeof message !== "string") return fail(400, "'message' is required and must be a string");
 
@@ -161,19 +162,35 @@ serve(async (req) => {
 
   const locationInfo = currentCity ? `${currentCity.name}${currentCity.country ? ", " + currentCity.country : ""}` : "All Regions";
   
+  // Use client-provided fleet context if available (more accurate real-time data)
+  const fleetMetrics = fleetContext?.metrics?.fleet || derived;
+  const depotMetrics = fleetContext?.metrics?.depot || {};
+  const incidentMetrics = fleetContext?.metrics?.incidents || {};
+  const serializedContext = fleetContext?.serialized || "";
+  
   // Enhanced system prompt for fleet intelligence
   const enhancedSystemPrompt = `You are OttoCommand AI — the definitive Autonomous Fleet Operations Intelligence System for OTTOYARD's premium OEM partners.
 
 **TARGET PARTNERS & CONTEXT:**
-Primary OEM Partners: Waymo, Zoox, Motional, May Mobility, Uber ATG, Lyft Level 5
+Primary OEM Partners: Waymo, Zoox, Motional, May Mobility, Cruise, Aurora, Nuro, Tesla
 Industry Focus: Autonomous vehicle fleet management, L4/L5 robotaxi operations, OEM partnership optimization
 Management Audience: Fleet directors, operations VPs, partner relationship managers, C-suite executives
 
-**CURRENT OPERATIONAL STATUS:**
+${serializedContext ? `**REAL-TIME FLEET DATA:**\n${serializedContext}\n` : `**CURRENT OPERATIONAL STATUS:**
 Region: ${locationInfo}
-Fleet Overview: ${derived.total} autonomous vehicles | Active: ${derived.active} | Charging: ${derived.charging} | Maintenance: ${derived.maint} | Idle: ${derived.idle}
-Average Battery: ${derived.avgBatt}%
-Partner Vehicle Status: ${actualVehicles.slice(0, 8).map((v: any) => `${v.id}:${v.battery ?? v.soc * 100 | 0}%`).join(", ")}${actualVehicles.length > 8 ? "..." : ""}
+Fleet Overview: ${fleetMetrics.totalVehicles || derived.total} autonomous vehicles | Active: ${fleetMetrics.activeVehicles || derived.active} | Charging: ${fleetMetrics.chargingVehicles || derived.charging} | Maintenance: ${fleetMetrics.maintenanceVehicles || derived.maint} | Idle: ${fleetMetrics.idleVehicles || derived.idle}
+Average SOC: ${fleetMetrics.avgSoc || derived.avgBatt}%
+Low Battery Vehicles: ${fleetMetrics.lowBatteryCount || 0}
+Average Health Score: ${fleetMetrics.avgHealthScore || 100}/100
+
+Depot Metrics:
+• Total Depots: ${depotMetrics.totalDepots || 0}
+• Charge Stalls: ${depotMetrics.availableChargeStalls || 0}/${depotMetrics.totalChargeStalls || 0} available
+• Active Jobs: ${depotMetrics.activeJobs || 0} | Pending: ${depotMetrics.pendingJobs || 0}
+
+Incidents:
+• Total: ${incidentMetrics.totalIncidents || 0} | Active: ${incidentMetrics.activeIncidents || 0} | Pending: ${incidentMetrics.pendingIncidents || 0}
+`}
 
 **OTTOW DISPATCH PROTOCOL (HIGHEST PRIORITY):**
 When a user mentions "OTTOW", "dispatch", "tow", or uses the OTTOW quick action:
@@ -267,7 +284,7 @@ For OTTOW dispatch requests, be conversational and guide users through the selec
   if (shouldUseClaude) {
     console.log("Using Claude for advanced fleet analysis with tool support");
     try {
-      // Convert tools to Claude format
+      // Convert tools to Claude format - includes all new query tools
       const claudeTools = [
         {
           name: "dispatch_ottow_tow",
@@ -276,21 +293,92 @@ For OTTOW dispatch requests, be conversational and guide users through the selec
             type: "object",
             properties: {
               city: { type: "string", description: "City where the incident occurred (e.g., Nashville, Austin, LA, San Francisco)" },
-              vehicleId: { 
-                type: "string", 
-                description: "Specific vehicle ID to dispatch for (optional on first call, required after user selects A/B/C/D)" 
-              },
-              type: { 
-                type: "string", 
-                enum: ["collision", "malfunction", "interior", "vandalism"], 
-                description: "Type of incident" 
-              },
-              summary: { 
-                type: "string", 
-                description: "Brief incident description" 
-              },
+              vehicleId: { type: "string", description: "Specific vehicle ID to dispatch for (optional on first call, required after user selects A/B/C/D)" },
+              type: { type: "string", enum: ["collision", "malfunction", "interior", "vandalism"], description: "Type of incident" },
+              summary: { type: "string", description: "Brief incident description" },
             },
             required: ["city"],
+          },
+        },
+        {
+          name: "query_fleet_status",
+          description: "Query vehicle fleet status. Filter by city, status, SOC range, or specific vehicle ID. Use this for questions about vehicles, batteries, or fleet health.",
+          input_schema: {
+            type: "object",
+            properties: {
+              vehicle_id: { type: "string", description: "Specific vehicle to query" },
+              city: { type: "string", description: "Filter by city name" },
+              status: { type: "string", enum: ["idle", "charging", "maintenance", "active", "enroute"], description: "Filter by status" },
+              soc_below: { type: "number", description: "Find vehicles below this SOC (0-1)" },
+              soc_above: { type: "number", description: "Find vehicles above this SOC (0-1)" },
+              limit: { type: "number", description: "Max results to return" },
+            },
+            required: [],
+          },
+        },
+        {
+          name: "query_depot_resources",
+          description: "Query depot resource availability including charging stalls, detailing bays, and maintenance slots.",
+          input_schema: {
+            type: "object",
+            properties: {
+              depot_id: { type: "string", description: "Specific depot ID" },
+              city: { type: "string", description: "Filter by city" },
+              resource_type: { type: "string", enum: ["CHARGE_STALL", "CLEAN_DETAIL_STALL", "MAINTENANCE_BAY"], description: "Filter by resource type" },
+              status: { type: "string", enum: ["AVAILABLE", "BUSY", "OUT_OF_SERVICE"], description: "Filter by status" },
+            },
+            required: [],
+          },
+        },
+        {
+          name: "query_incidents",
+          description: "Query incident status, history, and details.",
+          input_schema: {
+            type: "object",
+            properties: {
+              status: { type: "string", enum: ["Reported", "Dispatched", "Secured", "At Depot", "Closed"], description: "Filter by status" },
+              type: { type: "string", enum: ["collision", "malfunction", "interior", "vandalism"], description: "Filter by incident type" },
+              city: { type: "string", description: "Filter by city" },
+              limit: { type: "number", description: "Max results" },
+            },
+            required: [],
+          },
+        },
+        {
+          name: "generate_analytics_report",
+          description: "Generate analytics reports for fleet health, depot utilization, or incident summary.",
+          input_schema: {
+            type: "object",
+            properties: {
+              report_type: { type: "string", enum: ["fleet_health", "depot_utilization", "incident_summary", "general"], description: "Type of report to generate" },
+              city: { type: "string", description: "Filter by city" },
+              time_period: { type: "string", enum: ["today", "week", "month"], description: "Time period for report" },
+            },
+            required: ["report_type"],
+          },
+        },
+        {
+          name: "get_recommendations",
+          description: "Get AI-generated operational recommendations based on current fleet state.",
+          input_schema: {
+            type: "object",
+            properties: {
+              focus_area: { type: "string", enum: ["charging", "maintenance", "capacity", "operations", "incidents"], description: "Focus area for recommendations" },
+            },
+            required: [],
+          },
+        },
+        {
+          name: "compare_performance",
+          description: "Compare performance between cities, depots, or vehicles.",
+          input_schema: {
+            type: "object",
+            properties: {
+              compare_type: { type: "string", enum: ["cities", "depots", "vehicles"], description: "What to compare" },
+              entity_a: { type: "string", description: "First entity to compare" },
+              entity_b: { type: "string", description: "Second entity to compare" },
+            },
+            required: ["compare_type", "entity_a", "entity_b"],
           },
         },
         {
@@ -310,14 +398,27 @@ For OTTOW dispatch requests, be conversational and guide users through the selec
         },
         {
           name: "web_search",
-          description: "Search the web for real-time information, latest updates, or specific data.",
+          description: "Search the web for AV industry information, regulations, best practices, or fleet management topics.",
           input_schema: {
             type: "object",
             properties: {
               query: { type: "string", description: "Search query" },
-              focus_area: { type: "string", description: "Optional: fleet_operations, maintenance, safety, regulations" },
+              focus_area: { type: "string", enum: ["fleet_operations", "maintenance", "safety", "regulations"], description: "Focus area for search" },
             },
             required: ["query"],
+          },
+        },
+        {
+          name: "create_optimization_plan",
+          description: "Create optimization plans for routes, energy, maintenance, or costs.",
+          input_schema: {
+            type: "object",
+            properties: {
+              focus_area: { type: "string", enum: ["routes", "energy", "maintenance", "costs"], description: "Area to optimize" },
+              timeframe: { type: "string", enum: ["immediate", "weekly", "monthly"], description: "Timeframe for implementation" },
+              goals: { type: "string", description: "Specific optimization goals" },
+            },
+            required: ["focus_area", "timeframe"],
           },
         },
       ];
@@ -360,7 +461,8 @@ For OTTOW dispatch requests, be conversational and guide users through the selec
             try {
               const result = await executeFunction(
                 { name: block.name, arguments: block.input } as any,
-                supabase
+                supabase,
+                fleetContext // Pass fleet context for query tools
               );
               toolResults.push({
                 type: "tool_result",
@@ -460,10 +562,81 @@ For OTTOW dispatch requests, be conversational and guide users through the selec
     {
       type: "function",
       function: {
+        name: "query_fleet_status",
+        description: "Query vehicle fleet status. Filter by city, status, SOC range, or specific vehicle ID.",
+        parameters: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            vehicle_id: { type: "string", description: "Specific vehicle to query" },
+            city: { type: "string", description: "Filter by city name" },
+            status: { type: "string", enum: ["idle", "charging", "maintenance", "active", "enroute"], description: "Filter by status" },
+            soc_below: { type: "number", description: "Find vehicles below this SOC (0-1)" },
+            soc_above: { type: "number", description: "Find vehicles above this SOC (0-1)" },
+            limit: { type: "number", description: "Max results to return" },
+          },
+          required: [],
+        },
+      },
+    },
+    {
+      type: "function",
+      function: {
+        name: "query_depot_resources",
+        description: "Query depot resource availability including charging stalls, detailing bays, and maintenance slots.",
+        parameters: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            depot_id: { type: "string", description: "Specific depot ID" },
+            city: { type: "string", description: "Filter by city" },
+            resource_type: { type: "string", enum: ["CHARGE_STALL", "CLEAN_DETAIL_STALL", "MAINTENANCE_BAY"], description: "Filter by resource type" },
+            status: { type: "string", enum: ["AVAILABLE", "BUSY", "OUT_OF_SERVICE"], description: "Filter by status" },
+          },
+          required: [],
+        },
+      },
+    },
+    {
+      type: "function",
+      function: {
+        name: "generate_analytics_report",
+        description: "Generate analytics reports for fleet health, depot utilization, or incident summary.",
+        parameters: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            report_type: { type: "string", enum: ["fleet_health", "depot_utilization", "incident_summary", "general"], description: "Type of report to generate" },
+            city: { type: "string", description: "Filter by city" },
+            time_period: { type: "string", enum: ["today", "week", "month"], description: "Time period for report" },
+          },
+          required: ["report_type"],
+        },
+      },
+    },
+    {
+      type: "function",
+      function: {
+        name: "get_recommendations",
+        description: "Get AI-generated operational recommendations based on current fleet state.",
+        parameters: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            focus_area: { type: "string", enum: ["charging", "maintenance", "capacity", "operations", "incidents"], description: "Focus area for recommendations" },
+          },
+          required: [],
+        },
+      },
+    },
+    {
+      type: "function",
+      function: {
         name: "schedule_vehicle_task",
         description: "Schedule maintenance/ops tasks (maintenance, inspection, route_assignment, charging).",
         parameters: {
-          type: "object", additionalProperties: false,
+          type: "object",
+          additionalProperties: false,
           properties: {
             vehicle_id: { type: "string" },
             task_type: { type: "string", enum: ["maintenance", "inspection", "route_assignment", "charging"] },
@@ -478,17 +651,16 @@ For OTTOW dispatch requests, be conversational and guide users through the selec
     {
       type: "function",
       function: {
-        name: "update_vehicle_status",
-        description: "Update vehicle status (active/idle/charging/maintenance/offline).",
+        name: "web_search",
+        description: "Search the web for AV industry information, regulations, best practices, or fleet management topics.",
         parameters: {
-          type: "object", additionalProperties: false,
+          type: "object",
+          additionalProperties: false,
           properties: {
-            vehicle_id: { type: "string" },
-            status: { type: "string", enum: ["active", "idle", "charging", "maintenance", "offline"] },
-            location: { type: "string" },
-            notes: { type: "string" },
+            query: { type: "string", description: "Search query" },
+            focus_area: { type: "string", enum: ["fleet_operations", "maintenance", "safety", "regulations"], description: "Focus area for search" },
           },
-          required: ["vehicle_id", "status"],
+          required: ["query"],
         },
       },
     },
@@ -498,8 +670,13 @@ For OTTOW dispatch requests, be conversational and guide users through the selec
         name: "create_optimization_plan",
         description: "Create a plan for routes/energy/maintenance/costs.",
         parameters: {
-          type: "object", additionalProperties: false,
-          properties: { focus_area: { type: "string", enum: ["routes", "energy", "maintenance", "costs"] }, timeframe: { type: "string", enum: ["immediate", "weekly", "monthly"] }, goals: { type: "string" } },
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            focus_area: { type: "string", enum: ["routes", "energy", "maintenance", "costs"] },
+            timeframe: { type: "string", enum: ["immediate", "weekly", "monthly"] },
+            goals: { type: "string" },
+          },
           required: ["focus_area", "timeframe"],
         },
       },
@@ -536,8 +713,8 @@ For OTTOW dispatch requests, be conversational and guide users through the selec
       let args = {};
       try { args = call.function?.arguments ? JSON.parse(call.function.arguments) : {}; } catch {}
       try {
-        // executeFunction signature: ({ name, arguments }, supabaseClient)
-        const result = await executeFunction({ name, arguments: args } as any, supabase);
+        // executeFunction signature: ({ name, arguments }, supabaseClient, fleetContext)
+        const result = await executeFunction({ name, arguments: args } as any, supabase, fleetContext);
         toolMessages.push(asToolMessage(call.id, result ?? {}));
       } catch (err) {
         toolMessages.push(asToolMessage(call.id, { success: false, error: String(err) }));

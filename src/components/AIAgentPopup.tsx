@@ -2,13 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { MessageRenderer } from "./MessageRenderer";
-import { OTTOWDispatchDialog } from "./OTTOWDispatchDialog";
 import { useIncidentsStore } from "@/stores/incidentsStore";
+import { useFleetContext, serializeFleetContext } from "@/hooks/useFleetContext";
 import { 
   Bot, 
   Send, 
@@ -19,7 +18,8 @@ import {
   Zap,
   Loader2,
   X,
-  Truck
+  Truck,
+  Activity
 } from "lucide-react";
 
 interface AIAgentPopupProps {
@@ -42,17 +42,20 @@ interface Message {
 }
 
 export const AIAgentPopup = ({ open, onOpenChange, currentCity, vehicles = [], depots = [] }: AIAgentPopupProps) => {
+  // Get real-time fleet context
+  const fleetContext = useFleetContext();
+  const incidents = useIncidentsStore((state) => state.incidents);
+  
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       role: 'assistant',
-      content: 'Hello! I\'m OttoCommand AI, your intelligent fleet assistant. I can help with:\n\n• Scheduling & maintenance\n• Data analysis & reporting\n• Voice commands & reservations\n• OTTOW dispatch services',
+      content: 'Hello! I\'m OttoCommand AI, your intelligent fleet assistant. I can help with:\n\n• **Fleet Status** - Real-time vehicle & depot data\n• **Analytics** - Performance reports & insights\n• **Operations** - Scheduling, maintenance, OTTOW dispatch\n• **Industry Knowledge** - AV regulations, best practices\n\nAsk me anything about your fleet!',
       timestamp: new Date()
     }
   ]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [showOTTOWDialog, setShowOTTOWDialog] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -61,11 +64,11 @@ export const AIAgentPopup = ({ open, onOpenChange, currentCity, vehicles = [], d
   }, [messages, open]);
 
   const quickActions = [
+    { icon: Activity, label: "Fleet Status", action: "What's the current fleet status?" },
+    { icon: BarChart3, label: "Analytics Report", action: "Generate a fleet health report" },
     { icon: Calendar, label: "Schedule Maintenance", action: "schedule maintenance for vehicle" },
-    { icon: MapPin, label: "Reserve Depot Stall", action: "reserve a depot stall" },
-    { icon: BarChart3, label: "Analyze Fleet Data", action: "analyze fleet performance data" },
-    { icon: Wrench, label: "Check Vehicle Status", action: "check vehicle maintenance status" },
-    { icon: Zap, label: "Energy Optimization", action: "optimize energy usage" },
+    { icon: MapPin, label: "Depot Availability", action: "Show me depot resource availability" },
+    { icon: Wrench, label: "Recommendations", action: "What are your recommendations for the fleet?" },
     { icon: Truck, label: "OTTOW Dispatch", action: "ottow_dispatch", isDialog: true }
   ];
 
@@ -88,14 +91,35 @@ export const AIAgentPopup = ({ open, onOpenChange, currentCity, vehicles = [], d
     setIsLoading(true);
 
     try {
-      // Call AI assistant through our edge function
+      // Serialize fleet context for the AI
+      const fleetDataContext = serializeFleetContext(fleetContext);
+      
+      // Call AI assistant through our edge function with real-time data
       const { data, error } = await supabase.functions.invoke('ottocommand-ai-chat', {
         body: {
           message: text,
-          conversationHistory: messages.slice(-10), // Send last 10 messages for context
+          conversationHistory: messages.slice(-10),
           currentCity,
           vehicles,
-          depots
+          depots,
+          // Pass comprehensive fleet context
+          fleetContext: {
+            serialized: fleetDataContext,
+            metrics: {
+              fleet: fleetContext.fleetMetrics,
+              depot: fleetContext.depotMetrics,
+              incidents: fleetContext.incidentMetrics,
+            },
+            cities: fleetContext.cities,
+            incidents: incidents.map(i => ({
+              id: i.incidentId,
+              type: i.type,
+              status: i.status,
+              city: i.city,
+              vehicleId: i.vehicleId,
+              summary: i.summary,
+            })),
+          }
         }
       });
 
@@ -187,13 +211,32 @@ export const AIAgentPopup = ({ open, onOpenChange, currentCity, vehicles = [], d
       setIsLoading(true);
 
       try {
+        const fleetDataContext = serializeFleetContext(fleetContext);
+        
         const { data, error } = await supabase.functions.invoke('ottocommand-ai-chat', {
           body: {
             message: dispatchMessage,
             conversationHistory: messages.slice(-10),
             currentCity,
             vehicles,
-            depots
+            depots,
+            fleetContext: {
+              serialized: fleetDataContext,
+              metrics: {
+                fleet: fleetContext.fleetMetrics,
+                depot: fleetContext.depotMetrics,
+                incidents: fleetContext.incidentMetrics,
+              },
+              cities: fleetContext.cities,
+              incidents: incidents.map(i => ({
+                id: i.incidentId,
+                type: i.type,
+                status: i.status,
+                city: i.city,
+                vehicleId: i.vehicleId,
+                summary: i.summary,
+              })),
+            }
           }
         });
 
