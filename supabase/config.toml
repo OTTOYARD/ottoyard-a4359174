@@ -87,3 +87,6 @@ verify_jwt = false
 
 [functions.update-vehicle-oems]
 verify_jwt = false
+
+[functions.generate-incident-report]
+verify_jwt = false
