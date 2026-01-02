@@ -1,9 +1,18 @@
 import { memo } from "react";
+import DOMPurify from "dompurify";
 
 interface MessageRendererProps {
   content: string;
   role: 'user' | 'assistant';
 }
+
+// Configure DOMPurify to allow only safe formatting tags
+const sanitizeHtml = (html: string): string => {
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ['strong', 'em', 'b', 'i', 'br', 'span'],
+    ALLOWED_ATTR: ['class'],
+  });
+};
 
 const MessageRenderer = memo(({ content, role }: MessageRendererProps) => {
   // Enhanced message formatting with proper headings, bullets, and spacing
@@ -133,8 +142,8 @@ const MessageRenderer = memo(({ content, role }: MessageRendererProps) => {
       return (
         <ol className="list-none space-y-2 mb-3">
           {numberedItems.map((item, itemIndex) => {
-            console.log('📝 Rendering item', itemIndex + 1, ':', item);
             const formattedItem = item.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-foreground">$1</strong>');
+            const sanitizedItem = sanitizeHtml(formattedItem);
             return (
               <li key={itemIndex} className="text-sm leading-relaxed flex items-start">
                 <span className="text-primary font-medium mr-3 mt-0.5 min-w-[1.5rem]">
@@ -142,7 +151,7 @@ const MessageRenderer = memo(({ content, role }: MessageRendererProps) => {
                 </span>
                 <div 
                   className="flex-1"
-                  dangerouslySetInnerHTML={{ __html: formattedItem }}
+                  dangerouslySetInnerHTML={{ __html: sanitizedItem }}
                 />
               </li>
             );
@@ -159,12 +168,13 @@ const MessageRenderer = memo(({ content, role }: MessageRendererProps) => {
           {items.map((item, itemIndex) => {
             const cleanItem = item.replace(/^[•\-\*]\s/, '').trim();
             const formattedItem = cleanItem.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-foreground">$1</strong>');
+            const sanitizedItem = sanitizeHtml(formattedItem);
             return (
               <li key={itemIndex} className="text-sm leading-relaxed flex items-start">
                 <span className="text-primary mr-3 mt-1 text-xs">•</span>
                 <div 
                   className="flex-1"
-                  dangerouslySetInnerHTML={{ __html: formattedItem }}
+                  dangerouslySetInnerHTML={{ __html: sanitizedItem }}
                 />
               </li>
             );
@@ -177,11 +187,12 @@ const MessageRenderer = memo(({ content, role }: MessageRendererProps) => {
     const lines = text.split('\n').filter(line => line.trim());
     return lines.map((line, lineIndex) => {
       const formattedLine = line.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-foreground">$1</strong>');
+      const sanitizedLine = sanitizeHtml(formattedLine);
       return (
         <p 
           key={lineIndex} 
           className="text-sm leading-relaxed mb-2 last:mb-0"
-          dangerouslySetInnerHTML={{ __html: formattedLine }}
+          dangerouslySetInnerHTML={{ __html: sanitizedLine }}
         />
       );
     });

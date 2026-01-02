@@ -43,6 +43,23 @@ serve(async (req) => {
 
   if (req.method !== "POST") return fail(405, "Method not allowed", { method: req.method });
 
+  // Validate authentication
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader) {
+    return fail(401, "Unauthorized", { reason: "Missing Authorization header" });
+  }
+
+  const supabaseAuth = createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+    { global: { headers: { Authorization: authHeader } } }
+  );
+
+  const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
+  if (authError || !user) {
+    return fail(401, "Unauthorized", { reason: "Invalid or expired token" });
+  }
+
   // Parse input
   let payload: any;
   try { payload = await req.json(); } catch (e) { return fail(400, "Invalid JSON body", String(e)); }
