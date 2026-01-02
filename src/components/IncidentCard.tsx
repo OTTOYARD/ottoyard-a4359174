@@ -1,8 +1,11 @@
-import { MapPin, FileText } from "lucide-react";
+import { useState } from "react";
+import { MapPin, FileText, Download, Loader2 } from "lucide-react";
 import { Incident } from "@/data/incidents-mock";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { generateIncidentPDF } from "@/utils/incidentReportPDF";
+import { useToast } from "@/hooks/use-toast";
 
 interface IncidentCardProps {
   incident: Incident;
@@ -38,6 +41,34 @@ function formatTimestamp(iso: string): string {
 }
 
 export function IncidentCard({ incident, isSelected, onSelect }: IncidentCardProps) {
+  const [isGenerating, setIsGenerating] = useState(false);
+  const { toast } = useToast();
+
+  const handleDownloadReport = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsGenerating(true);
+    toast({
+      title: "Generating Report",
+      description: "Please wait while we generate your incident report...",
+    });
+    try {
+      await generateIncidentPDF({ incident });
+      toast({
+        title: "Report Downloaded",
+        description: `Incident report ${incident.incidentId} has been downloaded.`,
+      });
+    } catch (error) {
+      console.error('Failed to generate PDF:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate report. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   return (
     <Card
       className={`p-2 md:p-4 cursor-pointer transition-all hover:shadow-md ${
@@ -83,7 +114,6 @@ export function IncidentCard({ incident, isSelected, onSelect }: IncidentCardPro
               className="h-4 md:h-5 px-0.5 md:px-1 hidden md:inline-flex"
               onClick={(e) => {
                 e.stopPropagation();
-                // TODO: Open mini map modal
               }}
             >
               <MapPin className="w-2.5 h-2.5 md:w-3 md:h-3" />
@@ -99,6 +129,22 @@ export function IncidentCard({ incident, isSelected, onSelect }: IncidentCardPro
             >
               <FileText className="w-2.5 h-2.5 md:w-3 md:h-3" />
             </Button>
+            {incident.status === "Closed" && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-4 md:h-5 px-0.5 md:px-1 text-primary hover:text-primary/80"
+                onClick={handleDownloadReport}
+                disabled={isGenerating}
+                title="Download Incident Report PDF"
+              >
+                {isGenerating ? (
+                  <Loader2 className="w-2.5 h-2.5 md:w-3 md:h-3 animate-spin" />
+                ) : (
+                  <Download className="w-2.5 h-2.5 md:w-3 md:h-3" />
+                )}
+              </Button>
+            )}
           </div>
         </div>
         
