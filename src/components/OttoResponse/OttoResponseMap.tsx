@@ -1,44 +1,49 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { Circle, Pentagon, RotateCcw, MapPin, Car } from 'lucide-react';
+import { Circle, Pentagon, RotateCcw, MapPin, Loader2 } from 'lucide-react';
 import { useOttoResponseStore, ZonePoint, TrafficSeverity } from '@/stores/ottoResponseStore';
-import { AdaptedVehicle, isVehicleInZone, isVehicleNearZone } from '@/hooks/useOttoResponseData';
+import { AdaptedVehicle, isVehicleInZone, isVehicleNearZone, calculateDistanceMiles } from '@/hooks/useOttoResponseData';
 import { cn } from '@/lib/utils';
 
 interface OttoResponseMapProps {
   vehicles: AdaptedVehicle[];
 }
 
-// Map bounds for visualization (Nashville area as default)
-const MAP_BOUNDS = {
-  minLat: 35.9,
-  maxLat: 36.4,
-  minLng: -87.1,
-  maxLng: -86.5,
+// Mapbox token (same as main MapboxMap)
+const MAPBOX_TOKEN = 'pk.eyJ1Ijoib3R0b3lhcmQiLCJhIjoiY21lZWY5cjduMGtsdzJpb2wxNWpweGg4NCJ9.NfsLzQ2-o8wEHOfRrPO5WQ';
+
+// Traffic density mock zones for heatmap
+const MOCK_TRAFFIC_DATA: GeoJSON.FeatureCollection = {
+  type: 'FeatureCollection',
+  features: [
+    { type: 'Feature', properties: { intensity: 0.9 }, geometry: { type: 'Point', coordinates: [-86.78, 36.16] } },
+    { type: 'Feature', properties: { intensity: 0.7 }, geometry: { type: 'Point', coordinates: [-86.75, 36.18] } },
+    { type: 'Feature', properties: { intensity: 0.4 }, geometry: { type: 'Point', coordinates: [-86.82, 36.14] } },
+    { type: 'Feature', properties: { intensity: 0.6 }, geometry: { type: 'Point', coordinates: [-86.80, 36.20] } },
+    { type: 'Feature', properties: { intensity: 0.8 }, geometry: { type: 'Point', coordinates: [-86.77, 36.17] } },
+    { type: 'Feature', properties: { intensity: 0.5 }, geometry: { type: 'Point', coordinates: [-86.79, 36.15] } },
+    // Austin area
+    { type: 'Feature', properties: { intensity: 0.85 }, geometry: { type: 'Point', coordinates: [-97.74, 30.27] } },
+    { type: 'Feature', properties: { intensity: 0.65 }, geometry: { type: 'Point', coordinates: [-97.72, 30.29] } },
+    // LA area
+    { type: 'Feature', properties: { intensity: 0.75 }, geometry: { type: 'Point', coordinates: [-118.24, 34.05] } },
+    { type: 'Feature', properties: { intensity: 0.55 }, geometry: { type: 'Point', coordinates: [-118.28, 34.07] } },
+  ],
 };
 
-// Traffic density mock zones
-interface TrafficZone {
-  id: string;
-  center: { lat: number; lng: number };
-  radiusPx: number;
-  severity: TrafficSeverity;
-}
-
-const MOCK_TRAFFIC_ZONES: TrafficZone[] = [
-  { id: 't1', center: { lat: 36.16, lng: -86.78 }, radiusPx: 80, severity: 'High' },
-  { id: 't2', center: { lat: 36.18, lng: -86.75 }, radiusPx: 60, severity: 'Medium' },
-  { id: 't3', center: { lat: 36.14, lng: -86.82 }, radiusPx: 50, severity: 'Low' },
-  { id: 't4', center: { lat: 36.20, lng: -86.80 }, radiusPx: 45, severity: 'Medium' },
-];
-
 export function OttoResponseMap({ vehicles }: OttoResponseMapProps) {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const [mapSize, setMapSize] = useState({ width: 0, height: 0 });
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const map = useRef<mapboxgl.Map | null>(null);
+  const vehicleMarkersRef = useRef<mapboxgl.Marker[]>([]);
+  const zoneLayerRef = useRef<boolean>(false);
+  
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
   const [polygonPoints, setPolygonPoints] = useState<ZonePoint[]>([]);
   const [radiusCenter, setRadiusCenter] = useState<ZonePoint | null>(null);
   const [radiusMiles, setRadiusMiles] = useState(1);
@@ -55,70 +60,217 @@ export function OttoResponseMap({ vehicles }: OttoResponseMapProps) {
     confidence,
   } = useOttoResponseStore();
   
-  // Update map size on resize
+  // Calculate map center from vehicles
+  const getMapCenter = useCallback((): [number, number] => {
+    if (vehicles.length === 0) return [-86.7816, 36.1627]; // Default Nashville
+    const avgLng = vehicles.reduce((s, v) => s + v.location.lng, 0) / vehicles.length;
+    const avgLat = vehicles.reduce((s, v) => s + v.location.lat, 0) / vehicles.length;
+    return [avgLng, avgLat];
+  }, [vehicles]);
+  
+  // Initialize map
   useEffect(() => {
-    const updateSize = () => {
-      if (mapRef.current) {
-        setMapSize({
-          width: mapRef.current.clientWidth,
-          height: mapRef.current.clientHeight,
-        });
-      }
+    if (!mapContainer.current || map.current) return;
+    
+    mapboxgl.accessToken = MAPBOX_TOKEN;
+    
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/mapbox/dark-v11',
+      center: getMapCenter(),
+      zoom: 12,
+    });
+    
+    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    
+    map.current.on('load', () => {
+      setIsMapLoaded(true);
+      
+      // Add traffic heatmap layer
+      map.current!.addSource('traffic-heat', {
+        type: 'geojson',
+        data: MOCK_TRAFFIC_DATA,
+      });
+      
+      map.current!.addLayer({
+        id: 'traffic-heat-layer',
+        type: 'heatmap',
+        source: 'traffic-heat',
+        paint: {
+          'heatmap-weight': ['get', 'intensity'],
+          'heatmap-intensity': 1,
+          'heatmap-color': [
+            'interpolate',
+            ['linear'],
+            ['heatmap-density'],
+            0, 'rgba(0,0,0,0)',
+            0.2, 'rgba(34, 197, 94, 0.4)',
+            0.4, 'rgba(245, 158, 11, 0.5)',
+            0.6, 'rgba(245, 158, 11, 0.6)',
+            0.8, 'rgba(239, 68, 68, 0.7)',
+            1, 'rgba(239, 68, 68, 0.8)',
+          ],
+          'heatmap-radius': 60,
+          'heatmap-opacity': 0.7,
+        },
+      });
+      
+      // Add zone source
+      map.current!.addSource('zone', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: [] },
+      });
+      
+      // Add zone fill layer
+      map.current!.addLayer({
+        id: 'zone-fill',
+        type: 'fill',
+        source: 'zone',
+        paint: {
+          'fill-color': 'hsl(0, 85%, 60%)',
+          'fill-opacity': 0.2,
+        },
+      });
+      
+      // Add zone outline layer
+      map.current!.addLayer({
+        id: 'zone-outline',
+        type: 'line',
+        source: 'zone',
+        paint: {
+          'line-color': 'hsl(0, 85%, 60%)',
+          'line-width': 2,
+        },
+      });
+      
+      // Add buffer zone source
+      map.current!.addSource('zone-buffer', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: [] },
+      });
+      
+      // Add buffer outline layer
+      map.current!.addLayer({
+        id: 'zone-buffer-outline',
+        type: 'line',
+        source: 'zone-buffer',
+        paint: {
+          'line-color': 'hsl(45, 93%, 47%)',
+          'line-width': 2,
+          'line-dasharray': [4, 2],
+        },
+      });
+      
+      zoneLayerRef.current = true;
+    });
+    
+    return () => {
+      vehicleMarkersRef.current.forEach(m => m.remove());
+      map.current?.remove();
+      map.current = null;
     };
-    updateSize();
-    window.addEventListener('resize', updateSize);
-    return () => window.removeEventListener('resize', updateSize);
   }, []);
   
-  // Convert lat/lng to pixel coordinates
-  const toPixel = useCallback((lat: number, lng: number) => {
-    const x = ((lng - MAP_BOUNDS.minLng) / (MAP_BOUNDS.maxLng - MAP_BOUNDS.minLng)) * mapSize.width;
-    const y = ((MAP_BOUNDS.maxLat - lat) / (MAP_BOUNDS.maxLat - MAP_BOUNDS.minLat)) * mapSize.height;
-    return { x, y };
-  }, [mapSize]);
-  
-  // Convert pixel to lat/lng
-  const toLatLng = useCallback((x: number, y: number): ZonePoint => {
-    const lng = MAP_BOUNDS.minLng + (x / mapSize.width) * (MAP_BOUNDS.maxLng - MAP_BOUNDS.minLng);
-    const lat = MAP_BOUNDS.maxLat - (y / mapSize.height) * (MAP_BOUNDS.maxLat - MAP_BOUNDS.minLat);
-    return { lat, lng };
-  }, [mapSize]);
-  
-  // Convert miles to pixels (rough approximation)
-  const milesToPixels = useCallback((miles: number) => {
-    const degreesPerMile = 1 / 69; // Approximate
-    const lngSpan = MAP_BOUNDS.maxLng - MAP_BOUNDS.minLng;
-    const pixelsPerDegree = mapSize.width / lngSpan;
-    return miles * degreesPerMile * pixelsPerDegree;
-  }, [mapSize]);
-  
-  // Handle map click
-  const handleMapClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!mapRef.current) return;
+  // Handle map click for zone drawing
+  useEffect(() => {
+    if (!map.current || !isMapLoaded) return;
     
-    const rect = mapRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const point = toLatLng(x, y);
-    
-    if (drawingMode === 'radius') {
-      setRadiusCenter(point);
-      setDrawnZone({
-        type: 'radius',
-        center: point,
-        radiusMiles: radiusMiles,
-      });
-    } else if (drawingMode === 'polygon') {
-      const newPoints = [...polygonPoints, point];
-      setPolygonPoints(newPoints);
-      if (newPoints.length >= 3) {
+    const handleClick = (e: mapboxgl.MapMouseEvent) => {
+      const point: ZonePoint = { lat: e.lngLat.lat, lng: e.lngLat.lng };
+      
+      if (drawingMode === 'radius') {
+        setRadiusCenter(point);
         setDrawnZone({
-          type: 'polygon',
-          points: newPoints,
+          type: 'radius',
+          center: point,
+          radiusMiles: radiusMiles,
         });
+      } else if (drawingMode === 'polygon') {
+        const newPoints = [...polygonPoints, point];
+        setPolygonPoints(newPoints);
+        if (newPoints.length >= 3) {
+          setDrawnZone({
+            type: 'polygon',
+            points: newPoints,
+          });
+        }
       }
+    };
+    
+    map.current.on('click', handleClick);
+    
+    return () => {
+      map.current?.off('click', handleClick);
+    };
+  }, [isMapLoaded, drawingMode, polygonPoints, radiusMiles, setDrawnZone]);
+  
+  // Update zone visualization
+  useEffect(() => {
+    if (!map.current || !isMapLoaded || !zoneLayerRef.current) return;
+    
+    const zoneSource = map.current.getSource('zone') as mapboxgl.GeoJSONSource;
+    const bufferSource = map.current.getSource('zone-buffer') as mapboxgl.GeoJSONSource;
+    
+    if (!zoneSource || !bufferSource) return;
+    
+    if (!drawnZone) {
+      zoneSource.setData({ type: 'FeatureCollection', features: [] });
+      bufferSource.setData({ type: 'FeatureCollection', features: [] });
+      return;
     }
-  };
+    
+    if (drawnZone.type === 'radius' && drawnZone.center) {
+      const center = [drawnZone.center.lng, drawnZone.center.lat];
+      const radiusKm = (drawnZone.radiusMiles || 1) * 1.60934;
+      const bufferKm = radiusKm + 0.5 * 1.60934;
+      
+      // Create circle polygon
+      const createCircle = (centerLngLat: number[], radiusKm: number, points = 64) => {
+        const coords: number[][] = [];
+        for (let i = 0; i <= points; i++) {
+          const angle = (i / points) * 2 * Math.PI;
+          const dx = radiusKm * Math.cos(angle);
+          const dy = radiusKm * Math.sin(angle);
+          const lat = centerLngLat[1] + (dy / 111.32);
+          const lng = centerLngLat[0] + (dx / (111.32 * Math.cos(centerLngLat[1] * Math.PI / 180)));
+          coords.push([lng, lat]);
+        }
+        return coords;
+      };
+      
+      zoneSource.setData({
+        type: 'Feature',
+        properties: {},
+        geometry: {
+          type: 'Polygon',
+          coordinates: [createCircle(center, radiusKm)],
+        },
+      } as any);
+      
+      bufferSource.setData({
+        type: 'Feature',
+        properties: {},
+        geometry: {
+          type: 'Polygon',
+          coordinates: [createCircle(center, bufferKm)],
+        },
+      } as any);
+    } else if (drawnZone.type === 'polygon' && drawnZone.points && drawnZone.points.length >= 3) {
+      const coords = drawnZone.points.map(p => [p.lng, p.lat]);
+      coords.push(coords[0]); // Close polygon
+      
+      zoneSource.setData({
+        type: 'Feature',
+        properties: {},
+        geometry: {
+          type: 'Polygon',
+          coordinates: [coords],
+        },
+      } as any);
+      
+      bufferSource.setData({ type: 'FeatureCollection', features: [] });
+    }
+  }, [drawnZone, isMapLoaded]);
   
   // Update radius zone when slider changes
   useEffect(() => {
@@ -130,6 +282,53 @@ export function OttoResponseMap({ vehicles }: OttoResponseMapProps) {
       });
     }
   }, [radiusMiles, radiusCenter, drawingMode, setDrawnZone]);
+  
+  // Update vehicle markers
+  useEffect(() => {
+    if (!map.current || !isMapLoaded) return;
+    
+    // Clear existing markers
+    vehicleMarkersRef.current.forEach(m => m.remove());
+    vehicleMarkersRef.current = [];
+    
+    vehicles.forEach((vehicle) => {
+      const inZone = drawnZone && isVehicleInZone(vehicle, drawnZone);
+      const nearZone = drawnZone && isVehicleNearZone(vehicle, drawnZone);
+      
+      let color = '#3b82f6'; // Default blue
+      if (inZone) color = '#ef4444'; // Red for inside
+      else if (nearZone) color = '#f59e0b'; // Orange for near
+      
+      const el = document.createElement('div');
+      el.className = 'vehicle-marker';
+      el.style.cssText = `
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background-color: ${color};
+        border: 2px solid white;
+        box-shadow: 0 0 8px ${color}99;
+        cursor: pointer;
+      `;
+      el.title = `${vehicle.name} - ${vehicle.status}`;
+      
+      const marker = new mapboxgl.Marker({ element: el })
+        .setLngLat([vehicle.location.lng, vehicle.location.lat])
+        .addTo(map.current!);
+      
+      vehicleMarkersRef.current.push(marker);
+    });
+  }, [vehicles, drawnZone, isMapLoaded]);
+  
+  // Fit map to vehicles when they change significantly
+  useEffect(() => {
+    if (!map.current || !isMapLoaded || vehicles.length === 0) return;
+    
+    const bounds = new mapboxgl.LngLatBounds();
+    vehicles.forEach(v => bounds.extend([v.location.lng, v.location.lat]));
+    
+    map.current.fitBounds(bounds, { padding: 50, maxZoom: 14 });
+  }, [vehicles.length, isMapLoaded]);
   
   // Close polygon
   const closePolygon = () => {
@@ -148,26 +347,6 @@ export function OttoResponseMap({ vehicles }: OttoResponseMapProps) {
     setRadiusCenter(null);
     setDrawnZone(null);
     setDrawingMode('none');
-  };
-  
-  // Get traffic color
-  const getTrafficColor = (severity: TrafficSeverity) => {
-    switch (severity) {
-      case 'High': return 'rgba(239, 68, 68, 0.4)';
-      case 'Medium': return 'rgba(245, 158, 11, 0.35)';
-      case 'Low': return 'rgba(34, 197, 94, 0.3)';
-    }
-  };
-  
-  // Get vehicle color based on zone status
-  const getVehicleColor = (vehicle: AdaptedVehicle) => {
-    if (drawnZone && isVehicleInZone(vehicle, drawnZone)) {
-      return 'hsl(var(--destructive))';
-    }
-    if (drawnZone && isVehicleNearZone(vehicle, drawnZone)) {
-      return 'hsl(var(--warning))';
-    }
-    return 'hsl(var(--primary))';
   };
   
   return (
@@ -230,141 +409,17 @@ export function OttoResponseMap({ vehicles }: OttoResponseMapProps) {
       )}
       
       {/* Map Container */}
-      <div
-        ref={mapRef}
-        className={cn(
-          "flex-1 relative bg-background/80 cursor-crosshair overflow-hidden",
-          "bg-[radial-gradient(circle_at_center,_hsl(var(--muted)/0.3)_0%,_transparent_70%)]"
-        )}
-        onClick={handleMapClick}
-        style={{
-          backgroundImage: `
-            linear-gradient(hsl(var(--border)/0.3) 1px, transparent 1px),
-            linear-gradient(90deg, hsl(var(--border)/0.3) 1px, transparent 1px)
-          `,
-          backgroundSize: '40px 40px',
-        }}
-      >
-        {/* Traffic Density Overlay */}
-        {MOCK_TRAFFIC_ZONES.map((zone) => {
-          const pos = toPixel(zone.center.lat, zone.center.lng);
-          return (
-            <div
-              key={zone.id}
-              className="absolute rounded-full blur-xl pointer-events-none transition-opacity"
-              style={{
-                left: pos.x - zone.radiusPx,
-                top: pos.y - zone.radiusPx,
-                width: zone.radiusPx * 2,
-                height: zone.radiusPx * 2,
-                background: getTrafficColor(zone.severity),
-              }}
-            />
-          );
-        })}
+      <div className="flex-1 relative">
+        <div ref={mapContainer} className="absolute inset-0" />
         
-        {/* Drawn Radius Zone */}
-        {drawnZone?.type === 'radius' && drawnZone.center && (
-          <>
-            {/* Buffer ring */}
-            <div
-              className="absolute rounded-full border-2 border-dashed border-warning/50 pointer-events-none"
-              style={{
-                left: toPixel(drawnZone.center.lat, drawnZone.center.lng).x - milesToPixels((drawnZone.radiusMiles || 1) + 0.5),
-                top: toPixel(drawnZone.center.lat, drawnZone.center.lng).y - milesToPixels((drawnZone.radiusMiles || 1) + 0.5),
-                width: milesToPixels((drawnZone.radiusMiles || 1) + 0.5) * 2,
-                height: milesToPixels((drawnZone.radiusMiles || 1) + 0.5) * 2,
-              }}
-            />
-            {/* Main zone */}
-            <div
-              className="absolute rounded-full border-2 border-primary bg-primary/20 pointer-events-none"
-              style={{
-                left: toPixel(drawnZone.center.lat, drawnZone.center.lng).x - milesToPixels(drawnZone.radiusMiles || 1),
-                top: toPixel(drawnZone.center.lat, drawnZone.center.lng).y - milesToPixels(drawnZone.radiusMiles || 1),
-                width: milesToPixels(drawnZone.radiusMiles || 1) * 2,
-                height: milesToPixels(drawnZone.radiusMiles || 1) * 2,
-              }}
-            />
-            {/* Center marker */}
-            <div
-              className="absolute w-3 h-3 bg-primary rounded-full border-2 border-white transform -translate-x-1/2 -translate-y-1/2"
-              style={{
-                left: toPixel(drawnZone.center.lat, drawnZone.center.lng).x,
-                top: toPixel(drawnZone.center.lat, drawnZone.center.lng).y,
-              }}
-            />
-          </>
+        {!isMapLoaded && (
+          <div className="absolute inset-0 flex items-center justify-center bg-background/80">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
         )}
-        
-        {/* Drawn Polygon Zone */}
-        {(drawnZone?.type === 'polygon' || polygonPoints.length > 0) && (
-          <svg className="absolute inset-0 pointer-events-none" style={{ width: '100%', height: '100%' }}>
-            {/* Polygon fill */}
-            {(drawnZone?.points || polygonPoints).length >= 3 && (
-              <polygon
-                points={(drawnZone?.points || polygonPoints)
-                  .map((p) => `${toPixel(p.lat, p.lng).x},${toPixel(p.lat, p.lng).y}`)
-                  .join(' ')}
-                fill="hsl(var(--primary) / 0.2)"
-                stroke="hsl(var(--primary))"
-                strokeWidth="2"
-              />
-            )}
-            {/* Lines while drawing */}
-            {polygonPoints.length >= 2 && drawingMode === 'polygon' && (
-              <polyline
-                points={polygonPoints
-                  .map((p) => `${toPixel(p.lat, p.lng).x},${toPixel(p.lat, p.lng).y}`)
-                  .join(' ')}
-                fill="none"
-                stroke="hsl(var(--primary))"
-                strokeWidth="2"
-                strokeDasharray="5,5"
-              />
-            )}
-            {/* Point markers */}
-            {(drawnZone?.points || polygonPoints).map((p, i) => {
-              const pos = toPixel(p.lat, p.lng);
-              return (
-                <circle
-                  key={i}
-                  cx={pos.x}
-                  cy={pos.y}
-                  r="5"
-                  fill="hsl(var(--primary))"
-                  stroke="white"
-                  strokeWidth="2"
-                />
-              );
-            })}
-          </svg>
-        )}
-        
-        {/* Vehicle Pins */}
-        {vehicles.map((vehicle) => {
-          const pos = toPixel(vehicle.location.lat, vehicle.location.lng);
-          // Only render if in bounds
-          if (pos.x < 0 || pos.x > mapSize.width || pos.y < 0 || pos.y > mapSize.height) {
-            return null;
-          }
-          return (
-            <div
-              key={vehicle.id}
-              className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer hover:scale-125 transition-transform z-10"
-              style={{ left: pos.x, top: pos.y }}
-              title={`${vehicle.name} - ${vehicle.status}`}
-            >
-              <Car
-                className="h-4 w-4"
-                style={{ color: getVehicleColor(vehicle) }}
-              />
-            </div>
-          );
-        })}
         
         {/* Instructions overlay */}
-        {drawingMode !== 'none' && !drawnZone && (
+        {isMapLoaded && drawingMode !== 'none' && !drawnZone && (
           <div className="absolute bottom-4 left-4 right-4">
             <Card className="p-3 bg-card/90 backdrop-blur text-sm">
               {drawingMode === 'radius' && 'Click on the map to set the zone center'}
@@ -374,19 +429,20 @@ export function OttoResponseMap({ vehicles }: OttoResponseMapProps) {
         )}
         
         {/* Legend */}
-        <div className="absolute top-3 right-3">
+        <div className="absolute top-3 left-3">
           <Card className="p-2 bg-card/90 backdrop-blur text-xs space-y-1">
+            <div className="text-muted-foreground font-medium mb-1">Traffic Density</div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-destructive/60" />
-              <span>High Traffic</span>
+              <div className="w-3 h-3 rounded-full bg-destructive/80" />
+              <span>High</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-warning/60" />
-              <span>Medium Traffic</span>
+              <div className="w-3 h-3 rounded-full bg-warning/70" />
+              <span>Medium</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-success/60" />
-              <span>Low Traffic</span>
+              <span>Low</span>
             </div>
           </Card>
         </div>
