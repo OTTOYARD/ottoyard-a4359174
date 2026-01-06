@@ -10,7 +10,7 @@ export function OttoResponseButton() {
       variant="outline"
       size="sm"
       onClick={openPanel}
-      className="gap-1 border-primary/30 hover:border-primary hover:bg-primary/10 transition-colors h-5 px-1 text-xs py-0"
+      className="gap-0.5 border-primary/30 hover:border-primary hover:bg-primary/10 transition-colors h-6 px-0.5 text-xs py-0"
     >
       <AlertTriangle className="h-3 w-3 text-primary" />
       <span className="font-semibold">OTTO-RESPONSE</span>
