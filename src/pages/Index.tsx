@@ -428,17 +428,20 @@ const Index = () => {
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 sm:py-6 py-[18px]">
           <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1 cursor-pointer hover-neon transition-all duration-300" onClick={() => window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-          })}>
-              <div className="w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center flex-shrink-0">
-                <img src="/lovable-uploads/0802aeb6-e42e-4389-8e93-c10d17cf963e.png" alt="Fleet Command Logo" className="h-18 w-18 sm:h-24 sm:w-24" />
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 cursor-pointer hover-neon transition-all duration-300" onClick={() => window.scrollTo({
+              top: 0,
+              behavior: 'smooth'
+            })}>
+                <div className="w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center flex-shrink-0">
+                  <img src="/lovable-uploads/0802aeb6-e42e-4389-8e93-c10d17cf963e.png" alt="Fleet Command Logo" className="h-18 w-18 sm:h-24 sm:w-24" />
+                </div>
+                <div className="min-w-0">
+                  <h1 className="text-xl sm:text-3xl font-bold text-foreground truncate text-center neon-text">OTTOYARD</h1>
+                  <p className="text-sm truncate text-center bg-gradient-to-b from-slate-300 to-slate-600 bg-clip-text text-[#617fa5] font-medium sm:text-lg">Fleet Command</p>
+                </div>
               </div>
-              <div className="min-w-0">
-                <h1 className="text-xl sm:text-3xl font-bold text-foreground truncate text-center neon-text">OTTOYARD</h1>
-                <p className="text-sm truncate text-center bg-gradient-to-b from-slate-300 to-slate-600 bg-clip-text text-[#617fa5] font-medium sm:text-lg">Fleet Command</p>
-              </div>
+              <OttoResponseButton />
             </div>
             <div className="flex flex-col items-end space-y-2 flex-shrink-0">
               {/* Top Row: Notifications + Profile + Cart */}
@@ -450,9 +453,8 @@ const Index = () => {
                 <CartButton cartItems={cartItems} onRemoveItem={handleRemoveFromCart} onCheckout={handleCheckout} />
               </div>
               
-              {/* Second Row: AI Button + OTTO-RESPONSE */}
+              {/* Second Row: AI Button */}
               <div className="flex items-center gap-2">
-                <OttoResponseButton />
                 <Button variant="outline" size="sm" onClick={() => setAiAgentOpen(true)} className="bg-gradient-primary text-white border-0 hover:bg-gradient-primary/90 px-3">
                   <Bot className="h-4 w-4 mr-1 hidden sm:inline" />
                   <span className="sm:hidden">OttoCommand</span>
