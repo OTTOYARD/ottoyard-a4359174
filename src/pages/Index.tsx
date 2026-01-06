@@ -32,6 +32,7 @@ import { IncidentStatus } from "@/data/incidents-mock";
 import { OTTOQFleetView } from "@/components/OTTOQFleetView";
 import { OTTOQDepotView } from "@/components/OTTOQDepotView";
 import { NotificationsPanel } from "@/components/NotificationsPanel";
+import { OttoResponseButton, OttoResponsePanel } from "@/components/OttoResponse";
 
 
 // Incidents Tab Component
@@ -449,8 +450,9 @@ const Index = () => {
                 <CartButton cartItems={cartItems} onRemoveItem={handleRemoveFromCart} onCheckout={handleCheckout} />
               </div>
               
-              {/* Second Row: AI Button */}
-              <div className="flex items-center">
+              {/* Second Row: AI Button + OTTO-RESPONSE */}
+              <div className="flex items-center gap-2">
+                <OttoResponseButton />
                 <Button variant="outline" size="sm" onClick={() => setAiAgentOpen(true)} className="bg-gradient-primary text-white border-0 hover:bg-gradient-primary/90 px-3">
                   <Bot className="h-4 w-4 mr-1 hidden sm:inline" />
                   <span className="sm:hidden">OttoCommand</span>
@@ -1735,6 +1737,9 @@ const Index = () => {
           </DialogContent>
         </Dialog>
       </main>
+      
+      {/* OTTO-RESPONSE Panel */}
+      <OttoResponsePanel vehicles={vehicles} depots={depots} />
     </div>;
 };
 export default Index;
