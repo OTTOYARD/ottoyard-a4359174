@@ -10,16 +10,19 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { supabase } from "@/integrations/supabase/client";
-import { Building2, Zap, RefreshCw, Battery, Wrench, Sparkles, ChevronDown } from "lucide-react";
+import { Building2, Zap, RefreshCw, Battery, Wrench, Sparkles, ChevronDown, ParkingCircle } from "lucide-react";
 import { toast } from "sonner";
 import { EnergyAnalyticsCard } from "./EnergyAnalyticsCard";
+import { StallTaskPanel } from "./depot";
 
 interface Resource {
+  id: string;
   type: string;
   index: number;
   status: string;
   label: string;
   job_id: string | null;
+  vehicle_id?: string;
 }
 
 interface EnergyAnalytics {
@@ -176,6 +179,8 @@ export const OTTOQDepotView = ({ selectedCityName, highlightedDepotId }: OTTOQDe
         return <Wrench className="w-4 h-4" />;
       case "CLEAN_DETAIL_STALL":
         return <Sparkles className="w-4 h-4" />;
+      case "STAGING_STALL":
+        return <ParkingCircle className="w-4 h-4" />;
       default:
         return <Battery className="w-4 h-4" />;
     }
@@ -403,6 +408,17 @@ export const OTTOQDepotView = ({ selectedCityName, highlightedDepotId }: OTTOQDe
                                                </div>
                                              )}
                                            </div>
+                                           {resource.status === "OCCUPIED" && resource.job_id && (
+                                             <StallTaskPanel
+                                               resourceId={resource.id}
+                                               resourceType={resource.type}
+                                               resourceIndex={resource.index}
+                                               jobId={resource.job_id}
+                                               vehicleId={resource.vehicle_id}
+                                               depotId={selectedDepot}
+                                               onTaskUpdate={handleRefresh}
+                                             />
+                                           )}
                                         </div>
                                       ))}
                                     </div>

@@ -279,6 +279,70 @@ export type Database = {
           },
         ]
       }
+      ottoq_movement_queue: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          current_resource_id: string | null
+          id: string
+          priority: number | null
+          requested_at: string
+          status: string
+          target_depot_id: string
+          target_resource_type: Database["public"]["Enums"]["ottoq_resource_type"]
+          updated_at: string
+          vehicle_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          current_resource_id?: string | null
+          id?: string
+          priority?: number | null
+          requested_at?: string
+          status?: string
+          target_depot_id: string
+          target_resource_type: Database["public"]["Enums"]["ottoq_resource_type"]
+          updated_at?: string
+          vehicle_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          current_resource_id?: string | null
+          id?: string
+          priority?: number | null
+          requested_at?: string
+          status?: string
+          target_depot_id?: string
+          target_resource_type?: Database["public"]["Enums"]["ottoq_resource_type"]
+          updated_at?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ottoq_movement_queue_current_resource_id_fkey"
+            columns: ["current_resource_id"]
+            isOneToOne: false
+            referencedRelation: "ottoq_resources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ottoq_movement_queue_target_depot_id_fkey"
+            columns: ["target_depot_id"]
+            isOneToOne: false
+            referencedRelation: "ottoq_depots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ottoq_movement_queue_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "ottoq_vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ottoq_resources: {
         Row: {
           capabilities_jsonb: Json | null
@@ -397,6 +461,60 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      ottoq_task_confirmations: {
+        Row: {
+          automation_source: string | null
+          confirmed_at: string | null
+          confirmed_by: string | null
+          created_at: string
+          id: string
+          job_id: string | null
+          metadata_jsonb: Json | null
+          notes: string | null
+          resource_id: string
+          task_key: string
+        }
+        Insert: {
+          automation_source?: string | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          id?: string
+          job_id?: string | null
+          metadata_jsonb?: Json | null
+          notes?: string | null
+          resource_id: string
+          task_key: string
+        }
+        Update: {
+          automation_source?: string | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          id?: string
+          job_id?: string | null
+          metadata_jsonb?: Json | null
+          notes?: string | null
+          resource_id?: string
+          task_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ottoq_task_confirmations_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "ottoq_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ottoq_task_confirmations_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "ottoq_resources"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ottoq_vehicles: {
         Row: {
@@ -752,6 +870,7 @@ export type Database = {
         | "CHARGE_STALL"
         | "CLEAN_DETAIL_STALL"
         | "MAINTENANCE_BAY"
+        | "STAGING_STALL"
       ottoq_vehicle_status:
         | "IDLE"
         | "ENROUTE_DEPOT"
@@ -913,6 +1032,7 @@ export const Constants = {
         "CHARGE_STALL",
         "CLEAN_DETAIL_STALL",
         "MAINTENANCE_BAY",
+        "STAGING_STALL",
       ],
       ottoq_vehicle_status: [
         "IDLE",

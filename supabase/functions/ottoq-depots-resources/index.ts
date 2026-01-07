@@ -142,11 +142,15 @@ Deno.serve(async (req) => {
       }
 
       return {
+        id: r.id,
         type: r.resource_type,
         index: r.index,
         status: r.status,
         label,
         job_id: r.current_job_id,
+        vehicle_id: r.current_job_id && jobsMap.has(r.current_job_id) 
+          ? jobsMap.get(r.current_job_id).vehicle_id 
+          : null,
       };
     });
 
