@@ -165,9 +165,18 @@ export const OTTOQDepotView = ({ selectedCityName, highlightedDepotId }: OTTOQDe
   const handleRefresh = async () => {
     if (selectedDepot) {
       setRefreshing(true);
+      // Reset mock data by calling the API with reset flag
+      try {
+        await supabase.functions.invoke("ottoq-depots-resources", {
+          body: { depot_id: selectedDepot, reset: true },
+          method: "POST",
+        });
+      } catch {
+        // Ignore reset errors, just refresh
+      }
       await fetchDepotResources(selectedDepot);
       setRefreshing(false);
-      toast.success("Depot data refreshed");
+      toast.success("Depot data reset and refreshed");
     }
   };
 
@@ -420,7 +429,7 @@ export const OTTOQDepotView = ({ selectedCityName, highlightedDepotId }: OTTOQDe
                                                jobId={resource.job_id}
                                                vehicleId={resource.vehicle_id}
                                                depotId={selectedDepot}
-                                               onTaskUpdate={handleRefresh}
+                                               onTaskUpdate={() => fetchDepotResources(selectedDepot)}
                                              />
                                            )}
                                         </div>

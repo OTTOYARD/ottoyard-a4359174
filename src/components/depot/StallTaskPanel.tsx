@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Collapsible,
   CollapsibleContent,
@@ -7,13 +7,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ChevronDown, ClipboardCheck, CheckCircle2, Loader2 } from "lucide-react";
+import { ChevronDown, ClipboardCheck, CheckCircle2, Loader2, Rocket } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { TaskChecklistItem } from "./TaskChecklistItem";
 import { MovementQueueButton } from "./MovementQueueButton";
-import { getTaskConfigForResource, areAllTasksComplete } from "@/constants/stallTasks";
+import { getTaskConfigForResource } from "@/constants/stallTasks";
 
 interface TaskConfirmation {
   id: string;
@@ -44,8 +44,13 @@ export function StallTaskPanel({
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [confirmations, setConfirmations] = useState<TaskConfirmation[]>([]);
+  const [deployLoading, setDeployLoading] = useState(false);
   
   const taskConfig = getTaskConfigForResource(resourceType);
+  
+  // Get tasks excluding the deployment task (shown as separate button)
+  const checklistTasks = taskConfig?.tasks.filter(t => t.key !== taskConfig.deploymentTaskKey) || [];
+  const deploymentTask = taskConfig?.tasks.find(t => t.key === taskConfig?.deploymentTaskKey);
   
   useEffect(() => {
     if (isOpen && jobId) {
@@ -53,7 +58,7 @@ export function StallTaskPanel({
     }
   }, [isOpen, jobId, resourceId]);
 
-  const fetchConfirmations = async () => {
+  const fetchConfirmations = useCallback(async () => {
     if (!jobId) return;
     
     setLoading(true);
@@ -74,7 +79,7 @@ export function StallTaskPanel({
     } finally {
       setLoading(false);
     }
-  };
+  }, [jobId, resourceId]);
 
   const handleConfirmTask = async (
     taskKey: string,
@@ -96,17 +101,51 @@ export function StallTaskPanel({
 
       if (error) throw error;
 
-      // Refresh confirmations
-      await fetchConfirmations();
-      onTaskUpdate?.();
-      
-      if (taskKey === taskConfig?.deploymentTaskKey && confirmed) {
-        toast.success("Vehicle confirmed for deployment!");
-      }
+      // Update local state immediately without full refresh
+      setConfirmations(prev => {
+        if (confirmed) {
+          // Add or update confirmation
+          const existing = prev.find(c => c.task_key === taskKey);
+          if (existing) {
+            return prev.map(c => 
+              c.task_key === taskKey 
+                ? { ...c, confirmed_at: new Date().toISOString(), metadata_jsonb: metadata || c.metadata_jsonb }
+                : c
+            );
+          }
+          return [...prev, { 
+            id: crypto.randomUUID(), 
+            task_key: taskKey, 
+            confirmed_at: new Date().toISOString(),
+            metadata_jsonb: metadata || null
+          }];
+        } else {
+          // Remove confirmation
+          return prev.map(c => 
+            c.task_key === taskKey ? { ...c, confirmed_at: null } : c
+          );
+        }
+      });
     } catch (error) {
       console.error("Failed to confirm task:", error);
       toast.error("Failed to save confirmation");
       throw error;
+    }
+  };
+
+  const handleDeployment = async () => {
+    if (!jobId || !deploymentTask) return;
+    
+    setDeployLoading(true);
+    try {
+      await handleConfirmTask(deploymentTask.key, true);
+      toast.success("Vehicle confirmed for deployment!");
+      // Trigger parent refresh after deployment
+      onTaskUpdate?.();
+    } catch (error) {
+      // Error already handled in handleConfirmTask
+    } finally {
+      setDeployLoading(false);
     }
   };
 
@@ -117,9 +156,12 @@ export function StallTaskPanel({
   const confirmedTasks = new Set(
     confirmations.filter((c) => c.confirmed_at).map((c) => c.task_key)
   );
-  const allComplete = areAllTasksComplete(resourceType, confirmedTasks);
-  const completedCount = confirmedTasks.size;
-  const totalTasks = taskConfig.tasks.filter((t) => !t.requiresInput || t.key === "maintenance_type").length;
+  
+  // Count only checklist tasks (excluding deployment)
+  const completedCount = checklistTasks.filter(t => confirmedTasks.has(t.key)).length;
+  const totalTasks = checklistTasks.filter((t) => !t.requiresInput || t.key === "maintenance_type").length;
+  const allChecklistComplete = completedCount === totalTasks;
+  const isDeployed = confirmedTasks.has(taskConfig.deploymentTaskKey);
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen} className="mt-2">
@@ -129,7 +171,7 @@ export function StallTaskPanel({
           size="sm"
           className={cn(
             "w-full justify-between text-xs h-7 px-2",
-            allComplete && "text-success"
+            isDeployed && "text-success"
           )}
         >
           <span className="flex items-center gap-1.5">
@@ -137,10 +179,10 @@ export function StallTaskPanel({
             Task Confirmation
           </span>
           <span className="flex items-center gap-1.5">
-            {allComplete ? (
+            {isDeployed ? (
               <Badge variant="outline" className="h-5 text-[10px] border-success/40 text-success">
                 <CheckCircle2 className="w-3 h-3 mr-1" />
-                Complete
+                Deployed
               </Badge>
             ) : (
               <Badge variant="outline" className="h-5 text-[10px]">
@@ -164,7 +206,8 @@ export function StallTaskPanel({
             </div>
           ) : (
             <>
-              {taskConfig.tasks.map((task) => {
+              {/* Checklist Tasks */}
+              {checklistTasks.map((task) => {
                 const confirmation = confirmations.find((c) => c.task_key === task.key);
                 return (
                   <TaskChecklistItem
@@ -174,21 +217,46 @@ export function StallTaskPanel({
                     confirmedAt={confirmation?.confirmed_at || undefined}
                     metadata={(confirmation?.metadata_jsonb as Record<string, unknown>) || undefined}
                     onConfirm={handleConfirmTask}
+                    disabled={isDeployed}
                   />
                 );
               })}
               
+              <Separator className="my-2" />
+              
+              {/* Confirm Deployment Button */}
+              {deploymentTask && (
+                <Button
+                  variant={isDeployed ? "outline" : "default"}
+                  size="sm"
+                  className={cn(
+                    "w-full text-xs h-8",
+                    isDeployed && "border-success/40 text-success bg-success/10"
+                  )}
+                  onClick={handleDeployment}
+                  disabled={!allChecklistComplete || isDeployed || deployLoading}
+                >
+                  {deployLoading ? (
+                    <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                  ) : isDeployed ? (
+                    <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
+                  ) : (
+                    <Rocket className="w-3.5 h-3.5 mr-1.5" />
+                  )}
+                  {isDeployed ? "Deployed" : deploymentTask.label}
+                </Button>
+              )}
+              
+              {/* Queue for Service Dropdown */}
               {vehicleId && (
-                <>
-                  <Separator className="my-2" />
-                  <MovementQueueButton
-                    vehicleId={vehicleId}
-                    currentResourceId={resourceId}
-                    currentResourceType={resourceType}
-                    depotId={depotId}
-                    onQueued={onTaskUpdate}
-                  />
-                </>
+                <MovementQueueButton
+                  vehicleId={vehicleId}
+                  currentResourceId={resourceId}
+                  currentResourceType={resourceType}
+                  depotId={depotId}
+                  onQueued={onTaskUpdate}
+                  disabled={isDeployed}
+                />
               )}
             </>
           )}

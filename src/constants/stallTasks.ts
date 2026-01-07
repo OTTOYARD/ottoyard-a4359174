@@ -103,7 +103,7 @@ export function getTaskConfigForResource(resourceType: string): ResourceTaskConf
   return STALL_TASK_CONFIGS[resourceType] || null;
 }
 
-// Helper to check if all required tasks are complete
+// Helper to check if all required tasks are complete (excluding deployment task)
 export function areAllTasksComplete(
   resourceType: string, 
   completedTasks: Set<string>
@@ -111,7 +111,10 @@ export function areAllTasksComplete(
   const config = getTaskConfigForResource(resourceType);
   if (!config) return false;
   
-  const requiredTasks = config.tasks.filter(t => !t.requiresInput || t.key === 'maintenance_type');
+  // Filter out deployment task and optional input tasks (except maintenance_type which is required)
+  const requiredTasks = config.tasks.filter(t => 
+    t.key !== config.deploymentTaskKey && (!t.requiresInput || t.key === 'maintenance_type')
+  );
   return requiredTasks.every(task => completedTasks.has(task.key));
 }
 
