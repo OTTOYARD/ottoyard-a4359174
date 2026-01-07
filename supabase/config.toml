@@ -93,3 +93,9 @@ verify_jwt = false
 
 [functions.otto-response-ai]
 verify_jwt = false
+
+[functions.ottoq-task-confirm]
+verify_jwt = false
+
+[functions.ottoq-queue-movement]
+verify_jwt = false
