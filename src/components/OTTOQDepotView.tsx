@@ -191,6 +191,8 @@ export const OTTOQDepotView = ({ selectedCityName, highlightedDepotId }: OTTOQDe
       case "AVAILABLE":
         return "border-success/40 bg-success/5 text-success";
       case "OCCUPIED":
+      case "BUSY":
+      case "RESERVED":
         return "border-primary/40 bg-primary/5 text-primary";
       case "OUT_OF_SERVICE":
         return "border-destructive/40 bg-destructive/5 text-destructive";
@@ -218,6 +220,8 @@ export const OTTOQDepotView = ({ selectedCityName, highlightedDepotId }: OTTOQDe
         return "Maintenance Bays";
       case "CLEAN_DETAIL_STALL":
         return "Clean & Detail Stalls";
+      case "STAGING_STALL":
+        return "Staging Area";
       default:
         return type;
     }
@@ -309,7 +313,7 @@ export const OTTOQDepotView = ({ selectedCityName, highlightedDepotId }: OTTOQDe
                           <div className="text-xl font-bold text-primary">
                             {
                               depotResources.resources.filter(
-                                (r) => r.status === "OCCUPIED"
+                                (r) => r.status === "OCCUPIED" || r.status === "BUSY" || r.status === "RESERVED"
                               ).length
                             }
                           </div>
@@ -343,7 +347,7 @@ export const OTTOQDepotView = ({ selectedCityName, highlightedDepotId }: OTTOQDe
                           const displayedResources = isExpanded ? resources : resources.slice(0, INITIAL_DISPLAY_COUNT);
                           const hasMore = resources.length > INITIAL_DISPLAY_COUNT;
                           const availableCount = resources.filter(r => r.status === "AVAILABLE").length;
-                          const occupiedCount = resources.filter(r => r.status === "OCCUPIED").length;
+                          const occupiedCount = resources.filter(r => r.status === "OCCUPIED" || r.status === "BUSY" || r.status === "RESERVED").length;
 
                           return (
                             <AccordionItem key={type} value={type} className="border-none">
@@ -376,7 +380,7 @@ export const OTTOQDepotView = ({ selectedCityName, highlightedDepotId }: OTTOQDe
                                           className={`p-3 rounded-lg border transition-all ${getResourceColor(
                                             resource.status
                                           )} ${
-                                            resource.status === "OCCUPIED"
+                                            (resource.status === "OCCUPIED" || resource.status === "BUSY" || resource.status === "RESERVED")
                                               ? "pulse-border"
                                               : ""
                                           }`}
@@ -408,7 +412,7 @@ export const OTTOQDepotView = ({ selectedCityName, highlightedDepotId }: OTTOQDe
                                                </div>
                                              )}
                                            </div>
-                                           {resource.status === "OCCUPIED" && resource.job_id && (
+                                           {(resource.status === "OCCUPIED" || resource.status === "BUSY" || resource.status === "RESERVED") && resource.job_id && (
                                              <StallTaskPanel
                                                resourceId={resource.id}
                                                resourceType={resource.type}
