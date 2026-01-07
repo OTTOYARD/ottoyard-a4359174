@@ -15,7 +15,44 @@ Deno.serve(async (req) => {
 
   try {
     const url = new URL(req.url);
-    const depot_id = url.pathname.split('/').pop();
+    const pathParts = url.pathname.split('/').filter(Boolean);
+    const depot_id = pathParts[pathParts.length - 1];
+
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    );
+
+    // Handle POST request for reset
+    if (req.method === 'POST') {
+      const body = await req.json().catch(() => ({}));
+      const targetDepotId = body.depot_id || depot_id;
+      
+      if (body.reset && targetDepotId && targetDepotId !== 'ottoq-depots-resources') {
+        // Reset: clear all task confirmations and restore mock occupied stalls
+        
+        // Get current active jobs for this depot
+        const { data: activeJobs } = await supabase
+          .from('ottoq_jobs')
+          .select('id')
+          .eq('depot_id', targetDepotId)
+          .eq('state', 'ACTIVE');
+        
+        if (activeJobs && activeJobs.length > 0) {
+          const jobIds = activeJobs.map(j => j.id);
+          // Delete task confirmations for these jobs
+          await supabase
+            .from('ottoq_task_confirmations')
+            .delete()
+            .in('job_id', jobIds);
+        }
+        
+        return new Response(JSON.stringify({ success: true, message: 'Task confirmations reset' }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
 
     if (!depot_id || depot_id === 'ottoq-depots-resources') {
       return new Response(JSON.stringify({ error: 'depot_id required in path' }), {
@@ -23,11 +60,6 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    );
 
     // Get depot info
     const { data: depot, error: depotError } = await supabase
