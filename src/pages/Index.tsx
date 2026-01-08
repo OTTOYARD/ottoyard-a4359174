@@ -1359,7 +1359,7 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">
-            <div className="flex flex-col items-center gap-4">
+            <div className="flex items-center justify-between">
               <h2 className="text-3xl font-bold text-foreground">Fleet Analytics</h2>
               <Button variant="outline" onClick={async () => {
                 sonnerToast.info("Generating report...", { description: "Please wait while we generate your analytics report with AI insights." });
