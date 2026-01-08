@@ -423,31 +423,20 @@ export function AdvisoryBuilder({ safeHarbors }: AdvisoryBuilderProps) {
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-medium">Notes to OEM</CardTitle>
-            <div className="flex items-center gap-2">
-              <Select value={aiProvider} onValueChange={(v) => setAIProvider(v as AIProvider)}>
-                <SelectTrigger className="h-7 w-24 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="openai">OpenAI</SelectItem>
-                  <SelectItem value="anthropic">Claude</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleAIDraft}
-                disabled={isAILoading || !drawnZone}
-                className="h-7 text-xs"
-              >
-                {isAILoading ? (
-                  <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                ) : (
-                  <Sparkles className="h-3 w-3 mr-1" />
-                )}
-                AI Draft
-              </Button>
-            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleAIDraft}
+              disabled={isAILoading || !drawnZone}
+              className="h-7 text-xs"
+            >
+              {isAILoading ? (
+                <Loader2 className="h-3 w-3 animate-spin mr-1" />
+              ) : (
+                <Sparkles className="h-3 w-3 mr-1" />
+              )}
+              AI Draft
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
@@ -479,14 +468,6 @@ export function AdvisoryBuilder({ safeHarbors }: AdvisoryBuilderProps) {
         >
           <Send className="h-4 w-4 mr-2" />
           Submit Advisory to OEM
-        </Button>
-        <Button
-          variant="outline"
-          onClick={handleExport}
-          disabled={!canSubmit}
-        >
-          <FileDown className="h-4 w-4 mr-2" />
-          Export JSON
         </Button>
       </div>
       
