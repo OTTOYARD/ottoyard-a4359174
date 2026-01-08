@@ -78,11 +78,13 @@ export function OttoResponsePanel({
         
         <div className="flex-1 overflow-hidden">
           <Tabs defaultValue="advisory" className="h-full flex flex-col">
-            <div className="pt-2 border-b border-border flex-row flex items-start justify-center px-[12px]">
+            <div className="pt-2 border-b border-border flex flex-col items-center px-[12px] pb-3">
               <TabsList className="grid max-w-[400px] grid-cols-2">
                 <TabsTrigger value="advisory">Advisory Builder</TabsTrigger>
                 <TabsTrigger value="log">Advisory Log</TabsTrigger>
               </TabsList>
+              <h2 className="text-xl font-bold text-center mt-3">Incident Management</h2>
+              <p className="text-sm text-muted-foreground text-center">Active response protocols</p>
             </div>
             
             <TabsContent value="advisory" className="flex-1 overflow-hidden m-0 data-[state=active]:flex">
