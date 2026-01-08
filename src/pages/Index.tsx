@@ -1508,20 +1508,20 @@ const Index = () => {
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                          <Pie data={(() => {
-                          // Use actual vehicle data if available, otherwise use balanced mock data
+                          // Use actual vehicle data if available, otherwise use diverse mock data
                           const activeCount = vehicles.filter(v => v.status === 'active').length;
                           const chargingCount = vehicles.filter(v => v.status === 'charging').length;
                           const maintenanceCount = vehicles.filter(v => v.status === 'maintenance').length;
                           const idleCount = vehicles.filter(v => v.status === 'idle').length;
                           const total = activeCount + chargingCount + maintenanceCount + idleCount;
                           
-                          // If no real data, use evenly distributed mock data
+                          // If no real data, use well-distributed mock data
                           if (total === 0) {
                             return [
-                              { name: 'Active', value: 18, fill: 'hsl(var(--success))' },
-                              { name: 'Charging', value: 14, fill: 'hsl(var(--primary))' },
-                              { name: 'Maintenance', value: 8, fill: 'hsl(var(--warning))' },
-                              { name: 'Idle', value: 10, fill: 'hsl(var(--muted-foreground))' },
+                              { name: 'Active', value: 22, fill: 'hsl(var(--success))' },
+                              { name: 'Charging', value: 15, fill: 'hsl(var(--primary))' },
+                              { name: 'Maintenance', value: 6, fill: 'hsl(var(--warning))' },
+                              { name: 'Idle', value: 7, fill: 'hsl(142 76% 36%)' },
                             ];
                           }
                           
@@ -1529,27 +1529,39 @@ const Index = () => {
                             { name: 'Active', value: activeCount, fill: 'hsl(var(--success))' },
                             { name: 'Charging', value: chargingCount, fill: 'hsl(var(--primary))' },
                             { name: 'Maintenance', value: maintenanceCount, fill: 'hsl(var(--warning))' },
-                            { name: 'Idle', value: idleCount, fill: 'hsl(var(--muted-foreground))' },
+                            { name: 'Idle', value: idleCount, fill: 'hsl(142 76% 36%)' },
                           ];
-                        })()} cx="50%" cy="50%" labelLine={false} label={({
-                          name,
-                          percent,
-                          value
-                        }) => window.innerWidth >= 768 ? `${name}: ${value} (${(percent * 100).toFixed(0)}%)` : `${value}`} outerRadius={80} fill="#8884d8" dataKey="value" />
-                          <Tooltip formatter={(value, name) => [`${value} vehicles`, name]} contentStyle={{
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
-                        boxShadow: '0 4px 12px hsl(var(--muted) / 0.15)',
-                        padding: '8px 12px',
-                        fontSize: '12px',
-                        fontWeight: '500',
-                        color: 'hsl(var(--destructive))'
-                      }} labelStyle={{
-                        color: 'hsl(var(--destructive))'
-                      }} itemStyle={{
-                        color: 'hsl(var(--destructive))'
-                      }} />
+                        })()} 
+                        cx="50%" 
+                        cy="50%" 
+                        labelLine={true}
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        outerRadius={70} 
+                        innerRadius={30}
+                        paddingAngle={2}
+                        dataKey="value" 
+                      />
+                        <Tooltip 
+                          formatter={(value, name) => [`${value} vehicles`, name]} 
+                          contentStyle={{
+                            backgroundColor: 'hsl(var(--card))',
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '8px',
+                            boxShadow: '0 4px 12px hsl(var(--muted) / 0.15)',
+                            padding: '8px 12px',
+                            fontSize: '12px',
+                            fontWeight: '500',
+                          }} 
+                        />
+                        <Legend 
+                          verticalAlign="bottom" 
+                          height={36}
+                          formatter={(value, entry: any) => (
+                            <span style={{ color: 'hsl(var(--foreground))', fontSize: '11px' }}>
+                              {value}: {entry.payload.value}
+                            </span>
+                          )}
+                        />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
