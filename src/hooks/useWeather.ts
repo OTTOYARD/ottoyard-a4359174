@@ -1,0 +1,73 @@
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+
+export interface WeatherCurrent {
+  temperature: number;
+  feelsLike: number;
+  humidity: number;
+  windSpeed: number;
+  weatherCode: number;
+  visibility: number;
+  uvIndex: number;
+  isDay: boolean;
+}
+
+export interface WeatherDaily {
+  date: string;
+  tempHigh: number;
+  tempLow: number;
+  weatherCode: number;
+  precipProbability: number;
+  sunrise: string;
+  sunset: string;
+}
+
+export interface EvImpact {
+  rangeReduction: number;
+  chargingEfficiency: number;
+  recommendation: string;
+  severity: 'low' | 'medium' | 'high';
+}
+
+export interface WeatherData {
+  current: WeatherCurrent;
+  daily: WeatherDaily[];
+  evImpact: EvImpact;
+  timezone: string;
+}
+
+async function fetchWeather(lat: number, lng: number): Promise<WeatherData> {
+  const { data, error } = await supabase.functions.invoke('weather-data', {
+    body: null,
+    headers: {},
+  });
+
+  // Since we can't pass query params easily, we'll make a direct fetch
+  const response = await fetch(
+    `https://ycsisvozzgmisboumfqc.supabase.co/functions/v1/weather-data?lat=${lat}&lng=${lng}`,
+    {
+      headers: {
+        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inljc2lzdm96emdtaXNib3VtZnFjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM0NzI5NTcsImV4cCI6MjA2OTA0ODk1N30.8Na6XnuBNbHifv4BcNPGMltaEsmX3QVYMASbopT1MGI`,
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch weather data');
+  }
+
+  return response.json();
+}
+
+export function useWeather(lat: number, lng: number, enabled: boolean = true) {
+  return useQuery({
+    queryKey: ['weather', lat, lng],
+    queryFn: () => fetchWeather(lat, lng),
+    enabled: enabled && !!lat && !!lng,
+    staleTime: 15 * 60 * 1000, // 15 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes (formerly cacheTime)
+    refetchInterval: 15 * 60 * 1000, // Refresh every 15 minutes
+    retry: 2,
+  });
+}
