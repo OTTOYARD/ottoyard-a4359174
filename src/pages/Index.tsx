@@ -96,7 +96,7 @@ const IncidentsTabContent = () => {
           <p className="text-sm text-muted-foreground mt-1 text-center">
             {sortedIncidents.length} reported incident{sortedIncidents.length !== 1 ? 's' : ''}
           </p>
-          <div className="flex flex-col items-center gap-2 mt-2">
+          <div className="flex flex-col items-start gap-2 mt-2">
             <OttoResponseButton />
             <Badge className="bg-success text-white border-0 text-xs px-2 py-0.5 relative inline-flex items-center w-fit" style={{
             boxShadow: '0 0 8px rgba(34, 197, 94, 0.6), 0 0 16px rgba(34, 197, 94, 0.3)',
