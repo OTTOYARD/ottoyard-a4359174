@@ -78,7 +78,7 @@ export function OttoResponsePanel({
         
         <div className="flex-1 overflow-hidden">
           <Tabs defaultValue="advisory" className="h-full flex flex-col">
-            <div className="px-6 pt-2 border-b border-border flex items-center justify-center">
+            <div className="pt-2 border-b border-border flex-row flex items-start justify-center px-[12px]">
               <TabsList className="grid max-w-[400px] grid-cols-2">
                 <TabsTrigger value="advisory">Advisory Builder</TabsTrigger>
                 <TabsTrigger value="log">Advisory Log</TabsTrigger>
