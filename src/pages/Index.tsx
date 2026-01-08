@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { MapPin, Battery, Zap, Truck, Calendar, TrendingUp, Activity, Settings, ChevronRight, ChevronLeft, AlertTriangle, CheckCircle2, Wrench, Bot, Eye, Radio, Car } from "lucide-react";
+import { MapPin, Battery, Zap, Truck, Calendar, TrendingUp, Activity, Settings, ChevronRight, ChevronLeft, AlertTriangle, CheckCircle2, Wrench, Bot, Eye, Radio, Car, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, AreaChart, Area } from 'recharts';
@@ -33,6 +33,8 @@ import { OTTOQFleetView } from "@/components/OTTOQFleetView";
 import { OTTOQDepotView } from "@/components/OTTOQDepotView";
 import { NotificationsPanel } from "@/components/NotificationsPanel";
 import { OttoResponseButton, OttoResponsePanel } from "@/components/OttoResponse";
+import { generateAnalyticsReportPDF } from "@/utils/analyticsReportPDF";
+import { toast as sonnerToast } from "sonner";
 
 // Incidents Tab Component
 const allStatuses: IncidentStatus[] = ["Reported", "Dispatched", "Secured", "At Depot", "Closed"];
@@ -1337,8 +1339,37 @@ const Index = () => {
           <TabsContent value="analytics" className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-3xl font-bold text-foreground">Fleet Analytics</h2>
-              <Button variant="outline">
-                <TrendingUp className="h-4 w-4 mr-2" />
+              <Button variant="outline" onClick={async () => {
+                sonnerToast.info("Generating report...", { description: "Please wait while we generate your analytics report with AI insights." });
+                try {
+                  const weekData = [
+                    { period: 'Mon', efficiency: 93 },
+                    { period: 'Tue', efficiency: 94 },
+                    { period: 'Wed', efficiency: 92 },
+                    { period: 'Thu', efficiency: 95 },
+                    { period: 'Fri', efficiency: 94 },
+                    { period: 'Sat', efficiency: 93 },
+                    { period: 'Sun', efficiency: 91 },
+                  ];
+                  await generateAnalyticsReportPDF({
+                    totalVehicles: vehicles.length || 50,
+                    statusDistribution: {
+                      active: vehicles.filter(v => v.status === 'active').length || 15,
+                      charging: vehicles.filter(v => v.status === 'charging').length || 12,
+                      maintenance: vehicles.filter(v => v.status === 'maintenance').length || 8,
+                      idle: vehicles.filter(v => v.status === 'idle').length || 15,
+                    },
+                    efficiencyTrends: weekData,
+                    cityName: currentCity.name,
+                    reportDate: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+                  });
+                  sonnerToast.success("Report downloaded!", { description: "Your fleet analytics report has been generated successfully." });
+                } catch (error) {
+                  console.error('Failed to generate report:', error);
+                  sonnerToast.error("Failed to generate report", { description: "Please try again later." });
+                }
+              }}>
+                <Download className="h-4 w-4 mr-2" />
                 Export Report
               </Button>
             </div>
@@ -1476,27 +1507,35 @@ const Index = () => {
                   <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
-                         <Pie data={[{
-                        name: 'Active',
-                        value: vehicles.filter(v => v.status === 'active').length,
-                        fill: 'hsl(var(--success))'
-                      }, {
-                        name: 'Charging',
-                        value: vehicles.filter(v => v.status === 'charging').length,
-                        fill: 'hsl(var(--primary))'
-                      }, {
-                        name: 'Maintenance',
-                        value: vehicles.filter(v => v.status === 'maintenance').length,
-                        fill: 'hsl(var(--warning))'
-                      }, {
-                        name: 'Idle',
-                        value: vehicles.filter(v => v.status === 'idle').length,
-                        fill: 'hsl(var(--muted-foreground))'
-                      }]} cx="50%" cy="50%" labelLine={false} label={({
-                        name,
-                        percent,
-                        value
-                      }) => window.innerWidth >= 768 ? `${name}: ${value} (${(percent * 100).toFixed(0)}%)` : `${value}`} outerRadius={80} fill="#8884d8" dataKey="value" />
+                         <Pie data={(() => {
+                          // Use actual vehicle data if available, otherwise use balanced mock data
+                          const activeCount = vehicles.filter(v => v.status === 'active').length;
+                          const chargingCount = vehicles.filter(v => v.status === 'charging').length;
+                          const maintenanceCount = vehicles.filter(v => v.status === 'maintenance').length;
+                          const idleCount = vehicles.filter(v => v.status === 'idle').length;
+                          const total = activeCount + chargingCount + maintenanceCount + idleCount;
+                          
+                          // If no real data, use evenly distributed mock data
+                          if (total === 0) {
+                            return [
+                              { name: 'Active', value: 18, fill: 'hsl(var(--success))' },
+                              { name: 'Charging', value: 14, fill: 'hsl(var(--primary))' },
+                              { name: 'Maintenance', value: 8, fill: 'hsl(var(--warning))' },
+                              { name: 'Idle', value: 10, fill: 'hsl(var(--muted-foreground))' },
+                            ];
+                          }
+                          
+                          return [
+                            { name: 'Active', value: activeCount, fill: 'hsl(var(--success))' },
+                            { name: 'Charging', value: chargingCount, fill: 'hsl(var(--primary))' },
+                            { name: 'Maintenance', value: maintenanceCount, fill: 'hsl(var(--warning))' },
+                            { name: 'Idle', value: idleCount, fill: 'hsl(var(--muted-foreground))' },
+                          ];
+                        })()} cx="50%" cy="50%" labelLine={false} label={({
+                          name,
+                          percent,
+                          value
+                        }) => window.innerWidth >= 768 ? `${name}: ${value} (${(percent * 100).toFixed(0)}%)` : `${value}`} outerRadius={80} fill="#8884d8" dataKey="value" />
                           <Tooltip formatter={(value, name) => [`${value} vehicles`, name]} contentStyle={{
                         backgroundColor: 'hsl(var(--card))',
                         border: '1px solid hsl(var(--border))',
