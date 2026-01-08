@@ -15,11 +15,11 @@ export function OttoResponseButton() {
       variant="outline"
       size="sm"
       onClick={openPanel}
-      className={`gap-0.5 border-primary/30 hover:border-primary hover:bg-primary/10 transition-colors h-5 text-[10px] py-0 border rounded-none px-1 self-start ${
+      className={`gap-1 border-primary/30 hover:border-primary hover:bg-primary/10 transition-colors h-7 text-xs py-0 border rounded-md px-2 self-start ${
         hasActiveIncidents ? 'animate-pulse' : ''
       }`}
     >
-      <AlertTriangle className="h-2.5 w-2.5 text-primary" />
+      <AlertTriangle className="h-3.5 w-3.5 text-primary" />
       <span className="font-semibold">OTTO-RESPONSE</span>
     </Button>
   );
