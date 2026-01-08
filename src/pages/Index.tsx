@@ -92,7 +92,7 @@ const IncidentsTabContent = () => {
         <div className="flex-1">
           <h2 className="text-2xl font-bold text-center">Incident Management</h2>
           <p className="text-sm text-muted-foreground mt-1 text-center">
-            {sortedIncidents.length} incident{sortedIncidents.length !== 1 ? 's' : ''}
+            {sortedIncidents.length} reported incident{sortedIncidents.length !== 1 ? 's' : ''}
           </p>
           <Badge className="bg-success text-white border-0 text-xs px-2 py-0.5 relative mt-2 inline-flex items-center w-fit" style={{
           boxShadow: '0 0 8px rgba(34, 197, 94, 0.6), 0 0 16px rgba(34, 197, 94, 0.3)',
