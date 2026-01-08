@@ -406,7 +406,7 @@ export const OTTOQFleetView = ({ selectedCityName, highlightedVehicleId }: OTTOQ
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">OTTO-Q Fleet - {currentCity?.name || ''}</h2>
+          <h2 className="text-2xl font-bold">Autonomous Fleet - {currentCity?.name || ''}</h2>
           <p className="text-sm text-muted-foreground">
             {vehicles.length} vehicles
           </p>
