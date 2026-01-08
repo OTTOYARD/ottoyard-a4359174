@@ -15,7 +15,7 @@ export function OttoResponseButton() {
       variant="outline"
       size="sm"
       onClick={openPanel}
-      className={`gap-1.5 border-primary/30 hover:border-primary hover:bg-primary/10 transition-colors h-8 text-sm py-1 border rounded-md px-3 self-start ${
+      className={`gap-1.5 border-primary/30 hover:border-primary hover:bg-primary/10 transition-colors h-8 text-sm py-1 border-2 rounded-md px-3 self-start ${
         hasActiveIncidents ? 'animate-pulse' : ''
       }`}
     >
