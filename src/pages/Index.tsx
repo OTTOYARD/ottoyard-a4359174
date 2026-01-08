@@ -105,6 +105,7 @@ const IncidentsTabContent = () => {
         
         {/* Buttons stacked vertically on the right */}
         <div className="flex flex-col gap-2 min-w-[110px] shrink-0">
+          <OttoResponseButton />
           <OTTOWDispatchDialog />
           
           <Popover>
@@ -468,7 +469,6 @@ const Index = () => {
                   <p className="text-sm truncate text-center bg-gradient-to-b from-slate-300 to-slate-600 bg-clip-text text-[#617fa5] font-medium sm:text-lg">Fleet Command</p>
                 </div>
               </div>
-              <OttoResponseButton />
             </div>
             <div className="flex flex-col items-end space-y-2 flex-shrink-0">
               {/* Top Row: Notifications + Profile + Cart */}
