@@ -34,7 +34,6 @@ import { OTTOQDepotView } from "@/components/OTTOQDepotView";
 import { NotificationsPanel } from "@/components/NotificationsPanel";
 import { OttoResponseButton, OttoResponsePanel } from "@/components/OttoResponse";
 
-
 // Incidents Tab Component
 const allStatuses: IncidentStatus[] = ["Reported", "Dispatched", "Secured", "At Depot", "Closed"];
 const IncidentsTabContent = () => {
@@ -91,8 +90,8 @@ const IncidentsTabContent = () => {
       {/* Header Bar */}
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <h2 className="text-2xl font-bold">Incidents</h2>
-          <p className="text-sm text-muted-foreground mt-1">
+          <h2 className="text-2xl font-bold text-center">Incident Management</h2>
+          <p className="text-sm text-muted-foreground mt-1 text-center">
             {sortedIncidents.length} incident{sortedIncidents.length !== 1 ? 's' : ''}
           </p>
           <Badge className="bg-success text-white border-0 text-xs px-2 py-0.5 relative mt-2 inline-flex items-center w-fit" style={{
@@ -260,7 +259,9 @@ const Index = () => {
   };
   // Map any city to available OTTO-Q cities (Austin, LA, Nashville)
   const mapToOTTOQCity = (cityName: string): string => {
-    const cityMap: { [key: string]: string } = {
+    const cityMap: {
+      [key: string]: string;
+    } = {
       'Nashville': 'Nashville',
       'Austin': 'Austin',
       'Los Angeles': 'LA',
@@ -277,11 +278,28 @@ const Index = () => {
   };
 
   // Enhanced city coordinates mapping
-  const cityCoordinates: { [key: string]: { lat: number; lng: number } } = {
-    'Nashville': { lat: 36.1627, lng: -86.7816 },
-    'Austin': { lat: 30.2672, lng: -97.7431 },
-    'LA': { lat: 34.0522, lng: -118.2437 },
-    'Los Angeles': { lat: 34.0522, lng: -118.2437 }
+  const cityCoordinates: {
+    [key: string]: {
+      lat: number;
+      lng: number;
+    };
+  } = {
+    'Nashville': {
+      lat: 36.1627,
+      lng: -86.7816
+    },
+    'Austin': {
+      lat: 30.2672,
+      lng: -97.7431
+    },
+    'LA': {
+      lat: 34.0522,
+      lng: -118.2437
+    },
+    'Los Angeles': {
+      lat: 34.0522,
+      lng: -118.2437
+    }
   };
 
   // Fetch real vehicles and depots from database with enhanced fallbacks
@@ -289,15 +307,16 @@ const Index = () => {
     setLoadingData(true);
     try {
       // Get city coordinates
-      const cityCenter = cityCoordinates[cityName] || { lat: 36.1627, lng: -86.7816 };
-      
-      // Get city ID
-      const { data: cityData, error: cityError } = await supabase
-        .from("ottoq_cities")
-        .select("id, name")
-        .eq("name", cityName)
-        .maybeSingle();
+      const cityCenter = cityCoordinates[cityName] || {
+        lat: 36.1627,
+        lng: -86.7816
+      };
 
+      // Get city ID
+      const {
+        data: cityData,
+        error: cityError
+      } = await supabase.from("ottoq_cities").select("id, name").eq("name", cityName).maybeSingle();
       if (cityError) throw cityError;
       if (!cityData) {
         console.warn(`City ${cityName} not found in database`);
@@ -307,18 +326,19 @@ const Index = () => {
       }
 
       // Fetch vehicles for this city
-      const { data: vehiclesData, error: vehiclesError } = await supabase.rpc('get_random_vehicles_for_city', {
+      const {
+        data: vehiclesData,
+        error: vehiclesError
+      } = await supabase.rpc('get_random_vehicles_for_city', {
         p_city_id: cityData.id,
         p_limit: 50
       });
-
       if (vehiclesError) throw vehiclesError;
 
       // Transform vehicles to match the format expected by Overview with city-specific locations
       const transformedVehicles = (vehiclesData || []).map((v: any, index: number) => {
         const vehicleLat = cityCenter.lat + (Math.random() - 0.5) * 0.15;
         const vehicleLng = cityCenter.lng + (Math.random() - 0.5) * 0.20;
-        
         return {
           id: v.external_ref?.split(' ')[1] || v.id.slice(0, 5),
           name: v.external_ref || v.id.slice(0, 8),
@@ -334,58 +354,67 @@ const Index = () => {
           city: cityName
         };
       });
-
       console.log(`Loaded ${transformedVehicles.length} vehicles for ${cityName}`);
       setVehicles(transformedVehicles);
 
       // Fetch depots for this city
-      const { data: depotsData, error: depotsError } = await supabase
-        .from("ottoq_depots")
-        .select("id, name, address, lat, lon, config_jsonb")
-        .eq("city_id", cityData.id);
-
+      const {
+        data: depotsData,
+        error: depotsError
+      } = await supabase.from("ottoq_depots").select("id, name, address, lat, lon, config_jsonb").eq("city_id", cityData.id);
       if (depotsError) throw depotsError;
 
       // Fetch resources for each depot to calculate stalls - ensure we always have valid depot locations
-      const depotsWithResources = await Promise.all(
-        (depotsData || []).map(async (depot: any, index: number) => {
-          const { data: resourcesData } = await supabase
-            .from("ottoq_resources")
-            .select("status")
-            .eq("depot_id", depot.id);
+      const depotsWithResources = await Promise.all((depotsData || []).map(async (depot: any, index: number) => {
+        const {
+          data: resourcesData
+        } = await supabase.from("ottoq_resources").select("status").eq("depot_id", depot.id);
+        const totalStalls = resourcesData?.length || 12;
+        const occupiedStalls = resourcesData?.filter((r: any) => r.status === 'BUSY' || r.status === 'RESERVED').length || 0;
+        const availableStalls = Math.max(0, totalStalls - occupiedStalls);
 
-          const totalStalls = resourcesData?.length || 12;
-          const occupiedStalls = resourcesData?.filter((r: any) => r.status === 'BUSY' || r.status === 'RESERVED').length || 0;
-          const availableStalls = Math.max(0, totalStalls - occupiedStalls);
-
-          // Ensure every depot has valid coordinates - place strategically around city
-          const depotOffsets = [
-            { lat: 0.02, lng: 0.03 },   // North
-            { lat: -0.02, lng: -0.03 },  // South
-            { lat: 0.01, lng: -0.04 },   // West
-            { lat: -0.01, lng: 0.04 }    // East
-          ];
-          const offset = depotOffsets[index % depotOffsets.length];
-
-          return {
-            id: depot.id,
-            name: depot.name,
-            location: {
-              lat: depot.lat && typeof depot.lat === 'number' ? depot.lat : cityCenter.lat + offset.lat,
-              lng: depot.lon && typeof depot.lon === 'number' ? depot.lon : cityCenter.lng + offset.lng
-            },
-            energyGenerated: Math.floor(1500 + Math.random() * 1000),
-            energyReturned: Math.floor(800 + Math.random() * 600),
-            vehiclesCharging: occupiedStalls,
-            totalStalls,
-            availableStalls,
-            status: availableStalls > 2 ? 'optimal' : availableStalls > 0 ? 'busy' : 'full',
-            city: cityName
-          };
-        })
-      );
-
-      console.log(`Loaded ${depotsWithResources.length} depots for ${cityName}:`, depotsWithResources.map(d => ({ name: d.name, location: d.location })));
+        // Ensure every depot has valid coordinates - place strategically around city
+        const depotOffsets = [{
+          lat: 0.02,
+          lng: 0.03
+        },
+        // North
+        {
+          lat: -0.02,
+          lng: -0.03
+        },
+        // South
+        {
+          lat: 0.01,
+          lng: -0.04
+        },
+        // West
+        {
+          lat: -0.01,
+          lng: 0.04
+        } // East
+        ];
+        const offset = depotOffsets[index % depotOffsets.length];
+        return {
+          id: depot.id,
+          name: depot.name,
+          location: {
+            lat: depot.lat && typeof depot.lat === 'number' ? depot.lat : cityCenter.lat + offset.lat,
+            lng: depot.lon && typeof depot.lon === 'number' ? depot.lon : cityCenter.lng + offset.lng
+          },
+          energyGenerated: Math.floor(1500 + Math.random() * 1000),
+          energyReturned: Math.floor(800 + Math.random() * 600),
+          vehiclesCharging: occupiedStalls,
+          totalStalls,
+          availableStalls,
+          status: availableStalls > 2 ? 'optimal' : availableStalls > 0 ? 'busy' : 'full',
+          city: cityName
+        };
+      }));
+      console.log(`Loaded ${depotsWithResources.length} depots for ${cityName}:`, depotsWithResources.map(d => ({
+        name: d.name,
+        location: d.location
+      })));
       setDepots(depotsWithResources);
     } catch (error) {
       console.error("Error fetching city data:", error);
@@ -401,7 +430,6 @@ const Index = () => {
   useEffect(() => {
     fetchCityData("Nashville");
   }, []);
-
   const handleCitySelect = (city: City) => {
     console.log(`🌍 City selected: ${city.name} at coordinates`, city.coordinates);
     setCurrentCity(city);
@@ -421,7 +449,6 @@ const Index = () => {
   const totalStalls = depots.reduce((sum, depot) => sum + depot.totalStalls, 0);
   const availableStalls = depots.reduce((sum, depot) => sum + depot.availableStalls, 0);
   const occupancyRate = totalStalls > 0 ? Math.round((totalStalls - availableStalls) / totalStalls * 100) : 0;
-  
   console.log(`📊 ${currentCity.name} Metrics: ${vehicles.length} vehicles (${activeVehicles} active), ${depots.length} depots (${availableStalls}/${totalStalls} stalls available)`);
   return <div className="min-h-screen bg-background">
       {/* Header */}
@@ -526,7 +553,7 @@ const Index = () => {
                           const elementTop = element.offsetTop;
                           const scrollAreaHeight = scrollArea.clientHeight;
                           const elementHeight = element.clientHeight;
-                          const scrollTop = elementTop - (scrollAreaHeight / 2) + (elementHeight / 2);
+                          const scrollTop = elementTop - scrollAreaHeight / 2 + elementHeight / 2;
                           scrollArea.scrollTo({
                             top: scrollTop,
                             behavior: 'smooth'
@@ -554,7 +581,7 @@ const Index = () => {
                           const elementLeft = element.offsetLeft;
                           const containerWidth = buttonContainer.clientWidth;
                           const elementWidth = element.clientWidth;
-                          const scrollLeft = elementLeft - (containerWidth / 2) + (elementWidth / 2);
+                          const scrollLeft = elementLeft - containerWidth / 2 + elementWidth / 2;
                           buttonContainer.scrollTo({
                             left: scrollLeft,
                             behavior: 'smooth'
