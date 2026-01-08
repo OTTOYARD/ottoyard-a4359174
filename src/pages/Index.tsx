@@ -1251,7 +1251,7 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="maintenance" className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-center">
               <h2 className="text-3xl font-bold text-foreground">Maintenance & Detailing</h2>
             </div>
             
