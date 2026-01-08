@@ -70,8 +70,8 @@ export function OttoResponsePanel({ vehicles: externalVehicles, depots: external
         
         <div className="flex-1 overflow-hidden">
           <Tabs defaultValue="advisory" className="h-full flex flex-col">
-            <div className="px-6 pt-2 border-b border-border">
-              <TabsList className="grid w-full max-w-[400px] grid-cols-2">
+            <div className="px-6 pt-2 border-b border-border flex justify-center">
+              <TabsList className="grid max-w-[400px] grid-cols-2">
                 <TabsTrigger value="advisory">Advisory Builder</TabsTrigger>
                 <TabsTrigger value="log">Advisory Log</TabsTrigger>
               </TabsList>
