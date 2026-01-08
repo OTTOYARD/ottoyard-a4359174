@@ -344,18 +344,40 @@ const Index = () => {
       const transformedVehicles = (vehiclesData || []).map((v: any, index: number) => {
         const vehicleLat = cityCenter.lat + (Math.random() - 0.5) * 0.15;
         const vehicleLng = cityCenter.lng + (Math.random() - 0.5) * 0.20;
+        
+        // Map database status to chart-friendly status
+        const mapStatus = (dbStatus: string): string => {
+          const statusUpper = dbStatus.toUpperCase();
+          switch (statusUpper) {
+            case 'ON_TRIP':
+            case 'IN_SERVICE':
+              return 'active';
+            case 'AT_DEPOT':
+            case 'ENROUTE_DEPOT':
+              // Use SOC to determine if charging - low battery = charging
+              return v.soc < 0.5 ? 'charging' : 'idle';
+            case 'IDLE':
+              // Randomly assign some idle vehicles to maintenance for demo diversity
+              return index % 8 === 0 ? 'maintenance' : 'idle';
+            default:
+              return 'idle';
+          }
+        };
+        
+        const mappedStatus = mapStatus(v.status);
+        
         return {
           id: v.external_ref?.split(' ')[1] || v.id.slice(0, 5),
           name: v.external_ref || v.id.slice(0, 8),
-          status: v.status.toLowerCase(),
+          status: mappedStatus,
           battery: Math.round(v.soc * 100),
           location: {
             lat: vehicleLat,
             lng: vehicleLng
           },
           route: ['Downtown Route', 'Express Line', 'Airport Shuttle', 'City Loop', 'Suburban Connect'][index % 5],
-          chargingTime: v.status === 'CHARGING' || v.status === 'at_depot' ? `${Math.floor(Math.random() * 3) + 1}h ${Math.floor(Math.random() * 60)}m` : 'N/A',
-          nextMaintenance: v.status === 'MAINTENANCE' || v.status === 'in_service' ? 'In Progress' : `2025-${Math.random() < 0.5 ? '11' : '12'}-${Math.floor(Math.random() * 28) + 1}`,
+          chargingTime: mappedStatus === 'charging' ? `${Math.floor(Math.random() * 3) + 1}h ${Math.floor(Math.random() * 60)}m` : 'N/A',
+          nextMaintenance: mappedStatus === 'maintenance' ? 'In Progress' : `2025-${Math.random() < 0.5 ? '11' : '12'}-${Math.floor(Math.random() * 28) + 1}`,
           city: cityName
         };
       });
@@ -1501,7 +1523,7 @@ const Index = () => {
               
               <Card className="shadow-fleet-md">
                 <CardHeader>
-                  <CardTitle>Fleet Status Distribution (Total: {vehicles.length} vehicles)</CardTitle>
+                  <CardTitle>{currentCity.name} Fleet Status ({vehicles.length} vehicles)</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="h-64">
