@@ -94,6 +94,7 @@ const IncidentsTabContent = () => {
           <p className="text-sm text-muted-foreground mt-1 text-center">
             {sortedIncidents.length} reported incident{sortedIncidents.length !== 1 ? 's' : ''}
           </p>
+          <OttoResponseButton />
           <Badge className="bg-success text-white border-0 text-xs px-2 py-0.5 relative mt-2 inline-flex items-center w-fit" style={{
           boxShadow: '0 0 8px rgba(34, 197, 94, 0.6), 0 0 16px rgba(34, 197, 94, 0.3)',
           animation: 'glow-pulse 3s ease-in-out infinite'
@@ -105,7 +106,6 @@ const IncidentsTabContent = () => {
         
         {/* Buttons stacked vertically on the right */}
         <div className="flex flex-col gap-2 min-w-[110px] shrink-0">
-          <OttoResponseButton />
           <OTTOWDispatchDialog />
           
           <Popover>
