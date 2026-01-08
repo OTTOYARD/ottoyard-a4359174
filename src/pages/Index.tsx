@@ -99,9 +99,9 @@ const IncidentsTabContent = () => {
           <div className="flex flex-col gap-2 mt-2">
             <OttoResponseButton />
             <Badge className="bg-success text-white border-0 text-xs px-2 py-0.5 relative inline-flex items-center w-fit" style={{
-              boxShadow: '0 0 8px rgba(34, 197, 94, 0.6), 0 0 16px rgba(34, 197, 94, 0.3)',
-              animation: 'glow-pulse 3s ease-in-out infinite'
-            }}>
+            boxShadow: '0 0 8px rgba(34, 197, 94, 0.6), 0 0 16px rgba(34, 197, 94, 0.3)',
+            animation: 'glow-pulse 3s ease-in-out infinite'
+          }}>
               <Activity className="h-3 w-3 mr-1" />
               LIVE
             </Badge>
@@ -344,7 +344,7 @@ const Index = () => {
       const transformedVehicles = (vehiclesData || []).map((v: any, index: number) => {
         const vehicleLat = cityCenter.lat + (Math.random() - 0.5) * 0.15;
         const vehicleLng = cityCenter.lng + (Math.random() - 0.5) * 0.20;
-        
+
         // Map database status to chart-friendly status
         const mapStatus = (dbStatus: string): string => {
           const statusUpper = dbStatus.toUpperCase();
@@ -363,9 +363,7 @@ const Index = () => {
               return 'idle';
           }
         };
-        
         const mappedStatus = mapStatus(v.status);
-        
         return {
           id: v.external_ref?.split(' ')[1] || v.id.slice(0, 5),
           name: v.external_ref || v.id.slice(0, 8),
@@ -1360,37 +1358,60 @@ const Index = () => {
 
           <TabsContent value="analytics" className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-3xl font-bold text-foreground">Fleet Analytics</h2>
+              <h2 className="text-3xl font-bold text-foreground text-left">Fleet Analytics</h2>
               <Button variant="outline" onClick={async () => {
-                sonnerToast.info("Generating report...", { description: "Please wait while we generate your analytics report with AI insights." });
-                try {
-                  const weekData = [
-                    { period: 'Mon', efficiency: 93 },
-                    { period: 'Tue', efficiency: 94 },
-                    { period: 'Wed', efficiency: 92 },
-                    { period: 'Thu', efficiency: 95 },
-                    { period: 'Fri', efficiency: 94 },
-                    { period: 'Sat', efficiency: 93 },
-                    { period: 'Sun', efficiency: 91 },
-                  ];
-                  await generateAnalyticsReportPDF({
-                    totalVehicles: vehicles.length || 50,
-                    statusDistribution: {
-                      active: vehicles.filter(v => v.status === 'active').length || 15,
-                      charging: vehicles.filter(v => v.status === 'charging').length || 12,
-                      maintenance: vehicles.filter(v => v.status === 'maintenance').length || 8,
-                      idle: vehicles.filter(v => v.status === 'idle').length || 15,
-                    },
-                    efficiencyTrends: weekData,
-                    cityName: currentCity.name,
-                    reportDate: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
-                  });
-                  sonnerToast.success("Report downloaded!", { description: "Your fleet analytics report has been generated successfully." });
-                } catch (error) {
-                  console.error('Failed to generate report:', error);
-                  sonnerToast.error("Failed to generate report", { description: "Please try again later." });
-                }
-              }}>
+              sonnerToast.info("Generating report...", {
+                description: "Please wait while we generate your analytics report with AI insights."
+              });
+              try {
+                const weekData = [{
+                  period: 'Mon',
+                  efficiency: 93
+                }, {
+                  period: 'Tue',
+                  efficiency: 94
+                }, {
+                  period: 'Wed',
+                  efficiency: 92
+                }, {
+                  period: 'Thu',
+                  efficiency: 95
+                }, {
+                  period: 'Fri',
+                  efficiency: 94
+                }, {
+                  period: 'Sat',
+                  efficiency: 93
+                }, {
+                  period: 'Sun',
+                  efficiency: 91
+                }];
+                await generateAnalyticsReportPDF({
+                  totalVehicles: vehicles.length || 50,
+                  statusDistribution: {
+                    active: vehicles.filter(v => v.status === 'active').length || 15,
+                    charging: vehicles.filter(v => v.status === 'charging').length || 12,
+                    maintenance: vehicles.filter(v => v.status === 'maintenance').length || 8,
+                    idle: vehicles.filter(v => v.status === 'idle').length || 15
+                  },
+                  efficiencyTrends: weekData,
+                  cityName: currentCity.name,
+                  reportDate: new Date().toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })
+                });
+                sonnerToast.success("Report downloaded!", {
+                  description: "Your fleet analytics report has been generated successfully."
+                });
+              } catch (error) {
+                console.error('Failed to generate report:', error);
+                sonnerToast.error("Failed to generate report", {
+                  description: "Please try again later."
+                });
+              }
+            }}>
                 <Download className="h-4 w-4 mr-2" />
                 Export Report
               </Button>
@@ -1530,60 +1551,69 @@ const Index = () => {
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                          <Pie data={(() => {
-                          // Use actual vehicle data if available, otherwise use diverse mock data
-                          const activeCount = vehicles.filter(v => v.status === 'active').length;
-                          const chargingCount = vehicles.filter(v => v.status === 'charging').length;
-                          const maintenanceCount = vehicles.filter(v => v.status === 'maintenance').length;
-                          const idleCount = vehicles.filter(v => v.status === 'idle').length;
-                          const total = activeCount + chargingCount + maintenanceCount + idleCount;
-                          
-                          // If no real data, use well-distributed mock data
-                          if (total === 0) {
-                            return [
-                              { name: 'Active', value: 22, fill: 'hsl(var(--success))' },
-                              { name: 'Charging', value: 15, fill: 'hsl(var(--primary))' },
-                              { name: 'Maintenance', value: 6, fill: 'hsl(var(--warning))' },
-                              { name: 'Idle', value: 7, fill: 'hsl(142 76% 36%)' },
-                            ];
-                          }
-                          
-                          return [
-                            { name: 'Active', value: activeCount, fill: 'hsl(var(--success))' },
-                            { name: 'Charging', value: chargingCount, fill: 'hsl(var(--primary))' },
-                            { name: 'Maintenance', value: maintenanceCount, fill: 'hsl(var(--warning))' },
-                            { name: 'Idle', value: idleCount, fill: 'hsl(142 76% 36%)' },
-                          ];
-                        })()} 
-                        cx="50%" 
-                        cy="50%" 
-                        labelLine={true}
-                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                        outerRadius={70} 
-                        innerRadius={30}
-                        paddingAngle={2}
-                        dataKey="value" 
-                      />
-                        <Tooltip 
-                          formatter={(value, name) => [`${value} vehicles`, name]} 
-                          contentStyle={{
-                            backgroundColor: 'hsl(var(--card))',
-                            border: '1px solid hsl(var(--border))',
-                            borderRadius: '8px',
-                            boxShadow: '0 4px 12px hsl(var(--muted) / 0.15)',
-                            padding: '8px 12px',
-                            fontSize: '12px',
-                            fontWeight: '500',
-                          }} 
-                        />
-                        <Legend 
-                          verticalAlign="bottom" 
-                          height={36}
-                          formatter={(value, entry: any) => (
-                            <span style={{ color: 'hsl(var(--foreground))', fontSize: '11px' }}>
+                        // Use actual vehicle data if available, otherwise use diverse mock data
+                        const activeCount = vehicles.filter(v => v.status === 'active').length;
+                        const chargingCount = vehicles.filter(v => v.status === 'charging').length;
+                        const maintenanceCount = vehicles.filter(v => v.status === 'maintenance').length;
+                        const idleCount = vehicles.filter(v => v.status === 'idle').length;
+                        const total = activeCount + chargingCount + maintenanceCount + idleCount;
+
+                        // If no real data, use well-distributed mock data
+                        if (total === 0) {
+                          return [{
+                            name: 'Active',
+                            value: 22,
+                            fill: 'hsl(var(--success))'
+                          }, {
+                            name: 'Charging',
+                            value: 15,
+                            fill: 'hsl(var(--primary))'
+                          }, {
+                            name: 'Maintenance',
+                            value: 6,
+                            fill: 'hsl(var(--warning))'
+                          }, {
+                            name: 'Idle',
+                            value: 7,
+                            fill: 'hsl(142 76% 36%)'
+                          }];
+                        }
+                        return [{
+                          name: 'Active',
+                          value: activeCount,
+                          fill: 'hsl(var(--success))'
+                        }, {
+                          name: 'Charging',
+                          value: chargingCount,
+                          fill: 'hsl(var(--primary))'
+                        }, {
+                          name: 'Maintenance',
+                          value: maintenanceCount,
+                          fill: 'hsl(var(--warning))'
+                        }, {
+                          name: 'Idle',
+                          value: idleCount,
+                          fill: 'hsl(142 76% 36%)'
+                        }];
+                      })()} cx="50%" cy="50%" labelLine={true} label={({
+                        name,
+                        percent
+                      }) => `${name} ${(percent * 100).toFixed(0)}%`} outerRadius={70} innerRadius={30} paddingAngle={2} dataKey="value" />
+                        <Tooltip formatter={(value, name) => [`${value} vehicles`, name]} contentStyle={{
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 12px hsl(var(--muted) / 0.15)',
+                        padding: '8px 12px',
+                        fontSize: '12px',
+                        fontWeight: '500'
+                      }} />
+                        <Legend verticalAlign="bottom" height={36} formatter={(value, entry: any) => <span style={{
+                        color: 'hsl(var(--foreground))',
+                        fontSize: '11px'
+                      }}>
                               {value}: {entry.payload.value}
-                            </span>
-                          )}
-                        />
+                            </span>} />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
