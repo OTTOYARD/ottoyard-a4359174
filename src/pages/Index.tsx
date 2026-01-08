@@ -94,14 +94,16 @@ const IncidentsTabContent = () => {
           <p className="text-sm text-muted-foreground mt-1 text-center">
             {sortedIncidents.length} reported incident{sortedIncidents.length !== 1 ? 's' : ''}
           </p>
-          <OttoResponseButton />
-          <Badge className="bg-success text-white border-0 text-xs px-2 py-0.5 relative mt-2 inline-flex items-center w-fit" style={{
-          boxShadow: '0 0 8px rgba(34, 197, 94, 0.6), 0 0 16px rgba(34, 197, 94, 0.3)',
-          animation: 'glow-pulse 3s ease-in-out infinite'
-        }}>
-            <Activity className="h-3 w-3 mr-1" />
-            LIVE
-          </Badge>
+          <div className="flex flex-col gap-2 mt-2">
+            <OttoResponseButton />
+            <Badge className="bg-success text-white border-0 text-xs px-2 py-0.5 relative inline-flex items-center w-fit" style={{
+              boxShadow: '0 0 8px rgba(34, 197, 94, 0.6), 0 0 16px rgba(34, 197, 94, 0.3)',
+              animation: 'glow-pulse 3s ease-in-out infinite'
+            }}>
+              <Activity className="h-3 w-3 mr-1" />
+              LIVE
+            </Badge>
+          </div>
         </div>
         
         {/* Buttons stacked vertically on the right */}
