@@ -99,3 +99,6 @@ verify_jwt = false
 
 [functions.ottoq-queue-movement]
 verify_jwt = false
+
+[functions.generate-analytics-report]
+verify_jwt = false
