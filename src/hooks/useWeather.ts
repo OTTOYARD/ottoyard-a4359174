@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 
 export interface WeatherCurrent {
   temperature: number;
@@ -37,12 +36,6 @@ export interface WeatherData {
 }
 
 async function fetchWeather(lat: number, lng: number): Promise<WeatherData> {
-  const { data, error } = await supabase.functions.invoke('weather-data', {
-    body: null,
-    headers: {},
-  });
-
-  // Since we can't pass query params easily, we'll make a direct fetch
   const response = await fetch(
     `https://ycsisvozzgmisboumfqc.supabase.co/functions/v1/weather-data?lat=${lat}&lng=${lng}`,
     {
