@@ -64,11 +64,11 @@ export default function Install() {
       <div className="glass-card max-w-md w-full p-8 space-y-8">
         {/* Header */}
         <div className="text-center space-y-4">
-          <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border border-primary/20">
+          <div className="w-24 h-24 mx-auto rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border border-primary/20 overflow-hidden">
             <img 
-              src="/pwa-icons/icon-192x192.png" 
+              src="/ottoyard-logo-new.png" 
               alt="OTTOYARD" 
-              className="w-14 h-14 rounded-lg"
+              className="w-16 h-16 object-contain"
               onError={(e) => {
                 (e.target as HTMLImageElement).style.display = 'none';
               }}
