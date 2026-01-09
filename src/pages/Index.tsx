@@ -487,7 +487,7 @@ const Index = () => {
               behavior: 'smooth'
             })}>
                 <div className="w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center flex-shrink-0">
-                  <img src="/ottoyard-logo-header.png" alt="Fleet Command Logo" className="h-18 w-18 sm:h-24 sm:w-24 object-contain" />
+                  <img src="/lovable-uploads/0802aeb6-e42e-4389-8e93-c10d17cf963e.png" alt="Fleet Command Logo" className="h-18 w-18 sm:h-24 sm:w-24" />
                 </div>
                 <div className="min-w-0">
                   <h1 className="text-xl sm:text-3xl font-bold text-foreground truncate text-center neon-text">OTTOYARD</h1>
