@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
@@ -8,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { MapPin, Battery, Zap, Truck, Calendar, TrendingUp, Activity, Settings, ChevronRight, ChevronLeft, AlertTriangle, CheckCircle2, Wrench, Bot, Eye, Radio, Car, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { CheckoutSuccess } from "@/components/CheckoutSuccess";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, AreaChart, Area } from 'recharts';
 import FleetMap from "@/components/FleetMap";
 import MapboxMap from "@/components/MapboxMap";
@@ -236,6 +238,32 @@ const Index = () => {
   const [showDueSoonSummary, setShowDueSoonSummary] = useState(false);
   const [popupVehicle, setPopupVehicle] = useState<typeof vehicles[0] | null>(null);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  
+  // Checkout success handling
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [checkoutSuccessOpen, setCheckoutSuccessOpen] = useState(false);
+  const [checkoutSessionId, setCheckoutSessionId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const checkout = searchParams.get('checkout');
+    const sessionId = searchParams.get('session_id');
+    
+    if (checkout === 'success' && sessionId) {
+      setCheckoutSessionId(sessionId);
+      setCheckoutSuccessOpen(true);
+      // Clear cart on successful checkout
+      setCartItems([]);
+    } else if (checkout === 'cancelled') {
+      toast.info('Checkout cancelled');
+    }
+    
+    // Clean up URL params
+    if (checkout) {
+      searchParams.delete('checkout');
+      searchParams.delete('session_id');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
   const handleTrackVehicle = (vehicle: typeof vehicles[0]) => {
     setPopupVehicle(vehicle);
     setTrackVehicleOpen(true);
