@@ -70,8 +70,16 @@ export const PaymentMethods: React.FC<PaymentMethodsProps> = ({
   const fetchPaymentMethods = async () => {
     setLoading(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        console.log('No active session for fetching payment methods');
+        setMethods([]);
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke('stripe-payment-methods', {
         method: 'GET',
+        headers: { Authorization: `Bearer ${session.access_token}` },
       });
 
       if (error) throw error;
@@ -85,7 +93,7 @@ export const PaymentMethods: React.FC<PaymentMethodsProps> = ({
           onMethodSelected?.(defaultMethod.id);
         }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error fetching payment methods:', err);
       // Don't show error toast for new users without payment methods
     } finally {
@@ -96,19 +104,32 @@ export const PaymentMethods: React.FC<PaymentMethodsProps> = ({
   const handleAddPaymentMethod = async () => {
     setActionLoading('add');
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        toast.error('Please sign in to add a payment method');
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke('stripe-setup-intent', {
         body: {},
+        headers: { Authorization: `Bearer ${session.access_token}` },
       });
 
       if (error) throw error;
 
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
       if (data?.url) {
         // Redirect to Stripe's hosted setup page
         window.location.href = data.url;
+      } else {
+        throw new Error('No redirect URL received');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error creating setup session:', err);
-      toast.error('Failed to add payment method');
+      toast.error(err.message || 'Failed to add payment method');
     } finally {
       setActionLoading(null);
     }
@@ -117,11 +138,18 @@ export const PaymentMethods: React.FC<PaymentMethodsProps> = ({
   const handleSetDefault = async (methodId: string) => {
     setActionLoading(methodId);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        toast.error('Please sign in');
+        return;
+      }
+
       const { error } = await supabase.functions.invoke('stripe-payment-methods', {
         body: { 
           action: 'set_default',
           payment_method_id: methodId,
         },
+        headers: { Authorization: `Bearer ${session.access_token}` },
       });
 
       if (error) throw error;
@@ -139,11 +167,18 @@ export const PaymentMethods: React.FC<PaymentMethodsProps> = ({
   const handleDelete = async (methodId: string) => {
     setActionLoading(methodId);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        toast.error('Please sign in');
+        return;
+      }
+
       const { error } = await supabase.functions.invoke('stripe-payment-methods', {
         body: { 
           action: 'delete',
           payment_method_id: methodId,
         },
+        headers: { Authorization: `Bearer ${session.access_token}` },
       });
 
       if (error) throw error;

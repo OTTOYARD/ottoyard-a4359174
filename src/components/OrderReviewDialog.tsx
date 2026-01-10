@@ -77,8 +77,16 @@ export const OrderReviewDialog: React.FC<OrderReviewDialogProps> = ({
   const fetchPaymentMethods = async () => {
     setLoadingMethods(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        setPaymentMethods([]);
+        setPaymentMode('new');
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke('stripe-payment-methods', {
         method: 'GET',
+        headers: { Authorization: `Bearer ${session.access_token}` },
       });
 
       if (error) throw error;
@@ -114,11 +122,18 @@ export const OrderReviewDialog: React.FC<OrderReviewDialogProps> = ({
 
     setProcessingPayment(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        toast.error('Please sign in to complete payment');
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke('stripe-charge-saved-method', {
         body: {
           items,
           payment_method_id: selectedMethodId,
         },
+        headers: { Authorization: `Bearer ${session.access_token}` },
       });
 
       if (error) throw error;
