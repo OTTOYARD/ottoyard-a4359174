@@ -41,6 +41,23 @@ export const PaymentMethods: React.FC<PaymentMethodsProps> = ({
 
   useEffect(() => {
     fetchPaymentMethods();
+    
+    // Check if returning from Stripe setup
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('setup_intent') || urlParams.get('redirect_status') === 'succeeded') {
+      // Delay to allow webhook to process
+      const timer = setTimeout(() => {
+        fetchPaymentMethods();
+        toast.success('Payment method added successfully!');
+        // Clean up URL
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete('setup_intent');
+        newUrl.searchParams.delete('setup_intent_client_secret');
+        newUrl.searchParams.delete('redirect_status');
+        window.history.replaceState({}, '', newUrl.toString());
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
   }, []);
 
   const fetchPaymentMethods = async () => {
