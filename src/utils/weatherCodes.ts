@@ -55,8 +55,17 @@ export function getWeatherDescription(code: number): string {
   return getWeatherInfo(code).description;
 }
 
+function parseWeatherDate(dateString: string): Date {
+  // Open‑Meteo daily dates come as YYYY-MM-DD. JS parses that as UTC midnight,
+  // which can display as the *previous day* in negative-offset timezones.
+  // Parsing at midday keeps the calendar date stable across timezones.
+  const isDateOnly = /^\d{4}-\d{2}-\d{2}$/.test(dateString);
+  return isDateOnly ? new Date(`${dateString}T12:00:00`) : new Date(dateString);
+}
+
 export function getDayName(dateString: string, short: boolean = false): string {
-  const date = new Date(dateString);
+  const date = parseWeatherDate(dateString);
+
   const today = new Date();
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
@@ -67,11 +76,12 @@ export function getDayName(dateString: string, short: boolean = false): string {
   if (date.toDateString() === tomorrow.toDateString()) {
     return "Tomorrow";
   }
-  
+
   return date.toLocaleDateString('en-US', { weekday: short ? 'short' : 'long' });
 }
 
 export function formatDate(dateString: string): string {
-  const date = new Date(dateString);
+  const date = parseWeatherDate(dateString);
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
+
