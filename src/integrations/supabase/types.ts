@@ -92,6 +92,7 @@ export type Database = {
       billing_customers: {
         Row: {
           created_at: string
+          default_payment_method_id: string | null
           email: string | null
           id: string
           name: string | null
@@ -101,6 +102,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          default_payment_method_id?: string | null
           email?: string | null
           id?: string
           name?: string | null
@@ -110,6 +112,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          default_payment_method_id?: string | null
           email?: string | null
           id?: string
           name?: string | null
@@ -901,6 +904,8 @@ export type Database = {
           customer_name: string | null
           id: string
           items_jsonb: Json
+          payment_method_brand: string | null
+          payment_method_last4: string | null
           receipt_generated_at: string | null
           receipt_pdf_url: string | null
           status: string
@@ -919,6 +924,8 @@ export type Database = {
           customer_name?: string | null
           id?: string
           items_jsonb?: Json
+          payment_method_brand?: string | null
+          payment_method_last4?: string | null
           receipt_generated_at?: string | null
           receipt_pdf_url?: string | null
           status?: string
@@ -937,6 +944,8 @@ export type Database = {
           customer_name?: string | null
           id?: string
           items_jsonb?: Json
+          payment_method_brand?: string | null
+          payment_method_last4?: string | null
           receipt_generated_at?: string | null
           receipt_pdf_url?: string | null
           status?: string
