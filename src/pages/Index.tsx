@@ -17,7 +17,8 @@ import DepotCard from "@/components/DepotCard";
 import MetricsCard from "@/components/MetricsCard";
 import { AddVehiclePopup, TrackVehiclePopup, VehicleDetailsPopup, MaintenancePopup } from "@/components/VehiclePopups";
 import { AIAgentPopup } from "@/components/AIAgentPopup";
-import CartButton, { CartItem } from "@/components/CartButton";
+import { CartItem } from "@/components/CartButton";
+import SettingsHub from "@/components/SettingsHub";
 import { IncidentCard } from "@/components/IncidentCard";
 import { IncidentDetails } from "@/components/IncidentDetails";
 import { OTTOWDispatchDialog } from "@/components/OTTOWDispatchDialog";
@@ -500,10 +501,17 @@ const Index = () => {
               {/* Top Row: Notifications + Profile + Cart */}
               <div className="flex items-center space-x-2">
                 <NotificationsPanel />
-                <Button variant="outline" size="sm" onClick={() => navigate("/profile")}>
-                  <Settings className="h-4 w-4" />
-                </Button>
-                <CartButton cartItems={cartItems} onRemoveItem={handleRemoveFromCart} onCheckout={handleCheckout} />
+                <SettingsHub cartItems={cartItems} onRemoveFromCart={handleRemoveFromCart} onCheckout={handleCheckout}>
+                  <Button variant="outline" size="sm" className="relative">
+                    <Settings className="h-4 w-4 mr-1" />
+                    <span className="hidden sm:inline">Settings</span>
+                    {cartItems.length > 0 && (
+                      <Badge className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                        {cartItems.length}
+                      </Badge>
+                    )}
+                  </Button>
+                </SettingsHub>
               </div>
               
               {/* Second Row: AI Button */}
