@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -13,7 +13,6 @@ import {
   CheckCircle2,
   Download,
   Home,
-  Receipt,
   Calendar,
   Truck,
   MapPin,
@@ -21,6 +20,8 @@ import {
   Loader2,
   PartyPopper,
   Mail,
+  RefreshCw,
+  AlertCircle,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -35,6 +36,8 @@ interface OrderDetails {
   customer_email?: string;
   customer_name?: string;
   receipt_pdf_url?: string;
+  payment_method_last4?: string;
+  payment_method_brand?: string;
 }
 
 interface CheckoutSuccessProps {
@@ -51,26 +54,27 @@ export const CheckoutSuccess: React.FC<CheckoutSuccessProps> = ({
   const [order, setOrder] = useState<OrderDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [downloadingReceipt, setDownloadingReceipt] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (open && sessionId) {
-      fetchOrderDetails();
-    }
-  }, [open, sessionId]);
-
-  const fetchOrderDetails = async () => {
+  const fetchOrderDetails = useCallback(async () => {
+    if (!sessionId) return;
+    
     setLoading(true);
+    setError(null);
+    
     try {
-      // Give webhook time to process
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      // Initial delay to allow webhook processing
+      const delay = retryCount === 0 ? 2000 : 1000;
+      await new Promise((resolve) => setTimeout(resolve, delay));
 
-      const { data, error } = await supabase
+      const { data, error: fetchError } = await supabase
         .from('service_orders')
         .select('*')
         .eq('stripe_checkout_session_id', sessionId)
         .maybeSingle();
 
-      if (error) throw error;
+      if (fetchError) throw fetchError;
 
       if (data) {
         setOrder({
@@ -79,18 +83,41 @@ export const CheckoutSuccess: React.FC<CheckoutSuccessProps> = ({
           total_amount: data.total_amount,
           items_jsonb: data.items_jsonb as any[],
           created_at: data.created_at,
-          customer_email: (data as any).customer_email,
-          customer_name: (data as any).customer_name,
-          receipt_pdf_url: (data as any).receipt_pdf_url,
+          customer_email: data.customer_email ?? undefined,
+          customer_name: data.customer_name ?? undefined,
+          receipt_pdf_url: data.receipt_pdf_url ?? undefined,
+          payment_method_last4: data.payment_method_last4 ?? undefined,
+          payment_method_brand: data.payment_method_brand ?? undefined,
         });
+        setError(null);
+      } else if (retryCount < 3) {
+        // Order not found yet, webhook may still be processing
+        setRetryCount(prev => prev + 1);
+      } else {
+        setError('Order is still being processed. Please check back in a moment.');
       }
-    } catch (error) {
-      console.error('Error fetching order:', error);
-      toast.error('Failed to load order details');
+    } catch (err) {
+      console.error('Error fetching order:', err);
+      setError('Failed to load order details');
     } finally {
       setLoading(false);
     }
-  };
+  }, [sessionId, retryCount]);
+
+  useEffect(() => {
+    if (open && sessionId) {
+      setRetryCount(0);
+      setOrder(null);
+      fetchOrderDetails();
+    }
+  }, [open, sessionId]);
+
+  // Auto-retry if order not found
+  useEffect(() => {
+    if (open && sessionId && !order && retryCount > 0 && retryCount < 4) {
+      fetchOrderDetails();
+    }
+  }, [retryCount]);
 
   const handleDownloadReceipt = async () => {
     if (!order) return;
@@ -107,12 +134,17 @@ export const CheckoutSuccess: React.FC<CheckoutSuccessProps> = ({
         customerEmail: order.customer_email || '',
       });
       toast.success('Receipt downloaded');
-    } catch (error) {
-      console.error('Error generating receipt:', error);
+    } catch (err) {
+      console.error('Error generating receipt:', err);
       toast.error('Failed to download receipt');
     } finally {
       setDownloadingReceipt(false);
     }
+  };
+
+  const handleRetry = () => {
+    setRetryCount(0);
+    fetchOrderDetails();
   };
 
   const formatDate = (isoString: string) => {
@@ -130,7 +162,7 @@ export const CheckoutSuccess: React.FC<CheckoutSuccessProps> = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-hidden p-0">
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-border bg-gradient-to-r from-success/10 to-success/5">
           <div className="flex flex-col items-center text-center space-y-3">
@@ -151,7 +183,23 @@ export const CheckoutSuccess: React.FC<CheckoutSuccessProps> = ({
           {loading ? (
             <div className="flex flex-col items-center justify-center py-12 space-y-4">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-muted-foreground">Loading order details...</p>
+              <p className="text-muted-foreground">
+                {retryCount > 0 ? 'Still processing...' : 'Loading order details...'}
+              </p>
+              {retryCount > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Attempt {retryCount + 1} of 4
+                </p>
+              )}
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center py-12 space-y-4">
+              <AlertCircle className="h-12 w-12 text-warning" />
+              <p className="text-muted-foreground text-center">{error}</p>
+              <Button variant="outline" onClick={handleRetry}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Try Again
+              </Button>
             </div>
           ) : order ? (
             <div className="space-y-4">
@@ -168,6 +216,20 @@ export const CheckoutSuccess: React.FC<CheckoutSuccessProps> = ({
                   {order.status === 'completed' ? 'Paid' : order.status}
                 </Badge>
               </div>
+
+              {/* Payment Method Used */}
+              {order.payment_method_brand && order.payment_method_last4 && (
+                <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg border border-border/50">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">
+                      Paid with {order.payment_method_brand.charAt(0).toUpperCase() + order.payment_method_brand.slice(1)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      •••• {order.payment_method_last4}
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* Email Notification */}
               <div className="flex items-center gap-3 p-3 bg-primary/5 rounded-lg border border-primary/10">
@@ -265,8 +327,13 @@ export const CheckoutSuccess: React.FC<CheckoutSuccessProps> = ({
               </div>
             </div>
           ) : (
-            <div className="text-center py-12 text-muted-foreground">
-              <p>Order details not found</p>
+            <div className="flex flex-col items-center justify-center py-12 space-y-4">
+              <AlertCircle className="h-12 w-12 text-muted-foreground" />
+              <p className="text-center text-muted-foreground">Order details not found</p>
+              <Button variant="outline" onClick={handleRetry}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Retry
+              </Button>
             </div>
           )}
         </ScrollArea>

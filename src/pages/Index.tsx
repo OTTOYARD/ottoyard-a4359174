@@ -249,21 +249,27 @@ const Index = () => {
     const sessionId = searchParams.get('session_id');
     
     if (checkout === 'success' && sessionId) {
+      // Store session ID and open dialog BEFORE cleaning URL
       setCheckoutSessionId(sessionId);
       setCheckoutSuccessOpen(true);
       // Clear cart on successful checkout
       setCartItems([]);
+      
+      // Delay URL cleanup to ensure state is captured
+      setTimeout(() => {
+        const newParams = new URLSearchParams(searchParams);
+        newParams.delete('checkout');
+        newParams.delete('session_id');
+        setSearchParams(newParams, { replace: true });
+      }, 100);
     } else if (checkout === 'cancelled') {
       toast.info('Checkout cancelled');
+      // Clean up cancelled URL immediately
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('checkout');
+      setSearchParams(newParams, { replace: true });
     }
-    
-    // Clean up URL params
-    if (checkout) {
-      searchParams.delete('checkout');
-      searchParams.delete('session_id');
-      setSearchParams(searchParams, { replace: true });
-    }
-  }, [searchParams, setSearchParams]);
+  }, []);
   const handleTrackVehicle = (vehicle: typeof vehicles[0]) => {
     setPopupVehicle(vehicle);
     setTrackVehicleOpen(true);

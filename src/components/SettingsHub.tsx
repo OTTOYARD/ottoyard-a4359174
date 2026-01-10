@@ -51,6 +51,7 @@ import { toast } from 'sonner';
 import { CartItem } from './CartButton';
 import { OrderReviewDialog } from './OrderReviewDialog';
 import { InvoiceHistory } from './InvoiceHistory';
+import { PaymentMethods } from './PaymentMethods';
 
 interface SettingsHubProps {
   children: React.ReactNode;
@@ -638,11 +639,28 @@ const SettingsHub: React.FC<SettingsHubProps> = ({
 
             {/* Billing Tab */}
             <TabsContent value="billing" className="mt-0 space-y-4">
+              {/* Payment Methods Card */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <CreditCard className="h-5 w-5 mr-2 text-primary" />
-                    Billing & Subscription
+                    Payment Methods
+                  </CardTitle>
+                  <CardDescription>
+                    Manage your saved payment methods for faster checkout
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <PaymentMethods />
+                </CardContent>
+              </Card>
+
+              {/* Subscription & Pricing Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Zap className="h-5 w-5 mr-2 text-primary" />
+                    Subscription & Pricing
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -694,19 +712,32 @@ const SettingsHub: React.FC<SettingsHubProps> = ({
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 mb-6">
+                  <div className="grid grid-cols-2 gap-3">
                     <Button variant="outline" onClick={handleManageBilling}>
                       <ExternalLink className="h-4 w-4 mr-2" />
                       Manage Billing
                     </Button>
+                    <Button onClick={saveProfile} disabled={saving}>
+                      {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Check className="h-4 w-4 mr-2" />}
+                      Save
+                    </Button>
                   </div>
+                </CardContent>
+              </Card>
 
-                  <Separator className="my-4" />
-
-                  <div className="space-y-2">
-                    <h4 className="font-medium">Order History</h4>
-                    <InvoiceHistory />
-                  </div>
+              {/* Order History Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Activity className="h-5 w-5 mr-2 text-primary" />
+                    Order History
+                  </CardTitle>
+                  <CardDescription>
+                    View your past orders and download receipts
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <InvoiceHistory />
                 </CardContent>
               </Card>
             </TabsContent>

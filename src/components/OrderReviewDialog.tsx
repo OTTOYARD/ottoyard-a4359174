@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   CreditCard,
   Loader2,
@@ -22,8 +23,22 @@ import {
   CheckCircle2,
   ShieldCheck,
   FileText,
+  Star,
+  Plus,
+  AlertCircle,
 } from 'lucide-react';
 import { CartItem } from './CartButton';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+
+interface PaymentMethod {
+  id: string;
+  brand: string;
+  last4: string;
+  exp_month: number;
+  exp_year: number;
+  is_default: boolean;
+}
 
 interface OrderReviewDialogProps {
   open: boolean;
@@ -43,10 +58,97 @@ export const OrderReviewDialog: React.FC<OrderReviewDialogProps> = ({
   isLoading,
 }) => {
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [loadingMethods, setLoadingMethods] = useState(true);
+  const [selectedMethodId, setSelectedMethodId] = useState<string | null>(null);
+  const [paymentMode, setPaymentMode] = useState<'saved' | 'new'>('new');
+  const [processingPayment, setProcessingPayment] = useState(false);
 
   const subtotal = items.reduce((sum, item) => sum + item.price, 0);
   const tax = Math.round(subtotal * TAX_RATE);
   const total = subtotal + tax;
+
+  useEffect(() => {
+    if (open) {
+      fetchPaymentMethods();
+    }
+  }, [open]);
+
+  const fetchPaymentMethods = async () => {
+    setLoadingMethods(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('stripe-payment-methods', {
+        method: 'GET',
+      });
+
+      if (error) throw error;
+
+      if (data?.payment_methods && data.payment_methods.length > 0) {
+        setPaymentMethods(data.payment_methods);
+        const defaultMethod = data.payment_methods.find((m: PaymentMethod) => m.is_default);
+        if (defaultMethod) {
+          setSelectedMethodId(defaultMethod.id);
+          setPaymentMode('saved');
+        } else {
+          setSelectedMethodId(data.payment_methods[0].id);
+          setPaymentMode('saved');
+        }
+      } else {
+        setPaymentMethods([]);
+        setPaymentMode('new');
+      }
+    } catch (err) {
+      console.error('Error fetching payment methods:', err);
+      setPaymentMethods([]);
+      setPaymentMode('new');
+    } finally {
+      setLoadingMethods(false);
+    }
+  };
+
+  const handlePayWithSavedMethod = async () => {
+    if (!selectedMethodId) {
+      toast.error('Please select a payment method');
+      return;
+    }
+
+    setProcessingPayment(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('stripe-charge-saved-method', {
+        body: {
+          items,
+          payment_method_id: selectedMethodId,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.success) {
+        toast.success('Payment successful!');
+        // Redirect to success page with order info
+        window.location.href = `/?checkout=success&session_id=${data.order_id}`;
+      } else {
+        throw new Error(data?.error || 'Payment failed');
+      }
+    } catch (err: any) {
+      console.error('Payment error:', err);
+      toast.error(err.message || 'Payment failed. Please try again.');
+    } finally {
+      setProcessingPayment(false);
+    }
+  };
+
+  const handleConfirmPayment = () => {
+    if (paymentMode === 'saved' && selectedMethodId) {
+      handlePayWithSavedMethod();
+    } else {
+      onConfirmCheckout();
+    }
+  };
+
+  const formatBrand = (brand: string) => {
+    return brand.charAt(0).toUpperCase() + brand.slice(1);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -135,21 +237,104 @@ export const OrderReviewDialog: React.FC<OrderReviewDialogProps> = ({
 
             <Separator />
 
-            {/* Payment Method */}
+            {/* Payment Method Selection */}
             <div className="space-y-3">
               <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
                 Payment Method
               </h3>
-              <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg border border-border/50">
-                <CreditCard className="h-5 w-5 text-primary" />
-                <div className="flex-1">
-                  <p className="font-medium">Secure Stripe Checkout</p>
-                  <p className="text-sm text-muted-foreground">
-                    Credit/Debit Card, Apple Pay, Google Pay
-                  </p>
+              
+              {loadingMethods ? (
+                <div className="flex items-center justify-center py-4">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                 </div>
-                <ShieldCheck className="h-5 w-5 text-success" />
-              </div>
+              ) : paymentMethods.length > 0 ? (
+                <RadioGroup
+                  value={paymentMode}
+                  onValueChange={(value) => setPaymentMode(value as 'saved' | 'new')}
+                  className="space-y-3"
+                >
+                  {/* Saved Payment Methods */}
+                  <div className="space-y-2">
+                    {paymentMethods.map((method) => (
+                      <div
+                        key={method.id}
+                        className={`flex items-center justify-between p-3 rounded-lg border transition-colors cursor-pointer ${
+                          paymentMode === 'saved' && selectedMethodId === method.id
+                            ? 'border-primary bg-primary/5'
+                            : 'border-border hover:border-primary/50'
+                        }`}
+                        onClick={() => {
+                          setPaymentMode('saved');
+                          setSelectedMethodId(method.id);
+                        }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <RadioGroupItem value="saved" id={`method-${method.id}`} className="sr-only" />
+                          <div className="p-2 bg-muted rounded">
+                            <CreditCard className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">
+                                {formatBrand(method.brand)} •••• {method.last4}
+                              </span>
+                              {method.is_default && (
+                                <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
+                                  <Star className="h-2 w-2 mr-1" />
+                                  Primary
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              Expires {method.exp_month.toString().padStart(2, '0')}/{method.exp_year.toString().slice(-2)}
+                            </p>
+                          </div>
+                        </div>
+                        {paymentMode === 'saved' && selectedMethodId === method.id && (
+                          <CheckCircle2 className="h-5 w-5 text-primary" />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* New Card Option */}
+                  <div
+                    className={`flex items-center justify-between p-3 rounded-lg border transition-colors cursor-pointer ${
+                      paymentMode === 'new'
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border hover:border-primary/50'
+                    }`}
+                    onClick={() => setPaymentMode('new')}
+                  >
+                    <div className="flex items-center gap-3">
+                      <RadioGroupItem value="new" id="new-card" className="sr-only" />
+                      <div className="p-2 bg-muted rounded">
+                        <Plus className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <span className="font-medium">Pay with new card</span>
+                        <p className="text-xs text-muted-foreground">
+                          Secure checkout via Stripe
+                        </p>
+                      </div>
+                    </div>
+                    {paymentMode === 'new' && (
+                      <CheckCircle2 className="h-5 w-5 text-primary" />
+                    )}
+                  </div>
+                </RadioGroup>
+              ) : (
+                <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg border border-border/50">
+                  <CreditCard className="h-5 w-5 text-primary" />
+                  <div className="flex-1">
+                    <p className="font-medium">Secure Stripe Checkout</p>
+                    <p className="text-sm text-muted-foreground">
+                      Credit/Debit Card, Apple Pay, Google Pay
+                    </p>
+                  </div>
+                  <ShieldCheck className="h-5 w-5 text-success" />
+                </div>
+              )}
             </div>
 
             {/* Terms and Conditions */}
@@ -188,18 +373,23 @@ export const OrderReviewDialog: React.FC<OrderReviewDialogProps> = ({
               Back to Cart
             </Button>
             <Button
-              onClick={onConfirmCheckout}
-              disabled={!termsAccepted || isLoading}
+              onClick={handleConfirmPayment}
+              disabled={!termsAccepted || isLoading || processingPayment}
               className="flex-1 bg-gradient-to-r from-primary to-primary/80"
             >
-              {isLoading ? (
+              {isLoading || processingPayment ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   Processing...
                 </>
-              ) : (
+              ) : paymentMode === 'saved' ? (
                 <>
                   <CheckCircle2 className="h-4 w-4 mr-2" />
+                  Pay ${total.toLocaleString()}
+                </>
+              ) : (
+                <>
+                  <CreditCard className="h-4 w-4 mr-2" />
                   Continue to Payment
                 </>
               )}
