@@ -23,32 +23,43 @@ serve(async (req) => {
       apiVersion: "2023-10-16",
     });
 
-    // Get user from auth header
+    // Get user from auth header using the token
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      throw new Error("No authorization header");
+      return new Response(
+        JSON.stringify({ error: "Please sign in to manage billing" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
+    const token = authHeader.replace("Bearer ", "");
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    
+    // Use service role to verify the JWT token
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
+    
     if (userError || !user) {
-      throw new Error("User not authenticated");
+      console.error("Auth error:", userError);
+      return new Response(
+        JSON.stringify({ error: "Please sign in to manage billing" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    // Get customer from our database
-    const { data: billingCustomer } = await supabase
+    // Get customer from our database using admin client
+    const { data: billingCustomer } = await supabaseAdmin
       .from("billing_customers")
       .select("stripe_customer_id")
       .eq("user_id", user.id)
       .maybeSingle();
 
     if (!billingCustomer?.stripe_customer_id) {
-      throw new Error("No billing account found. Please make a purchase first.");
+      return new Response(
+        JSON.stringify({ error: "No billing account found. Please make a purchase first." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     // Get origin for return URL
