@@ -34,7 +34,10 @@ serve(async (req) => {
 
     const data = await response.json();
 
-    // Transform data to our format
+    // Get today's date in the location's timezone
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: data.timezone });
+
+    // Transform data to our format, filtering daily to only include today and future
     const weatherData = {
       current: {
         temperature: Math.round(data.current.temperature_2m),
@@ -46,15 +49,17 @@ serve(async (req) => {
         uvIndex: data.current.uv_index || 0,
         isDay: data.current.is_day === 1,
       },
-      daily: data.daily.time.map((date: string, index: number) => ({
-        date,
-        tempHigh: Math.round(data.daily.temperature_2m_max[index]),
-        tempLow: Math.round(data.daily.temperature_2m_min[index]),
-        weatherCode: data.daily.weather_code[index],
-        precipProbability: data.daily.precipitation_probability_max[index] || 0,
-        sunrise: data.daily.sunrise[index],
-        sunset: data.daily.sunset[index],
-      })),
+      daily: data.daily.time
+        .map((date: string, index: number) => ({
+          date,
+          tempHigh: Math.round(data.daily.temperature_2m_max[index]),
+          tempLow: Math.round(data.daily.temperature_2m_min[index]),
+          weatherCode: data.daily.weather_code[index],
+          precipProbability: data.daily.precipitation_probability_max[index] || 0,
+          sunrise: data.daily.sunrise[index],
+          sunset: data.daily.sunset[index],
+        }))
+        .filter((day: { date: string }) => day.date >= today),
       evImpact: calculateEvImpact(data.current.temperature_2m, data.current.weather_code),
       timezone: data.timezone,
     };
