@@ -29,13 +29,19 @@ serve(async (req) => {
       );
     }
 
-    const token = authHeader.replace("Bearer ", "");
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    
+    // Create Supabase client WITH user's auth header for RLS to work
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: { Authorization: authHeader },
+      },
+    });
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
+      console.error("Auth error:", userError);
       return new Response(
         JSON.stringify({ error: "Please sign in" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -43,11 +49,17 @@ serve(async (req) => {
     }
 
     // Get customer from billing_customers
-    const { data: billingCustomer } = await supabase
+    const { data: billingCustomer, error: selectError } = await supabase
       .from("billing_customers")
       .select("stripe_customer_id, default_payment_method_id")
       .eq("user_id", user.id)
       .maybeSingle();
+
+    if (selectError) {
+      console.error("Error fetching billing customer:", selectError);
+    }
+    
+    console.log(`User ${user.id} billing customer:`, billingCustomer);
 
     // Handle different HTTP methods and actions
     if (req.method === "GET") {
