@@ -29,13 +29,19 @@ serve(async (req) => {
       );
     }
 
-    const token = authHeader.replace("Bearer ", "");
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    
+    // Create Supabase client WITH user's auth header for RLS to work
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: { Authorization: authHeader },
+      },
+    });
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
+      console.error("Auth error:", userError);
       return new Response(
         JSON.stringify({ error: "Please sign in to add a payment method" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -43,16 +49,21 @@ serve(async (req) => {
     }
 
     // Check if customer exists
-    const { data: billingCustomer } = await supabase
+    const { data: billingCustomer, error: selectError } = await supabase
       .from("billing_customers")
       .select("stripe_customer_id")
       .eq("user_id", user.id)
       .maybeSingle();
 
+    if (selectError) {
+      console.error("Error fetching billing customer:", selectError);
+    }
+
     let stripeCustomerId: string;
 
     if (billingCustomer?.stripe_customer_id) {
       stripeCustomerId = billingCustomer.stripe_customer_id;
+      console.log(`Existing Stripe customer found: ${stripeCustomerId}`);
     } else {
       // Create new Stripe customer
       const customer = await stripe.customers.create({
@@ -62,13 +73,21 @@ serve(async (req) => {
         },
       });
       stripeCustomerId = customer.id;
+      console.log(`Created new Stripe customer: ${stripeCustomerId}`);
 
-      // Save to database
-      await supabase.from("billing_customers").insert({
+      // Save to database using upsert to handle race conditions
+      const { error: insertError } = await supabase.from("billing_customers").upsert({
         user_id: user.id,
         stripe_customer_id: customer.id,
         email: user.email,
-      });
+      }, { onConflict: 'user_id' });
+
+      if (insertError) {
+        console.error("Error saving billing customer:", insertError);
+        // Don't fail - the Stripe customer was created, we can still proceed
+      } else {
+        console.log(`Saved billing customer for user ${user.id}`);
+      }
     }
 
     const origin = req.headers.get("origin") || "https://lovable.dev";
