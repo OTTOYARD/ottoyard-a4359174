@@ -102,3 +102,18 @@ verify_jwt = false
 
 [functions.generate-analytics-report]
 verify_jwt = false
+
+[functions.stripe-setup-intent]
+verify_jwt = false
+
+[functions.stripe-payment-methods]
+verify_jwt = false
+
+[functions.stripe-charge-saved-method]
+verify_jwt = false
+
+[functions.stripe-create-checkout]
+verify_jwt = false
+
+[functions.stripe-create-portal]
+verify_jwt = false
