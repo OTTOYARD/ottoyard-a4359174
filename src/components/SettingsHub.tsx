@@ -249,12 +249,34 @@ const SettingsHub: React.FC<SettingsHubProps> = ({
   const handleManageBilling = async () => {
     try {
       const { data, error } = await supabase.functions.invoke('stripe-create-portal', {});
-      if (error) throw error;
+      if (error) {
+        // Check if it's a "no billing account" error
+        const errorMessage = error.message || '';
+        if (errorMessage.includes('No billing account') || errorMessage.includes('make a purchase')) {
+          toast.info('Complete a purchase to access billing management', {
+            description: 'Add items to your cart and checkout to create a billing account.',
+          });
+          return;
+        }
+        throw error;
+      }
       if (data?.url) {
         window.open(data.url, '_blank');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Portal error:', error);
+      // Handle the case where the error is in the response body
+      if (error?.context?.body) {
+        try {
+          const body = JSON.parse(error.context.body);
+          if (body.error?.includes('No billing account') || body.error?.includes('make a purchase')) {
+            toast.info('Complete a purchase to access billing management', {
+              description: 'Add items to your cart and checkout to create a billing account.',
+            });
+            return;
+          }
+        } catch {}
+      }
       toast.error('Failed to open billing portal');
     }
   };
