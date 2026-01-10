@@ -897,8 +897,12 @@ export type Database = {
           completed_at: string | null
           created_at: string
           currency: string
+          customer_email: string | null
+          customer_name: string | null
           id: string
           items_jsonb: Json
+          receipt_generated_at: string | null
+          receipt_pdf_url: string | null
           status: string
           stripe_checkout_session_id: string | null
           stripe_payment_intent_id: string | null
@@ -911,8 +915,12 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           currency?: string
+          customer_email?: string | null
+          customer_name?: string | null
           id?: string
           items_jsonb?: Json
+          receipt_generated_at?: string | null
+          receipt_pdf_url?: string | null
           status?: string
           stripe_checkout_session_id?: string | null
           stripe_payment_intent_id?: string | null
@@ -925,8 +933,12 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           currency?: string
+          customer_email?: string | null
+          customer_name?: string | null
           id?: string
           items_jsonb?: Json
+          receipt_generated_at?: string | null
+          receipt_pdf_url?: string | null
           status?: string
           stripe_checkout_session_id?: string | null
           stripe_payment_intent_id?: string | null

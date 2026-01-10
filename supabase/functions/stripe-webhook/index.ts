@@ -58,14 +58,53 @@ serve(async (req) => {
         const session = event.data.object as Stripe.Checkout.Session;
         
         // Update service order status
-        await supabase
+        const { data: orderData } = await supabase
           .from("service_orders")
           .update({
             status: "completed",
             stripe_payment_intent_id: session.payment_intent as string,
             completed_at: new Date().toISOString(),
+            customer_email: session.customer_email || session.customer_details?.email,
+            customer_name: session.customer_details?.name,
           })
-          .eq("stripe_checkout_session_id", session.id);
+          .eq("stripe_checkout_session_id", session.id)
+          .select("id, user_id, total_amount, items_jsonb, customer_email, customer_name")
+          .single();
+
+        // Send payment confirmation email (non-blocking)
+        if (orderData) {
+          try {
+            await fetch(`${supabaseUrl}/functions/v1/send-payment-confirmation`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${supabaseServiceKey}`,
+              },
+              body: JSON.stringify({
+                orderId: orderData.id,
+                customerEmail: orderData.customer_email || session.customer_details?.email,
+                customerName: orderData.customer_name || session.customer_details?.name || "Valued Customer",
+                orderTotal: orderData.total_amount,
+                items: orderData.items_jsonb || [],
+              }),
+            });
+            console.log("Payment confirmation email triggered");
+          } catch (emailError) {
+            console.error("Failed to trigger confirmation email:", emailError);
+            // Don't fail the webhook for email errors
+          }
+
+          // Log activity
+          await supabase.from("activity_logs").insert({
+            user_id: orderData.user_id,
+            action: "payment_completed",
+            details_jsonb: {
+              order_id: orderData.id,
+              amount: orderData.total_amount,
+              session_id: session.id,
+            },
+          });
+        }
 
         console.log(`Checkout completed: ${session.id}`);
         break;

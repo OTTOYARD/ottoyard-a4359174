@@ -49,6 +49,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { CartItem } from './CartButton';
+import { OrderReviewDialog } from './OrderReviewDialog';
+import { InvoiceHistory } from './InvoiceHistory';
 
 interface SettingsHubProps {
   children: React.ReactNode;
@@ -134,6 +136,7 @@ const SettingsHub: React.FC<SettingsHubProps> = ({
   const [showApiKey, setShowApiKey] = useState<string | null>(null);
   const [generatingKey, setGeneratingKey] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [orderReviewOpen, setOrderReviewOpen] = useState(false);
 
   // Cart calculations
   const cartTotal = cartItems.reduce((sum, item) => sum + item.price, 0);
@@ -503,18 +506,21 @@ const SettingsHub: React.FC<SettingsHubProps> = ({
                           Continue Shopping
                         </Button>
                         <Button
-                          onClick={handleStripeCheckout}
-                          disabled={checkoutLoading}
+                          onClick={() => setOrderReviewOpen(true)}
                           className="bg-gradient-to-r from-primary to-primary/80"
                         >
-                          {checkoutLoading ? (
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          ) : (
-                            <CreditCard className="h-4 w-4 mr-2" />
-                          )}
-                          Checkout
+                          <CreditCard className="h-4 w-4 mr-2" />
+                          Review Order
                         </Button>
                       </div>
+
+                      <OrderReviewDialog
+                        open={orderReviewOpen}
+                        onOpenChange={setOrderReviewOpen}
+                        items={cartItems}
+                        onConfirmCheckout={handleStripeCheckout}
+                        isLoading={checkoutLoading}
+                      />
                     </>
                   )}
                 </CardContent>
@@ -688,15 +694,18 @@ const SettingsHub: React.FC<SettingsHubProps> = ({
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-3 mb-6">
                     <Button variant="outline" onClick={handleManageBilling}>
                       <ExternalLink className="h-4 w-4 mr-2" />
                       Manage Billing
                     </Button>
-                    <Button variant="outline">
-                      <CreditCard className="h-4 w-4 mr-2" />
-                      View Invoices
-                    </Button>
+                  </div>
+
+                  <Separator className="my-4" />
+
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Order History</h4>
+                    <InvoiceHistory />
                   </div>
                 </CardContent>
               </Card>
