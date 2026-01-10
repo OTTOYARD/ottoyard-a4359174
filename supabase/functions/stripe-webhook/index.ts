@@ -193,6 +193,36 @@ serve(async (req) => {
         break;
       }
 
+      case "setup_intent.succeeded": {
+        const setupIntent = event.data.object as Stripe.SetupIntent;
+        const customerId = setupIntent.customer as string;
+        const paymentMethodId = setupIntent.payment_method as string;
+
+        if (customerId && paymentMethodId) {
+          // Attach payment method as default to customer
+          await stripe.customers.update(customerId, {
+            invoice_settings: {
+              default_payment_method: paymentMethodId,
+            },
+          });
+
+          // Get payment method details
+          const paymentMethod = await stripe.paymentMethods.retrieve(paymentMethodId);
+
+          // Update billing_customers with the new default payment method
+          await supabase
+            .from("billing_customers")
+            .update({ 
+              default_payment_method_id: paymentMethodId,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("stripe_customer_id", customerId);
+
+          console.log(`Setup intent succeeded: ${setupIntent.id}, payment method: ${paymentMethodId}`);
+        }
+        break;
+      }
+
       default:
         console.log(`Unhandled event type: ${event.type}`);
     }
