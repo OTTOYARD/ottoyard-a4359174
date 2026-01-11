@@ -51,7 +51,7 @@ import { toast } from 'sonner';
 import { CartItem } from './CartButton';
 import { OrderReviewDialog } from './OrderReviewDialog';
 import { InvoiceHistory } from './InvoiceHistory';
-import { PaymentMethods } from './PaymentMethods';
+import { BillingStatus } from './BillingStatus';
 
 interface SettingsHubProps {
   children: React.ReactNode;
@@ -639,19 +639,19 @@ const SettingsHub: React.FC<SettingsHubProps> = ({
 
             {/* Billing Tab */}
             <TabsContent value="billing" className="mt-0 space-y-4">
-              {/* Payment Methods Card */}
+              {/* Billing Status Card */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <CreditCard className="h-5 w-5 mr-2 text-primary" />
-                    Payment Methods
+                    Billing
                   </CardTitle>
                   <CardDescription>
-                    Manage your saved payment methods for faster checkout
+                    Manage your billing and payment methods via Stripe
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <PaymentMethods />
+                  <BillingStatus />
                 </CardContent>
               </Card>
 
