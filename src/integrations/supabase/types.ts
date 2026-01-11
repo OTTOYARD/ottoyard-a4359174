@@ -264,6 +264,48 @@ export type Database = {
           },
         ]
       }
+      monthly_statements: {
+        Row: {
+          created_at: string | null
+          currency: string | null
+          generated_at: string | null
+          id: string
+          order_count: number | null
+          statement_month: string
+          statement_pdf_url: string | null
+          tax_amount: number | null
+          total_amount: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          currency?: string | null
+          generated_at?: string | null
+          id?: string
+          order_count?: number | null
+          statement_month: string
+          statement_pdf_url?: string | null
+          tax_amount?: number | null
+          total_amount?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          currency?: string | null
+          generated_at?: string | null
+          id?: string
+          order_count?: number | null
+          statement_month?: string
+          statement_pdf_url?: string | null
+          tax_amount?: number | null
+          total_amount?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       ottoq_cities: {
         Row: {
           created_at: string
@@ -787,6 +829,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_summary_jsonb: Json | null
           ai_preferences_jsonb: Json | null
           billing_address_jsonb: Json | null
           billing_email: string | null
@@ -803,6 +846,7 @@ export type Database = {
           username: string | null
         }
         Insert: {
+          account_summary_jsonb?: Json | null
           ai_preferences_jsonb?: Json | null
           billing_address_jsonb?: Json | null
           billing_email?: string | null
@@ -819,6 +863,7 @@ export type Database = {
           username?: string | null
         }
         Update: {
+          account_summary_jsonb?: Json | null
           ai_preferences_jsonb?: Json | null
           billing_address_jsonb?: Json | null
           billing_email?: string | null
@@ -1003,6 +1048,60 @@ export type Database = {
           updated_at?: string
           user_id?: string
           vehicle_count?: number | null
+        }
+        Relationships: []
+      }
+      user_fleet_vehicles: {
+        Row: {
+          created_at: string | null
+          id: string
+          license_plate: string | null
+          make: string | null
+          metadata_jsonb: Json | null
+          model: string | null
+          notes: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string
+          vehicle_identifier: string
+          vehicle_name: string
+          vehicle_type: string | null
+          vin: string | null
+          year: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          license_plate?: string | null
+          make?: string | null
+          metadata_jsonb?: Json | null
+          model?: string | null
+          notes?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+          vehicle_identifier: string
+          vehicle_name: string
+          vehicle_type?: string | null
+          vin?: string | null
+          year?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          license_plate?: string | null
+          make?: string | null
+          metadata_jsonb?: Json | null
+          model?: string | null
+          notes?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+          vehicle_identifier?: string
+          vehicle_name?: string
+          vehicle_type?: string | null
+          vin?: string | null
+          year?: number | null
         }
         Relationships: []
       }

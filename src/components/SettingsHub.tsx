@@ -51,6 +51,9 @@ import { toast } from 'sonner';
 import { CartItem } from './CartButton';
 import { OrderReviewDialog } from './OrderReviewDialog';
 import { InvoiceHistory } from './InvoiceHistory';
+import { MonthlyStatements } from './MonthlyStatements';
+import { FleetVehicles } from './FleetVehicles';
+import { AccountOverview } from './AccountOverview';
 
 interface SettingsHubProps {
   children: React.ReactNode;
@@ -646,10 +649,26 @@ const SettingsHub: React.FC<SettingsHubProps> = ({
 
             {/* Billing Tab */}
             <TabsContent value="billing" className="mt-0 space-y-6">
+              {/* Account Overview */}
+              <div className="space-y-3">
+                <h3 className="font-medium flex items-center gap-2">
+                  <Activity className="h-4 w-4" />
+                  Account Overview
+                </h3>
+                <AccountOverview />
+              </div>
+
+              <Separator />
+
+              {/* Billing Portal Access */}
               {hasBillingAccount ? (
                 <div className="space-y-3">
+                  <h3 className="font-medium flex items-center gap-2">
+                    <CreditCard className="h-4 w-4" />
+                    Billing Management
+                  </h3>
                   <p className="text-sm text-muted-foreground">
-                    Manage payment methods, view invoices, and update billing details.
+                    Manage payment methods, view Stripe invoices, and update billing details.
                   </p>
                   <Button onClick={handleManageBilling} variant="outline" disabled={billingLoading}>
                     {billingLoading ? (
@@ -674,6 +693,21 @@ const SettingsHub: React.FC<SettingsHubProps> = ({
 
               <Separator />
 
+              {/* Monthly Statements */}
+              <div className="space-y-3">
+                <h3 className="font-medium flex items-center gap-2">
+                  <Database className="h-4 w-4" />
+                  Monthly Statements
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Download detailed monthly statements with all your orders.
+                </p>
+                <MonthlyStatements />
+              </div>
+
+              <Separator />
+
+              {/* Order History */}
               <div className="space-y-3">
                 <h3 className="font-medium flex items-center gap-2">
                   <Activity className="h-4 w-4" />
@@ -684,27 +718,33 @@ const SettingsHub: React.FC<SettingsHubProps> = ({
             </TabsContent>
 
             {/* Fleet Tab */}
-            <TabsContent value="fleet" className="mt-0 space-y-4">
+            <TabsContent value="fleet" className="mt-0 space-y-6">
+              {/* My Fleet Vehicles */}
+              <div className="space-y-3">
+                <h3 className="font-medium flex items-center gap-2">
+                  <Zap className="h-4 w-4" />
+                  My Fleet Vehicles
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Manage your registered fleet vehicles for tracking and services.
+                </p>
+                <FleetVehicles />
+              </div>
+
+              <Separator />
+
+              {/* Fleet Configuration */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
-                    <Zap className="h-5 w-5 mr-2 text-primary" />
-                    Fleet Configuration
+                    <Database className="h-5 w-5 mr-2 text-primary" />
+                    Fleet Settings
                   </CardTitle>
+                  <CardDescription>
+                    Configure default thresholds and settings for your fleet operations.
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="flex gap-2 flex-wrap">
-                    <Badge variant="outline" className="bg-success/10 text-success border-success/20">
-                      42 Active
-                    </Badge>
-                    <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-                      8 Charging
-                    </Badge>
-                    <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">
-                      3 Maintenance
-                    </Badge>
-                  </div>
-
                   <div className="grid grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label>Low Battery Threshold (%)</Label>

@@ -108,3 +108,6 @@ verify_jwt = false
 
 [functions.stripe-create-portal]
 verify_jwt = false
+
+[functions.user-account-summary]
+verify_jwt = false
