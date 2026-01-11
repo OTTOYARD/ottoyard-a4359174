@@ -17,6 +17,7 @@ import {
   Gauge,
   Thermometer
 } from "lucide-react";
+import { OEMVehicleIcon } from "@/components/OEMVehicleIcon";
 
 interface Vehicle {
   id: string;
@@ -77,6 +78,7 @@ const VehicleCard = ({ vehicle, compact = false, onTrack, onDetails, onSchedule,
     return (
       <div className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/50 transition-colors select-none">
         <div className="flex items-center space-x-3">
+          <OEMVehicleIcon name={vehicle.name} size="sm" />
           <div className="flex items-center space-x-2">
             <div className={`w-3 h-3 rounded-full ${vehicle.status === 'active' ? 'bg-success' : vehicle.status === 'charging' ? 'bg-warning animate-pulse-energy' : 'bg-destructive'}`} />
             <span className="font-medium text-card-foreground">{vehicle.name}</span>
@@ -96,7 +98,10 @@ const VehicleCard = ({ vehicle, compact = false, onTrack, onDetails, onSchedule,
     <Card className={`shadow-fleet-md hover:shadow-fleet-lg transition-all duration-500 select-none ${highlighted ? 'ring-4 ring-primary shadow-fleet-xl bg-primary/5' : ''}`}>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">{vehicle.name}</CardTitle>
+          <div className="flex items-center gap-3">
+            <OEMVehicleIcon name={vehicle.name} size="md" withBackground />
+            <CardTitle className="text-lg">{vehicle.name}</CardTitle>
+          </div>
           <Button variant="ghost" size="sm">
             <MoreVertical className="h-4 w-4" />
           </Button>

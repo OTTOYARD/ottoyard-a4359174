@@ -13,6 +13,7 @@ import { useVehicleHealth } from "@/hooks/useVehicleHealth";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { OEMVehicleIcon } from "@/components/OEMVehicleIcon";
 
 interface Vehicle {
   id: string;
@@ -441,17 +442,19 @@ export const OTTOQFleetView = ({ selectedCityName, highlightedVehicleId }: OTTOQ
                     >
                       <CardHeader className="pb-3">
                         <div className="flex items-start justify-between">
-                          <div className="flex items-center space-x-2">
-                            <Car className="w-5 h-5 text-primary" />
-                            <CardTitle className="text-base">
-                              {vehicle.external_ref || vehicle.id.slice(0, 8)}
-                            </CardTitle>
+                          <div className="flex items-center space-x-3">
+                            <OEMVehicleIcon name={vehicle.oem || vehicle.external_ref || ''} size="md" withBackground />
+                            <div>
+                              <CardTitle className="text-base">
+                                {vehicle.external_ref || vehicle.id.slice(0, 8)}
+                              </CardTitle>
+                              {vehicle.oem && (
+                                <p className="text-xs text-muted-foreground">{vehicle.oem}</p>
+                              )}
+                            </div>
                           </div>
                           {getStatusBadge(vehicle)}
                         </div>
-                        {vehicle.oem && (
-                          <p className="text-xs text-muted-foreground">{vehicle.oem}</p>
-                        )}
                       </CardHeader>
 
                       <CardContent className="space-y-3">
