@@ -137,6 +137,8 @@ const SettingsHub: React.FC<SettingsHubProps> = ({
   const [generatingKey, setGeneratingKey] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [orderReviewOpen, setOrderReviewOpen] = useState(false);
+  const [hasBillingAccount, setHasBillingAccount] = useState(false);
+  const [billingLoading, setBillingLoading] = useState(false);
 
   // Cart calculations
   const cartTotal = cartItems.reduce((sum, item) => sum + item.price, 0);
@@ -194,6 +196,15 @@ const SettingsHub: React.FC<SettingsHubProps> = ({
         .limit(20);
       
       setActivityLogs(logsData || []);
+
+      // Check billing account status
+      const { data: billingData } = await supabase
+        .from('billing_customers')
+        .select('stripe_customer_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      setHasBillingAccount(!!billingData?.stripe_customer_id);
     } catch (error) {
       console.error('Error fetching user data:', error);
     } finally {
@@ -250,15 +261,13 @@ const SettingsHub: React.FC<SettingsHubProps> = ({
   };
 
   const handleManageBilling = async () => {
+    setBillingLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('stripe-create-portal', {});
       if (error) {
-        // Check if it's a "no billing account" error
         const errorMessage = error.message || '';
         if (errorMessage.includes('No billing account') || errorMessage.includes('make a purchase')) {
-          toast.info('Complete a purchase to access billing management', {
-            description: 'Add items to your cart and checkout to create a billing account.',
-          });
+          toast.info('Complete a purchase to access billing management');
           return;
         }
         throw error;
@@ -268,19 +277,18 @@ const SettingsHub: React.FC<SettingsHubProps> = ({
       }
     } catch (error: any) {
       console.error('Portal error:', error);
-      // Handle the case where the error is in the response body
       if (error?.context?.body) {
         try {
           const body = JSON.parse(error.context.body);
           if (body.error?.includes('No billing account') || body.error?.includes('make a purchase')) {
-            toast.info('Complete a purchase to access billing management', {
-              description: 'Add items to your cart and checkout to create a billing account.',
-            });
+            toast.info('Complete a purchase to access billing management');
             return;
           }
         } catch {}
       }
       toast.error('Failed to open billing portal');
+    } finally {
+      setBillingLoading(false);
     }
   };
 
@@ -638,15 +646,31 @@ const SettingsHub: React.FC<SettingsHubProps> = ({
 
             {/* Billing Tab */}
             <TabsContent value="billing" className="mt-0 space-y-6">
-              <div className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  Manage payment methods, view invoices, and update billing details.
-                </p>
-                <Button onClick={handleManageBilling} variant="outline">
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Open Billing Portal
-                </Button>
-              </div>
+              {hasBillingAccount ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    Manage payment methods, view invoices, and update billing details.
+                  </p>
+                  <Button onClick={handleManageBilling} variant="outline" disabled={billingLoading}>
+                    {billingLoading ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                    )}
+                    Open Billing Portal
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-start gap-3 p-4 bg-muted/50 rounded-lg border border-border">
+                  <CreditCard className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div>
+                    <p className="font-medium">No billing account yet</p>
+                    <p className="text-sm text-muted-foreground">
+                      Complete a purchase to set up billing management.
+                    </p>
+                  </div>
+                </div>
+              )}
 
               <Separator />
 
