@@ -51,7 +51,6 @@ import { toast } from 'sonner';
 import { CartItem } from './CartButton';
 import { OrderReviewDialog } from './OrderReviewDialog';
 import { InvoiceHistory } from './InvoiceHistory';
-import { BillingStatus } from './BillingStatus';
 
 interface SettingsHubProps {
   children: React.ReactNode;
@@ -638,108 +637,26 @@ const SettingsHub: React.FC<SettingsHubProps> = ({
             </TabsContent>
 
             {/* Billing Tab */}
-            <TabsContent value="billing" className="mt-0 space-y-4">
-              {/* Billing Status Card */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <CreditCard className="h-5 w-5 mr-2 text-primary" />
-                    Billing
-                  </CardTitle>
-                  <CardDescription>
-                    Manage your billing and payment methods via Stripe
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <BillingStatus />
-                </CardContent>
-              </Card>
+            <TabsContent value="billing" className="mt-0 space-y-6">
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Manage payment methods, view invoices, and update billing details.
+                </p>
+                <Button onClick={handleManageBilling} variant="outline">
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Open Billing Portal
+                </Button>
+              </div>
 
-              {/* Subscription & Pricing Card */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Zap className="h-5 w-5 mr-2 text-primary" />
-                    Subscription & Pricing
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-4">
-                    <h4 className="font-medium">Current Plan</h4>
-                    <div className="p-4 border border-primary/20 rounded-lg bg-primary/5">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-semibold text-lg">Fleet Pro</span>
-                        <Badge>Active</Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground mb-3">
-                        Unlimited vehicles, priority support, advanced analytics
-                      </p>
-                      <div className="flex justify-between text-sm">
-                        <span>42 vehicles × $2,400/mo</span>
-                        <span className="font-semibold">$100,800/mo</span>
-                      </div>
-                    </div>
-                  </div>
+              <Separator />
 
-                  <Separator />
-
-                  <div className="space-y-4">
-                    <h4 className="font-medium">Service Pricing</h4>
-                    <div className="grid grid-cols-2 gap-2">
-                      {[
-                        { name: 'Stall Reservation', price: '$2,000/mo' },
-                        { name: 'Software Usage', price: '$400/mo' },
-                        { name: 'Routine Maintenance', price: '$500' },
-                        { name: 'Battery Check', price: '$50' },
-                        { name: 'Safety Check', price: '$100' },
-                        { name: 'Full Detail', price: '$150' },
-                      ].map((item) => (
-                        <div key={item.name} className="flex justify-between p-2 bg-muted/50 rounded">
-                          <span className="text-sm">{item.name}</span>
-                          <span className="text-sm font-medium">{item.price}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="billing_email">Billing Email</Label>
-                    <Input
-                      id="billing_email"
-                      value={profile.billing_email || ''}
-                      onChange={(e) => setProfile(prev => ({ ...prev, billing_email: e.target.value }))}
-                      placeholder="billing@company.com"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <Button variant="outline" onClick={handleManageBilling}>
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      Manage Billing
-                    </Button>
-                    <Button onClick={saveProfile} disabled={saving}>
-                      {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Check className="h-4 w-4 mr-2" />}
-                      Save
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Order History Card */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Activity className="h-5 w-5 mr-2 text-primary" />
-                    Order History
-                  </CardTitle>
-                  <CardDescription>
-                    View your past orders and download receipts
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <InvoiceHistory />
-                </CardContent>
-              </Card>
+              <div className="space-y-3">
+                <h3 className="font-medium flex items-center gap-2">
+                  <Activity className="h-4 w-4" />
+                  Order History
+                </h3>
+                <InvoiceHistory />
+              </div>
             </TabsContent>
 
             {/* Fleet Tab */}
