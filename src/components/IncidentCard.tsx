@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { generateIncidentPDF } from "@/utils/incidentReportPDF";
 import { useToast } from "@/hooks/use-toast";
+import { OEMVehicleIcon } from "@/components/OEMVehicleIcon";
 
 interface IncidentCardProps {
   incident: Incident;
@@ -77,11 +78,14 @@ export function IncidentCard({ incident, isSelected, onSelect }: IncidentCardPro
       onClick={onSelect}
     >
       <div className="flex items-start gap-2 md:gap-3">
-        {/* Left: Vehicle Avatar */}
+        {/* Left: Vehicle Icon */}
         <div className="flex-shrink-0">
-          <div className="w-8 h-8 md:w-12 md:h-12 rounded-full bg-primary/10 flex items-center justify-center text-[10px] md:text-sm font-semibold text-primary">
-            {incident.vehicleId.split(' ')[0].substring(0, 2)}
-          </div>
+          <OEMVehicleIcon 
+            name={incident.vehicleId} 
+            size="md" 
+            className="w-8 h-8 md:w-12 md:h-12" 
+            withBackground 
+          />
         </div>
         
         {/* Middle: Details */}

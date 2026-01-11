@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { OEMVehicleIcon } from '@/components/OEMVehicleIcon';
 
 interface FleetVehicle {
   id: string;
@@ -203,8 +204,13 @@ export const FleetVehicles: React.FC = () => {
     }
   };
 
-  const getVehicleIcon = (type: string) => {
-    if (type === 'EV' || type === 'Electric') {
+  const getVehicleIcon = (vehicle: FleetVehicle) => {
+    // If make is a known OEM, use the OEM icon
+    if (vehicle.make) {
+      return <OEMVehicleIcon name={vehicle.make} size="md" />;
+    }
+    // Fallback to generic icons
+    if (vehicle.vehicle_type === 'EV' || vehicle.vehicle_type === 'Electric') {
       return <Zap className="h-4 w-4 text-primary" />;
     }
     return <Car className="h-4 w-4 text-muted-foreground" />;
@@ -247,8 +253,8 @@ export const FleetVehicles: React.FC = () => {
                 className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border border-border hover:bg-muted/70 transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    {getVehicleIcon(vehicle.vehicle_type)}
+                  <div className="h-10 w-10 rounded-lg bg-muted/50 flex items-center justify-center overflow-hidden">
+                    {getVehicleIcon(vehicle)}
                   </div>
                   <div>
                     <div className="flex items-center gap-2">

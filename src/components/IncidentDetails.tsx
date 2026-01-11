@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Copy, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useIncidentsStore } from "@/stores/incidentsStore";
+import { OEMVehicleIcon } from "@/components/OEMVehicleIcon";
 
 interface IncidentDetailsProps {
   incident: Incident;
@@ -92,11 +93,14 @@ export function IncidentDetails({ incident }: IncidentDetailsProps) {
       <Card>
         <CardHeader className="p-3 md:p-6">
           <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <CardTitle className="text-sm md:text-lg truncate">{incident.incidentId}</CardTitle>
-              <p className="text-[10px] md:text-sm text-muted-foreground mt-0.5 md:mt-1 truncate">
-                Vehicle: <span className="font-semibold">{incident.vehicleId}</span> • {incident.city}
-              </p>
+            <div className="flex items-center gap-3 min-w-0">
+              <OEMVehicleIcon name={incident.vehicleId} size="lg" withBackground />
+              <div>
+                <CardTitle className="text-sm md:text-lg truncate">{incident.incidentId}</CardTitle>
+                <p className="text-[10px] md:text-sm text-muted-foreground mt-0.5 md:mt-1 truncate">
+                  Vehicle: <span className="font-semibold">{incident.vehicleId}</span> • {incident.city}
+                </p>
+              </div>
             </div>
             <Badge className={`${statusColors[incident.status]} text-[9px] md:text-xs whitespace-nowrap`}>
               {incident.status}
