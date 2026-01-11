@@ -31,14 +31,14 @@ const oemIconMap: Record<string, string> = {
   apollo: defaultIcon,
 };
 
-// Size presets for consistent usage
+// Size presets for consistent usage - slightly larger for cleaner vehicle display
 const sizePresets = {
-  xs: "h-4 w-4",
-  sm: "h-6 w-6",
-  md: "h-8 w-8",
-  lg: "h-10 w-10",
-  xl: "h-12 w-12",
-  "2xl": "h-16 w-16",
+  xs: "h-5 w-5",
+  sm: "h-7 w-7",
+  md: "h-9 w-9",
+  lg: "h-11 w-11",
+  xl: "h-14 w-14",
+  "2xl": "h-20 w-20",
 };
 
 interface OEMVehicleIconProps {
