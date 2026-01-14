@@ -12,7 +12,7 @@ const TabsList = React.forwardRef<
   <TabsPrimitive.List
     ref={ref}
     className={cn(
-      "inline-flex h-9 md:h-12 items-center justify-center rounded-lg glass-panel border md:border-4 border-gray-500/50 px-1 md:px-2 py-0.5 md:py-1 text-muted-foreground transition-all duration-300 hover:border-blue-500/50 hover:shadow-[0_0_8px_2px_rgba(59,130,246,0.4)]",
+      "inline-flex h-8 md:h-12 items-center justify-center rounded-lg glass-panel border md:border-4 border-gray-500/50 px-0.5 md:px-2 py-px md:py-1 text-muted-foreground transition-all duration-300 hover:border-blue-500/50 hover:shadow-[0_0_8px_2px_rgba(59,130,246,0.4)]",
       className
     )}
     {...props}
@@ -27,7 +27,7 @@ const TabsTrigger = React.forwardRef<
   <TabsPrimitive.Trigger
     ref={ref}
     className={cn(
-      "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-1.5 md:px-4 py-0.5 md:py-1.5 text-[10px] md:text-sm font-medium ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-white/80 hover:text-white hover:bg-muted/30 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm mx-px md:mx-1",
+      "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-1 md:px-4 py-px md:py-1.5 text-[9px] md:text-sm font-medium ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-white/80 hover:text-white hover:bg-muted/30 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm mx-0 md:mx-1",
       className
     )}
     {...props}
