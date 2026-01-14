@@ -401,9 +401,9 @@ const SettingsHub: React.FC<SettingsHubProps> = ({
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
           <div className="px-6 pt-2">
-            <TabsList className="grid w-full grid-cols-7 h-10">
-              <TabsTrigger value="cart" className="text-xs relative">
-                <ShoppingCart className="h-3 w-3 mr-1" />
+            <TabsList className="grid w-full grid-cols-4 md:grid-cols-7 grid-rows-2 md:grid-rows-1 h-auto md:h-10 gap-0.5 md:gap-0">
+              <TabsTrigger value="cart" className="text-[10px] md:text-xs relative">
+                <ShoppingCart className="hidden md:inline h-3 w-3 mr-1" />
                 Cart
                 {cartCount > 0 && (
                   <Badge className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]">
@@ -411,28 +411,28 @@ const SettingsHub: React.FC<SettingsHubProps> = ({
                   </Badge>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="profile" className="text-xs">
-                <User className="h-3 w-3 mr-1" />
+              <TabsTrigger value="profile" className="text-[10px] md:text-xs">
+                <User className="hidden md:inline h-3 w-3 mr-1" />
                 Profile
               </TabsTrigger>
-              <TabsTrigger value="billing" className="text-xs">
-                <CreditCard className="h-3 w-3 mr-1" />
+              <TabsTrigger value="billing" className="text-[10px] md:text-xs">
+                <CreditCard className="hidden md:inline h-3 w-3 mr-1" />
                 Billing
               </TabsTrigger>
-              <TabsTrigger value="fleet" className="text-xs">
-                <Zap className="h-3 w-3 mr-1" />
+              <TabsTrigger value="fleet" className="text-[10px] md:text-xs">
+                <Zap className="hidden md:inline h-3 w-3 mr-1" />
                 Fleet
               </TabsTrigger>
-              <TabsTrigger value="alerts" className="text-xs">
-                <Bell className="h-3 w-3 mr-1" />
+              <TabsTrigger value="alerts" className="text-[10px] md:text-xs">
+                <Bell className="hidden md:inline h-3 w-3 mr-1" />
                 Alerts
               </TabsTrigger>
-              <TabsTrigger value="integrations" className="text-xs">
-                <Database className="h-3 w-3 mr-1" />
+              <TabsTrigger value="integrations" className="text-[10px] md:text-xs">
+                <Database className="hidden md:inline h-3 w-3 mr-1" />
                 Services
               </TabsTrigger>
-              <TabsTrigger value="security" className="text-xs">
-                <Shield className="h-3 w-3 mr-1" />
+              <TabsTrigger value="security" className="text-[10px] md:text-xs">
+                <Shield className="hidden md:inline h-3 w-3 mr-1" />
                 Security
               </TabsTrigger>
             </TabsList>
