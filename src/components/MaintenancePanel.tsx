@@ -24,19 +24,25 @@ import {
   autoScheduledQueue,
   upcomingMaintenance,
   upcomingDetailing,
-  PredictedMaintenance
+  PredictedMaintenance,
+  getServicePrice
 } from "@/data/maintenance-mock";
+import { toast } from "sonner";
+
+import { CartItem } from "@/components/CartButton";
 
 interface MaintenancePanelProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   cityId: string;
+  onAddToCart?: (items: CartItem[]) => void;
 }
 
-export function MaintenancePanel({ isOpen, onOpenChange, cityId }: MaintenancePanelProps) {
+export function MaintenancePanel({ isOpen, onOpenChange, cityId, onAddToCart }: MaintenancePanelProps) {
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [selectedVehicleForSchedule, setSelectedVehicleForSchedule] = useState<any>(null);
   const [manualVehicleId, setManualVehicleId] = useState<string>("");
+  const [selectedServiceType, setSelectedServiceType] = useState<string>("MAINTENANCE");
 
   const predictedCount = predictiveMaintenanceData.filter(p => !p.autoScheduled).length;
   const autoScheduledCount = autoScheduledQueue.length;
@@ -45,8 +51,10 @@ export function MaintenancePanel({ isOpen, onOpenChange, cityId }: MaintenancePa
     setSelectedVehicleForSchedule({
       id: prediction.vehicleId,
       external_ref: prediction.vehicleName,
-      oem: prediction.oem
+      oem: prediction.oem,
+      predictedService: prediction.predictedService
     });
+    setSelectedServiceType(prediction.predictedService);
     setScheduleDialogOpen(true);
   };
 
@@ -57,11 +65,36 @@ export function MaintenancePanel({ isOpen, onOpenChange, cityId }: MaintenancePa
         setSelectedVehicleForSchedule({
           id: vehicle.vehicleId,
           external_ref: vehicle.vehicleName,
-          oem: vehicle.oem
+          oem: vehicle.oem,
+          predictedService: vehicle.predictedService
         });
+        setSelectedServiceType(vehicle.predictedService);
         setScheduleDialogOpen(true);
       }
     }
+  };
+
+  const handleScheduleSuccess = () => {
+    // Add to cart if callback provided
+    if (onAddToCart && selectedVehicleForSchedule) {
+      const price = getServicePrice(selectedServiceType);
+      const cartItem: CartItem = {
+        id: `maint-${Date.now()}`,
+        vehicleId: selectedVehicleForSchedule.id,
+        vehicleName: selectedVehicleForSchedule.external_ref || selectedVehicleForSchedule.id,
+        service: selectedServiceType,
+        serviceName: selectedServiceType,
+        price: price,
+        date: new Date().toLocaleDateString(),
+        time: "Scheduled",
+      };
+      onAddToCart([cartItem]);
+      toast.success(`Added to cart - $${price}`);
+    }
+    
+    setScheduleDialogOpen(false);
+    setSelectedVehicleForSchedule(null);
+    toast.success("Scheduling complete! Service has been booked.");
   };
 
   const getConfidenceColor = (score: number) => {
@@ -88,19 +121,23 @@ export function MaintenancePanel({ isOpen, onOpenChange, cityId }: MaintenancePa
       <Collapsible open={isOpen} onOpenChange={onOpenChange}>
         <CollapsibleTrigger asChild>
           <Button
-            className="w-full h-14 bg-gradient-to-r from-warning/80 to-primary/80 hover:from-warning hover:to-primary text-white font-semibold justify-between group"
+            className="w-full min-h-14 h-auto py-2 bg-gradient-to-r from-warning/80 to-primary/80 hover:from-warning hover:to-primary text-white font-semibold justify-between group"
           >
-            <div className="flex items-center">
-              <Wrench className="w-5 h-5 mr-2" />
-              <span>Intelligent Maintenance</span>
-              <Badge className="ml-3 bg-white/20 text-white border-0">
-                {predictedCount} Predicted
-              </Badge>
-              <Badge className="ml-2 bg-success/30 text-white border-0">
-                {autoScheduledCount} Auto-Scheduled
-              </Badge>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-0 items-start">
+              <div className="flex items-center">
+                <Wrench className="w-5 h-5 mr-2 shrink-0" />
+                <span className="text-sm sm:text-base">Intelligent Maintenance</span>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-1 sm:gap-2 sm:ml-3">
+                <Badge className="bg-white/20 text-white border-0 text-xs">
+                  {predictedCount} Predicted
+                </Badge>
+                <Badge className="bg-success/30 text-white border-0 text-xs">
+                  {autoScheduledCount} Available
+                </Badge>
+              </div>
             </div>
-            <ChevronDown className={`w-5 h-5 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`w-5 h-5 shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
           </Button>
         </CollapsibleTrigger>
 
@@ -338,10 +375,7 @@ export function MaintenancePanel({ isOpen, onOpenChange, cityId }: MaintenancePa
         open={scheduleDialogOpen}
         onOpenChange={setScheduleDialogOpen}
         cityId={cityId}
-        onSuccess={() => {
-          setScheduleDialogOpen(false);
-          setSelectedVehicleForSchedule(null);
-        }}
+        onSuccess={handleScheduleSuccess}
       />
     </>
   );

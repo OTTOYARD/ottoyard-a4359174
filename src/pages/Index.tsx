@@ -1303,7 +1303,7 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="fleet" className="space-y-6">
-            <OTTOQFleetView selectedCityName={selectedCityForOTTOQ} highlightedVehicleId={highlightedVehicleId} />
+            <OTTOQFleetView selectedCityName={selectedCityForOTTOQ} highlightedVehicleId={highlightedVehicleId} onAddToCart={handleAddToCart} />
           </TabsContent>
 
           <TabsContent value="depots" className="space-y-6">
