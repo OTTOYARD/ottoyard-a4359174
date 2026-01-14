@@ -53,12 +53,15 @@ interface City {
   tz: string;
 }
 
+import { CartItem } from "@/components/CartButton";
+
 interface OTTOQFleetViewProps {
   selectedCityName?: string;
   highlightedVehicleId?: string | null;
+  onAddToCart?: (items: CartItem[]) => void;
 }
 
-export const OTTOQFleetView = ({ selectedCityName, highlightedVehicleId }: OTTOQFleetViewProps) => {
+export const OTTOQFleetView = ({ selectedCityName, highlightedVehicleId, onAddToCart }: OTTOQFleetViewProps) => {
   const [cities, setCities] = useState<City[]>([]);
   const [selectedCity, setSelectedCity] = useState<string>("");
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -430,6 +433,7 @@ export const OTTOQFleetView = ({ selectedCityName, highlightedVehicleId }: OTTOQ
         isOpen={maintenancePanelOpen}
         onOpenChange={setMaintenancePanelOpen}
         cityId={selectedCity}
+        onAddToCart={onAddToCart}
       />
 
       {selectedCity && (

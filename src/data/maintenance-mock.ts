@@ -1,5 +1,28 @@
 // Mock data for predictive maintenance feature
 
+// Service pricing lookup
+export const servicePricing: Record<string, number> = {
+  "Tire Rotation": 75,
+  "Brake Pad Replacement": 350,
+  "Battery Health Check": 125,
+  "Sensor Calibration": 200,
+  "Fluid Top-up": 50,
+  "Full Interior Detail": 150,
+  "Exterior Wash": 45,
+  "Interior Sanitization": 85,
+  "Full Detail": 250,
+  "Software Update": 0,
+  "Brake Service": 400,
+  "CHARGE": 25,
+  "MAINTENANCE": 300,
+  "DETAILING": 150,
+};
+
+// Helper to get price for a service
+export const getServicePrice = (serviceType: string): number => {
+  return servicePricing[serviceType] ?? 100;
+};
+
 export interface PredictedMaintenance {
   id: string;
   vehicleId: string;
@@ -12,6 +35,7 @@ export interface PredictedMaintenance {
   autoScheduled: boolean;
   depotName: string;
   scheduledTime: string | null;
+  price?: number;
 }
 
 export interface AutoScheduledJob {
@@ -25,6 +49,7 @@ export interface AutoScheduledJob {
   depot: string;
   reason: string;
   bay: string;
+  price?: number;
 }
 
 export interface UpcomingService {
@@ -34,6 +59,7 @@ export interface UpcomingService {
   serviceType: string;
   scheduledDate: string;
   status: "scheduled" | "in_progress" | "completed";
+  price?: number;
 }
 
 // Predictive maintenance data - AI-predicted upcoming service needs
