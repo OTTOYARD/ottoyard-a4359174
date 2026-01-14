@@ -3,6 +3,36 @@
 @tailwind utilities;
 
 /* ============================================
+   PWA Safe Area Insets
+   ============================================ */
+:root {
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
+}
+
+/* PWA standalone mode - apply safe area padding */
+@media all and (display-mode: standalone) {
+  .pwa-header {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  
+  .pwa-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
+
+/* iOS PWA specific - ensure safe area works with black-translucent status bar */
+@supports (-webkit-touch-callout: none) {
+  @media all and (display-mode: standalone) {
+    .pwa-header {
+      padding-top: max(env(safe-area-inset-top, 0px), 20px);
+    }
+  }
+}
+
+/* ============================================
    OTTOYARD Fleet Command - Liquid Glass Design System
    ============================================
    

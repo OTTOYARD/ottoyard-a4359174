@@ -512,21 +512,21 @@ const Index = () => {
   const occupancyRate = totalStalls > 0 ? Math.round((totalStalls - availableStalls) / totalStalls * 100) : 0;
   console.log(`📊 ${currentCity.name} Metrics: ${vehicles.length} vehicles (${activeVehicles} active), ${depots.length} depots (${availableStalls}/${totalStalls} stalls available)`);
   return <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 sm:py-6 py-[18px]">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex flex-col gap-2 items-start">
+      {/* Header - with PWA safe area support */}
+      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50 pwa-header">
+        <div className="container mx-auto px-4 py-3 sm:py-5">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-col gap-1.5 items-start">
               <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 cursor-pointer hover-neon transition-all duration-300" onClick={() => window.scrollTo({
               top: 0,
               behavior: 'smooth'
             })}>
-                <div className="w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center flex-shrink-0">
-                  <img src="/lovable-uploads/0802aeb6-e42e-4389-8e93-c10d17cf963e.png" alt="Fleet Command Logo" className="h-18 w-18 sm:h-24 sm:w-24" />
+                <div className="w-10 h-10 sm:w-20 sm:h-20 flex items-center justify-center flex-shrink-0">
+                  <img src="/lovable-uploads/0802aeb6-e42e-4389-8e93-c10d17cf963e.png" alt="Fleet Command Logo" className="h-10 w-10 sm:h-20 sm:w-20" />
                 </div>
                 <div className="min-w-0">
-                  <h1 className="text-xl sm:text-3xl font-bold text-foreground truncate text-center neon-text">OTTOYARD</h1>
-                  <p className="text-sm truncate text-center bg-gradient-to-b from-slate-300 to-slate-600 bg-clip-text text-[#617fa5] font-medium sm:text-lg">Fleet Command</p>
+                  <h1 className="text-lg sm:text-3xl font-bold text-foreground truncate text-center neon-text">OTTOYARD</h1>
+                  <p className="text-xs sm:text-lg truncate text-center bg-gradient-to-b from-slate-300 to-slate-600 bg-clip-text text-[#617fa5] font-medium">Fleet Command</p>
                 </div>
               </div>
               <WeatherButton city={currentCity} />
