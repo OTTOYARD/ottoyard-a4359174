@@ -64,13 +64,13 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({ children }) => {
         </DialogHeader>
 
         <Tabs defaultValue="profile" className="h-full">
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="notifications">Alerts</TabsTrigger>
-            <TabsTrigger value="fleet">Fleet</TabsTrigger>
-            <TabsTrigger value="billing">Billing</TabsTrigger>
-            <TabsTrigger value="integrations">Services</TabsTrigger>
-            <TabsTrigger value="security">Security</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 grid-rows-2 md:grid-rows-1 h-auto gap-0.5 md:gap-0">
+            <TabsTrigger value="profile" className="text-[10px] md:text-sm">Profile</TabsTrigger>
+            <TabsTrigger value="notifications" className="text-[10px] md:text-sm">Alerts</TabsTrigger>
+            <TabsTrigger value="fleet" className="text-[10px] md:text-sm">Fleet</TabsTrigger>
+            <TabsTrigger value="billing" className="text-[10px] md:text-sm">Billing</TabsTrigger>
+            <TabsTrigger value="integrations" className="text-[10px] md:text-sm">Services</TabsTrigger>
+            <TabsTrigger value="security" className="text-[10px] md:text-sm">Security</TabsTrigger>
           </TabsList>
 
           <div className="mt-4 overflow-y-auto max-h-[60vh]">
