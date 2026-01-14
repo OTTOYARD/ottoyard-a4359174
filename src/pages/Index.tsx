@@ -574,12 +574,12 @@ const Index = () => {
       <main className="container mx-auto px-4 py-6">
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
           <div className="flex justify-center">
-            <TabsList className="w-full md:w-auto h-10 md:h-12 justify-center">
-              <TabsTrigger value="overview" className="flex-1 md:flex-none text-xs md:text-base">Overview</TabsTrigger>
-              <TabsTrigger value="fleet" className="flex-1 md:flex-none text-xs md:text-base">Fleet</TabsTrigger>
-              <TabsTrigger value="depots" className="flex-1 md:flex-none text-xs md:text-base">Depots</TabsTrigger>
-              <TabsTrigger value="incidents" className="flex-1 md:flex-none text-xs md:text-base">Incidents</TabsTrigger>
-              <TabsTrigger value="analytics" className="flex-1 md:flex-none text-xs md:text-base">Analytics</TabsTrigger>
+            <TabsList className="w-auto">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="fleet">Fleet</TabsTrigger>
+              <TabsTrigger value="depots">Depots</TabsTrigger>
+              <TabsTrigger value="incidents">Incidents</TabsTrigger>
+              <TabsTrigger value="analytics">Analytics</TabsTrigger>
             </TabsList>
           </div>
 
