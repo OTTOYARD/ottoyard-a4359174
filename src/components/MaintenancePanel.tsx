@@ -133,7 +133,7 @@ export function MaintenancePanel({ isOpen, onOpenChange, cityId, onAddToCart }: 
                   {predictedCount} Predicted
                 </Badge>
                 <Badge className="bg-success/30 text-white border-0 text-xs">
-                  {autoScheduledCount} Available
+                  {autoScheduledCount} Auto-Scheduled
                 </Badge>
               </div>
             </div>
