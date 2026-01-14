@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { OEMVehicleIcon } from "@/components/OEMVehicleIcon";
+import { MaintenancePanel } from "./MaintenancePanel";
 
 interface Vehicle {
   id: string;
@@ -66,6 +67,7 @@ export const OTTOQFleetView = ({ selectedCityName, highlightedVehicleId }: OTTOQ
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [healthDialogOpen, setHealthDialogOpen] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [maintenancePanelOpen, setMaintenancePanelOpen] = useState(false);
   const { loading: healthLoading, healthData, fetchHealthScore } = useVehicleHealth();
 
   useEffect(() => {
@@ -422,6 +424,13 @@ export const OTTOQFleetView = ({ selectedCityName, highlightedVehicleId }: OTTOQ
           Refresh
         </Button>
       </div>
+
+      {/* Maintenance Panel Button */}
+      <MaintenancePanel 
+        isOpen={maintenancePanelOpen}
+        onOpenChange={setMaintenancePanelOpen}
+        cityId={selectedCity}
+      />
 
       {selectedCity && (
         <div className="space-y-4">

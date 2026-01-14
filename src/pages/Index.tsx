@@ -578,13 +578,7 @@ const Index = () => {
               <TabsTrigger value="overview" className="flex-1 md:flex-none text-xs md:text-base">Overview</TabsTrigger>
               <TabsTrigger value="fleet" className="flex-1 md:flex-none text-xs md:text-base">Fleet</TabsTrigger>
               <TabsTrigger value="depots" className="flex-1 md:flex-none text-xs md:text-base">Depots</TabsTrigger>
-              <TabsTrigger value="incidents" className="flex-1 md:flex-none text-xs md:text-base">
-                Incidents
-              </TabsTrigger>
-              <TabsTrigger value="maintenance" className="flex-1 md:flex-none text-xs md:text-base">
-                <span className="md:hidden">Maint.</span>
-                <span className="hidden md:inline">Maintenance</span>
-              </TabsTrigger>
+              <TabsTrigger value="incidents" className="flex-1 md:flex-none text-xs md:text-base">Incidents</TabsTrigger>
               <TabsTrigger value="analytics" className="flex-1 md:flex-none text-xs md:text-base">Analytics</TabsTrigger>
             </TabsList>
           </div>
@@ -1314,90 +1308,6 @@ const Index = () => {
 
           <TabsContent value="depots" className="space-y-6">
             <OTTOQDepotView selectedCityName={selectedCityForOTTOQ} highlightedDepotId={highlightedDepotId} />
-          </TabsContent>
-
-          <TabsContent value="maintenance" className="space-y-6">
-            <div className="flex items-center justify-center">
-              <h2 className="text-3xl font-bold text-foreground">Maintenance & Detailing</h2>
-            </div>
-            
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 w-full max-w-3xl mx-auto">
-              <Button variant="outline" className="bg-warning/5 border-warning/30 text-warning hover:bg-warning/10 w-full sm:w-80 md:w-96 h-10 sm:h-14 md:h-16 text-sm sm:text-base" onClick={() => setShowDueSoonSummary(true)}>
-                <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 mr-2" />
-                Due Soon Summary ({vehicles.slice(0, 3).length} vehicles)
-                <Eye className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 ml-2" />
-              </Button>
-              
-              <Button className="bg-gradient-primary hover:bg-primary-hover w-full sm:w-80 md:w-96 h-10 sm:h-14 md:h-16 text-sm sm:text-base" onClick={() => handleMaintenanceSchedule(vehicles[0])}>
-                <Wrench className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 mr-2" />
-                Schedule Maintenance
-              </Button>
-            </div>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="shadow-fleet-md">
-                <CardHeader>
-                  <CardTitle>Upcoming Maintenance</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                     {vehicles.slice(0, 8).map((vehicle, index) => <div key={vehicle.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
-                         <div className="flex items-center space-x-3">
-                           <div className="flex flex-col items-center space-y-1">
-                             <AlertTriangle className="h-4 w-4 text-warning" />
-                             <Wrench className="h-3 w-3 text-muted-foreground" />
-                           </div>
-                           <div>
-                             <p className="font-medium">{vehicle.name} - Routine Service</p>
-                             <p className="text-sm text-muted-foreground">Due: {vehicle.nextMaintenance}</p>
-                           </div>
-                         </div>
-                          <div className="flex flex-col items-end space-y-2">
-                            <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">
-                              {index < 3 ? 'Due Soon' : 'Scheduled'}
-                            </Badge>
-                            <Button size="sm" variant="outline" onClick={() => handleMaintenanceSchedule(vehicle)} className="w-20">
-                              Schedule
-                            </Button>
-                          </div>
-                       </div>)}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="shadow-fleet-md">
-                <CardHeader>
-                  <CardTitle>Detailing Schedule</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                     {vehicles.slice(8, 16).map((vehicle, index) => <div key={vehicle.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
-                         <div className="flex items-center space-x-3">
-                           <div className="flex flex-col items-center space-y-1">
-                             <CheckCircle2 className="h-4 w-4 text-accent" />
-                             <Calendar className="h-3 w-3 text-muted-foreground" />
-                           </div>
-                           <div>
-                             <p className="font-medium">{vehicle.name} - Interior/Exterior Clean</p>
-                             <p className="text-sm text-muted-foreground">
-                               {index < 4 ? `Completed: 2024-08-${15 + index}` : `Scheduled: 2024-08-${25 + index}`}
-                             </p>
-                           </div>
-                         </div>
-                          <div className="flex flex-col items-end space-y-2">
-                            <Badge variant="outline" className={index < 4 ? "bg-success/10 text-success border-success/20" : "bg-accent/10 text-accent border-accent/20"}>
-                              {index < 4 ? 'Complete' : 'Scheduled'}
-                            </Badge>
-                            <Button size="sm" variant="outline" onClick={() => handleMaintenanceSchedule(vehicle)} className="w-20">
-                              Schedule
-                            </Button>
-                          </div>
-                       </div>)}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">
