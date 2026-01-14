@@ -12,8 +12,29 @@
   --safe-area-inset-right: env(safe-area-inset-right, 0px);
 }
 
-/* PWA standalone mode - apply safe area padding */
+/* Prevent iOS auto-zoom on input focus */
+@supports (-webkit-touch-callout: none) {
+  input, select, textarea, button {
+    font-size: 16px !important;
+  }
+}
+
+/* Prevent zoom gestures in PWA standalone mode */
 @media all and (display-mode: standalone) {
+  html {
+    touch-action: manipulation;
+  }
+  
+  body {
+    touch-action: pan-x pan-y;
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+  }
+  
+  input, select, textarea {
+    font-size: max(16px, 1rem);
+  }
+  
   .pwa-header {
     padding-top: env(safe-area-inset-top, 0px);
   }
