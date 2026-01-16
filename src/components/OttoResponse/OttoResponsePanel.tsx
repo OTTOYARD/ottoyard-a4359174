@@ -9,11 +9,12 @@ import { useOttoResponseData, calculateZoneAnalytics, updateSafeHarborDistances 
 import { OttoResponseMap } from './OttoResponseMap';
 import { AdvisoryBuilder } from './AdvisoryBuilder';
 import { AdvisoryLog } from './AdvisoryLog';
-import { PredictiveAdvisory } from './PredictiveAdvisory';
+
 interface OttoResponsePanelProps {
   vehicles?: any[];
   depots?: any[];
 }
+
 export function OttoResponsePanel({
   vehicles: externalVehicles,
   depots: externalDepots
@@ -43,6 +44,7 @@ export function OttoResponsePanel({
       }
     }
   }, [isPanelOpen, setTrafficSeverity]);
+
   const {
     vehicles,
     safeHarbors
@@ -58,6 +60,7 @@ export function OttoResponsePanel({
   const harborsWithDistances = useMemo(() => {
     return updateSafeHarborDistances(safeHarbors, drawnZone);
   }, [safeHarbors, drawnZone]);
+
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case 'High':
@@ -70,7 +73,9 @@ export function OttoResponsePanel({
         return 'bg-muted text-muted-foreground';
     }
   };
-  return <Sheet open={isPanelOpen} onOpenChange={open => !open && closePanel()}>
+
+  return (
+    <Sheet open={isPanelOpen} onOpenChange={open => !open && closePanel()}>
       <SheetContent side="right" className="w-full sm:max-w-[900px] md:max-w-[1100px] p-0 flex flex-col pt-8 md:pt-0">
         <SheetHeader className="px-4 md:px-6 py-3 md:py-4 border-b border-border">
           <div className="flex items-center justify-between gap-2">
@@ -98,10 +103,9 @@ export function OttoResponsePanel({
         <div className="flex-1 overflow-hidden">
           <Tabs defaultValue="advisory" className="h-full flex flex-col">
             <div className="pt-2 border-b border-border flex flex-col items-center px-2 md:px-3 pb-2 md:pb-3">
-              <TabsList className="grid max-w-[450px] w-full grid-cols-3 h-8 md:h-9">
-                <TabsTrigger value="advisory" className="text-xs md:text-sm px-1 md:px-3">Builder</TabsTrigger>
-                <TabsTrigger value="predictive" className="text-xs md:text-sm px-1 md:px-3">Predictive</TabsTrigger>
-                <TabsTrigger value="log" className="text-xs md:text-sm px-1 md:px-3">Log</TabsTrigger>
+              <TabsList className="grid max-w-[300px] w-full grid-cols-2 h-8 md:h-9">
+                <TabsTrigger value="advisory" className="text-xs md:text-sm px-2 md:px-4">Builder</TabsTrigger>
+                <TabsTrigger value="log" className="text-xs md:text-sm px-2 md:px-4">Log</TabsTrigger>
               </TabsList>
               <h2 className="text-base md:text-xl font-bold text-center mt-2 md:mt-3">Incident Management</h2>
               <p className="text-xs md:text-sm text-muted-foreground text-center">Active response protocols</p>
@@ -115,30 +119,8 @@ export function OttoResponsePanel({
                 </div>
                 
                 {/* Builder Section */}
-                <div className="flex-1 md:w-1/2 overflow-hidden">
-                  <ScrollArea className="h-full">
-                    <div className="p-3 md:p-4">
-                      <AdvisoryBuilder safeHarbors={harborsWithDistances} />
-                    </div>
-                  </ScrollArea>
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="predictive" className="flex-1 overflow-hidden m-0 data-[state=active]:flex">
-              <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-                {/* Map Section */}
-                <div className="flex-1 md:w-1/2 min-h-[50vh] md:min-h-0 md:h-auto border-b md:border-b-0 md:border-r border-border">
-                  <OttoResponseMap vehicles={vehicles} />
-                </div>
-                
-                {/* Predictive Section */}
-                <div className="flex-1 md:w-1/2 overflow-hidden">
-                  <ScrollArea className="h-full">
-                    <div className="p-3 md:p-4">
-                      <PredictiveAdvisory safeHarbors={harborsWithDistances} />
-                    </div>
-                  </ScrollArea>
+                <div className="flex-1 md:w-1/2 overflow-hidden flex flex-col">
+                  <AdvisoryBuilder safeHarbors={harborsWithDistances} />
                 </div>
               </div>
             </TabsContent>
@@ -153,5 +135,6 @@ export function OttoResponsePanel({
           </Tabs>
         </div>
       </SheetContent>
-    </Sheet>;
+    </Sheet>
+  );
 }

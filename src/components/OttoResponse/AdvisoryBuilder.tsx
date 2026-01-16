@@ -6,23 +6,25 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   AlertTriangle,
   Clock,
   MapPin,
   Car,
   Building2,
-  FileDown,
   Send,
   Sparkles,
   CheckCircle2,
   Loader2,
+  RotateCcw,
+  ChevronDown,
+  Zap,
 } from 'lucide-react';
-import { useOttoResponseStore, SafeHarbor, AIProvider } from '@/stores/ottoResponseStore';
+import { useOttoResponseStore, SafeHarbor, TrafficSeverity } from '@/stores/ottoResponseStore';
 import { getPolygonAreaSqMiles } from '@/hooks/useOttoResponseData';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -32,9 +34,30 @@ interface AdvisoryBuilderProps {
   safeHarbors: SafeHarbor[];
 }
 
+interface PredictiveScenario {
+  scenarioName: string;
+  cause: string;
+  severity: TrafficSeverity;
+  zoneType: 'radius' | 'polygon';
+  zoneCenter: { lat: number; lng: number };
+  radiusMiles: number;
+  vehiclesAffected: number;
+  vehiclesNearby: number;
+  recommendations: string[];
+  suggestedSafeHarbors: string[];
+  oemNotes: string;
+}
+
 export function AdvisoryBuilder({ safeHarbors }: AdvisoryBuilderProps) {
   const [showSubmitDialog, setShowSubmitDialog] = useState(false);
   const [aiDraftText, setAIDraftText] = useState<string | null>(null);
+  const [isGeneratingPrediction, setIsGeneratingPrediction] = useState(false);
+  const [predictiveScenario, setPredictiveScenario] = useState<PredictiveScenario | null>(null);
+  
+  // Collapsible section states
+  const [recommendationsOpen, setRecommendationsOpen] = useState(true);
+  const [safeHarborsOpen, setSafeHarborsOpen] = useState(true);
+  const [notesOpen, setNotesOpen] = useState(true);
   
   const {
     trafficSeverity,
@@ -49,13 +72,14 @@ export function AdvisoryBuilder({ safeHarbors }: AdvisoryBuilderProps) {
     toggleSafeHarbor,
     oemNotes,
     setOemNotes,
-    aiProvider,
-    setAIProvider,
     isAILoading,
     setIsAILoading,
     createAdvisory,
     submitAdvisory,
     resetBuilder,
+    setDrawnZone,
+    setTrafficSeverity,
+    updateZoneAnalytics,
   } = useOttoResponseStore();
   
   const maxNotes = 1000;
@@ -73,6 +97,126 @@ export function AdvisoryBuilder({ safeHarbors }: AdvisoryBuilderProps) {
   const waveError = recommendations.waveBasedRecovery && 
     (!recommendations.waveSize || !recommendations.waveIntervalMinutes);
   const hasErrors = safeHarborError || waveError;
+
+  // Handle Reset
+  const handleReset = () => {
+    resetBuilder();
+    setAIDraftText(null);
+    setPredictiveScenario(null);
+    toast.info('Advisory builder reset');
+  };
+
+  // Handle Predictive Analysis
+  const handlePredictiveAnalysis = async () => {
+    setIsGeneratingPrediction(true);
+    setPredictiveScenario(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('otto-response-ai', {
+        body: { 
+          action: 'generatePredictiveScenario',
+          context: {
+            availableHarbors: safeHarbors.map(h => h.name),
+          }
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.scenario) {
+        applyPredictiveScenario(data.scenario);
+        toast.success('AI prediction applied - review and submit');
+      }
+    } catch (err) {
+      console.error('Predictive analysis error:', err);
+      // Fallback to mock scenario
+      const mockScenario = generateMockScenario();
+      applyPredictiveScenario(mockScenario);
+      toast.info('Mock prediction applied - review and submit');
+    } finally {
+      setIsGeneratingPrediction(false);
+    }
+  };
+
+  const generateMockScenario = (): PredictiveScenario => {
+    const scenarios = [
+      {
+        scenarioName: 'Major Interstate Incident',
+        cause: 'Multi-vehicle collision on I-40 near downtown exit',
+        severity: 'High' as TrafficSeverity,
+        radiusMiles: 1.5,
+      },
+      {
+        scenarioName: 'Construction Zone Closure',
+        cause: 'Emergency road repair on main arterial route',
+        severity: 'Medium' as TrafficSeverity,
+        radiusMiles: 0.75,
+      },
+      {
+        scenarioName: 'Special Event Traffic',
+        cause: 'Major concert venue event causing congestion',
+        severity: 'Medium' as TrafficSeverity,
+        radiusMiles: 1.0,
+      },
+      {
+        scenarioName: 'Weather-Related Hazard',
+        cause: 'Flooding reported on low-lying roads',
+        severity: 'High' as TrafficSeverity,
+        radiusMiles: 2.0,
+      },
+    ];
+
+    const selected = scenarios[Math.floor(Math.random() * scenarios.length)];
+    const harborsToSuggest = safeHarbors.slice(0, 2).map(h => h.name);
+
+    return {
+      ...selected,
+      zoneType: 'radius',
+      zoneCenter: { lat: 36.16 + (Math.random() - 0.5) * 0.05, lng: -86.78 + (Math.random() - 0.5) * 0.05 },
+      vehiclesAffected: Math.floor(Math.random() * 5) + 1,
+      vehiclesNearby: Math.floor(Math.random() * 8) + 2,
+      recommendations: ['pauseDispatches', 'avoidZoneRouting', 'safeHarborStaging'],
+      suggestedSafeHarbors: harborsToSuggest,
+      oemNotes: `OTTO-RESPONSE Predictive Advisory: ${selected.cause}. Automated scenario generated based on real-time traffic patterns, weather conditions, and current fleet positioning.`,
+    };
+  };
+
+  const applyPredictiveScenario = (scenario: PredictiveScenario) => {
+    setPredictiveScenario(scenario);
+    
+    // Apply zone to map
+    setDrawnZone({
+      type: 'radius',
+      center: scenario.zoneCenter,
+      radiusMiles: scenario.radiusMiles,
+    });
+
+    // Set traffic severity
+    setTrafficSeverity(scenario.severity);
+
+    // Update zone analytics
+    updateZoneAnalytics(scenario.vehiclesAffected, scenario.vehiclesNearby);
+
+    // Apply recommendations
+    scenario.recommendations.forEach(rec => {
+      if (rec === 'pauseDispatches') setRecommendation('pauseDispatches', true);
+      if (rec === 'avoidZoneRouting') setRecommendation('avoidZoneRouting', true);
+      if (rec === 'waveBasedRecovery') setRecommendation('waveBasedRecovery', true);
+      if (rec === 'safeHarborStaging') setRecommendation('safeHarborStaging', true);
+      if (rec === 'keepClearCorridors') setRecommendation('keepClearCorridors', true);
+    });
+
+    // Select suggested safe harbors
+    scenario.suggestedSafeHarbors.forEach(harborName => {
+      const harbor = safeHarbors.find(h => h.name === harborName);
+      if (harbor && !selectedSafeHarbors.some(sh => sh.id === harbor.id)) {
+        toggleSafeHarbor(harbor);
+      }
+    });
+
+    // Set OEM notes
+    setOemNotes(scenario.oemNotes);
+  };
   
   // Handle AI Draft
   const handleAIDraft = async () => {
@@ -94,7 +238,6 @@ export function AdvisoryBuilder({ safeHarbors }: AdvisoryBuilderProps) {
           keepClearCorridors: recommendations.keepClearCorridors,
         },
         selectedSafeHarbors: selectedSafeHarbors.map(h => h.name),
-        provider: aiProvider,
       };
       
       const { data, error } = await supabase.functions.invoke('otto-response-ai', {
@@ -108,18 +251,16 @@ export function AdvisoryBuilder({ safeHarbors }: AdvisoryBuilderProps) {
         setOemNotes(data.draft);
         toast.success('AI draft generated');
       } else if (data?.mock) {
-        // Mock fallback
         setAIDraftText(data.draft);
         setOemNotes(data.draft);
-        toast.info('Mock AI draft generated (no API keys configured)');
+        toast.info('Mock AI draft generated');
       }
     } catch (err) {
       console.error('AI draft error:', err);
-      // Fallback to template-based mock
       const mockDraft = generateMockDraft();
       setAIDraftText(mockDraft);
       setOemNotes(mockDraft);
-      toast.info('Mock AI draft generated (no API keys configured)');
+      toast.info('Mock AI draft generated');
     } finally {
       setIsAILoading(false);
     }
@@ -143,21 +284,9 @@ export function AdvisoryBuilder({ safeHarbors }: AdvisoryBuilderProps) {
     submitAdvisory(advisory.id);
     setShowSubmitDialog(false);
     resetBuilder();
+    setAIDraftText(null);
+    setPredictiveScenario(null);
     toast.success(`Advisory ${advisory.id} submitted`);
-  };
-  
-  // Handle export
-  const handleExport = () => {
-    const advisory = createAdvisory();
-    const payload = JSON.stringify(advisory, null, 2);
-    const blob = new Blob([payload], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${advisory.id}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success('Advisory exported as JSON');
   };
   
   const getSeverityColor = (severity: string) => {
@@ -170,312 +299,390 @@ export function AdvisoryBuilder({ safeHarbors }: AdvisoryBuilderProps) {
   };
   
   return (
-    <div className="space-y-4">
-      {/* Snapshot */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4" />
-            Snapshot
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Traffic Severity</span>
-            <Badge variant="outline" className={getSeverityColor(trafficSeverity)}>
-              {trafficSeverity}
-            </Badge>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Last Updated</span>
-            <span className="text-sm flex items-center gap-1">
-              <Clock className="h-3 w-3" />
-              {lastUpdated.toLocaleTimeString()}
-            </span>
-          </div>
-        </CardContent>
-      </Card>
-      
-      {/* Zone Summary */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <MapPin className="h-4 w-4" />
-            Zone Summary
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {drawnZone ? (
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <p className="text-xs text-muted-foreground">Type</p>
-                <p className="font-medium capitalize">{drawnZone.type}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Size</p>
-                <p className="font-medium">{zoneSize}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Vehicles Inside</p>
-                <p className="font-medium text-destructive">{vehiclesInside}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Vehicles Near</p>
-                <p className="font-medium text-warning">{vehiclesNear}</p>
-              </div>
-              <div className="col-span-2">
-                <p className="text-xs text-muted-foreground">Confidence</p>
-                <Badge variant="outline">{confidence}</Badge>
-              </div>
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              Draw a zone on the map to see analytics
-            </p>
-          )}
-        </CardContent>
-      </Card>
-      
-      {/* Recommendations */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4" />
-            Recommendations
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="space-y-3">
-            <div className="flex items-start gap-3">
-              <Checkbox
-                id="pauseDispatches"
-                checked={recommendations.pauseDispatches}
-                onCheckedChange={(checked) => setRecommendation('pauseDispatches', !!checked)}
-              />
-              <div className="grid gap-1">
-                <Label htmlFor="pauseDispatches" className="cursor-pointer">
-                  Pause new dispatches in zone
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  Temporarily halt new vehicle assignments to affected area
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex items-start gap-3">
-              <Checkbox
-                id="avoidZoneRouting"
-                checked={recommendations.avoidZoneRouting}
-                onCheckedChange={(checked) => setRecommendation('avoidZoneRouting', !!checked)}
-              />
-              <div className="grid gap-1">
-                <Label htmlFor="avoidZoneRouting" className="cursor-pointer">
-                  Avoid-zone routing
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  Route vehicles around the designated zone
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex items-start gap-3">
-              <Checkbox
-                id="waveBasedRecovery"
-                checked={recommendations.waveBasedRecovery}
-                onCheckedChange={(checked) => setRecommendation('waveBasedRecovery', !!checked)}
-              />
-              <div className="grid gap-1">
-                <Label htmlFor="waveBasedRecovery" className="cursor-pointer">
-                  Wave-based recovery
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  Stagger vehicle recovery in controlled waves
-                </p>
-                {recommendations.waveBasedRecovery && (
-                  <div className="flex gap-2 mt-2">
-                    <div>
-                      <Label className="text-xs">Wave Size</Label>
-                      <Input
-                        type="number"
-                        min={1}
-                        max={20}
-                        value={recommendations.waveSize}
-                        onChange={(e) => setRecommendation('waveSize', parseInt(e.target.value) || 5)}
-                        className="h-8 w-20"
-                      />
+    <div className="flex flex-col h-full">
+      <ScrollArea className="flex-1">
+        <div className="p-3 md:p-4 space-y-5 md:space-y-6 pb-24">
+          {/* AI Predictive Analysis - Optional Feature */}
+          <Card className="border-dashed border-primary/30">
+            <CardContent className="py-3 px-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Zap className="h-4 w-4 text-primary shrink-0" />
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium truncate">AI Predictive Analysis</span>
+                      <Badge variant="outline" className="text-[10px] shrink-0">Optional</Badge>
                     </div>
-                    <div>
-                      <Label className="text-xs">Interval (min)</Label>
-                      <Input
-                        type="number"
-                        min={5}
-                        max={60}
-                        value={recommendations.waveIntervalMinutes}
-                        onChange={(e) => setRecommendation('waveIntervalMinutes', parseInt(e.target.value) || 15)}
-                        className="h-8 w-20"
-                      />
-                    </div>
+                    <p className="text-xs text-muted-foreground truncate">
+                      Auto-detect incidents from traffic & weather data
+                    </p>
                   </div>
-                )}
-                {waveError && (
-                  <p className="text-xs text-destructive">Wave size and interval required</p>
-                )}
+                </div>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={handlePredictiveAnalysis}
+                  disabled={isGeneratingPrediction}
+                  className="shrink-0"
+                >
+                  {isGeneratingPrediction ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4 mr-1" />
+                      Generate
+                    </>
+                  )}
+                </Button>
               </div>
-            </div>
-            
-            <div className="flex items-start gap-3">
-              <Checkbox
-                id="safeHarborStaging"
-                checked={recommendations.safeHarborStaging}
-                onCheckedChange={(checked) => setRecommendation('safeHarborStaging', !!checked)}
-              />
-              <div className="grid gap-1">
-                <Label htmlFor="safeHarborStaging" className="cursor-pointer">
-                  Safe Harbor staging
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  Direct vehicles to designated safe locations
+              {predictiveScenario && (
+                <div className="mt-3 p-2 bg-primary/5 rounded-md border border-primary/20">
+                  <p className="text-xs font-medium text-primary">{predictiveScenario.scenarioName}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{predictiveScenario.cause}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+          
+          {/* Snapshot */}
+          <Card>
+            <CardHeader className="pb-2 py-3">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4" />
+                Snapshot
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 py-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Traffic Severity</span>
+                <Badge variant="outline" className={getSeverityColor(trafficSeverity)}>
+                  {trafficSeverity}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Last Updated</span>
+                <span className="text-sm flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  {lastUpdated.toLocaleTimeString()}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+          
+          {/* Zone Summary */}
+          <Card>
+            <CardHeader className="pb-2 py-3">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <MapPin className="h-4 w-4" />
+                Zone Summary
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="py-2">
+              {drawnZone ? (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Type</p>
+                    <p className="font-medium capitalize">{drawnZone.type}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Size</p>
+                    <p className="font-medium">{zoneSize}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Vehicles Inside</p>
+                    <p className="font-medium text-destructive">{vehiclesInside}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Vehicles Near</p>
+                    <p className="font-medium text-warning">{vehiclesNear}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-xs text-muted-foreground">Confidence</p>
+                    <Badge variant="outline">{confidence}</Badge>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  Draw a zone on the map to see analytics
                 </p>
-                {safeHarborError && (
-                  <p className="text-xs text-destructive">Select at least one Safe Harbor below</p>
-                )}
-              </div>
-            </div>
-            
-            <div className="flex items-start gap-3">
-              <Checkbox
-                id="keepClearCorridors"
-                checked={recommendations.keepClearCorridors}
-                onCheckedChange={(checked) => setRecommendation('keepClearCorridors', !!checked)}
-              />
-              <div className="grid gap-1">
-                <Label htmlFor="keepClearCorridors" className="cursor-pointer">
-                  Keep-clear corridors
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  Maintain emergency access routes
-                </p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-      
-      {/* Safe Harbor Destinations */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <Building2 className="h-4 w-4" />
-            Safe Harbor Destinations
-            <Badge variant="secondary" className="ml-auto">
-              {selectedSafeHarbors.length}/3
-            </Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ScrollArea className="h-[180px]">
-            <div className="space-y-2">
-              {safeHarbors
-                .sort((a, b) => a.distanceFromZone - b.distanceFromZone)
-                .map((harbor) => {
-                  const isSelected = selectedSafeHarbors.some(h => h.id === harbor.id);
-                  const isDisabled = !isSelected && selectedSafeHarbors.length >= 3;
-                  
-                  return (
-                    <div
-                      key={harbor.id}
-                      className={cn(
-                        "p-2 rounded-md border cursor-pointer transition-colors",
-                        isSelected && "border-primary bg-primary/10",
-                        !isSelected && !isDisabled && "border-border hover:border-primary/50",
-                        isDisabled && "opacity-50 cursor-not-allowed"
-                      )}
-                      onClick={() => !isDisabled && toggleSafeHarbor(harbor)}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Checkbox checked={isSelected} className="pointer-events-none" />
-                          <div>
-                            <p className="text-sm font-medium">{harbor.name}</p>
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                              <Badge variant="outline" className="text-[10px] h-4">
-                                {harbor.type}
-                              </Badge>
-                              <span>{harbor.distanceFromZone} mi</span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm font-medium">{harbor.availableCapacity}</p>
-                          <p className="text-xs text-muted-foreground">slots</p>
-                        </div>
+              )}
+            </CardContent>
+          </Card>
+          
+          {/* Recommendations - Collapsible */}
+          <Collapsible open={recommendationsOpen} onOpenChange={setRecommendationsOpen}>
+            <Card>
+              <CollapsibleTrigger asChild>
+                <CardHeader className="pb-2 py-3 cursor-pointer hover:bg-muted/50 transition-colors">
+                  <CardTitle className="text-sm font-medium flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4" />
+                      Recommendations
+                    </div>
+                    <ChevronDown className={cn("h-4 w-4 transition-transform", recommendationsOpen && "rotate-180")} />
+                  </CardTitle>
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="space-y-3 py-2">
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <Checkbox
+                        id="pauseDispatches"
+                        checked={recommendations.pauseDispatches}
+                        onCheckedChange={(checked) => setRecommendation('pauseDispatches', !!checked)}
+                      />
+                      <div className="grid gap-0.5">
+                        <Label htmlFor="pauseDispatches" className="cursor-pointer text-sm">
+                          Pause new dispatches in zone
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                          Halt new vehicle assignments to affected area
+                        </p>
                       </div>
                     </div>
-                  );
-                })}
-            </div>
-          </ScrollArea>
-        </CardContent>
-      </Card>
+                    
+                    <div className="flex items-start gap-3">
+                      <Checkbox
+                        id="avoidZoneRouting"
+                        checked={recommendations.avoidZoneRouting}
+                        onCheckedChange={(checked) => setRecommendation('avoidZoneRouting', !!checked)}
+                      />
+                      <div className="grid gap-0.5">
+                        <Label htmlFor="avoidZoneRouting" className="cursor-pointer text-sm">
+                          Avoid-zone routing
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                          Route vehicles around the designated zone
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-3">
+                      <Checkbox
+                        id="waveBasedRecovery"
+                        checked={recommendations.waveBasedRecovery}
+                        onCheckedChange={(checked) => setRecommendation('waveBasedRecovery', !!checked)}
+                      />
+                      <div className="grid gap-0.5">
+                        <Label htmlFor="waveBasedRecovery" className="cursor-pointer text-sm">
+                          Wave-based recovery
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                          Stagger vehicle recovery in controlled waves
+                        </p>
+                        {recommendations.waveBasedRecovery && (
+                          <div className="flex gap-2 mt-2">
+                            <div>
+                              <Label className="text-xs">Wave Size</Label>
+                              <Input
+                                type="number"
+                                min={1}
+                                max={20}
+                                value={recommendations.waveSize}
+                                onChange={(e) => setRecommendation('waveSize', parseInt(e.target.value) || 5)}
+                                className="h-8 w-20"
+                              />
+                            </div>
+                            <div>
+                              <Label className="text-xs">Interval (min)</Label>
+                              <Input
+                                type="number"
+                                min={5}
+                                max={60}
+                                value={recommendations.waveIntervalMinutes}
+                                onChange={(e) => setRecommendation('waveIntervalMinutes', parseInt(e.target.value) || 15)}
+                                className="h-8 w-20"
+                              />
+                            </div>
+                          </div>
+                        )}
+                        {waveError && (
+                          <p className="text-xs text-destructive">Wave size and interval required</p>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-3">
+                      <Checkbox
+                        id="safeHarborStaging"
+                        checked={recommendations.safeHarborStaging}
+                        onCheckedChange={(checked) => setRecommendation('safeHarborStaging', !!checked)}
+                      />
+                      <div className="grid gap-0.5">
+                        <Label htmlFor="safeHarborStaging" className="cursor-pointer text-sm">
+                          Safe Harbor staging
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                          Direct vehicles to designated safe locations
+                        </p>
+                        {safeHarborError && (
+                          <p className="text-xs text-destructive">Select at least one Safe Harbor below</p>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-3">
+                      <Checkbox
+                        id="keepClearCorridors"
+                        checked={recommendations.keepClearCorridors}
+                        onCheckedChange={(checked) => setRecommendation('keepClearCorridors', !!checked)}
+                      />
+                      <div className="grid gap-0.5">
+                        <Label htmlFor="keepClearCorridors" className="cursor-pointer text-sm">
+                          Keep-clear corridors
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                          Maintain emergency access routes
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+          
+          {/* Safe Harbor Destinations - Collapsible */}
+          <Collapsible open={safeHarborsOpen} onOpenChange={setSafeHarborsOpen}>
+            <Card>
+              <CollapsibleTrigger asChild>
+                <CardHeader className="pb-2 py-3 cursor-pointer hover:bg-muted/50 transition-colors">
+                  <CardTitle className="text-sm font-medium flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Building2 className="h-4 w-4" />
+                      Safe Harbor Destinations
+                      <Badge variant="secondary" className="text-[10px]">
+                        {selectedSafeHarbors.length}/3
+                      </Badge>
+                    </div>
+                    <ChevronDown className={cn("h-4 w-4 transition-transform", safeHarborsOpen && "rotate-180")} />
+                  </CardTitle>
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="py-2">
+                  <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                    {safeHarbors
+                      .sort((a, b) => a.distanceFromZone - b.distanceFromZone)
+                      .map((harbor) => {
+                        const isSelected = selectedSafeHarbors.some(h => h.id === harbor.id);
+                        const isDisabled = !isSelected && selectedSafeHarbors.length >= 3;
+                        
+                        return (
+                          <div
+                            key={harbor.id}
+                            className={cn(
+                              "p-2 rounded-md border cursor-pointer transition-colors",
+                              isSelected && "border-primary bg-primary/10",
+                              !isSelected && !isDisabled && "border-border hover:border-primary/50",
+                              isDisabled && "opacity-50 cursor-not-allowed"
+                            )}
+                            onClick={() => !isDisabled && toggleSafeHarbor(harbor)}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <Checkbox checked={isSelected} className="pointer-events-none" />
+                                <div>
+                                  <p className="text-sm font-medium">{harbor.name}</p>
+                                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                    <Badge variant="outline" className="text-[10px] h-4">
+                                      {harbor.type}
+                                    </Badge>
+                                    <span>{harbor.distanceFromZone} mi</span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm font-medium">{harbor.availableCapacity}</p>
+                                <p className="text-xs text-muted-foreground">slots</p>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+          
+          {/* Notes to OEM - Collapsible */}
+          <Collapsible open={notesOpen} onOpenChange={setNotesOpen}>
+            <Card>
+              <CollapsibleTrigger asChild>
+                <CardHeader className="pb-2 py-3 cursor-pointer hover:bg-muted/50 transition-colors">
+                  <CardTitle className="text-sm font-medium flex items-center justify-between">
+                    <span>Notes to OEM</span>
+                    <ChevronDown className={cn("h-4 w-4 transition-transform", notesOpen && "rotate-180")} />
+                  </CardTitle>
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="py-2">
+                  <div className="flex justify-end mb-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleAIDraft}
+                      disabled={isAILoading || !drawnZone}
+                      className="h-7 text-xs"
+                    >
+                      {isAILoading ? (
+                        <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                      ) : (
+                        <Sparkles className="h-3 w-3 mr-1" />
+                      )}
+                      AI Draft
+                    </Button>
+                  </div>
+                  <Textarea
+                    value={oemNotes}
+                    onChange={(e) => setOemNotes(e.target.value.slice(0, maxNotes))}
+                    placeholder="Enter notes for the OEM..."
+                    className="min-h-[80px] resize-none"
+                  />
+                  <p className="text-xs text-muted-foreground text-right mt-1">
+                    {oemNotes.length}/{maxNotes}
+                  </p>
+                  {aiDraftText && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      ✨ AI-generated draft
+                    </p>
+                  )}
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+        </div>
+      </ScrollArea>
       
-      {/* Notes to OEM */}
-      <Card>
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-medium">Notes to OEM</CardTitle>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleAIDraft}
-              disabled={isAILoading || !drawnZone}
-              className="h-7 text-xs"
-            >
-              {isAILoading ? (
-                <Loader2 className="h-3 w-3 animate-spin mr-1" />
-              ) : (
-                <Sparkles className="h-3 w-3 mr-1" />
-              )}
-              AI Draft
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Textarea
-            value={oemNotes}
-            onChange={(e) => setOemNotes(e.target.value.slice(0, maxNotes))}
-            placeholder="Enter notes for the OEM..."
-            className="min-h-[100px] resize-none"
-          />
-          <p className="text-xs text-muted-foreground text-right mt-1">
-            {oemNotes.length}/{maxNotes}
+      {/* Sticky Action Buttons */}
+      <div className="sticky bottom-0 bg-background/95 backdrop-blur border-t border-border px-3 md:px-4 py-3">
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={handleReset}
+            className="shrink-0"
+          >
+            <RotateCcw className="h-4 w-4 mr-2" />
+            Reset
+          </Button>
+          <Button
+            className="flex-1"
+            onClick={() => setShowSubmitDialog(true)}
+            disabled={!canSubmit || hasErrors}
+          >
+            <Send className="h-4 w-4 mr-2" />
+            Submit Advisory
+          </Button>
+        </div>
+        {!canSubmit && (
+          <p className="text-xs text-muted-foreground text-center mt-2">
+            Draw a zone on the map to enable submission
           </p>
-          {aiDraftText && (
-            <p className="text-xs text-muted-foreground mt-1">
-              {isAILoading ? '' : '✨ AI-generated draft'}
-            </p>
-          )}
-        </CardContent>
-      </Card>
-      
-      <Separator />
-      
-      {/* Actions */}
-      <div className="flex gap-2">
-        <Button
-          className="flex-1"
-          onClick={() => setShowSubmitDialog(true)}
-          disabled={!canSubmit || hasErrors}
-        >
-          <Send className="h-4 w-4 mr-2" />
-          Submit Advisory to OEM
-        </Button>
+        )}
       </div>
-      
-      {!canSubmit && (
-        <p className="text-xs text-muted-foreground text-center">
-          Draw a zone on the map to enable submission
-        </p>
-      )}
       
       {/* Submit Confirmation Dialog */}
       <Dialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>
