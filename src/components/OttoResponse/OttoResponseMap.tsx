@@ -415,7 +415,7 @@ export function OttoResponseMap({
 
       {/* Edit Zone Button - When zone is confirmed, positioned below legend on mobile */}
       {zoneConfirmed && mapState === 'confirmed' && (
-        <div className="absolute top-12 right-2 z-20 md:top-2">
+        <div className="absolute top-12 left-2 z-20">
           <Button 
             variant="outline" 
             size="sm"
