@@ -4,11 +4,12 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, Radio } from 'lucide-react';
-import { useOttoResponseStore } from '@/stores/ottoResponseStore';
+import { useOttoResponseStore, TrafficSeverity } from '@/stores/ottoResponseStore';
 import { useOttoResponseData, calculateZoneAnalytics, updateSafeHarborDistances } from '@/hooks/useOttoResponseData';
 import { OttoResponseMap } from './OttoResponseMap';
 import { AdvisoryBuilder } from './AdvisoryBuilder';
 import { AdvisoryLog } from './AdvisoryLog';
+import { PredictiveAdvisory } from './PredictiveAdvisory';
 interface OttoResponsePanelProps {
   vehicles?: any[];
   depots?: any[];
@@ -22,8 +23,26 @@ export function OttoResponsePanel({
     closePanel,
     drawnZone,
     updateZoneAnalytics,
-    trafficSeverity
+    trafficSeverity,
+    setTrafficSeverity
   } = useOttoResponseStore();
+
+  // Auto-generate random traffic severity when panel opens
+  useEffect(() => {
+    if (isPanelOpen) {
+      const severities: TrafficSeverity[] = ['Low', 'Medium', 'High'];
+      const weights = [0.2, 0.5, 0.3]; // 20% Low, 50% Medium, 30% High
+      const random = Math.random();
+      let cumulative = 0;
+      for (let i = 0; i < severities.length; i++) {
+        cumulative += weights[i];
+        if (random < cumulative) {
+          setTrafficSeverity(severities[i]);
+          break;
+        }
+      }
+    }
+  }, [isPanelOpen, setTrafficSeverity]);
   const {
     vehicles,
     safeHarbors
@@ -52,25 +71,25 @@ export function OttoResponsePanel({
     }
   };
   return <Sheet open={isPanelOpen} onOpenChange={open => !open && closePanel()}>
-      <SheetContent side="right" className="w-full sm:max-w-[900px] md:max-w-[1100px] p-0 flex flex-col">
-        <SheetHeader className="px-6 py-4 border-b border-border">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <AlertTriangle className="h-5 w-5 text-primary" />
+      <SheetContent side="right" className="w-full sm:max-w-[900px] md:max-w-[1100px] p-0 flex flex-col pt-8 md:pt-0">
+        <SheetHeader className="px-4 md:px-6 py-3 md:py-4 border-b border-border">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="h-8 w-8 md:h-10 md:w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <AlertTriangle className="h-4 w-4 md:h-5 md:w-5 text-primary" />
               </div>
               <div>
-                <SheetTitle className="text-xl font-bold">OTTO-RESPONSE</SheetTitle>
-                <p className="text-sm text-muted-foreground">Advisory Protocol</p>
+                <SheetTitle className="text-base md:text-xl font-bold">OTTO-RESPONSE</SheetTitle>
+                <p className="text-xs md:text-sm text-muted-foreground hidden sm:block">Advisory Protocol</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="flex items-center gap-1.5">
-                <Radio className="h-3 w-3 animate-pulse" />
+            <div className="flex items-center gap-1 md:gap-2 shrink-0">
+              <Badge variant="outline" className="flex items-center gap-1 text-[10px] md:text-xs px-1.5 md:px-2.5">
+                <Radio className="h-2 w-2 md:h-3 md:w-3 animate-pulse" />
                 Live
               </Badge>
-              <Badge className={getSeverityColor(trafficSeverity)}>
-                Traffic: {trafficSeverity}
+              <Badge className={`text-[10px] md:text-xs px-1.5 md:px-2.5 ${getSeverityColor(trafficSeverity)}`}>
+                {trafficSeverity}
               </Badge>
             </div>
           </div>
@@ -78,27 +97,46 @@ export function OttoResponsePanel({
         
         <div className="flex-1 overflow-hidden">
           <Tabs defaultValue="advisory" className="h-full flex flex-col">
-            <div className="pt-2 border-b border-border flex flex-col items-center px-[12px] pb-3">
-              <TabsList className="grid max-w-[400px] grid-cols-2">
-                <TabsTrigger value="advisory">Advisory Builder</TabsTrigger>
-                <TabsTrigger value="log">Advisory Log</TabsTrigger>
+            <div className="pt-2 border-b border-border flex flex-col items-center px-2 md:px-3 pb-2 md:pb-3">
+              <TabsList className="grid max-w-[450px] w-full grid-cols-3 h-8 md:h-9">
+                <TabsTrigger value="advisory" className="text-xs md:text-sm px-1 md:px-3">Builder</TabsTrigger>
+                <TabsTrigger value="predictive" className="text-xs md:text-sm px-1 md:px-3">Predictive</TabsTrigger>
+                <TabsTrigger value="log" className="text-xs md:text-sm px-1 md:px-3">Log</TabsTrigger>
               </TabsList>
-              <h2 className="text-xl font-bold text-center mt-3">Incident Management</h2>
-              <p className="text-sm text-muted-foreground text-center">Active response protocols</p>
+              <h2 className="text-base md:text-xl font-bold text-center mt-2 md:mt-3">Incident Management</h2>
+              <p className="text-xs md:text-sm text-muted-foreground text-center">Active response protocols</p>
             </div>
             
             <TabsContent value="advisory" className="flex-1 overflow-hidden m-0 data-[state=active]:flex">
               <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-                {/* Map Section */}
-                <div className="flex-1 md:w-1/2 h-[300px] md:h-auto border-b md:border-b-0 md:border-r border-border">
+                {/* Map Section - Increased height on mobile */}
+                <div className="flex-1 md:w-1/2 min-h-[50vh] md:min-h-0 md:h-auto border-b md:border-b-0 md:border-r border-border">
                   <OttoResponseMap vehicles={vehicles} />
                 </div>
                 
                 {/* Builder Section */}
                 <div className="flex-1 md:w-1/2 overflow-hidden">
                   <ScrollArea className="h-full">
-                    <div className="p-4">
+                    <div className="p-3 md:p-4">
                       <AdvisoryBuilder safeHarbors={harborsWithDistances} />
+                    </div>
+                  </ScrollArea>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="predictive" className="flex-1 overflow-hidden m-0 data-[state=active]:flex">
+              <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+                {/* Map Section */}
+                <div className="flex-1 md:w-1/2 min-h-[50vh] md:min-h-0 md:h-auto border-b md:border-b-0 md:border-r border-border">
+                  <OttoResponseMap vehicles={vehicles} />
+                </div>
+                
+                {/* Predictive Section */}
+                <div className="flex-1 md:w-1/2 overflow-hidden">
+                  <ScrollArea className="h-full">
+                    <div className="p-3 md:p-4">
+                      <PredictiveAdvisory safeHarbors={harborsWithDistances} />
                     </div>
                   </ScrollArea>
                 </div>
@@ -107,7 +145,7 @@ export function OttoResponsePanel({
             
             <TabsContent value="log" className="flex-1 overflow-hidden m-0 data-[state=active]:flex">
               <ScrollArea className="flex-1">
-                <div className="p-4">
+                <div className="p-3 md:p-4">
                   <AdvisoryLog />
                 </div>
               </ScrollArea>

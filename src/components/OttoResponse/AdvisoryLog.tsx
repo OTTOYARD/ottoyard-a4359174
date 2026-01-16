@@ -5,14 +5,16 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Copy, Eye, FileText } from 'lucide-react';
+import { Copy, Eye, FileText, Download, Loader2, FileJson } from 'lucide-react';
 import { useOttoResponseStore, Advisory, AdvisoryStatus } from '@/stores/ottoResponseStore';
+import { supabase } from '@/integrations/supabase/client';
+import { generateAdvisoryReportPDF, downloadAdvisoryPDF } from '@/utils/advisoryReportPDF';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
 
 export function AdvisoryLog() {
   const { advisories, acknowledgeAdvisory } = useOttoResponseStore();
   const [selectedAdvisory, setSelectedAdvisory] = useState<Advisory | null>(null);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState<string | null>(null);
   
   const getStatusBadge = (status: AdvisoryStatus) => {
     switch (status) {
@@ -72,6 +74,70 @@ This advisory is a non-binding operational recommendation for OEM awareness.
     navigator.clipboard.writeText(summary);
     toast.success('Summary copied to clipboard');
   };
+
+  const exportAsJSON = (advisory: Advisory) => {
+    const payload = JSON.stringify({
+      ...advisory,
+      timestamp: advisory.timestamp.toISOString(),
+      exportedAt: new Date().toISOString(),
+    }, null, 2);
+    const blob = new Blob([payload], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${advisory.id}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success('Advisory exported as JSON');
+  };
+
+  const exportAsPDF = async (advisory: Advisory) => {
+    setIsGeneratingPDF(advisory.id);
+    
+    try {
+      // Try to get AI-generated detailed content
+      let aiContent: string | undefined;
+      
+      try {
+        const { data, error } = await supabase.functions.invoke('otto-response-ai', {
+          body: { 
+            action: 'generateReport',
+            context: {
+              advisory: {
+                id: advisory.id,
+                severity: advisory.severity,
+                zoneType: advisory.zoneType,
+                vehiclesInside: advisory.vehiclesInside,
+                vehiclesNear: advisory.vehiclesNear,
+                recommendations: advisory.recommendations,
+                selectedSafeHarbors: advisory.selectedSafeHarbors.map(h => h.name),
+                oemNotes: advisory.oemNotes,
+              }
+            }
+          },
+        });
+        
+        if (!error && data?.report) {
+          aiContent = data.report;
+        }
+      } catch (err) {
+        console.log('AI report generation skipped:', err);
+      }
+
+      const blob = await generateAdvisoryReportPDF({
+        advisory,
+        aiGeneratedContent: aiContent,
+      });
+      
+      downloadAdvisoryPDF(blob, advisory.id);
+      toast.success('PDF report downloaded');
+    } catch (err) {
+      console.error('PDF generation error:', err);
+      toast.error('Failed to generate PDF');
+    } finally {
+      setIsGeneratingPDF(null);
+    }
+  };
   
   if (advisories.length === 0) {
     return (
@@ -101,44 +167,38 @@ This advisory is a non-binding operational recommendation for OEM awareness.
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Advisory ID</TableHead>
-                  <TableHead>Time</TableHead>
-                  <TableHead>Severity</TableHead>
-                  <TableHead>Zone</TableHead>
-                  <TableHead>Recommendations</TableHead>
-                  <TableHead>Destinations</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="text-xs">ID</TableHead>
+                  <TableHead className="text-xs">Time</TableHead>
+                  <TableHead className="text-xs">Severity</TableHead>
+                  <TableHead className="text-xs hidden md:table-cell">Zone</TableHead>
+                  <TableHead className="text-xs hidden lg:table-cell">Recs</TableHead>
+                  <TableHead className="text-xs">Status</TableHead>
+                  <TableHead className="text-right text-xs">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {advisories.map((advisory) => (
                   <TableRow key={advisory.id}>
-                    <TableCell className="font-mono text-xs">{advisory.id}</TableCell>
-                    <TableCell className="text-xs">
+                    <TableCell className="font-mono text-[10px] md:text-xs">{advisory.id}</TableCell>
+                    <TableCell className="text-[10px] md:text-xs">
                       {advisory.timestamp.toLocaleTimeString()}
                     </TableCell>
                     <TableCell>{getSeverityBadge(advisory.severity)}</TableCell>
-                    <TableCell className="capitalize text-xs">
+                    <TableCell className="capitalize text-xs hidden md:table-cell">
                       {advisory.zoneType || 'N/A'}
                     </TableCell>
-                    <TableCell className="text-xs max-w-[120px] truncate">
+                    <TableCell className="text-xs max-w-[100px] truncate hidden lg:table-cell">
                       {getRecommendationsSummary(advisory)}
-                    </TableCell>
-                    <TableCell className="text-xs">
-                      {advisory.selectedSafeHarbors.length > 0 
-                        ? advisory.selectedSafeHarbors.map(h => h.name).join(', ')
-                        : '-'
-                      }
                     </TableCell>
                     <TableCell>{getStatusBadge(advisory.status)}</TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
+                      <div className="flex justify-end gap-0.5">
                         <Button
                           size="sm"
                           variant="ghost"
                           className="h-7 w-7 p-0"
                           onClick={() => setSelectedAdvisory(advisory)}
+                          title="View Details"
                         >
                           <Eye className="h-3.5 w-3.5" />
                         </Button>
@@ -146,9 +206,24 @@ This advisory is a non-binding operational recommendation for OEM awareness.
                           size="sm"
                           variant="ghost"
                           className="h-7 w-7 p-0"
-                          onClick={() => copyAdvisorySummary(advisory)}
+                          onClick={() => exportAsPDF(advisory)}
+                          disabled={isGeneratingPDF === advisory.id}
+                          title="Export PDF"
                         >
-                          <Copy className="h-3.5 w-3.5" />
+                          {isGeneratingPDF === advisory.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Download className="h-3.5 w-3.5" />
+                          )}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 w-7 p-0 hidden md:inline-flex"
+                          onClick={() => exportAsJSON(advisory)}
+                          title="Export JSON"
+                        >
+                          <FileJson className="h-3.5 w-3.5" />
                         </Button>
                       </div>
                     </TableCell>
@@ -162,9 +237,9 @@ This advisory is a non-binding operational recommendation for OEM awareness.
       
       {/* Advisory Details Dialog */}
       <Dialog open={!!selectedAdvisory} onOpenChange={() => setSelectedAdvisory(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="font-mono">{selectedAdvisory?.id}</DialogTitle>
+            <DialogTitle className="font-mono text-sm md:text-base">{selectedAdvisory?.id}</DialogTitle>
           </DialogHeader>
           {selectedAdvisory && (
             <div className="space-y-4">
@@ -194,6 +269,19 @@ This advisory is a non-binding operational recommendation for OEM awareness.
                   <p className="text-sm font-medium text-warning">{selectedAdvisory.vehiclesNear}</p>
                 </div>
               </div>
+
+              {/* Zone Coordinates */}
+              {selectedAdvisory.zone?.center && (
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Zone Details</p>
+                  <div className="bg-muted p-2 rounded-md text-xs font-mono">
+                    <p>Center: {selectedAdvisory.zone.center.lat.toFixed(5)}, {selectedAdvisory.zone.center.lng.toFixed(5)}</p>
+                    {selectedAdvisory.zone.radiusMiles && (
+                      <p>Radius: {selectedAdvisory.zone.radiusMiles} miles</p>
+                    )}
+                  </div>
+                </div>
+              )}
               
               <div>
                 <p className="text-xs text-muted-foreground mb-2">Recommendations</p>
@@ -236,28 +324,53 @@ This advisory is a non-binding operational recommendation for OEM awareness.
                 </div>
               )}
               
-              <div className="flex gap-2 pt-2">
+              <div className="flex flex-wrap gap-2 pt-2">
                 <Button
                   variant="outline"
-                  className="flex-1"
+                  size="sm"
                   onClick={() => copyAdvisorySummary(selectedAdvisory)}
+                  className="flex-1"
                 >
                   <Copy className="h-4 w-4 mr-2" />
-                  Copy Summary
+                  Copy
                 </Button>
-                {selectedAdvisory.status === 'Submitted' && (
-                  <Button
-                    className="flex-1"
-                    onClick={() => {
-                      acknowledgeAdvisory(selectedAdvisory.id);
-                      setSelectedAdvisory({ ...selectedAdvisory, status: 'Acknowledged' });
-                      toast.success('Advisory acknowledged');
-                    }}
-                  >
-                    Mark Acknowledged
-                  </Button>
-                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => exportAsPDF(selectedAdvisory)}
+                  disabled={isGeneratingPDF === selectedAdvisory.id}
+                  className="flex-1"
+                >
+                  {isGeneratingPDF === selectedAdvisory.id ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Download className="h-4 w-4 mr-2" />
+                  )}
+                  PDF
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => exportAsJSON(selectedAdvisory)}
+                  className="flex-1"
+                >
+                  <FileJson className="h-4 w-4 mr-2" />
+                  JSON
+                </Button>
               </div>
+              
+              {selectedAdvisory.status === 'Submitted' && (
+                <Button
+                  className="w-full"
+                  onClick={() => {
+                    acknowledgeAdvisory(selectedAdvisory.id);
+                    setSelectedAdvisory({ ...selectedAdvisory, status: 'Acknowledged' });
+                    toast.success('Advisory acknowledged');
+                  }}
+                >
+                  Mark Acknowledged
+                </Button>
+              )}
             </div>
           )}
         </DialogContent>

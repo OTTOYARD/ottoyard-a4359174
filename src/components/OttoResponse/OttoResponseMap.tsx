@@ -7,9 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Circle, Pentagon, RotateCcw, MapPin, Loader2 } from 'lucide-react';
-import { useOttoResponseStore, ZonePoint, TrafficSeverity } from '@/stores/ottoResponseStore';
-import { AdaptedVehicle, isVehicleInZone, isVehicleNearZone, calculateDistanceMiles } from '@/hooks/useOttoResponseData';
-import { cn } from '@/lib/utils';
+import { useOttoResponseStore, ZonePoint } from '@/stores/ottoResponseStore';
+import { AdaptedVehicle, isVehicleInZone, isVehicleNearZone } from '@/hooks/useOttoResponseData';
 
 interface OttoResponseMapProps {
   vehicles: AdaptedVehicle[];
@@ -53,8 +52,6 @@ export function OttoResponseMap({ vehicles }: OttoResponseMapProps) {
     setDrawingMode,
     drawnZone,
     setDrawnZone,
-    trafficSeverity,
-    setTrafficSeverity,
     vehiclesInside,
     vehiclesNear,
     confidence,
@@ -351,9 +348,9 @@ export function OttoResponseMap({ vehicles }: OttoResponseMapProps) {
   
   return (
     <div className="h-full flex flex-col">
-      {/* Drawing Tools */}
-      <div className="p-3 border-b border-border flex flex-wrap gap-2 items-center justify-between bg-card/50">
-        <div className="flex gap-2">
+      {/* Compact Drawing Tools */}
+      <div className="p-2 border-b border-border flex flex-wrap gap-1.5 items-center justify-between bg-card/50">
+        <div className="flex gap-1.5">
           <Button
             variant={drawingMode === 'radius' ? 'default' : 'outline'}
             size="sm"
@@ -361,8 +358,9 @@ export function OttoResponseMap({ vehicles }: OttoResponseMapProps) {
               resetDrawing();
               setDrawingMode('radius');
             }}
+            className="h-7 px-2 text-xs"
           >
-            <Circle className="h-4 w-4 mr-1.5" />
+            <Circle className="h-3.5 w-3.5 mr-1" />
             Radius
           </Button>
           <Button
@@ -372,44 +370,44 @@ export function OttoResponseMap({ vehicles }: OttoResponseMapProps) {
               resetDrawing();
               setDrawingMode('polygon');
             }}
+            className="h-7 px-2 text-xs"
           >
-            <Pentagon className="h-4 w-4 mr-1.5" />
+            <Pentagon className="h-3.5 w-3.5 mr-1" />
             Polygon
           </Button>
           {(drawnZone || polygonPoints.length > 0) && (
-            <Button variant="ghost" size="sm" onClick={resetDrawing}>
-              <RotateCcw className="h-4 w-4 mr-1.5" />
-              Reset
+            <Button variant="ghost" size="sm" onClick={resetDrawing} className="h-7 px-2 text-xs">
+              <RotateCcw className="h-3.5 w-3.5" />
             </Button>
           )}
         </div>
         
+        {/* Radius slider inline when active */}
+        {drawingMode === 'radius' && (
+          <div className="flex items-center gap-2 flex-1 max-w-[180px]">
+            <Label className="text-[10px] text-muted-foreground whitespace-nowrap">
+              {radiusMiles}mi
+            </Label>
+            <Slider
+              value={[radiusMiles]}
+              onValueChange={([val]) => setRadiusMiles(val)}
+              min={0.25}
+              max={5}
+              step={0.25}
+              className="flex-1"
+            />
+          </div>
+        )}
+        
         {drawingMode === 'polygon' && polygonPoints.length >= 3 && (
-          <Button size="sm" onClick={closePolygon}>
-            Close Polygon
+          <Button size="sm" onClick={closePolygon} className="h-7 px-2 text-xs">
+            Close
           </Button>
         )}
       </div>
       
-      {/* Radius Slider */}
-      {drawingMode === 'radius' && (
-        <div className="p-3 border-b border-border bg-card/30">
-          <Label className="text-xs text-muted-foreground mb-2 block">
-            Radius: {radiusMiles} mile{radiusMiles !== 1 ? 's' : ''}
-          </Label>
-          <Slider
-            value={[radiusMiles]}
-            onValueChange={([val]) => setRadiusMiles(val)}
-            min={0.25}
-            max={5}
-            step={0.25}
-            className="w-full"
-          />
-        </div>
-      )}
-      
-      {/* Map Container */}
-      <div className="flex-1 relative">
+      {/* Map Container - Full height */}
+      <div className="flex-1 relative min-h-0">
         <div ref={mapContainer} className="absolute inset-0" />
         
         {!isMapLoaded && (
@@ -418,78 +416,52 @@ export function OttoResponseMap({ vehicles }: OttoResponseMapProps) {
           </div>
         )}
         
-        {/* Instructions overlay */}
+        {/* Compact Instructions overlay */}
         {isMapLoaded && drawingMode !== 'none' && !drawnZone && (
-          <div className="absolute bottom-4 left-4 right-4">
-            <Card className="p-3 bg-card/90 backdrop-blur text-sm">
-              {drawingMode === 'radius' && 'Click on the map to set the zone center'}
-              {drawingMode === 'polygon' && `Click to add points (${polygonPoints.length}/3 minimum)`}
+          <div className="absolute bottom-2 left-2 right-2">
+            <Card className="p-2 bg-card/95 backdrop-blur text-xs text-center">
+              {drawingMode === 'radius' && 'Tap to set zone center'}
+              {drawingMode === 'polygon' && `Tap to add points (${polygonPoints.length}/3 min)`}
             </Card>
           </div>
         )}
         
-        {/* Legend */}
-        <div className="absolute top-3 left-3">
-          <Card className="p-2 bg-card/90 backdrop-blur text-xs space-y-1">
-            <div className="text-muted-foreground font-medium mb-1">Traffic Density</div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-destructive/80" />
-              <span>High</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-warning/70" />
-              <span>Medium</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-success/60" />
-              <span>Low</span>
-            </div>
-          </Card>
-        </div>
-        
-        {/* Zone Stats */}
+        {/* Compact Zone Stats - Only show when zone exists */}
         {drawnZone && (
-          <div className="absolute bottom-4 right-4">
-            <Card className="p-3 bg-card/90 backdrop-blur">
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <p className="text-muted-foreground text-xs">Inside Zone</p>
-                  <p className="font-bold text-lg text-destructive">{vehiclesInside}</p>
+          <div className="absolute bottom-2 right-2">
+            <Card className="p-2 bg-card/95 backdrop-blur">
+              <div className="flex gap-3 text-xs">
+                <div className="text-center">
+                  <p className="text-destructive font-bold text-sm">{vehiclesInside}</p>
+                  <p className="text-muted-foreground text-[10px]">Inside</p>
                 </div>
-                <div>
-                  <p className="text-muted-foreground text-xs">Near Zone</p>
-                  <p className="font-bold text-lg text-warning">{vehiclesNear}</p>
-                </div>
-                <div className="col-span-2">
-                  <p className="text-muted-foreground text-xs">Confidence</p>
-                  <Badge variant="outline">{confidence}</Badge>
+                <div className="text-center">
+                  <p className="text-warning font-bold text-sm">{vehiclesNear}</p>
+                  <p className="text-muted-foreground text-[10px]">Near</p>
                 </div>
               </div>
             </Card>
           </div>
         )}
-      </div>
-      
-      {/* Traffic Severity Selector */}
-      <div className="p-3 border-t border-border bg-card/50 flex items-center gap-3">
-        <Label className="text-xs text-muted-foreground whitespace-nowrap">Traffic Severity:</Label>
-        <div className="flex gap-1">
-          {(['Low', 'Medium', 'High'] as TrafficSeverity[]).map((level) => (
-            <Button
-              key={level}
-              size="sm"
-              variant={trafficSeverity === level ? 'default' : 'outline'}
-              onClick={() => setTrafficSeverity(level)}
-              className={cn(
-                "h-7 text-xs",
-                trafficSeverity === level && level === 'High' && 'bg-destructive hover:bg-destructive/90',
-                trafficSeverity === level && level === 'Medium' && 'bg-warning hover:bg-warning/90',
-                trafficSeverity === level && level === 'Low' && 'bg-success hover:bg-success/90'
-              )}
-            >
-              {level}
-            </Button>
-          ))}
+        
+        {/* Collapsible Legend - Minimal */}
+        <div className="absolute top-2 left-2">
+          <Card className="p-1.5 bg-card/90 backdrop-blur text-[10px]">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 rounded-full bg-destructive/80" />
+                <span>High</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 rounded-full bg-warning/70" />
+                <span>Med</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 rounded-full bg-success/60" />
+                <span>Low</span>
+              </div>
+            </div>
+          </Card>
         </div>
       </div>
     </div>
