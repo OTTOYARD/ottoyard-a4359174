@@ -381,16 +381,16 @@ export function OttoResponseMap({
   const isMapInteractive = mapState === 'expanded';
   
   return (
-    <div className="h-full flex flex-col relative">
+    <div className="h-full w-full flex flex-col relative">
       {/* Tap to Engage Overlay - Only when collapsed and no zone confirmed */}
       {mapState === 'collapsed' && !zoneConfirmed && (
         <div 
           className="absolute inset-0 bg-background/70 backdrop-blur-sm flex flex-col items-center justify-center cursor-pointer z-20 transition-opacity"
           onClick={handleActivateMap}
         >
-          <div className="bg-card/95 rounded-xl p-6 shadow-lg border border-border flex flex-col items-center gap-3">
-            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-              <MapPin className="h-6 w-6 text-primary" />
+          <div className="bg-card/95 rounded-xl p-4 md:p-6 shadow-lg border border-border flex flex-col items-center gap-2 md:gap-3 mx-4">
+            <div className="h-10 w-10 md:h-12 md:w-12 rounded-full bg-primary/10 flex items-center justify-center">
+              <MapPin className="h-5 w-5 md:h-6 md:w-6 text-primary" />
             </div>
             <div className="text-center">
               <p className="text-sm font-medium">Tap to Select Zone</p>
@@ -400,9 +400,9 @@ export function OttoResponseMap({
         </div>
       )}
 
-      {/* Edit Zone Button - When zone is confirmed */}
+      {/* Edit Zone Button - When zone is confirmed, positioned below legend on mobile */}
       {zoneConfirmed && mapState === 'confirmed' && (
-        <div className="absolute top-2 right-2 z-20">
+        <div className="absolute top-12 right-2 z-20 md:top-2">
           <Button 
             variant="outline" 
             size="sm"

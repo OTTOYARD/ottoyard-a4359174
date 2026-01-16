@@ -130,9 +130,9 @@ export function OttoResponsePanel({
               <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
                 {/* Map Section - Dynamic height based on state */}
                 <div className={cn(
-                  "border-b md:border-b-0 md:border-r border-border transition-all duration-300 ease-in-out",
+                  "border-b md:border-b-0 md:border-r border-border transition-all duration-300 ease-in-out overflow-hidden",
                   mapState === 'expanded' 
-                    ? "min-h-[50vh] md:min-h-0 md:flex-1" 
+                    ? "flex-1 min-h-[55vh] md:min-h-0" 
                     : "h-[180px] md:h-[200px] shrink-0"
                 )}>
                   <OttoResponseMap 

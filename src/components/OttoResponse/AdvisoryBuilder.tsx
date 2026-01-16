@@ -304,20 +304,20 @@ export function AdvisoryBuilder({ safeHarbors, onReset }: AdvisoryBuilderProps) 
   return (
     <div className="flex flex-col h-full">
       <ScrollArea className="flex-1">
-        <div className="p-3 md:p-4 space-y-5 md:space-y-6 pb-24">
+        <div className="px-4 md:px-5 py-3 md:py-4 space-y-4 md:space-y-5 pb-24">
           {/* AI Predictive Analysis - Optional Feature */}
-          <Card className="border-dashed border-primary/30">
-            <CardContent className="py-3 px-4">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2 min-w-0">
+          <Card className="border-dashed border-primary/30 overflow-hidden">
+            <CardContent className="py-3 px-3 md:px-4">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
                   <Zap className="h-4 w-4 text-primary shrink-0" />
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium truncate">AI Predictive Analysis</span>
-                      <Badge variant="outline" className="text-[10px] shrink-0">Optional</Badge>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1 flex-wrap">
+                      <span className="text-xs md:text-sm font-medium">AI Predictive</span>
+                      <Badge variant="outline" className="text-[10px] shrink-0 h-4">Optional</Badge>
                     </div>
-                    <p className="text-xs text-muted-foreground truncate">
-                      Auto-detect incidents from traffic & weather data
+                    <p className="text-[10px] md:text-xs text-muted-foreground line-clamp-1">
+                      Auto-detect incidents
                     </p>
                   </div>
                 </div>
@@ -326,45 +326,46 @@ export function AdvisoryBuilder({ safeHarbors, onReset }: AdvisoryBuilderProps) 
                   variant="outline"
                   onClick={handlePredictiveAnalysis}
                   disabled={isGeneratingPrediction}
-                  className="shrink-0"
+                  className="shrink-0 h-7 px-2 text-xs"
                 >
                   {isGeneratingPrediction ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   ) : (
                     <>
-                      <Sparkles className="h-4 w-4 mr-1" />
-                      Generate
+                      <Sparkles className="h-3.5 w-3.5 mr-1" />
+                      <span className="hidden sm:inline">Generate</span>
+                      <span className="sm:hidden">AI</span>
                     </>
                   )}
                 </Button>
               </div>
               {predictiveScenario && (
-                <div className="mt-3 p-2 bg-primary/5 rounded-md border border-primary/20">
-                  <p className="text-xs font-medium text-primary">{predictiveScenario.scenarioName}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{predictiveScenario.cause}</p>
+                <div className="mt-2 p-2 bg-primary/5 rounded-md border border-primary/20">
+                  <p className="text-xs font-medium text-primary line-clamp-1">{predictiveScenario.scenarioName}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">{predictiveScenario.cause}</p>
                 </div>
               )}
             </CardContent>
           </Card>
           
           {/* Snapshot */}
-          <Card>
-            <CardHeader className="pb-2 py-3">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4" />
+          <Card className="overflow-hidden">
+            <CardHeader className="pb-2 py-2 md:py-3 px-3 md:px-4">
+              <CardTitle className="text-xs md:text-sm font-medium flex items-center gap-2">
+                <AlertTriangle className="h-3.5 w-3.5 md:h-4 md:w-4" />
                 Snapshot
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2 py-2">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Traffic Severity</span>
-                <Badge variant="outline" className={getSeverityColor(trafficSeverity)}>
+            <CardContent className="space-y-1.5 md:space-y-2 py-2 px-3 md:px-4">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs md:text-sm text-muted-foreground">Traffic Severity</span>
+                <Badge variant="outline" className={cn("text-[10px] md:text-xs", getSeverityColor(trafficSeverity))}>
                   {trafficSeverity}
                 </Badge>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Last Updated</span>
-                <span className="text-sm flex items-center gap-1">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs md:text-sm text-muted-foreground">Last Updated</span>
+                <span className="text-xs md:text-sm flex items-center gap-1">
                   <Clock className="h-3 w-3" />
                   {lastUpdated.toLocaleTimeString()}
                 </span>
@@ -373,39 +374,39 @@ export function AdvisoryBuilder({ safeHarbors, onReset }: AdvisoryBuilderProps) 
           </Card>
           
           {/* Zone Summary */}
-          <Card>
-            <CardHeader className="pb-2 py-3">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <MapPin className="h-4 w-4" />
+          <Card className="overflow-hidden">
+            <CardHeader className="pb-2 py-2 md:py-3 px-3 md:px-4">
+              <CardTitle className="text-xs md:text-sm font-medium flex items-center gap-2">
+                <MapPin className="h-3.5 w-3.5 md:h-4 md:w-4" />
                 Zone Summary
               </CardTitle>
             </CardHeader>
-            <CardContent className="py-2">
+            <CardContent className="py-2 px-3 md:px-4">
               {drawnZone ? (
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-2 md:gap-3">
                   <div>
-                    <p className="text-xs text-muted-foreground">Type</p>
-                    <p className="font-medium capitalize">{drawnZone.type}</p>
+                    <p className="text-[10px] md:text-xs text-muted-foreground">Type</p>
+                    <p className="text-sm md:text-base font-medium capitalize">{drawnZone.type}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Size</p>
-                    <p className="font-medium">{zoneSize}</p>
+                    <p className="text-[10px] md:text-xs text-muted-foreground">Size</p>
+                    <p className="text-sm md:text-base font-medium">{zoneSize}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Vehicles Inside</p>
-                    <p className="font-medium text-destructive">{vehiclesInside}</p>
+                    <p className="text-[10px] md:text-xs text-muted-foreground">Vehicles Inside</p>
+                    <p className="text-sm md:text-base font-medium text-destructive">{vehiclesInside}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Vehicles Near</p>
-                    <p className="font-medium text-warning">{vehiclesNear}</p>
+                    <p className="text-[10px] md:text-xs text-muted-foreground">Vehicles Near</p>
+                    <p className="text-sm md:text-base font-medium text-warning">{vehiclesNear}</p>
                   </div>
                   <div className="col-span-2">
-                    <p className="text-xs text-muted-foreground">Confidence</p>
-                    <Badge variant="outline">{confidence}</Badge>
+                    <p className="text-[10px] md:text-xs text-muted-foreground">Confidence</p>
+                    <Badge variant="outline" className="text-[10px] md:text-xs">{confidence}</Badge>
                   </div>
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">
+                <p className="text-xs md:text-sm text-muted-foreground text-center py-3 md:py-4">
                   Draw a zone on the map to see analytics
                 </p>
               )}
@@ -548,23 +549,23 @@ export function AdvisoryBuilder({ safeHarbors, onReset }: AdvisoryBuilderProps) 
           
           {/* Safe Harbor Destinations - Collapsible */}
           <Collapsible open={safeHarborsOpen} onOpenChange={setSafeHarborsOpen}>
-            <Card>
+            <Card className="overflow-hidden">
               <CollapsibleTrigger asChild>
-                <CardHeader className="pb-2 py-3 cursor-pointer hover:bg-muted/50 transition-colors">
-                  <CardTitle className="text-sm font-medium flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Building2 className="h-4 w-4" />
-                      Safe Harbor Destinations
-                      <Badge variant="secondary" className="text-[10px]">
+                <CardHeader className="pb-2 py-2 md:py-3 px-3 md:px-4 cursor-pointer hover:bg-muted/50 transition-colors">
+                  <CardTitle className="text-xs md:text-sm font-medium flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 md:gap-2 min-w-0 flex-1">
+                      <Building2 className="h-3.5 w-3.5 md:h-4 md:w-4 shrink-0" />
+                      <span className="truncate">Safe Harbors</span>
+                      <Badge variant="secondary" className="text-[10px] shrink-0">
                         {selectedSafeHarbors.length}/3
                       </Badge>
                     </div>
-                    <ChevronDown className={cn("h-4 w-4 transition-transform", safeHarborsOpen && "rotate-180")} />
+                    <ChevronDown className={cn("h-4 w-4 transition-transform shrink-0", safeHarborsOpen && "rotate-180")} />
                   </CardTitle>
                 </CardHeader>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <CardContent className="py-2">
+                <CardContent className="py-2 px-3 md:px-4">
                   <div className="space-y-2 max-h-[200px] overflow-y-auto">
                     {safeHarbors
                       .sort((a, b) => a.distanceFromZone - b.distanceFromZone)
@@ -576,29 +577,29 @@ export function AdvisoryBuilder({ safeHarbors, onReset }: AdvisoryBuilderProps) 
                           <div
                             key={harbor.id}
                             className={cn(
-                              "p-2 rounded-md border cursor-pointer transition-colors",
+                              "p-2 rounded-md border cursor-pointer transition-colors overflow-hidden",
                               isSelected && "border-primary bg-primary/10",
                               !isSelected && !isDisabled && "border-border hover:border-primary/50",
                               isDisabled && "opacity-50 cursor-not-allowed"
                             )}
                             onClick={() => !isDisabled && toggleSafeHarbor(harbor)}
                           >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <Checkbox checked={isSelected} className="pointer-events-none" />
-                                <div>
-                                  <p className="text-sm font-medium">{harbor.name}</p>
-                                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                    <Badge variant="outline" className="text-[10px] h-4">
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-2 min-w-0 flex-1">
+                                <Checkbox checked={isSelected} className="pointer-events-none shrink-0" />
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-xs md:text-sm font-medium truncate">{harbor.name}</p>
+                                  <div className="flex items-center gap-1 text-[10px] md:text-xs text-muted-foreground">
+                                    <Badge variant="outline" className="text-[10px] h-4 shrink-0">
                                       {harbor.type}
                                     </Badge>
-                                    <span>{harbor.distanceFromZone} mi</span>
+                                    <span className="shrink-0">{harbor.distanceFromZone} mi</span>
                                   </div>
                                 </div>
                               </div>
-                              <div className="text-right">
-                                <p className="text-sm font-medium">{harbor.availableCapacity}</p>
-                                <p className="text-xs text-muted-foreground">slots</p>
+                              <div className="text-right shrink-0">
+                                <p className="text-xs md:text-sm font-medium">{harbor.availableCapacity}</p>
+                                <p className="text-[10px] md:text-xs text-muted-foreground">slots</p>
                               </div>
                             </div>
                           </div>
@@ -661,27 +662,27 @@ export function AdvisoryBuilder({ safeHarbors, onReset }: AdvisoryBuilderProps) 
       </ScrollArea>
       
       {/* Sticky Action Buttons */}
-      <div className="sticky bottom-0 bg-background/95 backdrop-blur border-t border-border px-3 md:px-4 py-3">
+      <div className="sticky bottom-0 bg-background/95 backdrop-blur border-t border-border px-4 md:px-5 py-3">
         <div className="flex gap-2">
           <Button
             variant="outline"
             onClick={handleReset}
-            className="shrink-0"
+            className="shrink-0 h-9 px-3"
           >
-            <RotateCcw className="h-4 w-4 mr-2" />
-            Reset
+            <RotateCcw className="h-4 w-4 md:mr-2" />
+            <span className="hidden md:inline">Reset</span>
           </Button>
           <Button
-            className="flex-1"
+            className="flex-1 h-9"
             onClick={() => setShowSubmitDialog(true)}
             disabled={!canSubmit || hasErrors}
           >
-            <Send className="h-4 w-4 mr-2" />
-            Submit Advisory
+            <Send className="h-4 w-4 mr-1.5 md:mr-2" />
+            <span className="text-sm">Submit</span>
           </Button>
         </div>
         {!canSubmit && (
-          <p className="text-xs text-muted-foreground text-center mt-2">
+          <p className="text-[10px] md:text-xs text-muted-foreground text-center mt-2">
             Draw a zone on the map to enable submission
           </p>
         )}
