@@ -103,9 +103,9 @@ export function OttoResponsePanel({
                 <p className="text-xs md:text-sm text-muted-foreground hidden sm:block">Advisory Protocol</p>
               </div>
             </div>
-            <div className="flex items-center gap-1 md:gap-2 shrink-0">
-              <Badge variant="outline" className="flex items-center gap-1 text-[10px] md:text-xs px-1.5 md:px-2.5">
-                <Radio className="h-2 w-2 md:h-3 md:w-3 animate-pulse" />
+            <div className="flex items-center gap-1.5 md:gap-2 shrink-0 mr-6 md:mr-8">
+              <Badge variant="outline" className="flex items-center gap-1 text-[10px] md:text-xs px-1.5 md:px-2.5 border-success/50 text-success bg-success/10 shadow-[0_0_6px_1px_hsl(var(--success)/0.25)]">
+                <Radio className="h-2 w-2 md:h-3 md:w-3 animate-pulse-slow" />
                 Live
               </Badge>
               <Badge className={`text-[10px] md:text-xs px-1.5 md:px-2.5 ${getSeverityColor(trafficSeverity)}`}>
@@ -132,8 +132,8 @@ export function OttoResponsePanel({
                 <div className={cn(
                   "border-b md:border-b-0 md:border-r border-border transition-all duration-300 ease-in-out overflow-hidden",
                   mapState === 'expanded' 
-                    ? "flex-1 min-h-[55vh] md:min-h-0" 
-                    : "h-[180px] md:h-[200px] shrink-0"
+                    ? "flex-1 min-h-[55vh] md:min-h-0 md:min-w-[400px] md:w-1/2" 
+                    : "h-[180px] md:h-auto md:min-h-[250px] md:min-w-[350px] md:w-[40%] shrink-0"
                 )}>
                   <OttoResponseMap 
                     vehicles={vehicles} 
