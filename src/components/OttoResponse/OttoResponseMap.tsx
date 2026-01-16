@@ -93,6 +93,8 @@ export function OttoResponseMap({
     
     map.current.on('load', () => {
       setIsMapLoaded(true);
+      // Ensure map fills container on initial load
+      setTimeout(() => map.current?.resize(), 50);
       
       // Add traffic heatmap layer
       map.current!.addSource('traffic-heat', {
@@ -337,6 +339,17 @@ export function OttoResponseMap({
     
     map.current.fitBounds(bounds, { padding: 50, maxZoom: 14 });
   }, [vehicles.length, isMapLoaded]);
+
+  // Resize map when mapState changes to expanded - fixes black dead space
+  useEffect(() => {
+    if (map.current && isMapLoaded && mapState === 'expanded') {
+      // Small delay to allow container to finish CSS transition
+      const timer = setTimeout(() => {
+        map.current?.resize();
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [mapState, isMapLoaded]);
   
   // Close polygon
   const closePolygon = () => {
