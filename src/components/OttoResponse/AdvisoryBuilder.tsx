@@ -23,6 +23,8 @@ import {
   RotateCcw,
   ChevronDown,
   Zap,
+  Shield,
+  MessageSquare,
 } from 'lucide-react';
 import { useOttoResponseStore, SafeHarbor, TrafficSeverity } from '@/stores/ottoResponseStore';
 import { getPolygonAreaSqMiles } from '@/hooks/useOttoResponseData';
@@ -349,10 +351,12 @@ export function AdvisoryBuilder({ safeHarbors, onReset }: AdvisoryBuilderProps) 
           </Card>
           
           {/* Snapshot */}
-          <Card className="overflow-hidden">
-            <CardHeader className="pb-2 py-2 md:py-3 px-3 md:px-4">
-              <CardTitle className="text-xs md:text-sm font-medium flex items-center gap-2">
-                <AlertTriangle className="h-3.5 w-3.5 md:h-4 md:w-4" />
+          <Card className="overflow-hidden border-l-4 border-l-primary">
+            <CardHeader className="pb-2 py-2 md:py-3 px-3 md:px-4 bg-muted/50">
+              <CardTitle className="text-sm md:text-base font-semibold flex items-center gap-2">
+                <div className="h-6 w-6 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+                  <AlertTriangle className="h-3.5 w-3.5 text-primary" />
+                </div>
                 Snapshot
               </CardTitle>
             </CardHeader>
@@ -374,10 +378,12 @@ export function AdvisoryBuilder({ safeHarbors, onReset }: AdvisoryBuilderProps) 
           </Card>
           
           {/* Zone Summary */}
-          <Card className="overflow-hidden">
-            <CardHeader className="pb-2 py-2 md:py-3 px-3 md:px-4">
-              <CardTitle className="text-xs md:text-sm font-medium flex items-center gap-2">
-                <MapPin className="h-3.5 w-3.5 md:h-4 md:w-4" />
+          <Card className="overflow-hidden border-l-4 border-l-blue-500">
+            <CardHeader className="pb-2 py-2 md:py-3 px-3 md:px-4 bg-muted/50">
+              <CardTitle className="text-sm md:text-base font-semibold flex items-center gap-2">
+                <div className="h-6 w-6 rounded-md bg-blue-500/10 flex items-center justify-center shrink-0">
+                  <MapPin className="h-3.5 w-3.5 text-blue-500" />
+                </div>
                 Zone Summary
               </CardTitle>
             </CardHeader>
@@ -415,15 +421,17 @@ export function AdvisoryBuilder({ safeHarbors, onReset }: AdvisoryBuilderProps) 
           
           {/* Recommendations - Collapsible */}
           <Collapsible open={recommendationsOpen} onOpenChange={setRecommendationsOpen}>
-            <Card>
+            <Card className="overflow-hidden border-l-4 border-l-green-500">
               <CollapsibleTrigger asChild>
-                <CardHeader className="pb-2 py-3 cursor-pointer hover:bg-muted/50 transition-colors">
-                  <CardTitle className="text-sm font-medium flex items-center justify-between">
+                <CardHeader className="pb-2 py-2 md:py-3 px-3 md:px-4 cursor-pointer hover:bg-muted/70 transition-colors bg-muted/50">
+                  <CardTitle className="text-sm md:text-base font-semibold flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4" />
+                      <div className="h-6 w-6 rounded-md bg-green-500/10 flex items-center justify-center shrink-0">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+                      </div>
                       Recommendations
                     </div>
-                    <ChevronDown className={cn("h-4 w-4 transition-transform", recommendationsOpen && "rotate-180")} />
+                    <ChevronDown className={cn("h-4 w-4 transition-transform shrink-0", recommendationsOpen && "rotate-180")} />
                   </CardTitle>
                 </CardHeader>
               </CollapsibleTrigger>
@@ -549,12 +557,14 @@ export function AdvisoryBuilder({ safeHarbors, onReset }: AdvisoryBuilderProps) 
           
           {/* Safe Harbor Destinations - Collapsible */}
           <Collapsible open={safeHarborsOpen} onOpenChange={setSafeHarborsOpen}>
-            <Card className="overflow-hidden">
+            <Card className="overflow-hidden border-l-4 border-l-amber-500">
               <CollapsibleTrigger asChild>
-                <CardHeader className="pb-2 py-2 md:py-3 px-3 md:px-4 cursor-pointer hover:bg-muted/50 transition-colors">
-                  <CardTitle className="text-xs md:text-sm font-medium flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 md:gap-2 min-w-0 flex-1">
-                      <Building2 className="h-3.5 w-3.5 md:h-4 md:w-4 shrink-0" />
+                <CardHeader className="pb-2 py-2 md:py-3 px-3 md:px-4 cursor-pointer hover:bg-muted/70 transition-colors bg-muted/50">
+                  <CardTitle className="text-sm md:text-base font-semibold flex items-center justify-between">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <div className="h-6 w-6 rounded-md bg-amber-500/10 flex items-center justify-center shrink-0">
+                        <Shield className="h-3.5 w-3.5 text-amber-500" />
+                      </div>
                       <span className="truncate">Safe Harbors</span>
                       <Badge variant="secondary" className="text-[10px] shrink-0">
                         {selectedSafeHarbors.length}/3
@@ -613,12 +623,17 @@ export function AdvisoryBuilder({ safeHarbors, onReset }: AdvisoryBuilderProps) 
           
           {/* Notes to OEM - Collapsible */}
           <Collapsible open={notesOpen} onOpenChange={setNotesOpen}>
-            <Card>
+            <Card className="overflow-hidden border-l-4 border-l-purple-500">
               <CollapsibleTrigger asChild>
-                <CardHeader className="pb-2 py-3 cursor-pointer hover:bg-muted/50 transition-colors">
-                  <CardTitle className="text-sm font-medium flex items-center justify-between">
-                    <span>Notes to OEM</span>
-                    <ChevronDown className={cn("h-4 w-4 transition-transform", notesOpen && "rotate-180")} />
+                <CardHeader className="pb-2 py-2 md:py-3 px-3 md:px-4 cursor-pointer hover:bg-muted/70 transition-colors bg-muted/50">
+                  <CardTitle className="text-sm md:text-base font-semibold flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="h-6 w-6 rounded-md bg-purple-500/10 flex items-center justify-center shrink-0">
+                        <MessageSquare className="h-3.5 w-3.5 text-purple-500" />
+                      </div>
+                      Notes to OEM
+                    </div>
+                    <ChevronDown className={cn("h-4 w-4 transition-transform shrink-0", notesOpen && "rotate-180")} />
                   </CardTitle>
                 </CardHeader>
               </CollapsibleTrigger>
