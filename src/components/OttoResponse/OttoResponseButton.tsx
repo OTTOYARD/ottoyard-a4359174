@@ -16,7 +16,7 @@ export function OttoResponseButton() {
       size="sm"
       onClick={openPanel}
       className={`gap-1.5 border-primary/30 hover:border-primary hover:bg-primary/10 transition-colors h-9 text-sm py-1.5 border-[5px] rounded-md px-4 ${
-        hasActiveIncidents ? 'animate-pulse' : ''
+        hasActiveIncidents ? 'animate-pulse-slow' : ''
       }`}
     >
       <AlertTriangle className="h-4 w-4 text-primary" />

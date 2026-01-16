@@ -166,6 +166,7 @@ export default {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'pulse-energy': 'pulse-energy 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+				'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
 				'slide-up': 'slide-up 0.5s ease-out',
 				'glow-pulse': 'glow-pulse 3s ease-in-out infinite',
 				'float': 'float 3s ease-in-out infinite',
