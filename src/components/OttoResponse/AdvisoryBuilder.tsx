@@ -32,6 +32,7 @@ import { cn } from '@/lib/utils';
 
 interface AdvisoryBuilderProps {
   safeHarbors: SafeHarbor[];
+  onReset?: () => void;
 }
 
 interface PredictiveScenario {
@@ -48,7 +49,7 @@ interface PredictiveScenario {
   oemNotes: string;
 }
 
-export function AdvisoryBuilder({ safeHarbors }: AdvisoryBuilderProps) {
+export function AdvisoryBuilder({ safeHarbors, onReset }: AdvisoryBuilderProps) {
   const [showSubmitDialog, setShowSubmitDialog] = useState(false);
   const [aiDraftText, setAIDraftText] = useState<string | null>(null);
   const [isGeneratingPrediction, setIsGeneratingPrediction] = useState(false);
@@ -103,6 +104,7 @@ export function AdvisoryBuilder({ safeHarbors }: AdvisoryBuilderProps) {
     resetBuilder();
     setAIDraftText(null);
     setPredictiveScenario(null);
+    onReset?.(); // Reset map state too
     toast.info('Advisory builder reset');
   };
 
@@ -286,6 +288,7 @@ export function AdvisoryBuilder({ safeHarbors }: AdvisoryBuilderProps) {
     resetBuilder();
     setAIDraftText(null);
     setPredictiveScenario(null);
+    onReset?.(); // Reset map state too
     toast.success(`Advisory ${advisory.id} submitted`);
   };
   

@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -6,9 +6,10 @@ import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, Radio } from 'lucide-react';
 import { useOttoResponseStore, TrafficSeverity } from '@/stores/ottoResponseStore';
 import { useOttoResponseData, calculateZoneAnalytics, updateSafeHarborDistances } from '@/hooks/useOttoResponseData';
-import { OttoResponseMap } from './OttoResponseMap';
+import { OttoResponseMap, MapInteractionState } from './OttoResponseMap';
 import { AdvisoryBuilder } from './AdvisoryBuilder';
 import { AdvisoryLog } from './AdvisoryLog';
+import { cn } from '@/lib/utils';
 
 interface OttoResponsePanelProps {
   vehicles?: any[];
@@ -28,9 +29,17 @@ export function OttoResponsePanel({
     setTrafficSeverity
   } = useOttoResponseStore();
 
-  // Auto-generate random traffic severity when panel opens
+  // Map interaction states
+  const [mapState, setMapState] = useState<MapInteractionState>('collapsed');
+  const [zoneConfirmed, setZoneConfirmed] = useState(false);
+
+  // Reset map state when panel opens
   useEffect(() => {
     if (isPanelOpen) {
+      setMapState('collapsed');
+      setZoneConfirmed(false);
+      
+      // Auto-generate random traffic severity
       const severities: TrafficSeverity[] = ['Low', 'Medium', 'High'];
       const weights = [0.2, 0.5, 0.3]; // 20% Low, 50% Medium, 30% High
       const random = Math.random();
@@ -44,6 +53,12 @@ export function OttoResponsePanel({
       }
     }
   }, [isPanelOpen, setTrafficSeverity]);
+
+  // Handle reset from AdvisoryBuilder - reset map state too
+  const handleMapReset = () => {
+    setMapState('collapsed');
+    setZoneConfirmed(false);
+  };
 
   const {
     vehicles,
@@ -113,14 +128,28 @@ export function OttoResponsePanel({
             
             <TabsContent value="advisory" className="flex-1 overflow-hidden m-0 data-[state=active]:flex">
               <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-                {/* Map Section - Increased height on mobile */}
-                <div className="flex-1 md:w-1/2 min-h-[50vh] md:min-h-0 md:h-auto border-b md:border-b-0 md:border-r border-border">
-                  <OttoResponseMap vehicles={vehicles} />
+                {/* Map Section - Dynamic height based on state */}
+                <div className={cn(
+                  "border-b md:border-b-0 md:border-r border-border transition-all duration-300 ease-in-out",
+                  mapState === 'expanded' 
+                    ? "min-h-[50vh] md:min-h-0 md:flex-1" 
+                    : "h-[180px] md:h-[200px] shrink-0"
+                )}>
+                  <OttoResponseMap 
+                    vehicles={vehicles} 
+                    mapState={mapState}
+                    onMapStateChange={setMapState}
+                    zoneConfirmed={zoneConfirmed}
+                    onZoneConfirmed={setZoneConfirmed}
+                  />
                 </div>
                 
-                {/* Builder Section */}
-                <div className="flex-1 md:w-1/2 overflow-hidden flex flex-col">
-                  <AdvisoryBuilder safeHarbors={harborsWithDistances} />
+                {/* Builder Section - Takes remaining space */}
+                <div className={cn(
+                  "flex-1 overflow-hidden flex flex-col",
+                  mapState === 'expanded' ? "md:w-1/2" : "md:flex-1"
+                )}>
+                  <AdvisoryBuilder safeHarbors={harborsWithDistances} onReset={handleMapReset} />
                 </div>
               </div>
             </TabsContent>

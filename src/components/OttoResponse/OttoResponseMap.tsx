@@ -4,14 +4,20 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { Circle, Pentagon, RotateCcw, MapPin, Loader2 } from 'lucide-react';
+import { Circle, Pentagon, RotateCcw, MapPin, Loader2, CheckCircle2, Pencil } from 'lucide-react';
 import { useOttoResponseStore, ZonePoint } from '@/stores/ottoResponseStore';
 import { AdaptedVehicle, isVehicleInZone, isVehicleNearZone } from '@/hooks/useOttoResponseData';
+import { cn } from '@/lib/utils';
+
+export type MapInteractionState = 'collapsed' | 'expanded' | 'confirmed';
 
 interface OttoResponseMapProps {
   vehicles: AdaptedVehicle[];
+  mapState: MapInteractionState;
+  onMapStateChange: (state: MapInteractionState) => void;
+  zoneConfirmed: boolean;
+  onZoneConfirmed: (confirmed: boolean) => void;
 }
 
 // Mapbox token (same as main MapboxMap)
@@ -36,7 +42,13 @@ const MOCK_TRAFFIC_DATA: GeoJSON.FeatureCollection = {
   ],
 };
 
-export function OttoResponseMap({ vehicles }: OttoResponseMapProps) {
+export function OttoResponseMap({ 
+  vehicles, 
+  mapState, 
+  onMapStateChange, 
+  zoneConfirmed, 
+  onZoneConfirmed 
+}: OttoResponseMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const vehicleMarkersRef = useRef<mapboxgl.Marker[]>([]);
@@ -54,7 +66,6 @@ export function OttoResponseMap({ vehicles }: OttoResponseMapProps) {
     setDrawnZone,
     vehiclesInside,
     vehiclesNear,
-    confidence,
   } = useOttoResponseStore();
   
   // Calculate map center from vehicles
@@ -344,91 +355,175 @@ export function OttoResponseMap({ vehicles }: OttoResponseMapProps) {
     setRadiusCenter(null);
     setDrawnZone(null);
     setDrawingMode('none');
+    onZoneConfirmed(false);
+    onMapStateChange('collapsed');
   };
+
+  // Confirm the zone and collapse map
+  const handleConfirmZone = () => {
+    onZoneConfirmed(true);
+    onMapStateChange('confirmed');
+    setDrawingMode('none');
+  };
+
+  // Edit the zone - expand map again
+  const handleEditZone = () => {
+    onZoneConfirmed(false);
+    onMapStateChange('expanded');
+  };
+
+  // Activate map from collapsed state
+  const handleActivateMap = () => {
+    onMapStateChange('expanded');
+  };
+
+  // Check if map interactions should be disabled
+  const isMapInteractive = mapState === 'expanded';
   
   return (
-    <div className="h-full flex flex-col">
-      {/* Compact Drawing Tools */}
-      <div className="p-2 border-b border-border flex flex-wrap gap-1.5 items-center justify-between bg-card/50">
-        <div className="flex gap-1.5">
-          <Button
-            variant={drawingMode === 'radius' ? 'default' : 'outline'}
+    <div className="h-full flex flex-col relative">
+      {/* Tap to Engage Overlay - Only when collapsed and no zone confirmed */}
+      {mapState === 'collapsed' && !zoneConfirmed && (
+        <div 
+          className="absolute inset-0 bg-background/70 backdrop-blur-sm flex flex-col items-center justify-center cursor-pointer z-20 transition-opacity"
+          onClick={handleActivateMap}
+        >
+          <div className="bg-card/95 rounded-xl p-6 shadow-lg border border-border flex flex-col items-center gap-3">
+            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+              <MapPin className="h-6 w-6 text-primary" />
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-medium">Tap to Select Zone</p>
+              <p className="text-xs text-muted-foreground mt-1">Draw a radius or polygon on the map</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Zone Button - When zone is confirmed */}
+      {zoneConfirmed && mapState === 'confirmed' && (
+        <div className="absolute top-2 right-2 z-20">
+          <Button 
+            variant="outline" 
             size="sm"
-            onClick={() => {
-              resetDrawing();
-              setDrawingMode('radius');
-            }}
-            className="h-7 px-2 text-xs"
+            onClick={handleEditZone}
+            className="h-7 px-2 text-xs bg-card/95 backdrop-blur"
           >
-            <Circle className="h-3.5 w-3.5 mr-1" />
-            Radius
+            <Pencil className="h-3 w-3 mr-1" />
+            Edit Zone
           </Button>
-          <Button
-            variant={drawingMode === 'polygon' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => {
-              resetDrawing();
-              setDrawingMode('polygon');
-            }}
-            className="h-7 px-2 text-xs"
-          >
-            <Pentagon className="h-3.5 w-3.5 mr-1" />
-            Polygon
-          </Button>
-          {(drawnZone || polygonPoints.length > 0) && (
-            <Button variant="ghost" size="sm" onClick={resetDrawing} className="h-7 px-2 text-xs">
-              <RotateCcw className="h-3.5 w-3.5" />
+        </div>
+      )}
+
+      {/* Drawing Tools - Only show when expanded */}
+      {mapState === 'expanded' && (
+        <div className="p-2 border-b border-border flex flex-wrap gap-1.5 items-center justify-between bg-card/50">
+          <div className="flex gap-1.5">
+            <Button
+              variant={drawingMode === 'radius' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => {
+                setPolygonPoints([]);
+                setRadiusCenter(null);
+                setDrawnZone(null);
+                setDrawingMode('radius');
+              }}
+              className="h-7 px-2 text-xs"
+            >
+              <Circle className="h-3.5 w-3.5 mr-1" />
+              Radius
+            </Button>
+            <Button
+              variant={drawingMode === 'polygon' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => {
+                setPolygonPoints([]);
+                setRadiusCenter(null);
+                setDrawnZone(null);
+                setDrawingMode('polygon');
+              }}
+              className="h-7 px-2 text-xs"
+            >
+              <Pentagon className="h-3.5 w-3.5 mr-1" />
+              Polygon
+            </Button>
+            {(drawnZone || polygonPoints.length > 0) && (
+              <Button variant="ghost" size="sm" onClick={resetDrawing} className="h-7 px-2 text-xs">
+                <RotateCcw className="h-3.5 w-3.5" />
+              </Button>
+            )}
+          </div>
+          
+          {/* Radius slider inline when active */}
+          {drawingMode === 'radius' && (
+            <div className="flex items-center gap-2 flex-1 max-w-[180px]">
+              <Label className="text-[10px] text-muted-foreground whitespace-nowrap">
+                {radiusMiles}mi
+              </Label>
+              <Slider
+                value={[radiusMiles]}
+                onValueChange={([val]) => setRadiusMiles(val)}
+                min={0.25}
+                max={5}
+                step={0.25}
+                className="flex-1"
+              />
+            </div>
+          )}
+          
+          {drawingMode === 'polygon' && polygonPoints.length >= 3 && (
+            <Button size="sm" onClick={closePolygon} className="h-7 px-2 text-xs">
+              Close
             </Button>
           )}
         </div>
-        
-        {/* Radius slider inline when active */}
-        {drawingMode === 'radius' && (
-          <div className="flex items-center gap-2 flex-1 max-w-[180px]">
-            <Label className="text-[10px] text-muted-foreground whitespace-nowrap">
-              {radiusMiles}mi
-            </Label>
-            <Slider
-              value={[radiusMiles]}
-              onValueChange={([val]) => setRadiusMiles(val)}
-              min={0.25}
-              max={5}
-              step={0.25}
-              className="flex-1"
-            />
-          </div>
-        )}
-        
-        {drawingMode === 'polygon' && polygonPoints.length >= 3 && (
-          <Button size="sm" onClick={closePolygon} className="h-7 px-2 text-xs">
-            Close
-          </Button>
-        )}
-      </div>
+      )}
       
-      {/* Map Container - Full height */}
+      {/* Map Container */}
       <div className="flex-1 relative min-h-0">
-        <div ref={mapContainer} className="absolute inset-0" />
+        <div 
+          ref={mapContainer} 
+          className={cn(
+            "absolute inset-0 transition-opacity",
+            !isMapInteractive && !zoneConfirmed && "pointer-events-none"
+          )} 
+        />
         
         {!isMapLoaded && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/80">
+          <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         )}
         
+        {/* Confirm Zone Button - Show when zone is drawn and map is expanded */}
+        {mapState === 'expanded' && drawnZone && (
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20">
+            <Button 
+              onClick={handleConfirmZone}
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground shadow-lg"
+            >
+              <CheckCircle2 className="h-4 w-4 mr-2" />
+              Confirm Zone
+            </Button>
+          </div>
+        )}
+        
         {/* Compact Instructions overlay */}
-        {isMapLoaded && drawingMode !== 'none' && !drawnZone && (
-          <div className="absolute bottom-2 left-2 right-2">
+        {isMapLoaded && mapState === 'expanded' && drawingMode !== 'none' && !drawnZone && (
+          <div className="absolute bottom-12 left-2 right-2">
             <Card className="p-2 bg-card/95 backdrop-blur text-xs text-center">
-              {drawingMode === 'radius' && 'Tap to set zone center'}
+              {drawingMode === 'radius' && 'Tap map to set zone center'}
               {drawingMode === 'polygon' && `Tap to add points (${polygonPoints.length}/3 min)`}
             </Card>
           </div>
         )}
         
-        {/* Compact Zone Stats - Only show when zone exists */}
+        {/* Compact Zone Stats - Show when zone exists */}
         {drawnZone && (
-          <div className="absolute bottom-2 right-2">
+          <div className={cn(
+            "absolute right-2 z-10",
+            mapState === 'expanded' ? "bottom-16" : "bottom-2"
+          )}>
             <Card className="p-2 bg-card/95 backdrop-blur">
               <div className="flex gap-3 text-xs">
                 <div className="text-center">
@@ -444,8 +539,11 @@ export function OttoResponseMap({ vehicles }: OttoResponseMapProps) {
           </div>
         )}
         
-        {/* Collapsible Legend - Minimal */}
-        <div className="absolute top-2 left-2">
+        {/* Traffic Legend - Minimal */}
+        <div className={cn(
+          "absolute top-2 left-2 z-10",
+          !isMapInteractive && !zoneConfirmed && "hidden"
+        )}>
           <Card className="p-1.5 bg-card/90 backdrop-blur text-[10px]">
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1">
