@@ -17,7 +17,7 @@ import {
   Car,
   Building2,
   Send,
-  Sparkles,
+  Activity,
   CheckCircle2,
   Loader2,
   RotateCcw,
@@ -308,18 +308,18 @@ export function AdvisoryBuilder({ safeHarbors, onReset }: AdvisoryBuilderProps) 
       <ScrollArea className="flex-1">
         <div className="px-4 md:px-5 py-3 md:py-4 space-y-4 md:space-y-5 pb-24">
           {/* AI Predictive Analysis - Optional Feature */}
-          <Card className="border-dashed border-primary/30 overflow-hidden">
+          <Card className="border-primary/30 bg-primary/5 overflow-hidden">
             <CardContent className="py-3 px-3 md:px-4">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0 flex-1">
-                  <Zap className="h-4 w-4 text-primary shrink-0" />
+                  <Activity className="h-4 w-4 text-primary shrink-0" />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1 flex-wrap">
-                      <span className="text-xs md:text-sm font-medium">AI Predictive</span>
-                      <Badge variant="outline" className="text-[10px] shrink-0 h-4">Optional</Badge>
+                      <span className="text-xs md:text-sm font-medium">Event Engine</span>
+                      <Badge variant="outline" className="text-[10px] shrink-0 h-4">Predictive</Badge>
                     </div>
                     <p className="text-[10px] md:text-xs text-muted-foreground line-clamp-1">
-                      Auto-detect incidents
+                      Real-time incident detection
                     </p>
                   </div>
                 </div>
@@ -334,9 +334,9 @@ export function AdvisoryBuilder({ safeHarbors, onReset }: AdvisoryBuilderProps) 
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   ) : (
                     <>
-                      <Sparkles className="h-3.5 w-3.5 mr-1" />
-                      <span className="hidden sm:inline">Generate</span>
-                      <span className="sm:hidden">AI</span>
+                      <Activity className="h-3.5 w-3.5 mr-1" />
+                      <span className="hidden sm:inline">Analyze</span>
+                      <span className="sm:hidden">Run</span>
                     </>
                   )}
                 </Button>
@@ -650,7 +650,7 @@ export function AdvisoryBuilder({ safeHarbors, onReset }: AdvisoryBuilderProps) 
                       {isAILoading ? (
                         <Loader2 className="h-3 w-3 animate-spin mr-1" />
                       ) : (
-                        <Sparkles className="h-3 w-3 mr-1" />
+                        <Zap className="h-3 w-3 mr-1" />
                       )}
                       AI Draft
                     </Button>

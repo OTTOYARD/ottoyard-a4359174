@@ -91,7 +91,7 @@ export function OttoResponsePanel({
 
   return (
     <Sheet open={isPanelOpen} onOpenChange={open => !open && closePanel()}>
-      <SheetContent side="right" className="w-full sm:max-w-[900px] md:max-w-[1100px] p-0 flex flex-col pt-8 md:pt-0">
+      <SheetContent side="right" className="w-full sm:max-w-[900px] md:max-w-[1100px] p-0 flex flex-col pt-12 md:pt-0">
         <SheetHeader className="px-4 md:px-6 py-3 md:py-4 border-b border-border">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 md:gap-3">
