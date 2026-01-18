@@ -307,7 +307,7 @@ export function AdvisoryBuilder({ safeHarbors, onReset }: AdvisoryBuilderProps) 
     <div className="flex flex-col h-full">
       <ScrollArea className="flex-1">
         <div className="px-4 md:px-5 py-3 md:py-4 space-y-4 md:space-y-5 pb-24">
-          {/* AI Predictive Analysis - Optional Feature */}
+          {/* Event Engine - Data Aggregation Feature */}
           <Card className="border-primary/30 bg-primary/5 overflow-hidden">
             <CardContent className="py-3 px-3 md:px-4">
               <div className="flex items-center justify-between gap-2">
@@ -316,7 +316,7 @@ export function AdvisoryBuilder({ safeHarbors, onReset }: AdvisoryBuilderProps) 
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1 flex-wrap">
                       <span className="text-xs md:text-sm font-medium">Event Engine</span>
-                      <Badge variant="outline" className="text-[10px] shrink-0 h-4">Predictive</Badge>
+                      <Badge variant="outline" className="text-[10px] shrink-0 h-4">Aggregator</Badge>
                     </div>
                     <p className="text-[10px] md:text-xs text-muted-foreground line-clamp-1">
                       Real-time incident detection
@@ -341,6 +341,27 @@ export function AdvisoryBuilder({ safeHarbors, onReset }: AdvisoryBuilderProps) 
                   )}
                 </Button>
               </div>
+              
+              {/* Data Source Indicators */}
+              <div className="mt-2.5 flex flex-wrap gap-1.5">
+                <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted/80 border border-border/50">
+                  <div className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
+                  <span className="text-[9px] md:text-[10px] text-muted-foreground">Traffic Feeds</span>
+                </div>
+                <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted/80 border border-border/50">
+                  <div className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
+                  <span className="text-[9px] md:text-[10px] text-muted-foreground">Emergency Services</span>
+                </div>
+                <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted/80 border border-border/50">
+                  <div className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
+                  <span className="text-[9px] md:text-[10px] text-muted-foreground">Weather Alerts</span>
+                </div>
+                <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted/80 border border-border/50">
+                  <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50" />
+                  <span className="text-[9px] md:text-[10px] text-muted-foreground/70">News Reports</span>
+                </div>
+              </div>
+              
               {predictiveScenario && (
                 <div className="mt-2 p-2 bg-primary/5 rounded-md border border-primary/20">
                   <p className="text-xs font-medium text-primary line-clamp-1">{predictiveScenario.scenarioName}</p>
