@@ -129,14 +129,14 @@ export function AdvisoryBuilder({ safeHarbors, onReset }: AdvisoryBuilderProps) 
 
       if (data?.scenario) {
         applyPredictiveScenario(data.scenario);
-        toast.success('AI prediction applied - review and submit');
+        toast.success('Event data analyzed - review and submit');
       }
     } catch (err) {
       console.error('Predictive analysis error:', err);
       // Fallback to mock scenario
       const mockScenario = generateMockScenario();
       applyPredictiveScenario(mockScenario);
-      toast.info('Mock prediction applied - review and submit');
+      toast.info('Sample scenario loaded - review and submit');
     } finally {
       setIsGeneratingPrediction(false);
     }
@@ -253,18 +253,18 @@ export function AdvisoryBuilder({ safeHarbors, onReset }: AdvisoryBuilderProps) 
       if (data?.draft) {
         setAIDraftText(data.draft);
         setOemNotes(data.draft);
-        toast.success('AI draft generated');
+        toast.success('Advisory draft generated');
       } else if (data?.mock) {
         setAIDraftText(data.draft);
         setOemNotes(data.draft);
-        toast.info('Mock AI draft generated');
+        toast.info('Sample draft generated');
       }
     } catch (err) {
       console.error('AI draft error:', err);
       const mockDraft = generateMockDraft();
       setAIDraftText(mockDraft);
       setOemNotes(mockDraft);
-      toast.info('Mock AI draft generated');
+      toast.info('Sample draft generated');
     } finally {
       setIsAILoading(false);
     }
