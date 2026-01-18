@@ -111,10 +111,10 @@ export function OttoResponsePanel({
               <Badge className={`text-[10px] md:text-xs px-1.5 md:px-2.5 ${getSeverityColor(trafficSeverity)}`}>
                 {trafficSeverity}
               </Badge>
-              {/* Mobile close button - positioned inline with badges */}
+              {/* Close button - positioned inline with badges for all screen sizes */}
               <button
                 onClick={closePanel}
-                className="md:hidden ml-1 rounded-md p-1.5 opacity-70 hover:opacity-100 hover:bg-muted/50 transition-all duration-200"
+                className="ml-2 md:ml-3 rounded-md p-1.5 opacity-70 hover:opacity-100 hover:bg-muted/50 transition-all duration-200"
               >
                 <X className="h-4 w-4" />
                 <span className="sr-only">Close</span>

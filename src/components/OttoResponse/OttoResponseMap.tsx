@@ -343,13 +343,33 @@ export function OttoResponseMap({
   // Resize map when mapState changes to expanded - fixes black dead space
   useEffect(() => {
     if (map.current && isMapLoaded && mapState === 'expanded') {
-      // Small delay to allow container to finish CSS transition
-      const timer = setTimeout(() => {
-        map.current?.resize();
-      }, 150);
-      return () => clearTimeout(timer);
+      // Multiple resize calls during CSS transition to prevent black sections
+      const timer1 = setTimeout(() => map.current?.resize(), 50);
+      const timer2 = setTimeout(() => map.current?.resize(), 150);
+      const timer3 = setTimeout(() => map.current?.resize(), 350);
+      const timer4 = setTimeout(() => map.current?.resize(), 500);
+      
+      return () => {
+        clearTimeout(timer1);
+        clearTimeout(timer2);
+        clearTimeout(timer3);
+        clearTimeout(timer4);
+      };
     }
   }, [mapState, isMapLoaded]);
+
+  // ResizeObserver to handle container size changes dynamically
+  useEffect(() => {
+    if (!mapContainer.current || !map.current || !isMapLoaded) return;
+    
+    const resizeObserver = new ResizeObserver(() => {
+      map.current?.resize();
+    });
+    
+    resizeObserver.observe(mapContainer.current);
+    
+    return () => resizeObserver.disconnect();
+  }, [isMapLoaded]);
   
   // Close polygon
   const closePolygon = () => {
