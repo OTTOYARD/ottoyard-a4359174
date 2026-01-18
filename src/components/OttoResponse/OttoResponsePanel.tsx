@@ -3,7 +3,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, Radio } from 'lucide-react';
+import { AlertTriangle, Radio, X } from 'lucide-react';
 import { useOttoResponseStore, TrafficSeverity } from '@/stores/ottoResponseStore';
 import { useOttoResponseData, calculateZoneAnalytics, updateSafeHarborDistances } from '@/hooks/useOttoResponseData';
 import { OttoResponseMap, MapInteractionState } from './OttoResponseMap';
@@ -103,7 +103,7 @@ export function OttoResponsePanel({
                 <p className="text-xs md:text-sm text-muted-foreground hidden sm:block">Advisory Protocol</p>
               </div>
             </div>
-            <div className="flex items-center gap-1.5 md:gap-2 shrink-0 mr-6 md:mr-8">
+            <div className="flex items-center gap-1.5 md:gap-2 shrink-0">
               <Badge variant="outline" className="flex items-center gap-1 text-[10px] md:text-xs px-1.5 md:px-2.5 border-success/50 text-success bg-success/10 shadow-[0_0_6px_1px_hsl(var(--success)/0.25)]">
                 <Radio className="h-2 w-2 md:h-3 md:w-3 animate-pulse-slow" />
                 Live
@@ -111,6 +111,14 @@ export function OttoResponsePanel({
               <Badge className={`text-[10px] md:text-xs px-1.5 md:px-2.5 ${getSeverityColor(trafficSeverity)}`}>
                 {trafficSeverity}
               </Badge>
+              {/* Mobile close button - positioned inline with badges */}
+              <button
+                onClick={closePanel}
+                className="md:hidden ml-1 rounded-md p-1.5 opacity-70 hover:opacity-100 hover:bg-muted/50 transition-all duration-200"
+              >
+                <X className="h-4 w-4" />
+                <span className="sr-only">Close</span>
+              </button>
             </div>
           </div>
         </SheetHeader>
