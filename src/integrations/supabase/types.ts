@@ -1268,8 +1268,8 @@ export type Database = {
         Returns: Json
       }
       ottoq_sim_set_state: {
-        Args: { p_config?: Json; p_is_running: boolean; p_mode: string }
-        Returns: Json
+        Args: { p_config?: Json; p_is_running?: boolean; p_mode?: string }
+        Returns: undefined
       }
       ottoq_sim_tick: { Args: { p_city_name?: string }; Returns: Json }
     }
