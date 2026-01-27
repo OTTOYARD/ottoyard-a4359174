@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -39,6 +39,9 @@ import { OttoResponseButton, OttoResponsePanel } from "@/components/OttoResponse
 import { generateAnalyticsReportPDF } from "@/utils/analyticsReportPDF";
 import { toast as sonnerToast } from "sonner";
 import { WeatherButton } from "@/components/WeatherButton";
+import { useOTTOQRealtime } from "@/hooks/useOTTOQRealtime";
+import { computeVehicleStatusCounts, computeDepotTotals, occupancyRatePct } from "@/lib/ottoq/ottoqClient";
+import type { UiVehicle, UiDepot } from "@/lib/ottoq/ottoqTypes";
 
 // Incidents Tab Component
 const allStatuses: IncidentStatus[] = ["Reported", "Dispatched", "Secured", "At Depot", "Closed"];
@@ -500,16 +503,32 @@ const Index = () => {
     fetchCityData(ottoqCity); // Fetch real data for the mapped OTTO-Q city
   };
 
-  // Calculate city-specific metrics
-  // Active vehicles are those that are IDLE or ON_TRIP
-  const activeVehicles = vehicles.filter(v => v.status === 'idle' || v.status === 'on_trip').length;
-  const chargingVehicles = vehicles.filter(v => v.status === 'charging' || v.status === 'at_depot').length;
-  const maintenanceVehicles = vehicles.filter(v => v.status === 'in_service' || v.status === 'enroute_depot').length;
-  const totalEnergyGenerated = depots.reduce((sum, depot) => sum + depot.energyGenerated, 0);
-  const totalEnergyReturned = depots.reduce((sum, depot) => sum + depot.energyReturned, 0);
-  const totalStalls = depots.reduce((sum, depot) => sum + depot.totalStalls, 0);
-  const availableStalls = depots.reduce((sum, depot) => sum + depot.availableStalls, 0);
-  const occupancyRate = totalStalls > 0 ? Math.round((totalStalls - availableStalls) / totalStalls * 100) : 0;
+  // Use realtime hook to refresh city data on OTTO-Q table changes
+  useOTTOQRealtime({
+    enabled: true,
+    cityName: selectedCityForOTTOQ,
+    onChange: useCallback(() => {
+      // Refresh current city data for live demos, only if not already loading
+      if (!loadingData) {
+        fetchCityData(selectedCityForOTTOQ);
+      }
+    }, [loadingData, selectedCityForOTTOQ]),
+    debounceMs: 500
+  });
+
+  // Calculate city-specific metrics using UI statuses only (active/charging/maintenance/idle)
+  const statusCounts = computeVehicleStatusCounts(vehicles as UiVehicle[]);
+  const activeVehicles = statusCounts.active;
+  const chargingVehicles = statusCounts.charging;
+  const maintenanceVehicles = statusCounts.maintenance;
+  
+  const depotTotals = computeDepotTotals(depots as UiDepot[]);
+  const totalEnergyGenerated = depotTotals.energyGenerated;
+  const totalEnergyReturned = depotTotals.energyReturned;
+  const totalStalls = depotTotals.totalStalls;
+  const availableStalls = depotTotals.availableStalls;
+  const occupancyRate = occupancyRatePct(totalStalls, availableStalls);
+  
   console.log(`📊 ${currentCity.name} Metrics: ${vehicles.length} vehicles (${activeVehicles} active), ${depots.length} depots (${availableStalls}/${totalStalls} stalls available)`);
   return <div className="min-h-screen bg-background">
       {/* Header - with PWA safe area support */}

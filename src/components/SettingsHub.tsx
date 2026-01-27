@@ -54,6 +54,7 @@ import { InvoiceHistory } from './InvoiceHistory';
 import { MonthlyStatements } from './MonthlyStatements';
 import { FleetVehicles } from './FleetVehicles';
 import { AccountOverview } from './AccountOverview';
+import SimulatorControlPanel from './admin/SimulatorControlPanel';
 
 interface SettingsHubProps {
   children: React.ReactNode;
@@ -401,7 +402,7 @@ const SettingsHub: React.FC<SettingsHubProps> = ({
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
           <div className="px-6 pt-2">
-            <TabsList className="grid w-full grid-cols-4 md:grid-cols-7 grid-rows-2 md:grid-rows-1 h-auto md:h-10 gap-0.5 md:gap-0">
+            <TabsList className="grid w-full grid-cols-4 md:grid-cols-8 grid-rows-2 md:grid-rows-1 h-auto md:h-10 gap-0.5 md:gap-0">
               <TabsTrigger value="cart" className="text-[10px] md:text-xs relative">
                 <ShoppingCart className="hidden md:inline h-3 w-3 mr-1" />
                 Cart
@@ -434,6 +435,10 @@ const SettingsHub: React.FC<SettingsHubProps> = ({
               <TabsTrigger value="security" className="text-[10px] md:text-xs">
                 <Shield className="hidden md:inline h-3 w-3 mr-1" />
                 Security
+              </TabsTrigger>
+              <TabsTrigger value="admin" className="text-[10px] md:text-xs">
+                <Bot className="hidden md:inline h-3 w-3 mr-1" />
+                Admin
               </TabsTrigger>
             </TabsList>
           </div>
@@ -1037,6 +1042,11 @@ const SettingsHub: React.FC<SettingsHubProps> = ({
                   </Button>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            {/* Admin Tab */}
+            <TabsContent value="admin" className="mt-0 space-y-4">
+              <SimulatorControlPanel />
             </TabsContent>
           </ScrollArea>
         </Tabs>
