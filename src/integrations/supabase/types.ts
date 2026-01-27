@@ -1257,6 +1257,21 @@ export type Database = {
         }
         Returns: boolean
       }
+      ottoq_sim_get_state: { Args: never; Returns: Json }
+      ottoq_sim_seed_all: { Args: never; Returns: Json }
+      ottoq_sim_seed_city: {
+        Args: {
+          p_city_name: string
+          p_depot_count?: number
+          p_vehicle_count?: number
+        }
+        Returns: Json
+      }
+      ottoq_sim_set_state: {
+        Args: { p_config?: Json; p_is_running: boolean; p_mode: string }
+        Returns: Json
+      }
+      ottoq_sim_tick: { Args: { p_city_name?: string }; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
