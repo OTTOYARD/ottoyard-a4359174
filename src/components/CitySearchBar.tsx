@@ -12,14 +12,15 @@ interface City {
 }
 
 const cities: City[] = [
-  { name: "San Francisco", coordinates: [-122.4194, 37.7749], country: "USA" },
+  { name: "Nashville", coordinates: [-86.7816, 36.1627], country: "USA" },
+  { name: "Austin", coordinates: [-97.7431, 30.2672], country: "USA" },
   { name: "Los Angeles", coordinates: [-118.2437, 34.0522], country: "USA" },
-  { name: "New York", coordinates: [-74.0060, 40.7128], country: "USA" },
-  { name: "Chicago", coordinates: [-87.6298, 41.8781], country: "USA" },
-  { name: "Miami", coordinates: [-80.1918, 25.7617], country: "USA" },
+  { name: "San Francisco", coordinates: [-122.4194, 37.7749], country: "USA" },
   { name: "Seattle", coordinates: [-122.3321, 47.6062], country: "USA" },
   { name: "Denver", coordinates: [-104.9903, 39.7392], country: "USA" },
-  { name: "Austin", coordinates: [-97.7431, 30.2672], country: "USA" },
+  { name: "Chicago", coordinates: [-87.6298, 41.8781], country: "USA" },
+  { name: "New York", coordinates: [-74.0060, 40.7128], country: "USA" },
+  { name: "Miami", coordinates: [-80.1918, 25.7617], country: "USA" },
   { name: "London", coordinates: [-0.1276, 51.5074], country: "UK" },
   { name: "Berlin", coordinates: [13.4050, 52.5200], country: "Germany" },
   { name: "Paris", coordinates: [2.3522, 48.8566], country: "France" },

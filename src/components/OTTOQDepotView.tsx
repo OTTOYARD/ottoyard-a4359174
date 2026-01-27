@@ -127,10 +127,12 @@ export const OTTOQDepotView = ({ selectedCityName, highlightedDepotId }: OTTOQDe
   };
 
   const fetchDepotsForCity = async (cityId: string) => {
+    // Only fetch Mini and Max depots for the city
     const { data, error } = await supabase
       .from("ottoq_depots")
       .select("*")
       .eq("city_id", cityId)
+      .or('name.ilike.%Mini%,name.ilike.%Max%')
       .order("name");
 
     if (error) {
