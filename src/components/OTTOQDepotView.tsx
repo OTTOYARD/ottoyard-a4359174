@@ -204,7 +204,7 @@ export const OTTOQDepotView = ({ selectedCityName, highlightedDepotId }: OTTOQDe
       case "OCCUPIED":
       case "BUSY":
       case "RESERVED":
-        return "border-primary/40 bg-primary/5 text-primary";
+        return "border-warning/40 bg-warning/5 text-warning";
       case "OUT_OF_SERVICE":
         return "border-destructive/40 bg-destructive/5 text-destructive";
       default:
@@ -320,8 +320,8 @@ export const OTTOQDepotView = ({ selectedCityName, highlightedDepotId }: OTTOQDe
                           </div>
                           <div className="text-xs text-muted-foreground mt-0.5">Available</div>
                         </div>
-                        <div className="p-2.5 rounded-lg bg-primary/10 border border-primary/20">
-                          <div className="text-xl font-bold text-primary">
+                        <div className="p-2.5 rounded-lg bg-warning/10 border border-warning/20">
+                          <div className="text-xl font-bold text-warning">
                             {
                               depotResources.resources.filter(
                                 (r) => r.status === "OCCUPIED" || r.status === "BUSY" || r.status === "RESERVED"
@@ -373,7 +373,7 @@ export const OTTOQDepotView = ({ selectedCityName, highlightedDepotId }: OTTOQDe
                                       <Badge variant="outline" className="border-success/40 text-success text-xs">
                                         {availableCount} Available
                                       </Badge>
-                                      <Badge variant="outline" className="border-primary/40 text-primary text-xs">
+                                      <Badge variant="outline" className="border-warning/40 text-warning text-xs">
                                         {occupiedCount} Occupied
                                       </Badge>
                                       <Badge variant="outline" className="text-xs">

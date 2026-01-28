@@ -74,7 +74,7 @@ export const DepotStallInfo = ({ depotId }: DepotStallInfoProps) => {
       case "AVAILABLE":
         return "border-success/40 bg-success/5 text-success";
       case "OCCUPIED":
-        return "border-primary/40 bg-primary/5 text-primary";
+        return "border-warning/40 bg-warning/5 text-warning";
       case "OUT_OF_SERVICE":
         return "border-destructive/40 bg-destructive/5 text-destructive";
       default:
@@ -133,7 +133,7 @@ export const DepotStallInfo = ({ depotId }: DepotStallInfoProps) => {
             <Badge variant="outline" className="border-success/40 bg-success/10 text-success">
               {depotResources.resources.filter((r) => r.status === "AVAILABLE").length} Available
             </Badge>
-            <Badge variant="outline" className="border-primary/40 bg-primary/10 text-primary">
+            <Badge variant="outline" className="border-warning/40 bg-warning/10 text-warning">
               {depotResources.resources.filter((r) => r.status === "OCCUPIED").length} Occupied
             </Badge>
             <Badge variant="outline" className="border-destructive/40 bg-destructive/10 text-destructive">
