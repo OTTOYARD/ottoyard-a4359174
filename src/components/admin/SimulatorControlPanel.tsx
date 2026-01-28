@@ -187,9 +187,6 @@ export default function SimulatorControlPanel() {
                 Unlock
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Default: ottoyard-admin (local only). Change later in code.
-            </p>
           </div>
         ) : (
           <>
