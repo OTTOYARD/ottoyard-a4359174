@@ -1,24 +1,14 @@
 // src/components/OttoCommand/QuickActions.tsx
-// Quick action buttons for OttoCommand AI chat interface
+// Streamlined quick action buttons for OttoCommand AI chat interface
 
 import React from "react";
 import {
-  BarChart3,
+  Activity,
   AlertTriangle,
-  PieChart,
-  ShieldAlert,
   Truck,
-  FileText,
   BatteryWarning,
   Wrench,
-  ListTodo,
-  Calendar,
-  CalendarClock,
-  Layers,
-  Zap,
-  Activity,
-  TrendingUp,
-  Bot
+  MapPin,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -32,196 +22,69 @@ export interface QuickAction {
   label: string;
   icon: React.ElementType;
   description: string;
-  category: "analysis" | "triage" | "automation" | "scheduling";
   prompt: string;
-  hotkey?: string;
+  isDialog?: boolean;
   variant?: "default" | "destructive" | "outline" | "secondary" | "ghost";
 }
 
 export interface QuickActionsProps {
   onSelect: (action: QuickAction) => void;
   disabled?: boolean;
-  compact?: boolean;
-  showCategories?: boolean;
   className?: string;
+  currentCity?: string;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// QUICK ACTIONS DATA
+// STREAMLINED QUICK ACTIONS - 6 Essential Actions
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export const quickActions: QuickAction[] = [
-  // ─────────────────────────────────────────────────────────────────────────────
-  // FLEET ANALYSIS
-  // ─────────────────────────────────────────────────────────────────────────────
   {
-    id: "fleet-snapshot",
-    label: "Fleet Snapshot",
-    icon: BarChart3,
-    description: "Comprehensive fleet health overview",
-    category: "analysis",
-    prompt: "Generate a comprehensive fleet snapshot including vehicle health, charging status, active incidents, utilization metrics, and key alerts.",
-    hotkey: "F1"
+    id: "fleet-status",
+    label: "Fleet Status",
+    icon: Activity,
+    description: "Real-time fleet overview",
+    prompt: "What's the current fleet status? Show vehicles by status, average SOC, and any critical alerts.",
   },
   {
     id: "critical-alerts",
     label: "Critical Alerts",
     icon: AlertTriangle,
-    description: "View all critical and high-priority alerts",
-    category: "analysis",
-    prompt: "Show all critical alerts: vehicles with SOC below 20%, overdue maintenance, active incidents requiring attention, and any detected anomalies.",
-    hotkey: "F2",
+    description: "Urgent items needing attention",
+    prompt: "Show all critical alerts: vehicles with SOC below 20%, incidents requiring attention, and high-risk maintenance items.",
     variant: "destructive"
-  },
-  {
-    id: "utilization-report",
-    label: "Utilization Report",
-    icon: PieChart,
-    description: "Depot and fleet utilization metrics",
-    category: "analysis",
-    prompt: "Generate a utilization report comparing all depots. Include charging stall usage, maintenance bay occupancy, vehicle distribution, and efficiency metrics."
-  },
-  {
-    id: "performance-comparison",
-    label: "Compare Cities",
-    icon: TrendingUp,
-    description: "Compare metrics across cities",
-    category: "analysis",
-    prompt: "Compare fleet performance across Nashville, Austin, and LA. Include utilization, average SOC, safety scores, and revenue metrics."
-  },
-
-  // ─────────────────────────────────────────────────────────────────────────────
-  // INCIDENT TRIAGE
-  // ─────────────────────────────────────────────────────────────────────────────
-  {
-    id: "incident-triage",
-    label: "Incident Triage",
-    icon: ShieldAlert,
-    description: "Smart incident prioritization",
-    category: "triage",
-    prompt: "Triage all active incidents by priority. Show status, severity, location, and recommended actions for each incident.",
-    hotkey: "F3"
   },
   {
     id: "ottow-dispatch",
     label: "OTTOW Dispatch",
     icon: Truck,
-    description: "Quick OTTOW roadside dispatch",
-    category: "triage",
-    prompt: "I need to dispatch OTTOW roadside assistance. Show me the dispatch options by city with available response vehicles.",
-    hotkey: "F4",
+    description: "Roadside assistance dispatch",
+    prompt: "ottow_dispatch",
+    isDialog: true,
     variant: "secondary"
   },
   {
-    id: "incident-summary",
-    label: "Incident Summary",
-    icon: FileText,
-    description: "Summary of recent incidents",
-    category: "triage",
-    prompt: "Summarize all incidents from the last 24 hours. Group by type, status, city, and show average resolution time."
-  },
-
-  // ─────────────────────────────────────────────────────────────────────────────
-  // PREDICTIVE / AUTOMATION
-  // ─────────────────────────────────────────────────────────────────────────────
-  {
-    id: "predict-charging",
-    label: "Charging Predictions",
+    id: "charging-predictions",
+    label: "Charging Needs",
     icon: BatteryWarning,
     description: "Vehicles needing charge soon",
-    category: "automation",
-    prompt: "Predict which vehicles will need charging in the next 4 hours. Include current SOC, predicted SOC, urgency level, and recommended charge scheduling.",
-    hotkey: "F5"
+    prompt: "Predict which vehicles will need charging in the next 4 hours. Show urgency levels and recommended actions.",
   },
   {
-    id: "predict-maintenance",
+    id: "maintenance-risks",
     label: "Maintenance Risks",
     icon: Wrench,
     description: "Predictive maintenance alerts",
-    category: "automation",
-    prompt: "Identify vehicles with elevated maintenance risk based on telemetry, mileage, and component health patterns. Show risk scores, categories, and recommended actions.",
-    hotkey: "F6"
-  },
-  {
-    id: "auto-queue",
-    label: "Smart Auto-Queue",
-    icon: ListTodo,
-    description: "Auto-queue vehicles for OTTO-Q",
-    category: "automation",
-    prompt: "Analyze the fleet and suggest vehicles to auto-queue for charging or maintenance based on SOC levels and risk scores. Show a dry-run preview before any execution."
-  },
-  {
-    id: "optimize-schedule",
-    label: "Optimize Schedule",
-    icon: Zap,
-    description: "Optimize depot operations schedule",
-    category: "automation",
-    prompt: "Optimize the charging and maintenance schedule across all depots for maximum throughput and minimum wait times. Show current utilization and improvement recommendations."
-  },
-  {
-    id: "anomaly-detection",
-    label: "Detect Anomalies",
-    icon: Activity,
-    description: "Find fleet anomalies",
-    category: "automation",
-    prompt: "Detect anomalies in fleet telemetry and operations. Check for unusual SOC drain, location issues, sensor drift, and performance drops."
-  },
-
-  // ─────────────────────────────────────────────────────────────────────────────
-  // SCHEDULING
-  // ─────────────────────────────────────────────────────────────────────────────
-  {
-    id: "schedule-maintenance",
-    label: "Schedule Maintenance",
-    icon: CalendarClock,
-    description: "Schedule vehicle maintenance",
-    category: "scheduling",
-    prompt: "Help me schedule maintenance. Show which vehicles are due or approaching their maintenance windows, sorted by urgency."
-  },
-  {
-    id: "bulk-operations",
-    label: "Bulk Operations",
-    icon: Layers,
-    description: "Schedule multiple vehicles at once",
-    category: "scheduling",
-    prompt: "I need to schedule bulk operations. Show me vehicles grouped by recommended action (charging, maintenance, detailing) and let me queue them in batch."
+    prompt: "Identify vehicles with elevated maintenance risk. Show risk scores, affected components, and recommended scheduling.",
   },
   {
     id: "depot-availability",
-    label: "Depot Availability",
-    icon: Calendar,
-    description: "Check depot resource availability",
-    category: "scheduling",
-    prompt: "Show depot availability across all locations. Include charging stalls, maintenance bays, and staging areas with current occupancy and upcoming reservations."
-  }
+    label: "Depot Resources",
+    icon: MapPin,
+    description: "Check depot availability",
+    prompt: "Show depot resource availability across all locations. Include charging stalls, maintenance bays, and current utilization.",
+  },
 ];
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// CATEGORY CONFIG
-// ═══════════════════════════════════════════════════════════════════════════════
-
-const categoryConfig = {
-  analysis: {
-    label: "Fleet Analysis",
-    icon: BarChart3,
-    color: "text-blue-600"
-  },
-  triage: {
-    label: "Incident Triage",
-    icon: ShieldAlert,
-    color: "text-red-600"
-  },
-  automation: {
-    label: "Predictions & Automation",
-    icon: Bot,
-    color: "text-purple-600"
-  },
-  scheduling: {
-    label: "Scheduling",
-    icon: Calendar,
-    color: "text-green-600"
-  }
-};
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // COMPONENTS
@@ -231,46 +94,20 @@ export const QuickActionButton: React.FC<{
   action: QuickAction;
   onClick: () => void;
   disabled?: boolean;
-  compact?: boolean;
-}> = ({ action, onClick, disabled, compact }) => {
+}> = ({ action, onClick, disabled }) => {
   const Icon = action.icon;
-
-  if (compact) {
-    return (
-      <Button
-        variant={action.variant || "outline"}
-        size="sm"
-        onClick={onClick}
-        disabled={disabled}
-        className="h-8 px-3 text-xs"
-        title={action.description}
-      >
-        <Icon className="h-3.5 w-3.5 mr-1.5" />
-        {action.label}
-        {action.hotkey && (
-          <span className="ml-1.5 text-[10px] opacity-50">{action.hotkey}</span>
-        )}
-      </Button>
-    );
-  }
 
   return (
     <Button
       variant={action.variant || "outline"}
+      size="sm"
+      className="h-auto p-2 sm:p-3 flex flex-col items-center space-y-1 hover:bg-primary/5 hover:border-primary/30 transition-all duration-200 hover:scale-[1.02]"
       onClick={onClick}
       disabled={disabled}
-      className="h-auto py-3 px-4 flex flex-col items-start gap-1 text-left hover:bg-muted/50"
+      title={action.description}
     >
-      <div className="flex items-center gap-2 w-full">
-        <Icon className="h-4 w-4" />
-        <span className="font-medium text-sm">{action.label}</span>
-        {action.hotkey && (
-          <span className="ml-auto text-[10px] opacity-50 bg-muted px-1.5 py-0.5 rounded">
-            {action.hotkey}
-          </span>
-        )}
-      </div>
-      <span className="text-xs text-muted-foreground">{action.description}</span>
+      <Icon className="h-3 w-3 text-primary sm:h-4 sm:w-4" />
+      <span className="text-xs text-center leading-tight">{action.label}</span>
     </Button>
   );
 };
@@ -278,88 +115,29 @@ export const QuickActionButton: React.FC<{
 export const QuickActionsGrid: React.FC<QuickActionsProps> = ({
   onSelect,
   disabled,
-  compact,
-  showCategories = true,
-  className
+  className,
+  currentCity
 }) => {
-  const categories = showCategories
-    ? Object.keys(categoryConfig) as Array<keyof typeof categoryConfig>
-    : null;
-
-  if (categories) {
-    return (
-      <div className={cn("space-y-4", className)}>
-        {categories.map(category => {
-          const config = categoryConfig[category];
-          const categoryActions = quickActions.filter(a => a.category === category);
-          const CategoryIcon = config.icon;
-
-          return (
-            <div key={category} className="space-y-2">
-              <div className={cn("flex items-center gap-2 text-sm font-medium", config.color)}>
-                <CategoryIcon className="h-4 w-4" />
-                {config.label}
-              </div>
-              <div className={cn(
-                "grid gap-2",
-                compact ? "grid-cols-2 sm:grid-cols-3 md:grid-cols-4" : "grid-cols-1 sm:grid-cols-2"
-              )}>
-                {categoryActions.map(action => (
-                  <QuickActionButton
-                    key={action.id}
-                    action={action}
-                    onClick={() => onSelect(action)}
-                    disabled={disabled}
-                    compact={compact}
-                  />
-                ))}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    );
-  }
+  const handleSelect = (action: QuickAction) => {
+    // For OTTOW dispatch, customize prompt with city if available
+    if (action.isDialog && action.id === "ottow-dispatch" && currentCity) {
+      onSelect({
+        ...action,
+        prompt: `I need to dispatch OTTOW in ${currentCity}`
+      });
+    } else {
+      onSelect(action);
+    }
+  };
 
   return (
-    <div className={cn(
-      "grid gap-2",
-      compact ? "grid-cols-2 sm:grid-cols-3 md:grid-cols-4" : "grid-cols-1 sm:grid-cols-2 md:grid-cols-3",
-      className
-    )}>
-      {quickActions.map(action => (
+    <div className={cn("grid grid-cols-2 sm:grid-cols-3 gap-2", className)}>
+      {quickActions.map((action) => (
         <QuickActionButton
           key={action.id}
           action={action}
-          onClick={() => onSelect(action)}
+          onClick={() => handleSelect(action)}
           disabled={disabled}
-          compact={compact}
-        />
-      ))}
-    </div>
-  );
-};
-
-// Compact horizontal list for toolbar use
-export const QuickActionBar: React.FC<QuickActionsProps & { maxActions?: number }> = ({
-  onSelect,
-  disabled,
-  maxActions = 6,
-  className
-}) => {
-  const priorityActions = quickActions
-    .filter(a => a.hotkey) // Only show hotkey actions
-    .slice(0, maxActions);
-
-  return (
-    <div className={cn("flex flex-wrap gap-2", className)}>
-      {priorityActions.map(action => (
-        <QuickActionButton
-          key={action.id}
-          action={action}
-          onClick={() => onSelect(action)}
-          disabled={disabled}
-          compact
         />
       ))}
     </div>
@@ -367,41 +145,15 @@ export const QuickActionBar: React.FC<QuickActionsProps & { maxActions?: number 
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// KEYBOARD SHORTCUTS HOOK
-// ═══════════════════════════════════════════════════════════════════════════════
-
-export const useQuickActionHotkeys = (
-  onSelect: (action: QuickAction) => void,
-  enabled = true
-) => {
-  React.useEffect(() => {
-    if (!enabled) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Check for F1-F6 keys
-      if (e.key.startsWith("F") && !e.ctrlKey && !e.altKey && !e.metaKey) {
-        const action = quickActions.find(a => a.hotkey === e.key);
-        if (action) {
-          e.preventDefault();
-          onSelect(action);
-        }
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onSelect, enabled]);
-};
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// SUGGESTED ACTIONS COMPONENT (Context-aware)
+// CONTEXT-AWARE SUGGESTIONS
 // ═══════════════════════════════════════════════════════════════════════════════
 
 interface SuggestedActionsProps {
   fleetMetrics?: {
-    lowBatteryCount: number;
-    activeIncidents: number;
-    maintenanceDue: number;
+    lowBatteryCount?: number;
+    criticalBatteryCount?: number;
+    activeIncidents?: number;
+    pendingIncidents?: number;
   };
   onSelect: (action: QuickAction) => void;
   className?: string;
@@ -412,40 +164,52 @@ export const SuggestedActions: React.FC<SuggestedActionsProps> = ({
   onSelect,
   className
 }) => {
-  // Determine suggested actions based on fleet state
+  // Determine top 2-3 suggested actions based on fleet state
   const suggestions: QuickAction[] = [];
 
   if (fleetMetrics) {
-    if (fleetMetrics.lowBatteryCount > 0) {
-      suggestions.push(quickActions.find(a => a.id === "predict-charging")!);
+    // Critical battery = highest priority
+    if ((fleetMetrics.criticalBatteryCount ?? 0) > 0) {
+      const action = quickActions.find(a => a.id === "critical-alerts");
+      if (action) suggestions.push(action);
     }
-    if (fleetMetrics.activeIncidents > 0) {
-      suggestions.push(quickActions.find(a => a.id === "incident-triage")!);
+
+    // Active incidents = high priority
+    if ((fleetMetrics.activeIncidents ?? 0) > 0 || (fleetMetrics.pendingIncidents ?? 0) > 0) {
+      const action = quickActions.find(a => a.id === "ottow-dispatch");
+      if (action && suggestions.length < 3) suggestions.push(action);
     }
-    if (fleetMetrics.maintenanceDue > 0) {
-      suggestions.push(quickActions.find(a => a.id === "predict-maintenance")!);
+
+    // Low battery vehicles = suggest charging predictions
+    if ((fleetMetrics.lowBatteryCount ?? 0) > 0) {
+      const action = quickActions.find(a => a.id === "charging-predictions");
+      if (action && suggestions.length < 3) suggestions.push(action);
     }
   }
 
-  // Default suggestions if no specific needs
+  // Default if no specific needs
   if (suggestions.length === 0) {
-    suggestions.push(
-      quickActions.find(a => a.id === "fleet-snapshot")!,
-      quickActions.find(a => a.id === "critical-alerts")!
-    );
+    const fleetStatus = quickActions.find(a => a.id === "fleet-status");
+    if (fleetStatus) suggestions.push(fleetStatus);
   }
+
+  if (suggestions.length === 0) return null;
 
   return (
     <div className={cn("space-y-2", className)}>
-      <p className="text-xs text-muted-foreground">Suggested actions:</p>
+      <p className="text-xs text-muted-foreground">Suggested:</p>
       <div className="flex flex-wrap gap-2">
-        {suggestions.filter(Boolean).slice(0, 3).map(action => (
-          <QuickActionButton
+        {suggestions.slice(0, 3).map(action => (
+          <Button
             key={action.id}
-            action={action}
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-xs"
             onClick={() => onSelect(action)}
-            compact
-          />
+          >
+            <action.icon className="h-3 w-3 mr-1" />
+            {action.label}
+          </Button>
         ))}
       </div>
     </div>
