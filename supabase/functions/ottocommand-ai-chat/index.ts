@@ -297,6 +297,21 @@ Response Format:
 • Partners: Waymo (safety-focused), Zoox (bi-directional), Cruise (urban), Aurora (highway)
 • Charging: DC Fast 150-350kW (20-80% in 15-30min), optimal SOC range 20-80%
 
+**PREDICTIVE & AUTOMATION CAPABILITIES (use these tools!):**
+You have access to powerful predictive analytics and automation tools. USE THEM when relevant:
+
+• **predict_charging_needs** - When asked about future charging needs, which vehicles need charging, or proactive charging
+• **predict_maintenance_risks** - When asked about maintenance risks, vehicle health predictions, or which vehicles need maintenance soon
+• **predict_depot_demand** - When asked about depot capacity forecasting or future demand
+• **auto_queue_charging** - When asked to auto-queue vehicles for charging (use dry_run=true first to preview)
+• **auto_queue_maintenance** - When asked to auto-queue vehicles for maintenance based on risk
+• **triage_incidents** - When asked to prioritize or triage incidents
+• **detect_anomalies** - When asked about anomalies, unusual patterns, or telemetry issues
+• **utilization_report** - When asked for depot utilization or efficiency metrics
+• **explain_concept** - When asked to explain AV/fleet concepts like L4, SOC, ODD, OTTO-Q, OTTOW
+
+IMPORTANT: When users ask predictive questions like "which vehicles will need charging", "predict maintenance", or "show urgency levels", ALWAYS use the appropriate tool. DO NOT say you lack the capability - you HAVE these tools.
+
 For OTTOW dispatch, guide users conversationally through vehicle selection. For all queries, match your response depth to the question scope.`;
 
   // Use Claude for all coding and complex analysis queries
