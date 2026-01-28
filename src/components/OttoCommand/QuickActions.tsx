@@ -52,7 +52,6 @@ export const quickActions: QuickAction[] = [
     icon: AlertTriangle,
     description: "Urgent items needing attention",
     prompt: "Show all critical alerts: vehicles with SOC below 20%, incidents requiring attention, and high-risk maintenance items.",
-    variant: "destructive"
   },
   {
     id: "ottow-dispatch",
@@ -61,7 +60,6 @@ export const quickActions: QuickAction[] = [
     description: "Roadside assistance dispatch",
     prompt: "ottow_dispatch",
     isDialog: true,
-    variant: "secondary"
   },
   {
     id: "charging-predictions",

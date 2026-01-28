@@ -645,7 +645,7 @@ export class AutomationEngine {
 
     // Apply additional conditions
     for (const condition of conditions) {
-      vehicles = vehicles.filter(v => this.evaluateCondition(v, condition));
+      vehicles = vehicles.filter(v => this.evaluateCondition(v as unknown as Record<string, unknown>, condition));
     }
 
     return vehicles;
@@ -664,12 +664,13 @@ export class AutomationEngine {
       case "lt":
         return typeof value === "number" && value < (condition.value as number);
       case "in":
-        return Array.isArray(condition.value) && condition.value.includes(value as string);
+        return Array.isArray(condition.value) && (condition.value as string[]).includes(value as string);
       case "contains":
         return typeof value === "string" && value.includes(condition.value as string);
       case "between":
         if (typeof value === "number" && Array.isArray(condition.value)) {
-          return value >= condition.value[0] && value <= condition.value[1];
+          const [min, max] = condition.value as [number, number];
+          return value >= min && value <= max;
         }
         return false;
       default:
