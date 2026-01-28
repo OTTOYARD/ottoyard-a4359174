@@ -4,8 +4,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { Battery, Zap, Wrench, MapPin, Activity, RefreshCw, Car, Calendar, Heart, Download } from "lucide-react";
+import { Battery, Zap, Wrench, MapPin, Activity, RefreshCw, Car, Calendar, Heart, Download, Clock, ChevronDown, CheckCircle2, AlertTriangle, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { OTTOQScheduleDialog } from "./OTTOQScheduleDialog";
 import { VehicleHealthCard } from "./VehicleHealthCard";
@@ -15,6 +17,12 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { OEMVehicleIcon } from "@/components/OEMVehicleIcon";
 import { MaintenancePanel } from "./MaintenancePanel";
+import { 
+  predictiveMaintenanceData, 
+  upcomingMaintenance, 
+  upcomingDetailing,
+  getServicePrice
+} from "@/data/maintenance-mock";
 
 interface Vehicle {
   id: string;
@@ -71,6 +79,9 @@ export const OTTOQFleetView = ({ selectedCityName, highlightedVehicleId, onAddTo
   const [healthDialogOpen, setHealthDialogOpen] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [maintenancePanelOpen, setMaintenancePanelOpen] = useState(false);
+  const [manualScheduleOpen, setManualScheduleOpen] = useState(false);
+  const [upcomingServicesOpen, setUpcomingServicesOpen] = useState(false);
+  const [manualVehicleId, setManualVehicleId] = useState<string>("");
   const { loading: healthLoading, healthData, fetchHealthScore } = useVehicleHealth();
 
   useEffect(() => {
@@ -428,13 +439,187 @@ export const OTTOQFleetView = ({ selectedCityName, highlightedVehicleId, onAddTo
         </Button>
       </div>
 
-      {/* Maintenance Panel Button */}
+      {/* Intelligent Maintenance Panel Button (Top, Centered) */}
       <MaintenancePanel 
         isOpen={maintenancePanelOpen}
         onOpenChange={setMaintenancePanelOpen}
         cityId={selectedCity}
         onAddToCart={onAddToCart}
       />
+
+      {/* Manual Schedule & Upcoming Services - Side by Side */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Manual Schedule Collapsible */}
+        <Collapsible open={manualScheduleOpen} onOpenChange={setManualScheduleOpen}>
+          <CollapsibleTrigger asChild>
+            <Button
+              className="w-full min-h-12 h-auto py-2 bg-primary/80 hover:bg-primary text-white font-semibold justify-between"
+            >
+              <div className="flex items-center">
+                <Calendar className="w-5 h-5 mr-2" />
+                <span className="text-sm">Manual Schedule</span>
+              </div>
+              <ChevronDown className={`w-5 h-5 transition-transform duration-200 ${manualScheduleOpen ? 'rotate-180' : ''}`} />
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-3 animate-accordion-down">
+            <Card className="border-primary/30">
+              <CardContent className="pt-4">
+                <div className="flex flex-col gap-3">
+                  <Select value={manualVehicleId} onValueChange={setManualVehicleId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a vehicle..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {predictiveMaintenanceData.map((p) => (
+                        <SelectItem key={p.vehicleId} value={p.vehicleId}>
+                          <div className="flex items-center">
+                            <Car className="w-4 h-4 mr-2" />
+                            {p.vehicleName} ({p.oem})
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button 
+                    onClick={() => {
+                      if (manualVehicleId) {
+                        const vehicle = predictiveMaintenanceData.find(p => p.vehicleId === manualVehicleId);
+                        if (vehicle) {
+                          setSelectedVehicle({
+                            id: vehicle.vehicleId,
+                            external_ref: vehicle.vehicleName,
+                            oem: vehicle.oem,
+                            vin: null,
+                            plate: null,
+                            soc: 0.8,
+                            odometer_km: 15000,
+                            status: "IDLE",
+                            city: "",
+                            last_telemetry_at: null
+                          });
+                          setScheduleDialogOpen(true);
+                        }
+                      }
+                    }}
+                    disabled={!manualVehicleId}
+                    className="bg-primary hover:bg-primary/90"
+                  >
+                    <Wrench className="w-4 h-4 mr-2" />
+                    Schedule Service
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </CollapsibleContent>
+        </Collapsible>
+
+        {/* Upcoming Services Collapsible */}
+        <Collapsible open={upcomingServicesOpen} onOpenChange={setUpcomingServicesOpen}>
+          <CollapsibleTrigger asChild>
+            <Button
+              className="w-full min-h-12 h-auto py-2 bg-warning/80 hover:bg-warning text-white font-semibold justify-between"
+            >
+              <div className="flex items-center">
+                <Clock className="w-5 h-5 mr-2" />
+                <span className="text-sm">Upcoming Services</span>
+                <Badge className="ml-2 bg-white/20 text-white border-0 text-xs">
+                  {upcomingMaintenance.length + upcomingDetailing.length}
+                </Badge>
+              </div>
+              <ChevronDown className={`w-5 h-5 transition-transform duration-200 ${upcomingServicesOpen ? 'rotate-180' : ''}`} />
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-3 animate-accordion-down">
+            <Card className="border-warning/30">
+              <CardContent className="pt-4">
+                <Tabs defaultValue="maintenance" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2 mb-3">
+                    <TabsTrigger value="maintenance" className="text-xs">
+                      <Wrench className="w-3 h-3 mr-1" />
+                      Maintenance ({upcomingMaintenance.length})
+                    </TabsTrigger>
+                    <TabsTrigger value="detailing" className="text-xs">
+                      <Sparkles className="w-3 h-3 mr-1" />
+                      Detailing ({upcomingDetailing.length})
+                    </TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="maintenance">
+                    <ScrollArea className="h-[200px]">
+                      <div className="space-y-2">
+                        {upcomingMaintenance.map((service) => (
+                          <div 
+                            key={service.id}
+                            className="flex items-center justify-between p-3 rounded-lg border border-border/50"
+                          >
+                            <div className="flex items-center space-x-3">
+                              <AlertTriangle className="w-4 h-4 text-warning" />
+                              <div>
+                                <p className="text-sm font-medium">{service.vehicleName}</p>
+                                <p className="text-xs text-muted-foreground">{service.serviceType}</p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-xs text-muted-foreground mb-1">{service.scheduledDate}</p>
+                              <Badge 
+                                variant="outline" 
+                                className={
+                                  service.status === "scheduled" 
+                                    ? "bg-primary/10 text-primary border-primary/30"
+                                    : service.status === "in_progress"
+                                    ? "bg-warning/20 text-warning border-warning/40"
+                                    : "bg-success/20 text-success border-success/40"
+                                }
+                              >
+                                {service.status === "scheduled" ? "Scheduled" : service.status === "in_progress" ? "In Progress" : "Completed"}
+                              </Badge>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </TabsContent>
+                  <TabsContent value="detailing">
+                    <ScrollArea className="h-[200px]">
+                      <div className="space-y-2">
+                        {upcomingDetailing.map((service) => (
+                          <div 
+                            key={service.id}
+                            className="flex items-center justify-between p-3 rounded-lg border border-border/50"
+                          >
+                            <div className="flex items-center space-x-3">
+                              <CheckCircle2 className="w-4 h-4 text-primary" />
+                              <div>
+                                <p className="text-sm font-medium">{service.vehicleName}</p>
+                                <p className="text-xs text-muted-foreground">{service.serviceType}</p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-xs text-muted-foreground mb-1">{service.scheduledDate}</p>
+                              <Badge 
+                                variant="outline" 
+                                className={
+                                  service.status === "scheduled" 
+                                    ? "bg-primary/10 text-primary border-primary/30"
+                                    : service.status === "in_progress"
+                                    ? "bg-warning/20 text-warning border-warning/40"
+                                    : "bg-success/20 text-success border-success/40"
+                                }
+                              >
+                                {service.status === "scheduled" ? "Scheduled" : service.status === "in_progress" ? "In Progress" : "Completed"}
+                              </Badge>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+          </CollapsibleContent>
+        </Collapsible>
+      </div>
 
       {selectedCity && (
         <div className="space-y-4">

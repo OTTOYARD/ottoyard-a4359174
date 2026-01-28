@@ -1,234 +1,211 @@
 
-# Plan: City-Specific Depots with Consistent Occupied Stalls & Task Cards
+# Plan: Reorganize Fleet Tab Layout with Merged Categories
 
 ## Overview
-This plan implements a proper city-depot relationship where each city displays exactly 2 depots ("Mini" and "Max"), with consistent mock occupancy data showing task cards for occupied stalls. The solution will work dynamically for any city selected in the Overview tab.
+Restructure the Fleet tab layout to:
+1. Merge "AI Predictions" and "Auto-Scheduled Queue" into a single "Intelligent Maintenance" section (since predicted = auto-scheduled)
+2. Move "Manual Schedule" and "Upcoming Maintenance/Detailing" outside the Intelligent Maintenance collapsible as separate side-by-side collapsible buttons
+3. Place the overall fleet vehicle list below these control buttons, scrollable
 
----
-
-## Part 1: Database Cleanup & Depot Naming Standardization
-
-### 1.1 Clean Up Duplicate Depots
-Remove duplicate "Depot 1" and "Depot 2" entries, keeping only the properly named "OTTOYARD Mini - {City}" and "OTTOYARD Max - {City}" depots.
-
-```sql
--- Delete duplicate depots (Depot 1, Depot 2 variants)
-DELETE FROM ottoq_depots 
-WHERE name LIKE '%Depot 1%' OR name LIKE '%Depot 2%';
+## Current Layout
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│ Intelligent Maintenance (Collapsible Button)                    │
+│   ├── AI Predictions Section                                    │
+│   ├── Auto-Scheduled Queue Section                              │
+│   ├── Manual Schedule Section                                   │
+│   └── Upcoming Maintenance / Detailing (side by side)           │
+├─────────────────────────────────────────────────────────────────┤
+│ Fleet Vehicle Cards (Scrollable Grid)                           │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-### 1.2 Add Support for Additional Cities
-Create new cities and depots for cities that users can select but don't exist yet (Seattle, San Francisco, etc.):
-
-**New Cities to Add:**
-- Seattle (maps to new depots)
-- San Francisco (maps to new depots)
-- Denver (maps to new depots)
-- Chicago (maps to new depots)
-- New York (maps to new depots)
-- Miami (maps to new depots)
-
-**For each new city, create:**
-- `OTTOYARD Mini - {CityName}`
-- `OTTOYARD Max - {CityName}`
-- Corresponding resources (12 charge stalls, 4 clean/detail, 2 maintenance, 6 staging)
-
----
-
-## Part 2: Mock Occupation Data Generator
-
-### 2.1 Create Edge Function Enhancement
-Modify `supabase/functions/ottoq-depots-resources/index.ts` to generate consistent mock occupancy when real jobs don't exist.
-
-**Mock Occupation Pattern (per depot):**
-| Resource Type | Occupied Count | Status |
-|--------------|----------------|--------|
-| CHARGE_STALL | 3 | BUSY |
-| CLEAN_DETAIL_STALL | 2 | BUSY |
-| MAINTENANCE_BAY | 1 | BUSY |
-| STAGING_STALL | 2 | RESERVED |
-
-**Implementation:**
-- When fetching resources, if no real jobs exist, inject mock job data
-- Generate deterministic mock job IDs based on depot_id + resource_id (so they persist across refreshes)
-- Include vehicle references for task cards
-- Set `job_id` and `vehicle_id` on occupied resources
-
-### 2.2 Mock Job Data Structure
-```typescript
-// For each occupied stall, generate:
-{
-  id: generateDeterministicId(depotId, resourceId),
-  vehicle_id: generateMockVehicleId(index),
-  job_type: resourceTypeToJobType(resourceType),
-  state: 'ACTIVE',
-  started_at: recentTimestamp(),
-  eta_seconds: randomEta(),
-  metadata_jsonb: { mock: true }
-}
+## Target Layout
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│        Intelligent Maintenance (Collapsible - Centered)         │
+│        [Shows merged Predicted + Auto-Scheduled items]          │
+├──────────────────────────┬──────────────────────────────────────┤
+│  Manual Schedule         │   Upcoming Services                  │
+│  (Collapsible)           │   (Collapsible)                      │
+├──────────────────────────┴──────────────────────────────────────┤
+│ Fleet Vehicle Cards (Scrollable Grid)                           │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Part 3: Frontend Changes
+## Technical Implementation
 
-### 3.1 Update CitySearchBar Cities
-Add Nashville to the city list and update coordinates:
+### File: `src/components/MaintenancePanel.tsx`
 
-**File:** `src/components/CitySearchBar.tsx`
+**Changes:**
+1. Remove the "Auto-Scheduled Queue" section (merge with AI Predictions)
+2. Since all predicted items are now auto-scheduled, show all predictions as "Auto-Scheduled by OTTO-Q"
+3. Remove the "Manual Schedule" and "Upcoming Maintenance/Detailing" sections from this component
+
+**Updated Logic:**
+- Remove the `predictedCount` that filters for `!p.autoScheduled`
+- Show all predictions as auto-scheduled (the assumption is: predicted = auto-scheduled)
+- Badge will just show total count of auto-scheduled items
+
+### File: `src/components/OTTOQFleetView.tsx`
+
+**Changes:**
+1. Add two new collapsible panels: "Manual Schedule" and "Upcoming Services"
+2. Place them side-by-side in a responsive grid below the Intelligent Maintenance button
+3. Move the existing "Manual Schedule" and "Upcoming" content into these new collapsibles
+
+**New Structure:**
 ```typescript
-const cities: City[] = [
-  { name: "Nashville", coordinates: [-86.7816, 36.1627], country: "USA" }, // ADD
-  { name: "Austin", coordinates: [-97.7431, 30.2672], country: "USA" },
-  { name: "Los Angeles", coordinates: [-118.2437, 34.0522], country: "USA" },
-  // ... rest
-];
-```
-
-### 3.2 Update Index.tsx City Mapping
-Enhance `mapToOTTOQCity()` to handle all cities consistently:
-
-**File:** `src/pages/Index.tsx`
-
-Remove the mapping function and instead use the actual city name for depot display. The backend will handle creating proper depots for each city.
-
-### 3.3 Ensure OTTOQDepotView Shows Only Mini/Max
-Add filtering to show only OTTOYARD Mini and Max depots:
-
-**File:** `src/components/OTTOQDepotView.tsx`
-```typescript
-const fetchDepotsForCity = async (cityId: string) => {
-  const { data, error } = await supabase
-    .from("ottoq_depots")
-    .select("*")
-    .eq("city_id", cityId)
-    .or('name.ilike.%Mini%,name.ilike.%Max%') // Filter for Mini/Max only
-    .order("name");
-  // ...
-};
-```
-
-### 3.4 Reset/Refresh Button Behavior
-Update `handleRefresh` to clear mock deployments and restore default occupancy:
-
-**File:** `src/components/OTTOQDepotView.tsx`
-```typescript
-const handleRefresh = async () => {
-  setRefreshing(true);
-  try {
-    // Call reset endpoint to clear task confirmations and restore defaults
-    await supabase.functions.invoke("ottoq-depots-resources", {
-      body: { depot_id: selectedDepot, reset: true },
-      method: "POST",
-    });
-    // Re-fetch fresh data
-    await fetchDepotResources(selectedDepot);
-    toast.success("Depot data reset to defaults");
-  } finally {
-    setRefreshing(false);
-  }
-};
-```
-
----
-
-## Part 4: Edge Function Update for Mock Occupancy
-
-### 4.1 Update `ottoq-depots-resources/index.ts`
-
-Add logic to generate mock occupied stalls when no real jobs exist:
-
-```typescript
-// Define mock occupation pattern
-const MOCK_OCCUPATION = {
-  CHARGE_STALL: 3,
-  CLEAN_DETAIL_STALL: 2,
-  MAINTENANCE_BAY: 1,
-  STAGING_STALL: 2,
-};
-
-// Generate mock jobs for display
-function generateMockOccupancy(resources: Resource[], depotId: string) {
-  const grouped = groupBy(resources, 'resource_type');
-  const mockJobs = new Map();
+<div className="space-y-4">
+  {/* Top: Intelligent Maintenance Button (centered) */}
+  <MaintenancePanel ... />
   
-  for (const [type, count] of Object.entries(MOCK_OCCUPATION)) {
-    const typeResources = grouped[type] || [];
-    for (let i = 0; i < count && i < typeResources.length; i++) {
-      const resource = typeResources[i];
-      const mockJobId = `mock-${depotId}-${resource.id}`.substring(0, 36);
-      mockJobs.set(resource.id, {
-        id: mockJobId,
-        vehicle_id: `mock-vehicle-${i}`,
-        vehicle_ref: `AV-${(i + 1).toString().padStart(3, '0')}`,
-        job_type: typeToJobType(type),
-        state: 'ACTIVE',
-        started_at: new Date(Date.now() - 30 * 60000).toISOString(),
-        eta_seconds: 1800 + Math.floor(Math.random() * 1800),
-      });
-      resource.status = 'BUSY';
-      resource.current_job_id = mockJobId;
-    }
-  }
-  return mockJobs;
-}
+  {/* Middle: Manual Schedule + Upcoming Services (side by side) */}
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <ManualSchedulePanel />      {/* New collapsible */}
+    <UpcomingServicesPanel />    {/* New collapsible */}
+  </div>
+  
+  {/* Bottom: Fleet Vehicle Grid (scrollable) */}
+  <ScrollArea>
+    {/* Vehicle cards */}
+  </ScrollArea>
+</div>
 ```
 
-### 4.2 Handle Reset Flag
-When `reset: true` is passed:
-1. Delete any task confirmations for mock jobs
-2. Return fresh default occupancy state
+### New Components
+
+**Option A: Inline in OTTOQFleetView**
+Create the Manual Schedule and Upcoming Services as inline Collapsible components within OTTOQFleetView.
+
+**Option B: Separate Components**
+Create two new small components: `ManualSchedulePanel.tsx` and `UpcomingServicesPanel.tsx`.
+
+Recommended: **Option A** (inline) to minimize file complexity, since these are small UI sections.
 
 ---
 
-## Part 5: Database Seed Script
+## Detailed Changes
 
-Create new cities and depots via SQL migration or RPC:
+### 1. MaintenancePanel.tsx - Simplify to Merged View
 
-```sql
--- Create new cities
-INSERT INTO ottoq_cities (name, tz) VALUES
-  ('Seattle', 'America/Los_Angeles'),
-  ('San Francisco', 'America/Los_Angeles'),
-  ('Denver', 'America/Denver'),
-  ('Chicago', 'America/Chicago'),
-  ('New York', 'America/New_York'),
-  ('Miami', 'America/New_York')
-ON CONFLICT (name) DO NOTHING;
+**Remove:**
+- Lines 217-260: Auto-Scheduled Queue card (redundant since all predictions are auto-scheduled)
+- Lines 262-297: Manual Schedule section
+- Lines 300-368: Upcoming Services Grid (Maintenance + Detailing)
 
--- For each new city, create Mini and Max depots with resources
--- (using the existing create_ottoq_depot_resources function pattern)
+**Modify:**
+- Lines 131-138: Change badges to show only "X Auto-Scheduled" (merged count)
+- Lines 145-215: Rename "AI Predictions" to "Auto-Scheduled Maintenance" and update styling to reflect all items are scheduled
+- Update the card styling so all items show as "Auto-Scheduled" (green success styling)
+
+### 2. OTTOQFleetView.tsx - Add New Collapsible Sections
+
+**Add after MaintenancePanel (around line 437):**
+
+```typescript
+{/* Manual Schedule & Upcoming Services - Side by Side */}
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  {/* Manual Schedule Collapsible */}
+  <Collapsible open={manualScheduleOpen} onOpenChange={setManualScheduleOpen}>
+    <CollapsibleTrigger asChild>
+      <Button className="w-full justify-between bg-primary/80 hover:bg-primary">
+        <div className="flex items-center">
+          <Calendar className="w-5 h-5 mr-2" />
+          Manual Schedule
+        </div>
+        <ChevronDown className={`transition-transform ${manualScheduleOpen ? 'rotate-180' : ''}`} />
+      </Button>
+    </CollapsibleTrigger>
+    <CollapsibleContent>
+      {/* Vehicle selector + Schedule button */}
+    </CollapsibleContent>
+  </Collapsible>
+
+  {/* Upcoming Services Collapsible */}
+  <Collapsible open={upcomingServicesOpen} onOpenChange={setUpcomingServicesOpen}>
+    <CollapsibleTrigger asChild>
+      <Button className="w-full justify-between bg-warning/80 hover:bg-warning">
+        <div className="flex items-center">
+          <Clock className="w-5 h-5 mr-2" />
+          Upcoming Services
+          <Badge className="ml-2">{upcomingMaintenance.length + upcomingDetailing.length}</Badge>
+        </div>
+        <ChevronDown className={`transition-transform ${upcomingServicesOpen ? 'rotate-180' : ''}`} />
+      </Button>
+    </CollapsibleTrigger>
+    <CollapsibleContent>
+      {/* Tabs for Maintenance vs Detailing */}
+    </CollapsibleContent>
+  </Collapsible>
+</div>
+```
+
+**Add new state variables:**
+```typescript
+const [manualScheduleOpen, setManualScheduleOpen] = useState(false);
+const [upcomingServicesOpen, setUpcomingServicesOpen] = useState(false);
+```
+
+**Import additional dependencies:**
+```typescript
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Clock, ChevronDown } from "lucide-react";
+import { upcomingMaintenance, upcomingDetailing } from "@/data/maintenance-mock";
 ```
 
 ---
 
-## Technical Details
+## Mock Data Update
 
-### Files to Modify:
-1. **`supabase/functions/ottoq-depots-resources/index.ts`** - Add mock occupancy generation
-2. **`src/components/OTTOQDepotView.tsx`** - Filter to Mini/Max depots only
-3. **`src/components/CitySearchBar.tsx`** - Add Nashville to city list
-4. **`src/pages/Index.tsx`** - Simplify city mapping
+### File: `src/data/maintenance-mock.ts`
 
-### Files to Create:
-None - all changes are modifications to existing files
-
-### Database Changes:
-1. Delete duplicate "Depot 1/2" entries
-2. Add new cities (Seattle, SF, Denver, Chicago, NYC, Miami)
-3. Create Mini/Max depots for new cities with resources
+**Update `predictiveMaintenanceData`:**
+- Set `autoScheduled: true` for ALL predictions (since predicted = auto-scheduled)
+- Populate `depotName` and `scheduledTime` for all entries
 
 ---
 
-## Expected Outcome
+## Visual Design
 
-After implementation:
-- Selecting "Nashville, USA" shows only "OTTOYARD Mini - Nashville" and "OTTOYARD Max - Nashville"
-- Selecting "Seattle, USA" shows "OTTOYARD Mini - Seattle" and "OTTOYARD Max - Seattle"
-- Each depot shows:
-  - 3 charging bays occupied with task cards
-  - 2 cleaning stalls occupied with task cards
-  - 1 maintenance bay occupied with task card
-  - 2 staging stalls occupied with task cards
-- "Refresh" button restores default vehicle occupancy after deployment
-- Task cards display vehicle info, job type, and time remaining
+### Intelligent Maintenance Button (Top, Centered)
+- Full-width gradient button (warning → primary)
+- Shows merged count: "X Auto-Scheduled"
+- Opens to show all predicted/scheduled maintenance items
+
+### Manual Schedule Button (Left Side)
+- Primary color button
+- Calendar icon
+- Expands to show vehicle selector + schedule action
+
+### Upcoming Services Button (Right Side)  
+- Warning color button
+- Clock icon + badge with count
+- Expands to show tabs: Maintenance | Detailing
+
+### Fleet Vehicle Grid (Below)
+- Scrollable area with vehicle cards
+- No changes to existing card design
+
+---
+
+## Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/components/MaintenancePanel.tsx` | Remove redundant sections, merge predicted + auto-scheduled |
+| `src/components/OTTOQFleetView.tsx` | Add Manual Schedule + Upcoming Services collapsibles |
+| `src/data/maintenance-mock.ts` | Set all predictions as auto-scheduled with depot info |
+
+---
+
+## Summary
+
+This reorganization:
+1. Treats all AI predictions as automatically scheduled (merged category)
+2. Provides Manual Schedule as a quick-access collapsible button
+3. Provides Upcoming Services (maintenance + detailing) as a separate collapsible
+4. Keeps the fleet vehicle list scrollable below these controls
+5. Creates a cleaner, more logical hierarchy
