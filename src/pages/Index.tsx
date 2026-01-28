@@ -301,49 +301,35 @@ const Index = () => {
     // Add checkout logic here
     setCartItems([]);
   };
-  // Map any city to available OTTO-Q cities (Austin, LA, Nashville)
+  // Map city names to their database equivalents
   const mapToOTTOQCity = (cityName: string): string => {
-    const cityMap: {
-      [key: string]: string;
-    } = {
+    const cityMap: { [key: string]: string } = {
       'Nashville': 'Nashville',
       'Austin': 'Austin',
       'Los Angeles': 'LA',
       'LA': 'LA',
-      // Map other cities to the closest OTTO-Q city
-      'San Francisco': 'LA',
-      'New York': 'Nashville',
-      'Chicago': 'Nashville',
-      'Seattle': 'LA',
-      'Miami': 'Nashville',
-      'Denver': 'Austin'
+      'San Francisco': 'San Francisco',
+      'Seattle': 'Seattle',
+      'Denver': 'Denver',
+      'Chicago': 'Chicago',
+      'New York': 'New York',
+      'Miami': 'Miami',
     };
-    return cityMap[cityName] || 'Nashville'; // Default to Nashville
+    return cityMap[cityName] || cityName; // Pass through unknown cities
   };
 
-  // Enhanced city coordinates mapping
-  const cityCoordinates: {
-    [key: string]: {
-      lat: number;
-      lng: number;
-    };
-  } = {
-    'Nashville': {
-      lat: 36.1627,
-      lng: -86.7816
-    },
-    'Austin': {
-      lat: 30.2672,
-      lng: -97.7431
-    },
-    'LA': {
-      lat: 34.0522,
-      lng: -118.2437
-    },
-    'Los Angeles': {
-      lat: 34.0522,
-      lng: -118.2437
-    }
+  // Enhanced city coordinates mapping for all 9 supported cities
+  const cityCoordinates: { [key: string]: { lat: number; lng: number } } = {
+    'Nashville': { lat: 36.1627, lng: -86.7816 },
+    'Austin': { lat: 30.2672, lng: -97.7431 },
+    'LA': { lat: 34.0522, lng: -118.2437 },
+    'Los Angeles': { lat: 34.0522, lng: -118.2437 },
+    'San Francisco': { lat: 37.7749, lng: -122.4194 },
+    'Seattle': { lat: 47.6062, lng: -122.3321 },
+    'Denver': { lat: 39.7392, lng: -104.9903 },
+    'Chicago': { lat: 41.8781, lng: -87.6298 },
+    'New York': { lat: 40.7128, lng: -74.0060 },
+    'Miami': { lat: 25.7617, lng: -80.1918 },
   };
 
   // Fetch real vehicles and depots from database with enhanced fallbacks
