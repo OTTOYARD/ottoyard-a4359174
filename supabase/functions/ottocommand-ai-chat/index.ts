@@ -450,6 +450,124 @@ For OTTOW dispatch, guide users conversationally through vehicle selection. For 
             required: ["focus_area", "timeframe"],
           },
         },
+        // ─────────────────────────────────────────────────────────────────────────────
+        // PREDICTIVE ANALYTICS TOOLS
+        // ─────────────────────────────────────────────────────────────────────────────
+        {
+          name: "predict_charging_needs",
+          description: "Predict which vehicles will need charging in the next N hours based on SOC trends and usage patterns. Use for proactive charging scheduling.",
+          input_schema: {
+            type: "object",
+            properties: {
+              hours: { type: "number", description: "Prediction window in hours (default: 4)" },
+              urgency_threshold: { type: "number", description: "SOC threshold to flag as needing charge (default: 30)" },
+              city: { type: "string", description: "Filter predictions by city" },
+            },
+            required: [],
+          },
+        },
+        {
+          name: "predict_maintenance_risks",
+          description: "Identify vehicles with elevated maintenance risk based on telemetry, mileage, and component health patterns. Returns risk scores and recommendations.",
+          input_schema: {
+            type: "object",
+            properties: {
+              risk_threshold: { type: "number", description: "Minimum risk score to include (0-100, default: 50)" },
+              city: { type: "string", description: "Filter by city" },
+            },
+            required: [],
+          },
+        },
+        {
+          name: "predict_depot_demand",
+          description: "Forecast depot capacity demand for charging, maintenance, and staging over the next N hours.",
+          input_schema: {
+            type: "object",
+            properties: {
+              depot_id: { type: "string", description: "Specific depot to predict" },
+              city: { type: "string", description: "Filter by city" },
+              hours: { type: "number", description: "Prediction window in hours (default: 8)" },
+            },
+            required: [],
+          },
+        },
+        // ─────────────────────────────────────────────────────────────────────────────
+        // AUTOMATION / OTTO-Q TOOLS
+        // ─────────────────────────────────────────────────────────────────────────────
+        {
+          name: "auto_queue_charging",
+          description: "Smart auto-queue vehicles for charging based on SOC and urgency. Supports strategies: urgent_first, balanced, off_peak. Always preview with dry_run=true first.",
+          input_schema: {
+            type: "object",
+            properties: {
+              strategy: { type: "string", enum: ["urgent_first", "balanced", "off_peak", "revenue_optimal"], description: "Queuing strategy" },
+              soc_threshold: { type: "number", description: "Queue vehicles below this SOC (default: 30)" },
+              city: { type: "string", description: "Filter by city" },
+              dry_run: { type: "boolean", description: "Preview only, don't execute (default: true)" },
+            },
+            required: [],
+          },
+        },
+        {
+          name: "auto_queue_maintenance",
+          description: "Auto-queue vehicles for maintenance based on predictive risk scores. Always preview with dry_run=true first.",
+          input_schema: {
+            type: "object",
+            properties: {
+              risk_threshold: { type: "number", description: "Queue vehicles with risk score above this (default: 70)" },
+              city: { type: "string", description: "Filter by city" },
+              dry_run: { type: "boolean", description: "Preview only, don't execute (default: true)" },
+            },
+            required: [],
+          },
+        },
+        {
+          name: "triage_incidents",
+          description: "Smart incident prioritization and triage. Scores and ranks incidents by priority with recommended actions.",
+          input_schema: {
+            type: "object",
+            properties: {
+              city: { type: "string", description: "Filter by city" },
+              include_resolved: { type: "boolean", description: "Include resolved incidents (default: false)" },
+            },
+            required: [],
+          },
+        },
+        {
+          name: "detect_anomalies",
+          description: "Detect anomalies in fleet telemetry: unusual SOC drain, sensor drift, location mismatches, performance drops.",
+          input_schema: {
+            type: "object",
+            properties: {
+              city: { type: "string", description: "Filter by city" },
+              anomaly_type: { type: "string", enum: ["soc_drain", "sensor_drift", "location_mismatch", "performance_drop", "communication_gap"], description: "Filter by anomaly type" },
+            },
+            required: [],
+          },
+        },
+        {
+          name: "utilization_report",
+          description: "Generate depot utilization report with charging, maintenance, and efficiency metrics.",
+          input_schema: {
+            type: "object",
+            properties: {
+              city: { type: "string", description: "Filter by city" },
+              period: { type: "string", enum: ["today", "week", "month"], description: "Report period" },
+            },
+            required: [],
+          },
+        },
+        {
+          name: "explain_concept",
+          description: "Explain AV/fleet concepts like L4 autonomy, SOC, ODD, disengagement, OTTO-Q, or OTTOW. Use for educational queries.",
+          input_schema: {
+            type: "object",
+            properties: {
+              topic: { type: "string", description: "Topic to explain (e.g., 'L4 autonomy', 'SOC', 'OTTO-Q')" },
+            },
+            required: ["topic"],
+          },
+        },
       ];
 
       const claudeResponse = await fetch("https://api.anthropic.com/v1/messages", {
@@ -742,6 +860,160 @@ For OTTOW dispatch, guide users conversationally through vehicle selection. For 
             goals: { type: "string" },
           },
           required: ["focus_area", "timeframe"],
+        },
+      },
+    },
+    // ─────────────────────────────────────────────────────────────────────────────
+    // PREDICTIVE ANALYTICS TOOLS
+    // ─────────────────────────────────────────────────────────────────────────────
+    {
+      type: "function",
+      function: {
+        name: "predict_charging_needs",
+        description: "Predict which vehicles will need charging in the next N hours based on SOC trends and usage patterns.",
+        parameters: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            hours: { type: "number", description: "Prediction window in hours (default: 4)" },
+            urgency_threshold: { type: "number", description: "SOC threshold to flag as needing charge (default: 30)" },
+            city: { type: "string", description: "Filter predictions by city" },
+          },
+          required: [],
+        },
+      },
+    },
+    {
+      type: "function",
+      function: {
+        name: "predict_maintenance_risks",
+        description: "Identify vehicles with elevated maintenance risk based on telemetry, mileage, and component health patterns.",
+        parameters: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            risk_threshold: { type: "number", description: "Minimum risk score to include (0-100, default: 50)" },
+            city: { type: "string", description: "Filter by city" },
+          },
+          required: [],
+        },
+      },
+    },
+    {
+      type: "function",
+      function: {
+        name: "predict_depot_demand",
+        description: "Forecast depot capacity demand for charging, maintenance, and staging over the next N hours.",
+        parameters: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            depot_id: { type: "string", description: "Specific depot to predict" },
+            city: { type: "string", description: "Filter by city" },
+            hours: { type: "number", description: "Prediction window in hours (default: 8)" },
+          },
+          required: [],
+        },
+      },
+    },
+    // ─────────────────────────────────────────────────────────────────────────────
+    // AUTOMATION / OTTO-Q TOOLS
+    // ─────────────────────────────────────────────────────────────────────────────
+    {
+      type: "function",
+      function: {
+        name: "auto_queue_charging",
+        description: "Smart auto-queue vehicles for charging based on SOC and urgency. Supports strategies: urgent_first, balanced, off_peak.",
+        parameters: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            strategy: { type: "string", enum: ["urgent_first", "balanced", "off_peak", "revenue_optimal"], description: "Queuing strategy" },
+            soc_threshold: { type: "number", description: "Queue vehicles below this SOC (default: 30)" },
+            city: { type: "string", description: "Filter by city" },
+            dry_run: { type: "boolean", description: "Preview only, don't execute (default: true)" },
+          },
+          required: [],
+        },
+      },
+    },
+    {
+      type: "function",
+      function: {
+        name: "auto_queue_maintenance",
+        description: "Auto-queue vehicles for maintenance based on predictive risk scores.",
+        parameters: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            risk_threshold: { type: "number", description: "Queue vehicles with risk score above this (default: 70)" },
+            city: { type: "string", description: "Filter by city" },
+            dry_run: { type: "boolean", description: "Preview only, don't execute (default: true)" },
+          },
+          required: [],
+        },
+      },
+    },
+    {
+      type: "function",
+      function: {
+        name: "triage_incidents",
+        description: "Smart incident prioritization and triage. Scores and ranks incidents by priority with recommended actions.",
+        parameters: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            city: { type: "string", description: "Filter by city" },
+            include_resolved: { type: "boolean", description: "Include resolved incidents (default: false)" },
+          },
+          required: [],
+        },
+      },
+    },
+    {
+      type: "function",
+      function: {
+        name: "detect_anomalies",
+        description: "Detect anomalies in fleet telemetry: unusual SOC drain, sensor drift, location mismatches, performance drops.",
+        parameters: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            city: { type: "string", description: "Filter by city" },
+            anomaly_type: { type: "string", enum: ["soc_drain", "sensor_drift", "location_mismatch", "performance_drop", "communication_gap"], description: "Filter by anomaly type" },
+          },
+          required: [],
+        },
+      },
+    },
+    {
+      type: "function",
+      function: {
+        name: "utilization_report",
+        description: "Generate depot utilization report with charging, maintenance, and efficiency metrics.",
+        parameters: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            city: { type: "string", description: "Filter by city" },
+            period: { type: "string", enum: ["today", "week", "month"], description: "Report period" },
+          },
+          required: [],
+        },
+      },
+    },
+    {
+      type: "function",
+      function: {
+        name: "explain_concept",
+        description: "Explain AV/fleet concepts like L4 autonomy, SOC, ODD, disengagement, OTTO-Q, or OTTOW.",
+        parameters: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            topic: { type: "string", description: "Topic to explain (e.g., 'L4 autonomy', 'SOC', 'OTTO-Q')" },
+          },
+          required: ["topic"],
         },
       },
     },
