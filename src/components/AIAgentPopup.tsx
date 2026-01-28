@@ -8,18 +8,12 @@ import { toast } from "sonner";
 import { MessageRenderer } from "./MessageRenderer";
 import { useIncidentsStore } from "@/stores/incidentsStore";
 import { useFleetContext, serializeFleetContext } from "@/hooks/useFleetContext";
-import { 
-  Bot, 
-  Send, 
-  Calendar,
-  MapPin,
-  BarChart3,
-  Wrench,
-  Zap,
+import { QuickActionsGrid, QuickAction } from "./OttoCommand/QuickActions";
+import {
+  Bot,
+  Send,
   Loader2,
   X,
-  Truck,
-  Activity
 } from "lucide-react";
 
 interface AIAgentPopupProps {
@@ -62,15 +56,6 @@ export const AIAgentPopup = ({ open, onOpenChange, currentCity, vehicles = [], d
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [messages, open]);
-
-  const quickActions = [
-    { icon: Activity, label: "Fleet Status", action: "What's the current fleet status?" },
-    { icon: BarChart3, label: "Analytics Report", action: "Generate a fleet health report" },
-    { icon: Calendar, label: "Schedule Maintenance", action: "schedule maintenance for vehicle" },
-    { icon: MapPin, label: "Depot Availability", action: "Show me depot resource availability" },
-    { icon: Wrench, label: "Recommendations", action: "What are your recommendations for the fleet?" },
-    { icon: Truck, label: "OTTOW Dispatch", action: "ottow_dispatch", isDialog: true }
-  ];
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
@@ -193,13 +178,13 @@ export const AIAgentPopup = ({ open, onOpenChange, currentCity, vehicles = [], d
     }
   };
 
-  const handleQuickAction = async (action: string, isDialog?: boolean) => {
-    if (action === "ottow_dispatch") {
+  const handleQuickAction = async (action: QuickAction) => {
+    if (action.isDialog && action.id === "ottow-dispatch") {
       // Send message to AI to start OTTOW dispatch flow
-      const dispatchMessage = currentCity 
-        ? `I need to dispatch OTTOW in ${currentCity.name}` 
+      const dispatchMessage = currentCity
+        ? `I need to dispatch OTTOW in ${currentCity.name}`
         : "I need to dispatch OTTOW tow service";
-      
+
       const userMessage: Message = {
         id: Date.now().toString(),
         role: 'user',
@@ -212,7 +197,7 @@ export const AIAgentPopup = ({ open, onOpenChange, currentCity, vehicles = [], d
 
       try {
         const fleetDataContext = serializeFleetContext(fleetContext);
-        
+
         const { data, error } = await supabase.functions.invoke('ottocommand-ai-chat', {
           body: {
             message: dispatchMessage,
@@ -255,7 +240,7 @@ export const AIAgentPopup = ({ open, onOpenChange, currentCity, vehicles = [], d
       } catch (error) {
         console.error('Error calling OttoCommand AI:', error);
         toast.error('Failed to get AI response. Please try again.');
-        
+
         const errorMessage: Message = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
@@ -267,7 +252,8 @@ export const AIAgentPopup = ({ open, onOpenChange, currentCity, vehicles = [], d
         setIsLoading(false);
       }
     } else {
-      setInputMessage(action);
+      // For non-dialog actions, set the prompt as the input message
+      setInputMessage(action.prompt);
     }
   };
 
@@ -312,20 +298,11 @@ export const AIAgentPopup = ({ open, onOpenChange, currentCity, vehicles = [], d
               {/* Quick Actions */}
               <div className="space-y-2">
                 <p className="text-xs font-medium text-muted-foreground sm:text-sm">Quick Actions</p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {quickActions.map((action, index) => (
-                    <Button
-                      key={index}
-                      variant="outline"
-                      size="sm"
-                      className="h-auto p-2 sm:p-3 flex flex-col items-center space-y-1 hover:bg-primary/5 hover:border-primary/30 transition-all duration-200 hover:scale-[1.02]"
-                      onClick={() => handleQuickAction(action.action, action.isDialog)}
-                    >
-                      <action.icon className="h-3 w-3 text-primary sm:h-4 sm:w-4" />
-                      <span className="text-xs text-center leading-tight">{action.label}</span>
-                    </Button>
-                  ))}
-                </div>
+                <QuickActionsGrid
+                  onSelect={handleQuickAction}
+                  disabled={isLoading}
+                  currentCity={currentCity?.name}
+                />
               </div>
 
               {/* Messages */}

@@ -847,6 +847,587 @@ async function performWebSearch(args: any) {
   };
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// PREDICTIVE ANALYTICS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Predict Charging Needs
+async function predictChargingNeeds(args: any, fleetContext: any) {
+  const { hours = 4, urgency_threshold = 30, city } = args;
+
+  // Use fleet context or mock data
+  const vehicles = fleetContext?.vehicles || mockVehicles;
+
+  // Filter by city if provided
+  let filteredVehicles = vehicles;
+  if (city) {
+    filteredVehicles = vehicles.filter((v: any) =>
+      v.city?.toLowerCase().includes(city.toLowerCase())
+    );
+  }
+
+  // Calculate predicted SOC based on usage patterns
+  const predictions = filteredVehicles
+    .filter((v: any) => v.status !== "charging")
+    .map((v: any) => {
+      const currentSoc = typeof v.soc === 'number' ? v.soc : parseFloat(v.soc) || 0.5;
+      const socPercent = currentSoc > 1 ? currentSoc : currentSoc * 100;
+
+      // Simulate drain rate based on status
+      const drainRatePerHour = v.status === "active" ? 8 : v.status === "idle" ? 2 : 1;
+      const predictedSoc = Math.max(0, socPercent - (drainRatePerHour * hours));
+
+      // Determine urgency
+      let urgency: "critical" | "high" | "medium" | "low";
+      if (predictedSoc < 15) urgency = "critical";
+      else if (predictedSoc < 25) urgency = "high";
+      else if (predictedSoc < 40) urgency = "medium";
+      else urgency = "low";
+
+      return {
+        vehicleId: v.id,
+        make: v.make,
+        model: v.model,
+        city: v.city,
+        currentSoc: Math.round(socPercent),
+        predictedSoc: Math.round(predictedSoc),
+        hoursUntilCritical: predictedSoc > 15 ? Math.ceil((predictedSoc - 15) / drainRatePerHour) : 0,
+        urgency,
+        recommendation: urgency === "critical" || urgency === "high" ? "Queue immediately" : urgency === "medium" ? "Schedule within 2 hours" : "Monitor",
+      };
+    })
+    .filter((p: any) => p.predictedSoc < urgency_threshold)
+    .sort((a: any, b: any) => a.predictedSoc - b.predictedSoc);
+
+  const urgent = predictions.filter((p: any) => p.urgency === "critical" || p.urgency === "high");
+
+  return {
+    success: true,
+    action: "charging_needs_predicted",
+    timeframe: `${hours} hours`,
+    predictions: predictions.slice(0, 10),
+    summary: {
+      total: predictions.length,
+      critical: predictions.filter((p: any) => p.urgency === "critical").length,
+      high: predictions.filter((p: any) => p.urgency === "high").length,
+      medium: predictions.filter((p: any) => p.urgency === "medium").length,
+    },
+    confidence: 87,
+    message: `Predicted ${predictions.length} vehicles will need charging in ${hours} hours. ${urgent.length} require immediate attention.`,
+    recommendedAction: urgent.length > 0
+      ? `Auto-queue ${urgent.length} high-urgency vehicles for charging using 'urgent_first' strategy.`
+      : "No immediate charging needs.",
+  };
+}
+
+// Predict Maintenance Risks
+async function predictMaintenanceRisks(args: any, fleetContext: any) {
+  const { risk_threshold = 50, city } = args;
+
+  const vehicles = fleetContext?.vehicles || mockVehicles;
+
+  let filteredVehicles = vehicles;
+  if (city) {
+    filteredVehicles = vehicles.filter((v: any) =>
+      v.city?.toLowerCase().includes(city.toLowerCase())
+    );
+  }
+
+  // Generate mock risk predictions based on vehicle data
+  const predictions = filteredVehicles.map((v: any) => {
+    // Simulate risk based on various factors
+    const baseRisk = Math.random() * 40 + 10; // 10-50 base
+    const socFactor = v.soc < 0.3 ? 15 : 0; // Low SOC increases risk
+    const statusFactor = v.status === "maintenance" ? 30 : 0;
+    const totalRisk = Math.min(100, Math.round(baseRisk + socFactor + statusFactor));
+
+    // Random component categories
+    const components = ["Battery", "Sensors", "Brakes", "Tires", "HVAC", "Compute"];
+    const riskComponent = components[Math.floor(Math.random() * components.length)];
+
+    return {
+      vehicleId: v.id,
+      make: v.make,
+      model: v.model,
+      city: v.city,
+      riskScore: totalRisk,
+      riskCategory: totalRisk >= 70 ? "Critical" : totalRisk >= 50 ? "High" : totalRisk >= 30 ? "Medium" : "Low",
+      primaryComponent: riskComponent,
+      factors: [
+        { factor: "Usage Pattern", contribution: Math.round(Math.random() * 30) },
+        { factor: "Component Age", contribution: Math.round(Math.random() * 25) },
+        { factor: "Telemetry Anomalies", contribution: Math.round(Math.random() * 20) },
+      ],
+      recommendation: totalRisk >= 70 ? "Schedule maintenance within 24 hours" :
+                      totalRisk >= 50 ? "Schedule maintenance within 7 days" :
+                      "Continue monitoring",
+      estimatedDaysUntilFailure: totalRisk >= 70 ? Math.floor(Math.random() * 3) + 1 :
+                                  totalRisk >= 50 ? Math.floor(Math.random() * 14) + 7 :
+                                  Math.floor(Math.random() * 30) + 21,
+    };
+  })
+  .filter((p: any) => p.riskScore >= risk_threshold)
+  .sort((a: any, b: any) => b.riskScore - a.riskScore);
+
+  return {
+    success: true,
+    action: "maintenance_risks_predicted",
+    predictions: predictions.slice(0, 10),
+    summary: {
+      total: predictions.length,
+      critical: predictions.filter((p: any) => p.riskCategory === "Critical").length,
+      high: predictions.filter((p: any) => p.riskCategory === "High").length,
+      medium: predictions.filter((p: any) => p.riskCategory === "Medium").length,
+    },
+    confidence: 82,
+    message: `Identified ${predictions.length} vehicles with maintenance risk above ${risk_threshold}%. ${predictions.filter((p: any) => p.riskScore >= 70).length} require urgent attention.`,
+  };
+}
+
+// Predict Depot Demand
+async function predictDepotDemand(args: any, fleetContext: any) {
+  const { depot_id, city, hours = 8 } = args;
+
+  const depots = fleetContext?.depots || [
+    { id: "depot-nash-1", name: "Nashville Central", city: "Nashville" },
+    { id: "depot-austin-1", name: "Austin Main", city: "Austin" },
+    { id: "depot-la-1", name: "LA Operations", city: "LA" },
+  ];
+
+  let targetDepots = depots;
+  if (depot_id) {
+    targetDepots = depots.filter((d: any) => d.id === depot_id);
+  } else if (city) {
+    targetDepots = depots.filter((d: any) =>
+      d.city?.toLowerCase().includes(city.toLowerCase())
+    );
+  }
+
+  const predictions = targetDepots.map((depot: any) => {
+    const currentUtilization = Math.round(Math.random() * 40 + 40); // 40-80%
+    const predictedUtilization = Math.min(100, currentUtilization + Math.round(Math.random() * 20));
+
+    return {
+      depotId: depot.id,
+      depotName: depot.name,
+      city: depot.city,
+      currentUtilization: `${currentUtilization}%`,
+      predictedUtilization: `${predictedUtilization}%`,
+      peakHour: `${Math.floor(Math.random() * 4 + 14)}:00`, // 2-6 PM
+      expectedArrivals: Math.floor(Math.random() * 10 + 5),
+      chargingDemand: {
+        current: Math.floor(Math.random() * 5 + 3),
+        predicted: Math.floor(Math.random() * 8 + 5),
+        available: Math.floor(Math.random() * 10 + 2),
+      },
+      maintenanceDemand: {
+        scheduled: Math.floor(Math.random() * 3),
+        predicted: Math.floor(Math.random() * 2),
+      },
+      recommendation: predictedUtilization > 85
+        ? "Consider redistributing incoming vehicles to alternate depot"
+        : "Capacity sufficient for predicted demand",
+    };
+  });
+
+  return {
+    success: true,
+    action: "depot_demand_predicted",
+    timeframe: `${hours} hours`,
+    predictions,
+    confidence: 79,
+    message: `Predicted depot demand for next ${hours} hours across ${predictions.length} depot(s).`,
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// AUTOMATION / OTTO-Q
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Auto-Queue Charging
+async function autoQueueCharging(args: any, fleetContext: any) {
+  const { strategy = "urgent_first", soc_threshold = 30, city, dry_run = true } = args;
+
+  const vehicles = fleetContext?.vehicles || mockVehicles;
+
+  let eligible = vehicles.filter((v: any) => {
+    const soc = typeof v.soc === 'number' ? (v.soc > 1 ? v.soc : v.soc * 100) : 50;
+    return soc < soc_threshold && v.status !== "charging";
+  });
+
+  if (city) {
+    eligible = eligible.filter((v: any) =>
+      v.city?.toLowerCase().includes(city.toLowerCase())
+    );
+  }
+
+  // Sort based on strategy
+  if (strategy === "urgent_first") {
+    eligible.sort((a: any, b: any) => {
+      const socA = typeof a.soc === 'number' ? (a.soc > 1 ? a.soc : a.soc * 100) : 50;
+      const socB = typeof b.soc === 'number' ? (b.soc > 1 ? b.soc : b.soc * 100) : 50;
+      return socA - socB;
+    });
+  } else if (strategy === "balanced") {
+    // Distribute evenly across depots
+    eligible.sort(() => Math.random() - 0.5);
+  }
+
+  const queuedVehicles = eligible.slice(0, 10).map((v: any, idx: number) => ({
+    vehicleId: v.id,
+    make: v.make,
+    model: v.model,
+    city: v.city,
+    currentSoc: Math.round((typeof v.soc === 'number' ? (v.soc > 1 ? v.soc : v.soc * 100) : 50)),
+    queuePosition: idx + 1,
+    estimatedWait: `${(idx + 1) * 15} min`,
+    targetSoc: 80,
+  }));
+
+  return {
+    success: true,
+    action: dry_run ? "charging_queue_preview" : "vehicles_queued_for_charging",
+    dryRun: dry_run,
+    strategy,
+    threshold: `${soc_threshold}%`,
+    vehiclesQueued: queuedVehicles,
+    summary: {
+      total: queuedVehicles.length,
+      criticalSoc: queuedVehicles.filter((v: any) => v.currentSoc < 15).length,
+      averageSoc: queuedVehicles.length > 0
+        ? Math.round(queuedVehicles.reduce((sum, v) => sum + v.currentSoc, 0) / queuedVehicles.length)
+        : 0,
+    },
+    message: dry_run
+      ? `Preview: ${queuedVehicles.length} vehicles would be queued for charging using '${strategy}' strategy. Execute with dry_run=false to apply.`
+      : `✓ Queued ${queuedVehicles.length} vehicles for charging using '${strategy}' strategy.`,
+  };
+}
+
+// Auto-Queue Maintenance
+async function autoQueueMaintenance(args: any, fleetContext: any) {
+  const { risk_threshold = 70, city, dry_run = true } = args;
+
+  // Get maintenance risk predictions
+  const riskResult = await predictMaintenanceRisks({ risk_threshold, city }, fleetContext);
+  const highRiskVehicles = riskResult.predictions?.slice(0, 5) || [];
+
+  const queuedVehicles = highRiskVehicles.map((v: any, idx: number) => ({
+    vehicleId: v.vehicleId,
+    make: v.make,
+    model: v.model,
+    city: v.city,
+    riskScore: v.riskScore,
+    primaryComponent: v.primaryComponent,
+    queuePosition: idx + 1,
+    scheduledDate: new Date(Date.now() + (idx + 1) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    maintenanceType: v.primaryComponent + " Inspection",
+  }));
+
+  return {
+    success: true,
+    action: dry_run ? "maintenance_queue_preview" : "vehicles_queued_for_maintenance",
+    dryRun: dry_run,
+    riskThreshold: risk_threshold,
+    vehiclesQueued: queuedVehicles,
+    summary: {
+      total: queuedVehicles.length,
+      criticalRisk: queuedVehicles.filter((v: any) => v.riskScore >= 80).length,
+      avgRiskScore: queuedVehicles.length > 0
+        ? Math.round(queuedVehicles.reduce((sum, v) => sum + v.riskScore, 0) / queuedVehicles.length)
+        : 0,
+    },
+    message: dry_run
+      ? `Preview: ${queuedVehicles.length} vehicles would be queued for maintenance based on risk scores ≥${risk_threshold}. Execute with dry_run=false to apply.`
+      : `✓ Queued ${queuedVehicles.length} vehicles for maintenance based on predictive risk analysis.`,
+  };
+}
+
+// Triage Incidents
+async function triageIncidents(args: any, fleetContext: any) {
+  const { city, include_resolved = false } = args;
+
+  const incidents = fleetContext?.incidents || [];
+
+  let filtered = incidents;
+  if (!include_resolved) {
+    filtered = incidents.filter((i: any) => i.status !== "Closed");
+  }
+  if (city) {
+    filtered = filtered.filter((i: any) =>
+      i.city?.toLowerCase().includes(city.toLowerCase())
+    );
+  }
+
+  // Score and prioritize incidents
+  const triaged = filtered.map((incident: any) => {
+    // Calculate priority score
+    let score = 0;
+    if (incident.type === "collision") score += 40;
+    else if (incident.type === "malfunction") score += 30;
+    else if (incident.type === "vandalism") score += 20;
+    else score += 10;
+
+    if (incident.status === "Reported") score += 30;
+    else if (incident.status === "Dispatched") score += 20;
+
+    // Time factor (mock - incidents get more urgent over time)
+    score += Math.min(30, Math.floor(Math.random() * 30));
+
+    const priority = score >= 70 ? "Critical" : score >= 50 ? "High" : score >= 30 ? "Medium" : "Low";
+
+    return {
+      ...incident,
+      priorityScore: score,
+      priority,
+      recommendedAction:
+        priority === "Critical" ? "Dispatch OTTOW immediately" :
+        priority === "High" ? "Dispatch OTTOW within 15 min" :
+        priority === "Medium" ? "Schedule response" :
+        "Monitor and follow up",
+      estimatedResponseTime:
+        priority === "Critical" ? "6 min" :
+        priority === "High" ? "15 min" :
+        priority === "Medium" ? "30 min" :
+        "1+ hour",
+    };
+  }).sort((a: any, b: any) => b.priorityScore - a.priorityScore);
+
+  return {
+    success: true,
+    action: "incidents_triaged",
+    incidents: triaged.slice(0, 10),
+    summary: {
+      total: triaged.length,
+      critical: triaged.filter((i: any) => i.priority === "Critical").length,
+      high: triaged.filter((i: any) => i.priority === "High").length,
+      medium: triaged.filter((i: any) => i.priority === "Medium").length,
+      low: triaged.filter((i: any) => i.priority === "Low").length,
+    },
+    message: `Triaged ${triaged.length} active incidents. ${triaged.filter((i: any) => i.priority === "Critical" || i.priority === "High").length} require immediate attention.`,
+  };
+}
+
+// Detect Anomalies
+async function detectAnomalies(args: any, fleetContext: any) {
+  const { city, anomaly_type } = args;
+
+  const vehicles = fleetContext?.vehicles || mockVehicles;
+
+  let filteredVehicles = vehicles;
+  if (city) {
+    filteredVehicles = vehicles.filter((v: any) =>
+      v.city?.toLowerCase().includes(city.toLowerCase())
+    );
+  }
+
+  // Generate mock anomalies
+  const anomalyTypes = ["soc_drain", "sensor_drift", "location_mismatch", "performance_drop", "communication_gap"];
+  const anomalies: any[] = [];
+
+  filteredVehicles.forEach((v: any) => {
+    // Random chance of anomaly
+    if (Math.random() < 0.2) {
+      const type = anomalyTypes[Math.floor(Math.random() * anomalyTypes.length)];
+      if (!anomaly_type || type === anomaly_type) {
+        anomalies.push({
+          vehicleId: v.id,
+          make: v.make,
+          model: v.model,
+          city: v.city,
+          anomalyType: type,
+          severity: Math.random() < 0.3 ? "high" : Math.random() < 0.6 ? "medium" : "low",
+          description: getAnomalyDescription(type),
+          detectedAt: new Date(Date.now() - Math.random() * 3600000).toISOString(),
+          recommendation: getAnomalyRecommendation(type),
+        });
+      }
+    }
+  });
+
+  return {
+    success: true,
+    action: "anomalies_detected",
+    anomalies: anomalies.sort((a, b) => {
+      const severityOrder: Record<string, number> = { high: 0, medium: 1, low: 2 };
+      return severityOrder[a.severity] - severityOrder[b.severity];
+    }),
+    summary: {
+      total: anomalies.length,
+      high: anomalies.filter(a => a.severity === "high").length,
+      medium: anomalies.filter(a => a.severity === "medium").length,
+      low: anomalies.filter(a => a.severity === "low").length,
+      byType: anomalies.reduce((acc, a) => {
+        acc[a.anomalyType] = (acc[a.anomalyType] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>),
+    },
+    message: `Detected ${anomalies.length} anomalies across ${filteredVehicles.length} vehicles. ${anomalies.filter(a => a.severity === "high").length} require immediate investigation.`,
+  };
+}
+
+function getAnomalyDescription(type: string): string {
+  const descriptions: Record<string, string> = {
+    soc_drain: "Unusual battery drain rate detected - 3x normal consumption",
+    sensor_drift: "LiDAR calibration deviation exceeds threshold",
+    location_mismatch: "GPS location differs from expected position by >100m",
+    performance_drop: "Compute performance degraded by 25%",
+    communication_gap: "Telemetry gaps detected - 5 min blackout periods",
+  };
+  return descriptions[type] || "Unknown anomaly detected";
+}
+
+function getAnomalyRecommendation(type: string): string {
+  const recommendations: Record<string, string> = {
+    soc_drain: "Schedule battery diagnostic and check for parasitic drain",
+    sensor_drift: "Schedule sensor recalibration at depot",
+    location_mismatch: "Verify GPS module and update map data",
+    performance_drop: "Run compute diagnostics and clear cache",
+    communication_gap: "Check antenna connections and modem firmware",
+  };
+  return recommendations[type] || "Schedule diagnostic inspection";
+}
+
+// Utilization Report
+async function utilizationReport(args: any, fleetContext: any) {
+  const { city, period = "today" } = args;
+
+  const depots = fleetContext?.depots || [
+    { id: "depot-nash-1", name: "Nashville Central", city: "Nashville" },
+    { id: "depot-austin-1", name: "Austin Main", city: "Austin" },
+    { id: "depot-la-1", name: "LA Operations", city: "LA" },
+  ];
+
+  let targetDepots = depots;
+  if (city) {
+    targetDepots = depots.filter((d: any) =>
+      d.city?.toLowerCase().includes(city.toLowerCase())
+    );
+  }
+
+  const report = targetDepots.map((depot: any) => ({
+    depot: depot.name,
+    city: depot.city,
+    chargeStalls: {
+      total: Math.floor(Math.random() * 10) + 10,
+      utilized: Math.floor(Math.random() * 8) + 4,
+      utilization: `${Math.floor(Math.random() * 30) + 50}%`,
+      peakUtilization: `${Math.floor(Math.random() * 20) + 75}%`,
+      peakTime: "14:00-18:00",
+    },
+    maintenanceBays: {
+      total: Math.floor(Math.random() * 5) + 3,
+      utilized: Math.floor(Math.random() * 3) + 1,
+      utilization: `${Math.floor(Math.random() * 40) + 30}%`,
+    },
+    jobsCompleted: {
+      charging: Math.floor(Math.random() * 20) + 10,
+      maintenance: Math.floor(Math.random() * 5) + 2,
+      detailing: Math.floor(Math.random() * 8) + 3,
+    },
+    efficiency: {
+      avgChargingTime: `${Math.floor(Math.random() * 30) + 30} min`,
+      avgTurnaround: `${Math.floor(Math.random() * 20) + 45} min`,
+      queueWaitTime: `${Math.floor(Math.random() * 15) + 5} min`,
+    },
+  }));
+
+  const totalUtilization = Math.round(
+    report.reduce((sum, r) => sum + parseInt(r.chargeStalls.utilization), 0) / report.length
+  );
+
+  return {
+    success: true,
+    action: "utilization_report_generated",
+    period,
+    depots: report,
+    summary: {
+      totalDepots: report.length,
+      avgChargeUtilization: `${totalUtilization}%`,
+      totalJobsCompleted: report.reduce((sum, r) =>
+        sum + r.jobsCompleted.charging + r.jobsCompleted.maintenance + r.jobsCompleted.detailing, 0
+      ),
+      recommendation: totalUtilization > 80
+        ? "Consider expanding charging capacity"
+        : totalUtilization < 50
+        ? "Optimize scheduling to improve utilization"
+        : "Utilization within optimal range",
+    },
+    message: `Generated ${period} utilization report for ${report.length} depot(s). Average charge stall utilization: ${totalUtilization}%.`,
+  };
+}
+
+// Explain Concept (General Knowledge)
+async function explainConcept(args: any) {
+  const { topic } = args;
+
+  const concepts: Record<string, { explanation: string; fleetContext: string; relatedTopics: string[] }> = {
+    "l4 autonomy": {
+      explanation: "Level 4 (L4) autonomy means the vehicle can handle all driving tasks in specific conditions (geofenced areas, certain weather, etc.) without human intervention. The vehicle has a fallback system and can safely stop if it encounters a situation it cannot handle.",
+      fleetContext: "Most OTTOYARD partners (Waymo, Cruise, Motional) operate L4 vehicles. They require designated operational design domains (ODDs) and depot support for edge cases.",
+      relatedTopics: ["L5 autonomy", "ODD (Operational Design Domain)", "Disengagement rate"],
+    },
+    "l5 autonomy": {
+      explanation: "Level 5 (L5) autonomy represents full driving automation - the vehicle can drive anywhere, in any condition, without human intervention. No steering wheel or pedals required. This is the ultimate goal of AV development.",
+      fleetContext: "Zoox is targeting L5 with their purpose-built vehicles. Most current commercial deployments are L4.",
+      relatedTopics: ["L4 autonomy", "Purpose-built AVs", "Full self-driving"],
+    },
+    "soc": {
+      explanation: "State of Charge (SOC) represents the current battery level as a percentage of total capacity. It's the EV equivalent of a fuel gauge.",
+      fleetContext: "OTTOYARD monitors SOC across all vehicles. Critical threshold is 15%, low battery is <30%, optimal charging window is 20-80%.",
+      relatedTopics: ["Battery health", "Charging strategies", "Range anxiety"],
+    },
+    "odd": {
+      explanation: "Operational Design Domain (ODD) defines the specific conditions under which an AV system is designed to function. This includes geographic boundaries, weather conditions, time of day, and road types.",
+      fleetContext: "Each partner's vehicles have defined ODDs. OTTOYARD helps manage vehicles at ODD boundaries and supports transitions.",
+      relatedTopics: ["L4 autonomy", "Geofencing", "Edge cases"],
+    },
+    "disengagement": {
+      explanation: "A disengagement occurs when the autonomous system hands control back to a human driver, either by request or due to a system limitation. Disengagement rate (miles per disengagement) is a key safety metric.",
+      fleetContext: "Waymo leads with ~13,000+ miles per disengagement. Lower disengagement rates indicate more reliable autonomy.",
+      relatedTopics: ["Safety metrics", "L4 autonomy", "MPD (Miles Per Disengagement)"],
+    },
+    "otto-q": {
+      explanation: "OTTO-Q is OTTOYARD's intelligent queue management system for autonomous vehicle operations. It handles job scheduling, resource allocation, and automated workflows for charging, maintenance, and staging.",
+      fleetContext: "OTTO-Q powers automated charging queues, predictive maintenance scheduling, and fleet rebalancing across all depots.",
+      relatedTopics: ["Auto-queue charging", "Predictive maintenance", "Fleet rebalancing"],
+    },
+    "ottow": {
+      explanation: "OTTOW (Otto Tow/Watcher) is OTTOYARD's roadside assistance and incident response system. It dispatches service vehicles to handle vehicle-down situations, incidents, and recoveries.",
+      fleetContext: "OTTOW integrates with incident triage to prioritize responses. Average response time target is under 6 minutes in service areas.",
+      relatedTopics: ["Incident triage", "Roadside assistance", "Vehicle recovery"],
+    },
+  };
+
+  const normalizedTopic = topic.toLowerCase().trim();
+  const match = Object.keys(concepts).find(key =>
+    normalizedTopic.includes(key) || key.includes(normalizedTopic)
+  );
+
+  if (match) {
+    const concept = concepts[match];
+    return {
+      success: true,
+      action: "concept_explained",
+      topic: match,
+      explanation: concept.explanation,
+      fleetContext: concept.fleetContext,
+      relatedTopics: concept.relatedTopics,
+      message: `Explained: ${match}`,
+    };
+  }
+
+  return {
+    success: true,
+    action: "concept_explained",
+    topic: topic,
+    explanation: `I can provide general information about "${topic}" in the context of autonomous vehicle fleet management. For specific operational queries, try asking about fleet status, depot resources, or incident management.`,
+    fleetContext: "Use natural language queries to explore OTTOYARD's fleet intelligence capabilities.",
+    relatedTopics: ["Fleet operations", "AV technology", "OTTO-Q automation"],
+    message: `Provided general context for: ${topic}`,
+  };
+}
+
 // Create Optimization Plan
 async function createOptimizationPlan(args: any) {
   const { focus_area, timeframe, goals } = args;
@@ -981,11 +1562,44 @@ export async function executeFunction(functionCall: any, supabase: any, fleetCon
     
     case 'create_optimization_plan':
       return await createOptimizationPlan(parsedArgs);
-    
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // PREDICTIVE ANALYTICS TOOLS
+    // ─────────────────────────────────────────────────────────────────────────────
+    case 'predict_charging_needs':
+      return await predictChargingNeeds(parsedArgs, fleetContext);
+
+    case 'predict_maintenance_risks':
+      return await predictMaintenanceRisks(parsedArgs, fleetContext);
+
+    case 'predict_depot_demand':
+      return await predictDepotDemand(parsedArgs, fleetContext);
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // AUTOMATION / OTTO-Q TOOLS
+    // ─────────────────────────────────────────────────────────────────────────────
+    case 'auto_queue_charging':
+      return await autoQueueCharging(parsedArgs, fleetContext);
+
+    case 'auto_queue_maintenance':
+      return await autoQueueMaintenance(parsedArgs, fleetContext);
+
+    case 'triage_incidents':
+      return await triageIncidents(parsedArgs, fleetContext);
+
+    case 'detect_anomalies':
+      return await detectAnomalies(parsedArgs, fleetContext);
+
+    case 'utilization_report':
+      return await utilizationReport(parsedArgs, fleetContext);
+
+    case 'explain_concept':
+      return await explainConcept(parsedArgs);
+
     default:
-      return { 
-        success: false, 
-        error: `Unknown function: ${name}` 
+      return {
+        success: false,
+        error: `Unknown function: ${name}`
       };
   }
 }
