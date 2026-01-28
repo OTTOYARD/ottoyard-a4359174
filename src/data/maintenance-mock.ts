@@ -63,6 +63,7 @@ export interface UpcomingService {
 }
 
 // Predictive maintenance data - AI-predicted upcoming service needs
+// All predictions are auto-scheduled by OTTO-Q
 export const predictiveMaintenanceData: PredictedMaintenance[] = [
   {
     id: "pm-001",
@@ -99,9 +100,9 @@ export const predictiveMaintenanceData: PredictedMaintenance[] = [
     confidenceScore: 76,
     predictedDate: "2025-01-22",
     healthScore: 85,
-    autoScheduled: false,
-    depotName: null,
-    scheduledTime: null
+    autoScheduled: true,
+    depotName: "Nashville Central",
+    scheduledTime: "11:00 AM"
   },
   {
     id: "pm-004",
@@ -125,9 +126,9 @@ export const predictiveMaintenanceData: PredictedMaintenance[] = [
     confidenceScore: 82,
     predictedDate: "2025-01-21",
     healthScore: 88,
-    autoScheduled: false,
-    depotName: null,
-    scheduledTime: null
+    autoScheduled: true,
+    depotName: "Austin Downtown",
+    scheduledTime: "3:30 PM"
   }
 ];
 
