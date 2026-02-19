@@ -65,14 +65,16 @@ export default function Install() {
         {/* Header */}
         <div className="text-center space-y-4">
           <div className="w-24 h-24 mx-auto rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border border-primary/20 overflow-hidden">
-            <img 
-              src="/ottoyard-logo-new.png" 
-              alt="OTTOYARD" 
-              className="w-16 h-16 object-contain"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = 'none';
-              }}
-            />
+            <div className="bg-background rounded-lg overflow-hidden w-16 h-16 flex items-center justify-center">
+              <img 
+                src="/ottoyard-logo-new.png" 
+                alt="OTTOYARD" 
+                className="w-16 h-16 object-contain mix-blend-multiply"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+              />
+            </div>
           </div>
           <div>
             <h1 className="text-2xl font-bold text-foreground">Install OTTOYARD</h1>
