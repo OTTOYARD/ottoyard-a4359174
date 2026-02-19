@@ -68,6 +68,7 @@ export default {
 					low: 'hsl(var(--energy-low))',
 					grid: 'hsl(var(--energy-grid))'
 				},
+				orchestra: 'hsl(var(--orchestra))',
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
