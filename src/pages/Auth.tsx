@@ -160,9 +160,7 @@ export default function Auth() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
         <Card className="w-full max-w-sm">
         <CardHeader className="flex flex-col items-center text-center pb-4">
-          <div className="bg-background rounded-xl overflow-hidden w-32 h-32 mb-0 flex items-center justify-center">
-            <img src={ottoyardLogo} alt="OTTOYARD" className="w-32 h-32 object-contain mix-blend-multiply" />
-          </div>
+          <img src={ottoyardLogo} alt="OTTOYARD" className="w-32 h-32 object-contain mb-0" />
           <CardTitle className="text-xl">Reset Password</CardTitle>
           <CardDescription className="text-sm">
             Enter your email to receive a password reset link
@@ -207,9 +205,7 @@ export default function Auth() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="flex flex-col items-center text-center pb-4">
-          <div className="bg-background rounded-xl overflow-hidden w-32 h-32 mb-0 flex items-center justify-center">
-            <img src={ottoyardLogo} alt="OTTOYARD" className="w-32 h-32 object-contain mix-blend-multiply" />
-          </div>
+          <img src={ottoyardLogo} alt="OTTOYARD" className="w-32 h-32 object-contain mb-0" />
           <CardTitle className="text-xl">
             <span className="text-[#617fa5]">Fleet Command</span> Dashboard
           </CardTitle>
