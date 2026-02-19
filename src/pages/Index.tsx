@@ -529,7 +529,7 @@ const Index = () => {
       <main className="container mx-auto px-4 py-6">
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
           <div className="flex justify-center overflow-x-auto">
-            <TabsList className="w-auto flex-shrink-0">
+            <TabsList className="w-auto flex-shrink-0 max-w-xl">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="fleet">Fleet</TabsTrigger>
               <TabsTrigger value="depots">Depots</TabsTrigger>
