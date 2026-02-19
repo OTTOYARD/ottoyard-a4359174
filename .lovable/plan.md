@@ -1,37 +1,23 @@
 
 
-# Compact Header Layout
+# Move Weather Closer to Logo
 
 ## Goal
-Reorganize the header to stack Notifications + Settings, OttoCommand, and Online badge tightly on the right side, reducing vertical space.
+Eliminate the gap between the weather row and the logo/title row to shrink the overall header height.
 
-## New Layout
-
-Current 3-row layout becomes a 2-row layout:
-
-```text
-Row 1: [Logo + OTTOYARD/AppName]     [Notifications] [Settings]
-                                      [OttoCommand button]
-                                      [Online badge]
-
-Row 2: [Weather button]
-```
-
-Specifically, the right column becomes a vertical stack (flex-col) with tight spacing containing:
-1. Notifications + Settings icons (in a row)
-2. OttoCommand button
-3. Online badge
-
-This all sits in Row 1 opposite the logo. Weather moves to a slim Row 2 on its own.
-
-## Technical Changes
+## Changes
 
 **`src/components/shared/AppHeader.tsx`**
-- Change `space-y-2` on the container to `space-y-1` for tighter rows
-- Restructure Row 1's right side into a `flex flex-col items-end gap-1` containing:
-  - The notification + settings buttons row
-  - The OttoCommand button
-  - The Online badge
-- Remove the separate Row 2 (OttoCommand) and Row 3 (Online badge) sections
-- Keep Weather as a slim second row with reduced top spacing
+- Remove `space-y-1` from the container div (line 31) -- this adds vertical gap between Row 1 and the Weather row
+- Remove the separate Row 2 wrapper div entirely and instead place the `WeatherButton` directly below the logo/title inside the left side of Row 1
+- Specifically, nest the weather button under the OTTOYARD + appName text column so it sits tight beneath the app name with no extra spacing
+
+The left side will become:
+```
+[Logo image]  OTTOYARD
+              OrchestraAV1
+              [Weather button]
+```
+
+This removes the inter-row gap and tucks the weather info right under the branding text, shrinking the header footprint.
 
