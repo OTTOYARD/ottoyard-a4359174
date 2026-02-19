@@ -72,7 +72,7 @@ const OrchestraEV = () => {
           </TabsContent>
 
           <TabsContent value="towing">
-            <EVTowing towRequests={mockTowRequests} vehicle={mockVehicle} subscriber={mockSubscriber} />
+            <EVTowing towRequests={mockTowRequests} />
           </TabsContent>
 
           <TabsContent value="amenities">
