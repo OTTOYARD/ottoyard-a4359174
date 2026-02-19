@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
-  Car,
+  
   Battery,
   MapPin,
   Heart,
@@ -53,9 +53,11 @@ export const EVVehicleHero: React.FC<EVVehicleHeroProps> = ({ vehicle }) => {
           <CollapsibleTrigger asChild>
             <Button variant="ghost" className="w-full p-0 h-auto hover:bg-transparent justify-between flex-wrap gap-y-1">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
-                  <Car className="h-5 w-5 text-primary" />
-                </div>
+                <img
+                  src="/tesla-model-3.png"
+                  alt="2024 Tesla Model 3 Long Range"
+                  className="w-12 h-8 object-contain flex-shrink-0 rounded"
+                />
                 <div className="text-left min-w-0">
                   <p className="text-sm font-semibold text-foreground truncate">
                     {vehicle.year} {vehicle.make} {vehicle.model}
