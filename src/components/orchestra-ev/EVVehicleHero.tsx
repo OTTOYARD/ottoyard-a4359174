@@ -51,20 +51,20 @@ export const EVVehicleHero: React.FC<EVVehicleHeroProps> = ({ vehicle }) => {
       <Card className="glass-panel border-border/50">
         <CardHeader className="pb-2">
           <CollapsibleTrigger asChild>
-            <Button variant="ghost" className="w-full p-0 h-auto hover:bg-transparent justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+            <Button variant="ghost" className="w-full p-0 h-auto hover:bg-transparent justify-between flex-wrap gap-y-1">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
                   <Car className="h-5 w-5 text-primary" />
                 </div>
-                <div className="text-left">
-                  <p className="text-sm font-semibold text-foreground">
+                <div className="text-left min-w-0">
+                  <p className="text-sm font-semibold text-foreground truncate">
                     {vehicle.year} {vehicle.make} {vehicle.model}
                   </p>
                   <p className="text-xs text-muted-foreground">{vehicle.color}</p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-shrink-0">
                 <Badge variant="outline" className={`text-[10px] ${status.color}`}>
                   <StatusIcon className="h-3 w-3 mr-1" />
                   {status.label}
