@@ -60,7 +60,7 @@ const OrchestraEV = () => {
           </div>
 
           <TabsContent value="overview">
-            <EVOverview subscriber={mockSubscriber} vehicle={mockVehicle} notifications={mockNotifications} events={mockEvents} depotStages={mockDepotServiceStages} />
+            <EVOverview subscriber={mockSubscriber} vehicle={mockVehicle} serviceRecords={mockServiceRecords} notifications={mockNotifications} events={mockEvents} predictions={mockMaintenancePredictions} onTabChange={setSelectedTab} />
           </TabsContent>
 
           <TabsContent value="depot-q">
