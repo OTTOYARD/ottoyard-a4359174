@@ -56,7 +56,7 @@ export const EVVehicleHero: React.FC<EVVehicleHeroProps> = ({ vehicle }) => {
                 <img
                   src="/tesla-model-3.png"
                   alt="2024 Tesla Model 3 Long Range"
-                  className="w-12 h-8 object-contain flex-shrink-0 rounded"
+                  className="w-20 h-14 object-contain flex-shrink-0 rounded"
                 />
                 <div className="text-left min-w-0">
                   <p className="text-sm font-semibold text-foreground truncate">
