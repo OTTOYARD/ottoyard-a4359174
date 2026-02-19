@@ -1,51 +1,35 @@
 
 
-# Restore Stacked Header Layout with New Logo
+# Update Site Logo (No White Background)
 
 ## Overview
-Revert the header to the previous stacked multi-row layout matching the screenshot reference, replace the site logo with the uploaded red hexagon image, and make OttoCommand a red (primary/destructive) button.
+Replace the current site logo everywhere with the uploaded red hexagon image, and ensure it renders without any white background artifacts against the dark UI.
 
 ## Changes
 
-### 1. Copy new logo to project
-- Copy `user-uploads://Untitled_design_7.png` to `public/ottoyard-logo-new.png` (replacing the existing logo file)
+### 1. Copy new logo asset
+- Copy `user-uploads://Untitled_design_7-2.png` to `public/ottoyard-logo-new.png` (overwriting the current file)
+- Also copy to `src/assets/ottoyard-logo.png` (used by the Auth page via ES6 import)
 
-### 2. Redesign `src/components/shared/AppHeader.tsx`
-Restructure from a single compressed row to a stacked layout matching the screenshot:
+### 2. Ensure no white background shows
+The uploaded PNG appears to have a white background. To handle this:
+- Apply `mix-blend-mode: multiply` or use a CSS approach to blend the white away on dark backgrounds
+- Alternatively, if the image has transparency already, just ensure no container adds a white/light background behind it
 
-**Row 1 (top):**
-- Left: Logo (larger, ~10-12 size) + "OTTOYARD" bold title + app name subtitle in red/primary
-- Right: Notification bell icon + Settings gear icon
+### 3. Files affected
+- **`src/components/shared/AppHeader.tsx`** - Main header logo (already references `/ottoyard-logo-new.png`)
+- **`src/pages/Auth.tsx`** - Login page logo (imports from `@/assets/ottoyard-logo.png`)
+- **`src/pages/Install.tsx`** - PWA install page logo (references `/ottoyard-logo-new.png`)
 
-**Row 2:**
-- Left: Weather button (visible on all screen sizes, not hidden on mobile)
-- Right: Red "OttoCommand" button (using `variant="default"` or custom red styling, not ghost)
-
-**Row 3:**
-- Right-aligned: "Online" status badge (visible on all screens)
-
-### 3. OttoCommand Button Styling
-- Change from `variant="ghost"` to `variant="default"` (red/primary background)
-- Always show the "OttoCommand" text label (remove `hidden sm:inline`)
-- Include the Bot icon
+For each location, ensure the `<img>` tag does not have any background container styling that would show white, and add a transparent-background-friendly class if needed.
 
 ### Technical Details
 
-```
-Layout structure:
-+------------------------------------------+
-| [Logo] OTTOYARD          [Bell] [Gear]   |
-|         Fleet Command                    |
-| [Weather Badge]        [OttoCommandBtn] |
-|                           [Online Badge] |
-+------------------------------------------+
-```
+The logo image will be copied to both:
+- `public/ottoyard-logo-new.png` (for direct URL references in AppHeader and Install)
+- `src/assets/ottoyard-logo.png` (for the ES6 import in Auth.tsx)
 
-- The logo `img` tag will reference `/ottoyard-logo-new.png` (same path, new file)
-- Logo container: remove the `bg-primary/20` background box, increase image size to ~w-10 h-10
-- "OTTOYARD" becomes larger bold text (~text-lg font-bold)
-- App name (e.g. "Fleet Command") rendered in primary/red color below
-- Weather button shown on all breakpoints (remove `hidden sm:block`)
-- "Online" badge shown on all breakpoints (remove `hidden sm:inline-flex`)
-- All elements use `overflow-hidden` and `min-w-0` to prevent mobile overflow
+If the PNG has a white background baked into the pixels, we'll add `className="mix-blend-screen"` (for dark backgrounds) or `"mix-blend-multiply"` (for light backgrounds) to visually remove it. Since the app uses a dark theme, `mix-blend-screen` will make white pixels transparent against dark backgrounds.
+
+On the Install page, the logo sits inside a container with `bg-gradient-to-br from-primary/20 to-primary/5` -- we'll keep that but ensure no solid white shows through.
 
