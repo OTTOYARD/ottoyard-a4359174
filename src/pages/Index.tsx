@@ -39,6 +39,7 @@ import { OttoResponseButton, OttoResponsePanel } from "@/components/OttoResponse
 import { generateAnalyticsReportPDF } from "@/utils/analyticsReportPDF";
 import { toast as sonnerToast } from "sonner";
 import { WeatherButton } from "@/components/WeatherButton";
+import { AppHeader } from "@/components/shared/AppHeader";
 import { useOTTOQRealtime } from "@/hooks/useOTTOQRealtime";
 import { computeVehicleStatusCounts, computeDepotTotals, occupancyRatePct } from "@/lib/ottoq/ottoqClient";
 import type { UiVehicle, UiDepot } from "@/lib/ottoq/ottoqTypes";
@@ -517,63 +518,12 @@ const Index = () => {
   
   console.log(`📊 ${currentCity.name} Metrics: ${vehicles.length} vehicles (${activeVehicles} active), ${depots.length} depots (${availableStalls}/${totalStalls} stalls available)`);
   return <div className="min-h-screen bg-background">
-      {/* Header - with PWA safe area support */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50 pwa-header">
-        <div className="container mx-auto px-4 py-3 sm:py-5">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex flex-col gap-1.5 items-start">
-              <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 cursor-pointer hover-neon transition-all duration-300" onClick={() => window.scrollTo({
-              top: 0,
-              behavior: 'smooth'
-            })}>
-                <div className="w-10 h-10 sm:w-20 sm:h-20 flex items-center justify-center flex-shrink-0">
-                  <img src="/lovable-uploads/0802aeb6-e42e-4389-8e93-c10d17cf963e.png" alt="Fleet Command Logo" className="h-10 w-10 sm:h-20 sm:w-20" />
-                </div>
-                <div className="min-w-0">
-                  <h1 className="text-lg sm:text-3xl font-bold text-foreground truncate text-center neon-text">OTTOYARD</h1>
-                  <p className="text-xs sm:text-lg truncate text-center bg-gradient-to-b from-slate-300 to-slate-600 bg-clip-text text-[#617fa5] font-medium">Fleet Command</p>
-                </div>
-              </div>
-              <WeatherButton city={currentCity} />
-            </div>
-            <div className="flex flex-col items-end space-y-2 flex-shrink-0">
-              {/* Top Row: Notifications + Profile + Cart */}
-              <div className="flex items-center space-x-2">
-                <NotificationsPanel />
-                <SettingsHub cartItems={cartItems} onRemoveFromCart={handleRemoveFromCart} onCheckout={handleCheckout}>
-                  <Button variant="outline" size="sm" className="relative">
-                    <Settings className="h-4 w-4 mr-1" />
-                    <span className="hidden sm:inline">Settings</span>
-                    {cartItems.length > 0 && (
-                      <Badge className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs">
-                        {cartItems.length}
-                      </Badge>
-                    )}
-                  </Button>
-                </SettingsHub>
-              </div>
-              
-              {/* Second Row: AI Button */}
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={() => setAiAgentOpen(true)} className="bg-gradient-primary text-white border-0 hover:bg-gradient-primary/90 px-3">
-                  <Bot className="h-4 w-4 mr-1 hidden sm:inline" />
-                  <span className="sm:hidden">OttoCommand</span>
-                  <span className="hidden sm:inline">OttoCommand AI</span>
-                </Button>
-              </div>
-              
-              {/* Third Row: Status Badge */}
-              <div className="flex items-center">
-                <Badge variant="outline" className="bg-success/10 text-success border-success/20 text-xs">
-                  <Activity className="h-3 w-3 mr-1" />
-                  <span className="hidden md:inline">All Systems Operational</span>
-                  <span className="md:hidden">Online</span>
-                </Badge>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* Header - Shared AppHeader with Interface Toggle */}
+      <AppHeader
+        appName="Fleet Command"
+        currentCity={currentCity}
+        onOpenAI={() => setAiAgentOpen(true)}
+      />
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
