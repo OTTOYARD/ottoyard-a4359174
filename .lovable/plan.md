@@ -1,14 +1,32 @@
 
 
-# Replace Logo With New Upload
+# Rename Interfaces and Remove "Coming Soon" Option
 
-## What
-Copy `Untitled_design_10.png` to both `src/assets/ottoyard-logo.png` and `public/ottoyard-logo-new.png`, replacing the current logo files. No CSS changes needed -- the image will display exactly as uploaded.
+## Summary
+Rename the three product interfaces and remove the disabled "OrchestraAV" coming-soon entry from the switcher.
 
-## Files Changed
-- **`src/assets/ottoyard-logo.png`** -- overwrite with new upload
-- **`public/ottoyard-logo-new.png`** -- overwrite with new upload
+## Changes
 
-## Note
-This image still has white pixels (not transparency) in the background and hexagon center. On the dark UI, those areas will appear as white squares/regions. If that's not acceptable, the fix is to export from Canva with "Transparent background" enabled (available on Canva Pro), which produces a PNG with true alpha transparency.
+### 1. Rename interfaces
+- **"Fleet Command"** becomes **"OrchestraAV1"** with description "Autonomous vehicle management"
+- **"OrchestraEV"** becomes **"OrchestraEV1"** (description stays "Private EV management")
+- The old "OrchestraAV" coming-soon entry is removed entirely
+
+### 2. Files to update
+
+**`src/components/shared/InterfaceToggle.tsx`**
+- Update the `interfaces` array: rename labels/descriptions, remove the third "coming soon" entry
+- Update `getInterfaceName()` to return the new names
+
+**`src/components/shared/AppHeader.tsx`**
+- Update the Orchestra color condition to match new names (both now start with "Orchestra", so both get the ice blue color -- or keep AV1 using the primary red to distinguish it)
+
+**`src/pages/Index.tsx`**
+- Pass `appName="OrchestraAV1"` instead of `"Fleet Command"` to the header (if it uses AppHeader)
+
+**`src/pages/OrchestraEV.tsx`**
+- Pass `appName="OrchestraEV1"` instead of `"OrchestraEV"`
+
+### 3. Design decision
+Since both interfaces now start with "Orchestra", both labels in the header will display in the ice-blue color. If you'd prefer AV1 to stay in the red/primary color, I can keep that distinction -- but by default both will get the Orchestra blue treatment.
 
