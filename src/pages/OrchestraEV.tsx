@@ -49,7 +49,7 @@ const OrchestraEV = () => {
       <div className="px-3 pb-3">
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
           <div className="flex justify-center mb-3">
-            <TabsList className="flex overflow-x-auto md:grid md:grid-cols-6 w-full max-w-2xl">
+            <TabsList className="flex overflow-x-auto md:grid md:grid-cols-6 w-full max-w-xl">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="depot-q">Depot</TabsTrigger>
               <TabsTrigger value="services">Services</TabsTrigger>
