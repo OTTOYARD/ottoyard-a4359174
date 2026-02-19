@@ -28,8 +28,8 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
 }) => {
   return (
     <div className="px-3 pt-3 pb-2 overflow-hidden">
-      <div className="glass-panel rounded-xl border border-border/50 px-3 py-2 overflow-hidden space-y-2">
-        {/* Row 1: Logo + Title | Notifications + Settings */}
+      <div className="glass-panel rounded-xl border border-border/50 px-3 py-2 overflow-hidden space-y-1">
+        {/* Row 1: Logo + Title | Stacked controls */}
         <div className="flex items-center justify-between gap-2 min-w-0">
           <InterfaceToggle>
             <div className="flex items-center gap-2.5 cursor-pointer min-w-0">
@@ -49,40 +49,38 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             </div>
           </InterfaceToggle>
 
-          <div className="flex items-center gap-1 flex-shrink-0">
-            <NotificationsPanel />
-            <SettingsHub
-              cartItems={cartItems}
-              onRemoveFromCart={onRemoveFromCart}
-              onCheckout={onCheckout}
-            >
-              <Button variant="ghost" size="sm" className="h-8 px-1.5 gap-1">
-                <Settings className="h-4 w-4" />
-                {cartItems.length > 0 && (
-                  <Badge variant="destructive" className="h-4 min-w-4 text-[10px] px-1">
-                    {cartItems.length}
-                  </Badge>
-                )}
-              </Button>
-            </SettingsHub>
+          <div className="flex flex-col items-end gap-1 flex-shrink-0">
+            <div className="flex items-center gap-1">
+              <NotificationsPanel />
+              <SettingsHub
+                cartItems={cartItems}
+                onRemoveFromCart={onRemoveFromCart}
+                onCheckout={onCheckout}
+              >
+                <Button variant="ghost" size="sm" className="h-8 px-1.5 gap-1">
+                  <Settings className="h-4 w-4" />
+                  {cartItems.length > 0 && (
+                    <Badge variant="destructive" className="h-4 min-w-4 text-[10px] px-1">
+                      {cartItems.length}
+                    </Badge>
+                  )}
+                </Button>
+              </SettingsHub>
+            </div>
+            <Button variant="default" size="sm" className="h-7 px-2.5 gap-1.5" onClick={onOpenAI}>
+              <Bot className="h-3.5 w-3.5" />
+              <span className="text-xs font-semibold">OttoCommand</span>
+            </Button>
+            <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-emerald-500/30 text-emerald-400 gap-1">
+              <Activity className="h-2.5 w-2.5" />
+              <span>Online</span>
+            </Badge>
           </div>
         </div>
 
-        {/* Row 2: Weather | OttoCommand */}
-        <div className="flex items-center justify-between gap-2 min-w-0">
+        {/* Row 2: Weather */}
+        <div className="min-w-0">
           <WeatherButton city={currentCity} />
-          <Button variant="default" size="sm" className="h-8 px-3 gap-1.5" onClick={onOpenAI}>
-            <Bot className="h-4 w-4" />
-            <span className="text-xs font-semibold">OttoCommand</span>
-          </Button>
-        </div>
-
-        {/* Row 3: Online badge */}
-        <div className="flex justify-end">
-          <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-emerald-500/30 text-emerald-400 gap-1">
-            <Activity className="h-2.5 w-2.5" />
-            <span>Online</span>
-          </Badge>
         </div>
       </div>
     </div>
