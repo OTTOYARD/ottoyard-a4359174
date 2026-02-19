@@ -1,33 +1,13 @@
 
-# Add Tesla Model 3 Image to Vehicle Hero Card
 
-## Goal
-Replace the generic Car icon placeholder in the EVVehicleHero component with an actual 2024 Tesla Model 3 Long Range image.
+# Larger Tesla Model 3 Image with Transparent Background
 
-## Steps
+## Changes
 
-### 1. Add Tesla Model 3 image asset
-- Save a clean Tesla Model 3 image to `public/tesla-model-3.png`
-- I'll use a publicly available Tesla Model 3 side-profile image (transparent or clean background)
+### 1. Regenerate the image (`public/tesla-model-3.png`)
+- Use the image generation API to create a new 2024 Tesla Model 3 Long Range image with a **transparent/no background** (prompt will specify transparent background, studio lighting, side profile)
+- Save to `public/tesla-model-3.png`, replacing the current file
 
-### 2. Update EVVehicleHero.tsx
-Replace the icon placeholder div (lines 56-58):
-```
-<div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
-  <Car className="h-5 w-5 text-primary" />
-</div>
-```
-With an actual image:
-```
-<img
-  src="/tesla-model-3.png"
-  alt="2024 Tesla Model 3 Long Range"
-  className="w-12 h-8 object-contain flex-shrink-0 rounded"
-/>
-```
-- Slightly wider aspect ratio (48x32px) to fit a car side-profile naturally
-- `object-contain` ensures the image scales without cropping
-- Remove the `Car` icon import if no longer used elsewhere
+### 2. Increase image size in `EVVehicleHero.tsx`
+- Change the image classes from `w-12 h-8` to `w-20 h-14` (80x56px instead of 48x32px) for a noticeably larger vehicle image in the card header
 
-### 3. Clean up unused import
-- Remove `Car` from the lucide-react import since it's no longer needed in this component
