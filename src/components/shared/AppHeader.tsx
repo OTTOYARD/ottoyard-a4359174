@@ -33,13 +33,11 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
         <div className="flex items-center justify-between gap-2 min-w-0">
           <InterfaceToggle>
             <div className="flex items-center gap-2.5 cursor-pointer min-w-0">
-              <div className="bg-background rounded-lg overflow-hidden flex-shrink-0 w-10 h-10 flex items-center justify-center">
-                <img
-                  src="/ottoyard-logo-new.png"
-                  alt="OTTOYARD"
-                  className="w-10 h-10 object-contain mix-blend-multiply"
-                />
-              </div>
+              <img
+                src="/ottoyard-logo-new.png"
+                alt="OTTOYARD"
+                className="w-10 h-10 object-contain flex-shrink-0"
+              />
               <div className="flex flex-col min-w-0">
                 <span className="text-base font-bold tracking-wide text-foreground truncate">
                   OTTOYARD
