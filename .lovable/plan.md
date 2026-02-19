@@ -1,79 +1,51 @@
 
 
-# Fix Mobile Overflow Issues
+# Restore Stacked Header Layout with New Logo
 
-## Problems Identified
-
-1. **AppHeader (shared)** - The header has a left section (logo, interface toggle, weather button) and a right section (3 rows: notifications/settings, OttoCommand button, status badge) that together overflow on screens narrower than ~400px.
-
-2. **OrchestraEV Tab Bar** - Uses `grid grid-cols-6` which forces 6 equal columns on all screen sizes, causing text to be clipped or overflow on mobile.
-
-3. **Fleet Command Tab Bar** - 5 horizontal tabs can also get cramped on very small screens.
-
-4. **Map container** - Mapbox controls can overflow the viewport edges on mobile (noted from session replay context).
-
----
+## Overview
+Revert the header to the previous stacked multi-row layout matching the screenshot reference, replace the site logo with the uploaded red hexagon image, and make OttoCommand a red (primary/destructive) button.
 
 ## Changes
 
-### 1. AppHeader (`src/components/shared/AppHeader.tsx`)
-- Add `overflow-hidden` to the outer container to prevent bleed
-- On mobile (below `sm`), stack the header vertically: logo row on top, action buttons below
-- Shrink/hide the weather button text on very small screens
-- Collapse the right-side 3 rows into a single compact row on mobile
+### 1. Copy new logo to project
+- Copy `user-uploads://Untitled_design_7.png` to `public/ottoyard-logo-new.png` (replacing the existing logo file)
 
-### 2. OrchestraEV Tabs (`src/pages/OrchestraEV.tsx`)
-- Change from `grid grid-cols-6` to a horizontally scrollable tab list on mobile using `flex overflow-x-auto` with `grid-cols-6` only on `md+` screens
-- Add `whitespace-nowrap` to tab triggers so text doesn't wrap
+### 2. Redesign `src/components/shared/AppHeader.tsx`
+Restructure from a single compressed row to a stacked layout matching the screenshot:
 
-### 3. Fleet Command Tabs (`src/pages/Index.tsx`)
-- Add `overflow-x-auto` to the tab list wrapper so tabs scroll horizontally on small screens instead of wrapping or overflowing
+**Row 1 (top):**
+- Left: Logo (larger, ~10-12 size) + "OTTOYARD" bold title + app name subtitle in red/primary
+- Right: Notification bell icon + Settings gear icon
 
-### 4. Global CSS (`src/App.css`)
-- Add `overflow-x: hidden` on the root/body level to prevent any horizontal scroll from leaking elements
+**Row 2:**
+- Left: Weather button (visible on all screen sizes, not hidden on mobile)
+- Right: Red "OttoCommand" button (using `variant="default"` or custom red styling, not ghost)
 
-### 5. Map Controls (`src/App.css`)
-- Ensure mapbox control groups respect viewport boundaries with `max-width` and proper positioning
+**Row 3:**
+- Right-aligned: "Online" status badge (visible on all screens)
 
----
+### 3. OttoCommand Button Styling
+- Change from `variant="ghost"` to `variant="default"` (red/primary background)
+- Always show the "OttoCommand" text label (remove `hidden sm:inline`)
+- Include the Bot icon
 
-## Technical Details
+### Technical Details
 
-**AppHeader mobile layout change:**
-```tsx
-// Outer wrapper gets overflow-hidden
-<div className="px-3 pt-3 pb-2 overflow-hidden">
-  <div className="glass-panel rounded-xl border border-border/50 px-3 py-2 overflow-hidden">
-    {/* flex-wrap so items can stack on narrow screens */}
-    <div className="flex items-center justify-between gap-2 min-w-0">
-      {/* Left side: add min-w-0 + truncate to prevent overflow */}
-      <div className="flex items-center gap-2 min-w-0 flex-shrink">
-        ...
-      </div>
-      {/* Right side: shrink flex items */}
-      <div className="flex flex-col items-end gap-1 flex-shrink-0">
-        ...
-      </div>
-    </div>
-  </div>
-</div>
+```
+Layout structure:
++------------------------------------------+
+| [Logo] OTTOYARD          [Bell] [Gear]   |
+|         Fleet Command                    |
+| [Weather Badge]        [OttoCommandBtn] |
+|                           [Online Badge] |
++------------------------------------------+
 ```
 
-**OrchestraEV tabs change:**
-```tsx
-// From:
-<TabsList className="grid grid-cols-6 w-full max-w-2xl">
+- The logo `img` tag will reference `/ottoyard-logo-new.png` (same path, new file)
+- Logo container: remove the `bg-primary/20` background box, increase image size to ~w-10 h-10
+- "OTTOYARD" becomes larger bold text (~text-lg font-bold)
+- App name (e.g. "Fleet Command") rendered in primary/red color below
+- Weather button shown on all breakpoints (remove `hidden sm:block`)
+- "Online" badge shown on all breakpoints (remove `hidden sm:inline-flex`)
+- All elements use `overflow-hidden` and `min-w-0` to prevent mobile overflow
 
-// To:
-<TabsList className="flex overflow-x-auto md:grid md:grid-cols-6 w-full max-w-2xl">
-```
-
-**Global overflow prevention:**
-```css
-html, body, #root {
-  overflow-x: hidden;
-  max-width: 100vw;
-}
-```
-
-This ensures nothing bleeds past the viewport edge on any mobile device while keeping the desktop layout unchanged.
