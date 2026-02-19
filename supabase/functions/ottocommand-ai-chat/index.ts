@@ -25,7 +25,7 @@ function actionBlock(action: "schedule_return" | "create_service_job" | "assign_
   return { action, reason, details };
 }
 
-console.log("🚀 OttoCommand AI Edge Function v6.0 — dual-mode (general + ops)");
+console.log("🚀 OttoCommand AI Edge Function v7.0 — dual-mode AV/EV agentic assistant");
 console.log("Deployed:", new Date().toISOString());
 
 serve(async (req) => {
@@ -70,7 +70,8 @@ serve(async (req) => {
     currentCity = null,
     vehicles = [],
     depots = [],
-    fleetContext = null, // NEW: Real-time fleet context from client
+    fleetContext = null,
+    evContext = null, // NEW: EV subscriber context
   } = payload ?? {};
   if (!message || typeof message !== "string") return fail(400, "'message' is required and must be a string");
 
@@ -82,7 +83,7 @@ serve(async (req) => {
   // AI Model Selection - Claude for advanced reasoning, OpenAI for general tasks
   const useClaudeForAnalysis = Deno.env.get("USE_CLAUDE_ANALYSIS") !== "0"; // default true
   const model = Deno.env.get("OTTO_MODEL")?.trim() || "gpt-4o-mini";
-  const claudeModel = "claude-3-5-sonnet-20241022"; // Latest Claude for fleet analysis
+  const claudeModel = "claude-sonnet-4-20250514";
   const DEMO = Deno.env.get("DEMO_MODE") === "1";
   
   // Get Claude API key for advanced analysis
@@ -115,7 +116,200 @@ serve(async (req) => {
     return ok({ success: true, mode: "general", content, timestamp: new Date().toISOString() });
   }
 
-  // --- Mode B: OPS (fleet intelligence + tools) ---
+  // --- Mode EV: OrchestraEV Personal Concierge ---
+  if (mode === "ev" && claudeApiKey && evContext) {
+    console.log("Using Claude for EV concierge mode");
+
+    const subscriber = evContext.subscriber || {};
+    const vehicle = evContext.vehicle || {};
+    const socPct = typeof vehicle.currentSoc === "number" ? (vehicle.currentSoc > 1 ? vehicle.currentSoc : Math.round(vehicle.currentSoc * 100)) : 0;
+
+    const evSystemPrompt = `You are OttoCommand for OrchestraEV — a premium personal EV concierge for OTTOYARD depot subscribers.
+
+**SUBSCRIBER:**
+• Name: ${subscriber.firstName} ${subscriber.lastName}
+• Membership: ${subscriber.membershipTier} (${subscriber.subscriptionStatus})
+• Member Since: ${subscriber.memberSince ? new Date(subscriber.memberSince).toLocaleDateString() : "N/A"}
+• Email: ${subscriber.email} | Phone: ${subscriber.phone}
+• Home: ${subscriber.homeAddress?.street}, ${subscriber.homeAddress?.city}, ${subscriber.homeAddress?.state}
+• Preferred Depot: ${subscriber.preferredDepotId || "OTTO Nashville #1"}
+
+**VEHICLE:**
+• ${vehicle.year} ${vehicle.make} ${vehicle.model} (${vehicle.color})
+• License: ${vehicle.licensePlate} | VIN: ${vehicle.vin}
+• Current SOC: ${socPct}% | Range: ${vehicle.estimatedRangeMiles} mi
+• Status: ${vehicle.currentStatus}
+• Stall: ${vehicle.currentStallId || "None"} | Depot: ${vehicle.currentDepotId || "Not at depot"}
+• Health Score: ${vehicle.healthScore}/100 | Battery Health: ${vehicle.batteryHealthPct}%
+• Odometer: ${vehicle.odometerMiles?.toLocaleString()} mi
+• Brake Wear: Front ${vehicle.brakeWearPct?.front}% / Rear ${vehicle.brakeWearPct?.rear}%
+• Tire Pressure: FL ${vehicle.tirePressure?.fl} FR ${vehicle.tirePressure?.fr} RL ${vehicle.tirePressure?.rl} RR ${vehicle.tirePressure?.rr} ${vehicle.tirePressure?.unit}
+
+**YOUR CAPABILITIES:**
+1. Check vehicle status, SOC, health, range, and diagnostics (use ev_vehicle_status tool)
+2. Book amenities — sim golf, cowork tables, privacy pods (use ev_book_amenity tool)
+3. Schedule services — detailing, tire rotation, brake inspection, etc. (use ev_schedule_service tool)
+4. Check depot queue — stall position, wait times, service stages (use ev_depot_queue_status tool)
+5. Account summary — membership, billing, reservations (use ev_account_summary tool)
+
+**PROACTIVE RECOMMENDATIONS:**
+When relevant, proactively suggest:
+• ${vehicle.brakeWearPct?.front <= 50 ? "⚠️ Front brake pads at " + vehicle.brakeWearPct.front + "% — schedule inspection soon" : ""}
+• ${socPct < 30 ? "⚠️ Battery is low at " + socPct + "% — consider scheduling a charge" : ""}
+• ${vehicle.healthScore < 85 ? "⚠️ Health score is " + vehicle.healthScore + "/100 — diagnostic recommended" : ""}
+
+**RESPONSE STYLE:**
+• Address the subscriber by first name (${subscriber.firstName})
+• Be warm, helpful, and concise — like a premium hotel concierge
+• Use tools to fetch real data before answering questions
+• Bold important values: **78%**, **Stall C-12**, **$89.99**
+• Use bullet points for lists
+• For bookings: confirm with ✓ and provide relevant details
+• For general EV questions: answer knowledgeably (charging tips, battery care, etc.)
+• Keep responses under 200 words unless detailed information is requested`;
+
+    const evTools = [
+      {
+        name: "ev_vehicle_status",
+        description: "Get the subscriber's vehicle status including SOC, health, charging status, stall assignment, range, tire pressure, and brake wear.",
+        input_schema: { type: "object", properties: {}, required: [] },
+      },
+      {
+        name: "ev_book_amenity",
+        description: "Browse available amenities or book a specific one. Call without amenity_type to see all availability. Call with amenity_type + time_slot to book.",
+        input_schema: {
+          type: "object",
+          properties: {
+            amenity_type: { type: "string", enum: ["sim_golf", "cowork_table", "privacy_pod"], description: "Type of amenity to book (omit to see all availability)" },
+            time_slot: { type: "string", description: "Preferred time slot (e.g., '2:00 PM')" },
+            bay_or_pod: { type: "string", description: "Specific bay or pod ID (e.g., 'Bay 2', 'P-1')" },
+          },
+          required: [],
+        },
+      },
+      {
+        name: "ev_schedule_service",
+        description: "Browse available services/maintenance predictions or schedule a specific service. Call without service_type to see options and upcoming predictions.",
+        input_schema: {
+          type: "object",
+          properties: {
+            service_type: { type: "string", enum: ["charging", "detailing", "tire_rotation", "brake_inspection", "battery_diagnostic", "cabin_air_filter", "full_maintenance"], description: "Service to schedule (omit to see options)" },
+            preferred_date: { type: "string", description: "Preferred date (ISO format)" },
+            notes: { type: "string", description: "Additional notes for the service" },
+          },
+          required: [],
+        },
+      },
+      {
+        name: "ev_depot_queue_status",
+        description: "Check the subscriber's vehicle depot queue status including current stall, service stages, wait times, and estimated completion.",
+        input_schema: { type: "object", properties: {}, required: [] },
+      },
+      {
+        name: "ev_account_summary",
+        description: "Get subscriber account summary including membership tier, billing history, upcoming reservations, and service records.",
+        input_schema: { type: "object", properties: {}, required: [] },
+      },
+    ];
+
+    const evMessages = [
+      ...conversationHistory.slice(-10).map((m: any) => ({
+        role: m.role === "assistant" ? "assistant" : "user",
+        content: String(m.content),
+      })),
+      { role: "user", content: message },
+    ];
+
+    try {
+      // Multi-turn agentic loop (max 3 iterations)
+      let claudeMessages = [...evMessages];
+      let finalText = "";
+
+      for (let iteration = 0; iteration < 3; iteration++) {
+        const claudeResponse = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${claudeApiKey}`,
+            "Content-Type": "application/json",
+            "anthropic-version": "2023-06-01",
+          },
+          body: JSON.stringify({
+            model: claudeModel,
+            max_tokens: 2000,
+            messages: claudeMessages,
+            system: evSystemPrompt,
+            tools: evTools,
+            temperature: 0.3,
+          }),
+        });
+
+        if (!claudeResponse.ok) {
+          const errorText = await claudeResponse.text();
+          console.error("Claude EV API failed:", claudeResponse.status, errorText);
+          return fail(502, "Claude API failed (EV mode)", errorText);
+        }
+
+        const claudeData = await claudeResponse.json();
+        const content = claudeData.content || [];
+
+        // Extract text and tool_use blocks
+        const textBlocks = content.filter((b: any) => b.type === "text");
+        const toolUseBlocks = content.filter((b: any) => b.type === "tool_use");
+
+        finalText = textBlocks.map((b: any) => b.text).join("\n");
+
+        // If no tool calls, we're done
+        if (toolUseBlocks.length === 0) {
+          break;
+        }
+
+        // Execute all tool calls
+        const toolResults: any[] = [];
+        for (const block of toolUseBlocks) {
+          console.log(`EV tool call [${iteration}]: ${block.name}`, block.input);
+          try {
+            const result = await executeFunction(
+              { name: block.name, arguments: block.input },
+              supabase,
+              fleetContext,
+              evContext  // Pass EV context to executor
+            );
+            toolResults.push({
+              type: "tool_result",
+              tool_use_id: block.id,
+              content: JSON.stringify(result),
+            });
+          } catch (err) {
+            toolResults.push({
+              type: "tool_result",
+              tool_use_id: block.id,
+              content: JSON.stringify({ success: false, error: String(err) }),
+              is_error: true,
+            });
+          }
+        }
+
+        // Add assistant response + tool results to conversation for next iteration
+        claudeMessages = [
+          ...claudeMessages,
+          { role: "assistant", content: content },
+          { role: "user", content: toolResults },
+        ];
+      }
+
+      return ok({
+        success: true,
+        mode: "ev",
+        content: finalText || "(no content)",
+        timestamp: new Date().toISOString(),
+      });
+
+    } catch (evError) {
+      console.error("EV mode error:", evError);
+      return fail(500, "EV mode processing error", String(evError));
+    }
+  }
+
   // Optional DB fetch (if supabase configured)
   let realTimeVehicles: any[] = [];
   let realTimeMaintenance: any[] = [];
@@ -1050,7 +1244,7 @@ For OTTOW dispatch, guide users conversationally through vehicle selection. For 
       try { args = call.function?.arguments ? JSON.parse(call.function.arguments) : {}; } catch {}
       try {
         // executeFunction signature: ({ name, arguments }, supabaseClient, fleetContext)
-        const result = await executeFunction({ name, arguments: args } as any, supabase, fleetContext);
+        const result = await executeFunction({ name, arguments: args } as any, supabase, fleetContext, evContext);
         toolMessages.push(asToolMessage(call.id, result ?? {}));
       } catch (err) {
         toolMessages.push(asToolMessage(call.id, { success: false, error: String(err) }));
