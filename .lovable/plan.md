@@ -1,36 +1,34 @@
 
 
-# Fix Logo White Background
+# Fix Logo White Background (For Real This Time)
 
-## Problem
-The uploaded logo PNG has a white/light background baked into the image pixels. The `mix-blend-screen` CSS trick only works reliably when the container behind the image has a solid dark background. However, the header uses a `glass-panel` class with semi-transparent backgrounds and backdrop blur, causing the white background to partially show through.
+## Root Cause
+The uploaded logo PNG (`Untitled_design_8.png`) has **white pixels baked into the image** -- it is NOT a transparent PNG. The corners, the inner hexagon hole, and surrounding area are all solid white. The last edit removed the `mix-blend-multiply` CSS workaround, which made the problem visible again.
 
 ## Solution
-The most reliable fix is to **not rely on CSS blend modes** and instead take a two-pronged approach:
+Since we cannot edit the image pixels directly in Lovable, we will use a CSS approach that reliably hides the white:
 
-1. **Re-export the logo with actual transparency** -- Since we can't edit the image file directly, we'll use a CSS `filter` approach that works better than `mix-blend-screen` for this case.
+1. **Wrap each logo `<img>` in a dark-background container** and apply `mix-blend-multiply` to the image
+2. `mix-blend-multiply` makes white pixels take on the color of whatever is behind them -- so with a dark container, white becomes dark
+3. The container gets `overflow-hidden` and `rounded` to cleanly clip edges
 
-2. **Use a combination of CSS techniques** to hide the white background:
-   - Wrap the logo in a container with a dark background that matches the surrounding panel
-   - Apply `mix-blend-multiply` instead of `mix-blend-screen` -- `multiply` makes white pixels transparent regardless of the container's darkness level
-   - As a fallback, add a dark background directly behind the logo image
-
-## Technical Details
+## Changes
 
 ### `src/components/shared/AppHeader.tsx`
-- Change `mix-blend-screen` to `mix-blend-multiply` on the logo `<img>` tag
-- Note: `mix-blend-multiply` makes white become transparent (white x any color = that color), which is the correct blend mode for removing white backgrounds. `mix-blend-screen` is for removing black backgrounds.
+- Wrap the logo `<img>` in a `<div>` with `className="bg-background rounded-lg overflow-hidden"`
+- Add `mix-blend-multiply` back to the `<img>` tag
+- This ensures the white background blends into a dark container reliably, regardless of the glass-panel behind it
 
-### `src/pages/Auth.tsx`
-- Same fix: change both logo `<img>` instances from `mix-blend-screen` to `mix-blend-multiply`
-- The Auth page has a dark background (`from-background via-background to-primary/5`), but the Card component is lighter, so `multiply` is the correct choice here too
+### `src/pages/Auth.tsx` (two locations: reset password view + main login view)
+- Same approach: wrap logo in a dark-background container with `rounded-xl overflow-hidden`
+- Add `mix-blend-multiply` to the `<img>` tag
+- The Card background is lighter, so we explicitly set `bg-[#1a1a2e]` or `bg-background` on the wrapper
 
 ### `src/pages/Install.tsx`
-- Same fix on the Install page logo
+- Same wrapper approach for the Install page logo
 
-### Why `multiply` instead of `screen`?
-- `mix-blend-screen`: makes **black** pixels transparent (good for removing black backgrounds)
-- `mix-blend-multiply`: makes **white** pixels transparent (good for removing white backgrounds)
+## Why This Will Work Now
+The previous `mix-blend-multiply` attempt failed because the logo was sitting on a **semi-transparent glass-panel** with no solid color behind it. By adding an explicit dark background container directly behind the image, `multiply` has a solid dark color to blend against, making white pixels appear dark (matching the container).
 
-The previous fix used `screen` which is the wrong mode -- it was designed for the opposite problem. Switching to `multiply` should properly eliminate the white background on all pages.
-
+## Alternative
+If you can provide a version of the logo with actual transparency (e.g., exported from Canva with "transparent background" checked), that would be the cleanest solution and we could remove all blend-mode workarounds entirely.
