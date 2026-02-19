@@ -51,7 +51,7 @@ const OrchestraEV = () => {
           <div className="flex justify-center mb-3">
             <TabsList className="flex overflow-x-auto md:grid md:grid-cols-6 w-full max-w-2xl">
               <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="depot-q">Depot & Q</TabsTrigger>
+              <TabsTrigger value="depot-q">Depot</TabsTrigger>
               <TabsTrigger value="services">Services</TabsTrigger>
               <TabsTrigger value="towing">OTTOW</TabsTrigger>
               <TabsTrigger value="amenities">Amenities</TabsTrigger>
