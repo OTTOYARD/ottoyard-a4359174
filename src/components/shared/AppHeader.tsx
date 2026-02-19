@@ -44,7 +44,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                 <span className={`text-[10px] font-semibold leading-tight truncate ${appName.startsWith("Orchestra") ? "text-orchestra" : "text-primary"}`}>
                   {appName}
                 </span>
-                <div className="mt-0.5 min-w-0 scale-[0.84] origin-left">
+                <div className="mt-0.5 min-w-0 scale-[0.84] origin-center">
                   <WeatherButton city={currentCity} />
                 </div>
               </div>
