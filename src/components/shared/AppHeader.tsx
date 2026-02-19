@@ -28,9 +28,8 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
 }) => {
   return (
     <div className="px-3 pt-3 pb-2 overflow-hidden">
-      <div className="glass-panel rounded-xl border border-border/50 px-3 py-2 overflow-hidden space-y-1">
-        {/* Row 1: Logo + Title | Stacked controls */}
-        <div className="flex items-center justify-between gap-2 min-w-0">
+      <div className="glass-panel rounded-xl border border-border/50 px-3 py-2 overflow-hidden">
+        <div className="flex items-start justify-between gap-2 min-w-0">
           <InterfaceToggle>
             <div className="flex items-center gap-2.5 cursor-pointer min-w-0">
               <img
@@ -45,6 +44,9 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                 <span className={`text-sm font-semibold leading-tight truncate ${appName.startsWith("Orchestra") ? "text-orchestra" : "text-primary"}`}>
                   {appName}
                 </span>
+                <div className="mt-0.5 min-w-0">
+                  <WeatherButton city={currentCity} />
+                </div>
               </div>
             </div>
           </InterfaceToggle>
@@ -76,11 +78,6 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
               <span>Online</span>
             </Badge>
           </div>
-        </div>
-
-        {/* Row 2: Weather */}
-        <div className="min-w-0">
-          <WeatherButton city={currentCity} />
         </div>
       </div>
     </div>
