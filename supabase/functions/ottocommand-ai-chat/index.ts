@@ -229,7 +229,7 @@ When relevant, proactively suggest:
         const claudeResponse = await fetch("https://api.anthropic.com/v1/messages", {
           method: "POST",
           headers: {
-            "Authorization": `Bearer ${claudeApiKey}`,
+            "x-api-key": claudeApiKey,
             "Content-Type": "application/json",
             "anthropic-version": "2023-06-01",
           },
@@ -767,7 +767,7 @@ For OTTOW dispatch, guide users conversationally through vehicle selection. For 
       const claudeResponse = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${claudeApiKey}`,
+          "x-api-key": claudeApiKey,
           "Content-Type": "application/json",
           "anthropic-version": "2023-06-01",
         },
@@ -826,7 +826,7 @@ For OTTOW dispatch, guide users conversationally through vehicle selection. For 
           const followUpResponse = await fetch("https://api.anthropic.com/v1/messages", {
             method: "POST",
             headers: {
-              "Authorization": `Bearer ${claudeApiKey}`,
+              "x-api-key": claudeApiKey,
               "Content-Type": "application/json",
               "anthropic-version": "2023-06-01",
             },
