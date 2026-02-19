@@ -80,7 +80,7 @@ const OrchestraEV = () => {
           </TabsContent>
 
           <TabsContent value="reports">
-            <EVReports vehicle={mockVehicle} serviceRecords={mockServiceRecords} predictions={mockMaintenancePredictions} />
+            <EVReports serviceRecords={mockServiceRecords} />
           </TabsContent>
         </Tabs>
       </div>
