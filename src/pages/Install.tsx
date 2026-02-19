@@ -68,7 +68,7 @@ export default function Install() {
             <img 
               src="/ottoyard-logo-new.png" 
               alt="OTTOYARD" 
-              className="w-16 h-16 object-contain"
+              className="w-16 h-16 object-contain mix-blend-screen"
               onError={(e) => {
                 (e.target as HTMLImageElement).style.display = 'none';
               }}
