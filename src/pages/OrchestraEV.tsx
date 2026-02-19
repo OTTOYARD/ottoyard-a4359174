@@ -81,7 +81,20 @@ const OrchestraEV = () => {
       </div>
 
       {/* OttoCommand AI Agent */}
-      <AIAgentPopup open={aiAgentOpen} onOpenChange={setAiAgentOpen} />
+      <AIAgentPopup
+        open={aiAgentOpen}
+        onOpenChange={setAiAgentOpen}
+        mode="ev"
+        evContext={{
+          subscriber: mockSubscriber,
+          vehicle: mockVehicle,
+          serviceRecords: mockServiceRecords,
+          amenityAvailability: mockAmenityAvailability,
+          amenityReservations: mockAmenityReservations,
+          depotStages: mockDepotServiceStages,
+        }}
+        currentCity={defaultCity}
+      />
     </div>
   );
 };

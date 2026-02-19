@@ -9,6 +9,11 @@ import {
   BatteryWarning,
   Wrench,
   MapPin,
+  Car,
+  Target,
+  CalendarDays,
+  ListOrdered,
+  Receipt,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -32,6 +37,7 @@ export interface QuickActionsProps {
   disabled?: boolean;
   className?: string;
   currentCity?: string;
+  mode?: "av" | "ev";
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -85,6 +91,56 @@ export const quickActions: QuickAction[] = [
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// EV-SPECIFIC QUICK ACTIONS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export const evQuickActions: QuickAction[] = [
+  {
+    id: "ev-vehicle-status",
+    label: "Vehicle Status",
+    icon: Car,
+    description: "SOC, health, stall, charging ETA",
+    prompt: "What's my vehicle status? Show current SOC, health score, charging status, stall assignment, and estimated range.",
+  },
+  {
+    id: "ev-book-amenity",
+    label: "Book Amenity",
+    icon: Target,
+    description: "Reserve sim golf, cowork, pod",
+    prompt: "What amenities are available right now? Show sim golf bays, cowork tables, and privacy pods with open time slots.",
+  },
+  {
+    id: "ev-schedule-service",
+    label: "Schedule Service",
+    icon: CalendarDays,
+    description: "Detailing, tire rotation, maintenance",
+    prompt: "What services are available to schedule? Show my upcoming maintenance predictions and let me book a service.",
+  },
+  {
+    id: "ev-depot-queue",
+    label: "Depot Queue",
+    icon: ListOrdered,
+    description: "Stall position, wait times, stages",
+    prompt: "Show my depot queue status. What stage is my vehicle at, what's the current stall info, and estimated completion time?",
+  },
+  {
+    id: "ev-tow-request",
+    label: "Tow Request",
+    icon: Truck,
+    description: "Request OTTOW pickup",
+    prompt: "I need to request an OTTOW tow pickup for my vehicle from my home address to my preferred depot.",
+    isDialog: true,
+  },
+  {
+    id: "ev-billing",
+    label: "Billing Summary",
+    icon: Receipt,
+    description: "Charges, membership, reservations",
+    prompt: "Show my account summary including membership tier, recent service charges, and upcoming reservations.",
+  },
+];
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // COMPONENTS
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -114,10 +170,12 @@ export const QuickActionsGrid: React.FC<QuickActionsProps> = ({
   onSelect,
   disabled,
   className,
-  currentCity
+  currentCity,
+  mode = "av",
 }) => {
+  const actions = mode === "ev" ? evQuickActions : quickActions;
+
   const handleSelect = (action: QuickAction) => {
-    // For OTTOW dispatch, customize prompt with city if available
     if (action.isDialog && action.id === "ottow-dispatch" && currentCity) {
       onSelect({
         ...action,
@@ -130,7 +188,7 @@ export const QuickActionsGrid: React.FC<QuickActionsProps> = ({
 
   return (
     <div className={cn("grid grid-cols-2 sm:grid-cols-3 gap-2", className)}>
-      {quickActions.map((action) => (
+      {actions.map((action) => (
         <QuickActionButton
           key={action.id}
           action={action}

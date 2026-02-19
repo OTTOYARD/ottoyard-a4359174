@@ -1522,8 +1522,215 @@ async function createOptimizationPlan(args: any) {
   };
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// EV (OrchestraEV) TOOLS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+async function evVehicleStatus(args: any, evContext: any) {
+  const v = evContext?.vehicle;
+  if (!v) return { success: false, error: "No vehicle data available" };
+
+  const socPct = typeof v.currentSoc === "number" ? (v.currentSoc > 1 ? v.currentSoc : Math.round(v.currentSoc * 100)) : 0;
+
+  return {
+    success: true,
+    action: "ev_vehicle_status",
+    vehicle: {
+      id: v.id,
+      name: `${v.year} ${v.make} ${v.model}`,
+      color: v.color,
+      licensePlate: v.licensePlate,
+      vin: v.vin,
+      status: v.currentStatus,
+      soc: `${socPct}%`,
+      estimatedRange: `${v.estimatedRangeMiles} mi`,
+      healthScore: `${v.healthScore}/100`,
+      batteryHealth: `${v.batteryHealthPct}%`,
+      odometer: `${v.odometerMiles.toLocaleString()} mi`,
+      chargingPreference: `${v.chargingPreferencePct}%`,
+      currentStall: v.currentStallId || "Not assigned",
+      currentDepot: v.currentDepotId || "Not at depot",
+      tirePressure: v.tirePressure,
+      brakeWear: v.brakeWearPct,
+      lastDiagnostic: v.lastDiagnosticDate,
+    },
+    message: `Your ${v.year} ${v.make} ${v.model} is currently **${v.currentStatus}** at **${socPct}%** SOC with **${v.estimatedRangeMiles} mi** range. Health score: **${v.healthScore}/100**.`,
+  };
+}
+
+async function evBookAmenity(args: any, evContext: any) {
+  const { amenity_type, time_slot, bay_or_pod } = args;
+  const avail = evContext?.amenityAvailability;
+  if (!avail) return { success: false, error: "No amenity availability data" };
+
+  // If no amenity_type specified, return all availability
+  if (!amenity_type) {
+    return {
+      success: true,
+      action: "ev_amenity_availability",
+      availability: {
+        simGolf: avail.simGolf?.map((b: any) => ({ bay: b.bayNumber, openSlots: b.slots })),
+        coworkTables: avail.coworkTables?.map((t: any) => ({ table: t.tableId, type: t.type, amenities: t.amenities, slots: t.slots })),
+        privacyPods: avail.privacyPods?.map((p: any) => ({ pod: p.podId, capacity: p.capacity, equipment: p.equipment, slots: p.slots })),
+      },
+      existingReservations: evContext?.amenityReservations?.map((r: any) => ({
+        type: r.type,
+        date: r.date,
+        time: `${r.startTime} - ${r.endTime}`,
+        status: r.status,
+        bay: r.bayNumber,
+      })),
+      message: `Here's what's available:\n• **Sim Golf**: ${avail.simGolf?.length || 0} bays\n• **Cowork Tables**: ${avail.coworkTables?.length || 0} tables\n• **Privacy Pods**: ${avail.privacyPods?.length || 0} pods`,
+    };
+  }
+
+  // Book a specific amenity
+  const reservationId = `res-${Date.now().toString(36)}`;
+  const today = new Date().toISOString().split("T")[0];
+
+  return {
+    success: true,
+    action: "ev_amenity_booked",
+    reservation: {
+      id: reservationId,
+      type: amenity_type,
+      date: today,
+      timeSlot: time_slot || "Next available",
+      bayOrPod: bay_or_pod || "Auto-assigned",
+      status: "confirmed",
+      depot: "OTTO Nashville #1",
+    },
+    message: `✓ **${amenity_type.replace("_", " ")}** reserved for **${time_slot || "next available slot"}** at OTTO Nashville #1. Reservation ID: ${reservationId}`,
+  };
+}
+
+async function evScheduleService(args: any, evContext: any) {
+  const { service_type, preferred_date, notes } = args;
+  const records = evContext?.serviceRecords || [];
+  const subscriber = evContext?.subscriber;
+
+  // If no service_type, show available services and predictions
+  if (!service_type) {
+    const predictions = [
+      { service: "Tire Rotation", dueDate: "2026-03-05", urgency: "soon", confidence: "high" },
+      { service: "Cabin Air Filter", dueDate: "2026-04-01", urgency: "routine", confidence: "medium" },
+      { service: "Brake Inspection", dueDate: "2026-06-15", urgency: "routine", confidence: "medium" },
+    ];
+
+    return {
+      success: true,
+      action: "ev_service_options",
+      availableServices: [
+        "Charging", "Detailing (Interior + Exterior)", "Tire Rotation",
+        "Brake Inspection", "Battery Diagnostic", "Cabin Air Filter",
+        "Full Maintenance Package",
+      ],
+      upcomingPredictions: predictions,
+      recentServices: records.slice(0, 3).map((r: any) => ({
+        type: r.type,
+        status: r.status,
+        date: r.scheduledAt,
+        cost: `$${r.cost}`,
+        depot: r.depotName,
+      })),
+      message: "Here are your service options and upcoming maintenance predictions. Which service would you like to schedule?",
+    };
+  }
+
+  // Schedule a service
+  const serviceId = `svc-${Date.now().toString(36)}`;
+  const scheduleDate = preferred_date || new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0];
+
+  return {
+    success: true,
+    action: "ev_service_scheduled",
+    booking: {
+      id: serviceId,
+      type: service_type,
+      scheduledDate: scheduleDate,
+      depot: subscriber?.preferredDepotId ? "OTTO Nashville #1" : "Nearest depot",
+      estimatedCost: service_type === "detailing" ? "$89.99" : service_type === "tire_rotation" ? "$49.99" : "$79.99",
+      notes: notes || "",
+      status: "scheduled",
+    },
+    message: `✓ **${service_type.replace("_", " ")}** scheduled for **${scheduleDate}** at OTTO Nashville #1. Service ID: ${serviceId}`,
+  };
+}
+
+async function evDepotQueueStatus(args: any, evContext: any) {
+  const stages = evContext?.depotStages;
+  if (!stages) return { success: false, error: "No depot queue data available" };
+
+  const currentStageIdx = stages.stages?.findIndex((s: any) => s.status === "in_progress");
+  const completedStages = stages.stages?.filter((s: any) => s.status === "completed").length || 0;
+  const totalStages = stages.stages?.length || 0;
+
+  return {
+    success: true,
+    action: "ev_depot_queue_status",
+    depot: {
+      name: stages.depotName,
+      address: stages.depotAddress,
+      hours: stages.depotHours,
+      status: stages.depotStatus,
+    },
+    currentStall: stages.currentStall,
+    stages: stages.stages?.map((s: any) => ({
+      name: s.name,
+      status: s.status,
+      timestamp: s.timestamp,
+      estimatedCompletion: s.estimatedCompletion,
+    })),
+    progress: `${completedStages}/${totalStages} stages completed`,
+    currentStage: currentStageIdx >= 0 ? stages.stages[currentStageIdx]?.name : "Unknown",
+    message: `Your vehicle is at **${stages.depotName}** — currently **${currentStageIdx >= 0 ? stages.stages[currentStageIdx]?.name : "processing"}**. Stall **${stages.currentStall?.id}** (${stages.currentStall?.subType}). Progress: ${completedStages}/${totalStages} stages.`,
+  };
+}
+
+async function evAccountSummary(args: any, evContext: any) {
+  const sub = evContext?.subscriber;
+  const reservations = evContext?.amenityReservations || [];
+  const records = evContext?.serviceRecords || [];
+
+  if (!sub) return { success: false, error: "No subscriber data available" };
+
+  const totalSpent = records
+    .filter((r: any) => r.status === "completed")
+    .reduce((sum: number, r: any) => sum + (r.cost || 0), 0);
+
+  return {
+    success: true,
+    action: "ev_account_summary",
+    subscriber: {
+      name: `${sub.firstName} ${sub.lastName}`,
+      email: sub.email,
+      phone: sub.phone,
+      membershipTier: sub.membershipTier,
+      subscriptionStatus: sub.subscriptionStatus,
+      memberSince: sub.memberSince,
+      preferredDepot: sub.preferredDepotId,
+      homeAddress: `${sub.homeAddress?.street}, ${sub.homeAddress?.city}, ${sub.homeAddress?.state}`,
+    },
+    billing: {
+      totalSpent: `$${totalSpent.toFixed(2)}`,
+      servicesCompleted: records.filter((r: any) => r.status === "completed").length,
+      pendingServices: records.filter((r: any) => r.status === "in_progress" || r.status === "scheduled").length,
+    },
+    upcomingReservations: reservations
+      .filter((r: any) => r.status === "confirmed")
+      .map((r: any) => ({
+        type: r.type,
+        date: r.date,
+        time: `${r.startTime} - ${r.endTime}`,
+        depot: r.depotName,
+        bay: r.bayNumber,
+      })),
+    message: `**${sub.firstName} ${sub.lastName}** — **${sub.membershipTier}** member since ${new Date(sub.memberSince).toLocaleDateString()}. Total spent: **$${totalSpent.toFixed(2)}**. ${reservations.filter((r: any) => r.status === "confirmed").length} upcoming reservation(s).`,
+  };
+}
+
 // Main executor
-export async function executeFunction(functionCall: any, supabase: any, fleetContext?: any) {
+export async function executeFunction(functionCall: any, supabase: any, fleetContext?: any, evContext?: any) {
   const { name, arguments: rawArgs } = functionCall;
   const parsedArgs = typeof rawArgs === "string" ? JSON.parse(rawArgs || "{}") : (rawArgs ?? {});
   
@@ -1563,38 +1770,39 @@ export async function executeFunction(functionCall: any, supabase: any, fleetCon
     case 'create_optimization_plan':
       return await createOptimizationPlan(parsedArgs);
 
-    // ─────────────────────────────────────────────────────────────────────────────
-    // PREDICTIVE ANALYTICS TOOLS
-    // ─────────────────────────────────────────────────────────────────────────────
+    // PREDICTIVE ANALYTICS
     case 'predict_charging_needs':
       return await predictChargingNeeds(parsedArgs, fleetContext);
-
     case 'predict_maintenance_risks':
       return await predictMaintenanceRisks(parsedArgs, fleetContext);
-
     case 'predict_depot_demand':
       return await predictDepotDemand(parsedArgs, fleetContext);
 
-    // ─────────────────────────────────────────────────────────────────────────────
-    // AUTOMATION / OTTO-Q TOOLS
-    // ─────────────────────────────────────────────────────────────────────────────
+    // AUTOMATION / OTTO-Q
     case 'auto_queue_charging':
       return await autoQueueCharging(parsedArgs, fleetContext);
-
     case 'auto_queue_maintenance':
       return await autoQueueMaintenance(parsedArgs, fleetContext);
-
     case 'triage_incidents':
       return await triageIncidents(parsedArgs, fleetContext);
-
     case 'detect_anomalies':
       return await detectAnomalies(parsedArgs, fleetContext);
-
     case 'utilization_report':
       return await utilizationReport(parsedArgs, fleetContext);
-
     case 'explain_concept':
       return await explainConcept(parsedArgs);
+
+    // EV (OrchestraEV) TOOLS
+    case 'ev_vehicle_status':
+      return await evVehicleStatus(parsedArgs, evContext);
+    case 'ev_book_amenity':
+      return await evBookAmenity(parsedArgs, evContext);
+    case 'ev_schedule_service':
+      return await evScheduleService(parsedArgs, evContext);
+    case 'ev_depot_queue_status':
+      return await evDepotQueueStatus(parsedArgs, evContext);
+    case 'ev_account_summary':
+      return await evAccountSummary(parsedArgs, evContext);
 
     default:
       return {

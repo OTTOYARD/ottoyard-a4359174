@@ -19,6 +19,15 @@ import {
 interface AIAgentPopupProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  mode?: "av" | "ev";
+  evContext?: {
+    subscriber: any;
+    vehicle: any;
+    serviceRecords: any[];
+    amenityAvailability: any;
+    amenityReservations: any[];
+    depotStages: any;
+  };
   currentCity?: {
     name: string;
     coordinates: [number, number];
@@ -35,7 +44,7 @@ interface Message {
   timestamp: Date;
 }
 
-export const AIAgentPopup = ({ open, onOpenChange, currentCity, vehicles = [], depots = [] }: AIAgentPopupProps) => {
+export const AIAgentPopup = ({ open, onOpenChange, mode = "av", evContext, currentCity, vehicles = [], depots = [] }: AIAgentPopupProps) => {
   // Get real-time fleet context
   const fleetContext = useFleetContext();
   const incidents = useIncidentsStore((state) => state.incidents);
@@ -44,7 +53,9 @@ export const AIAgentPopup = ({ open, onOpenChange, currentCity, vehicles = [], d
     {
       id: '1',
       role: 'assistant',
-      content: 'Hello! I\'m OttoCommand AI, your intelligent fleet assistant. I can help with:\n\n• **Fleet Status** - Real-time vehicle & depot data\n• **Analytics** - Performance reports & insights\n• **Operations** - Scheduling, maintenance, OTTOW dispatch\n• **Industry Knowledge** - AV regulations, best practices\n\nAsk me anything about your fleet!',
+      content: mode === "ev"
+        ? `Hello${evContext?.subscriber?.firstName ? `, ${evContext.subscriber.firstName}` : ''}! I'm OttoCommand for OrchestraEV — your personal EV concierge. I can help with:\n\n• **Vehicle Status** — SOC, health, charging ETA\n• **Book Amenities** — Sim golf, cowork tables, privacy pods\n• **Schedule Services** — Detailing, tire rotation, maintenance\n• **Depot Queue** — Stall position, wait times, service stages\n• **Account & Billing** — Membership tier, charges, reservations\n\nHow can I help you today?`
+        : 'Hello! I\'m OttoCommand AI, your intelligent fleet assistant. I can help with:\n\n• **Fleet Status** - Real-time vehicle & depot data\n• **Analytics** - Performance reports & insights\n• **Operations** - Scheduling, maintenance, OTTOW dispatch\n• **Industry Knowledge** - AV regulations, best practices\n\nAsk me anything about your fleet!',
       timestamp: new Date()
     }
   ]);
@@ -83,12 +94,15 @@ export const AIAgentPopup = ({ open, onOpenChange, currentCity, vehicles = [], d
       const { data, error } = await supabase.functions.invoke('ottocommand-ai-chat', {
         body: {
           message: text,
+          mode: mode === "ev" ? "ev" : "ops",
           conversationHistory: messages.slice(-10),
           currentCity,
           vehicles,
           depots,
-          // Pass comprehensive fleet context
-          fleetContext: {
+          // Pass EV context when in EV mode
+          evContext: mode === "ev" ? evContext : undefined,
+          // Pass comprehensive fleet context for AV mode
+          fleetContext: mode === "av" ? {
             serialized: fleetDataContext,
             metrics: {
               fleet: fleetContext.fleetMetrics,
@@ -104,7 +118,7 @@ export const AIAgentPopup = ({ open, onOpenChange, currentCity, vehicles = [], d
               vehicleId: i.vehicleId,
               summary: i.summary,
             })),
-          }
+          } : undefined,
         }
       });
 
@@ -179,16 +193,12 @@ export const AIAgentPopup = ({ open, onOpenChange, currentCity, vehicles = [], d
   };
 
   const handleQuickAction = async (action: QuickAction) => {
-    if (action.isDialog && action.id === "ottow-dispatch") {
-      // Send message to AI to start OTTOW dispatch flow
-      const dispatchMessage = currentCity
-        ? `I need to dispatch OTTOW in ${currentCity.name}`
-        : "I need to dispatch OTTOW tow service";
-
+    if (action.isDialog) {
+      // Send message to AI to handle dialog actions
       const userMessage: Message = {
         id: Date.now().toString(),
         role: 'user',
-        content: dispatchMessage,
+        content: action.prompt,
         timestamp: new Date()
       };
 
@@ -200,12 +210,14 @@ export const AIAgentPopup = ({ open, onOpenChange, currentCity, vehicles = [], d
 
         const { data, error } = await supabase.functions.invoke('ottocommand-ai-chat', {
           body: {
-            message: dispatchMessage,
+            message: action.prompt,
+            mode: mode === "ev" ? "ev" : "ops",
             conversationHistory: messages.slice(-10),
             currentCity,
             vehicles,
             depots,
-            fleetContext: {
+            evContext: mode === "ev" ? evContext : undefined,
+            fleetContext: mode === "av" ? {
               serialized: fleetDataContext,
               metrics: {
                 fleet: fleetContext.fleetMetrics,
@@ -221,13 +233,13 @@ export const AIAgentPopup = ({ open, onOpenChange, currentCity, vehicles = [], d
                 vehicleId: i.vehicleId,
                 summary: i.summary,
               })),
-            }
+            } : undefined,
           }
         });
 
         if (error) throw error;
 
-        const content = data?.content || 'I can help you dispatch OTTOW. Which city would you like to dispatch to?';
+        const content = data?.content || 'I can help you with that. Could you provide more details?';
 
         const assistantMessage: Message = {
           id: (Date.now() + 1).toString(),
@@ -252,7 +264,7 @@ export const AIAgentPopup = ({ open, onOpenChange, currentCity, vehicles = [], d
         setIsLoading(false);
       }
     } else {
-      // For non-dialog actions, set the prompt as the input message
+      // For non-dialog actions, set the prompt as the input message and auto-send
       setInputMessage(action.prompt);
     }
   };
@@ -268,8 +280,8 @@ export const AIAgentPopup = ({ open, onOpenChange, currentCity, vehicles = [], d
                   <Bot className="h-3 w-3 text-white sm:h-4 sm:w-4" />
                 </div>
                 <div>
-                  <span className="text-base font-semibold sm:text-lg">OttoCommand</span>
-                  <p className="text-xs text-muted-foreground">AI-Powered Assistant</p>
+                   <span className="text-base font-semibold sm:text-lg">OttoCommand{mode === "ev" ? " EV" : ""}</span>
+                   <p className="text-xs text-muted-foreground">{mode === "ev" ? "EV Concierge" : "AI-Powered Assistant"}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -302,6 +314,7 @@ export const AIAgentPopup = ({ open, onOpenChange, currentCity, vehicles = [], d
                   onSelect={handleQuickAction}
                   disabled={isLoading}
                   currentCity={currentCity?.name}
+                  mode={mode}
                 />
               </div>
 
