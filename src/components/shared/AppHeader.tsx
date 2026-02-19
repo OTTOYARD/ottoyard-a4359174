@@ -69,8 +69,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                 </Button>
               </SettingsHub>
             </div>
-            <Button variant="default" size="sm" className="h-7 px-2.5 gap-1.5" onClick={onOpenAI}>
-              <Bot className="h-3.5 w-3.5" />
+            <Button variant="default" size="sm" className="h-7 px-2.5" onClick={onOpenAI}>
               <span className="text-xs font-semibold">OttoCommand</span>
             </Button>
             <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-emerald-500/30 text-emerald-400 gap-1">
