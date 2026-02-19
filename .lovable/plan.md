@@ -1,20 +1,18 @@
 
 
-# Tab Styling Updates
+# Tighter Tab Styling for Mobile and Desktop
 
-## Changes
+## What Changes
 
-### 1. Rename "Depot & Q" tab to "Depot" in `src/pages/OrchestraEV.tsx`
-- Line 54: Change `Depot & Q` to `Depot`
+### 1. Reduce horizontal padding between tab labels (`src/components/ui/tabs.tsx`)
+- **TabsTrigger**: Reduce `px-2 md:px-4` to `px-1 md:px-2.5` so the text in each tab sits closer together
 
-### 2. Update `TabsTrigger` text color in `src/components/ui/tabs.tsx`
-- Change inactive tab text from `text-muted-foreground` to `text-white` so all tab labels are bright white
-- Keep the active state styling (`data-[state=active]:bg-primary data-[state=active]:text-primary-foreground`)
+### 2. Shrink the tab tray border inward (`src/components/ui/tabs.tsx`)
+- **TabsList**: Reduce internal padding from `p-0.5 md:p-1` to `p-px md:p-0.5` so the glowing border hugs the tabs more tightly
 
-### 3. Update `TabsList` border to glow blue permanently in `src/components/ui/tabs.tsx`
-- Change `border-border/50` to `border-blue-500/50`
-- Change the hover glow from conditional to always-on: add `shadow-[0_0_8px_2px_rgba(59,130,246,0.25)]` as a default class (not just on hover)
-- Keep the hover state for a slightly brighter glow
+### 3. Constrain tab tray width on both pages
+- **OrchestraEV** (`src/pages/OrchestraEV.tsx`, line 52): Change `max-w-2xl` to `max-w-xl` so the tray doesn't stretch as wide
+- **Index/AV** (`src/pages/Index.tsx`, ~line 532): Add `max-w-xl` to the TabsList wrapper so it also doesn't span the full page width
 
-These changes affect the shared `tabs.tsx` component, so both the AV (Index) and EV (OrchestraEV) pages will get the updated styling automatically.
+All changes are purely CSS class adjustments -- no logic changes.
 
