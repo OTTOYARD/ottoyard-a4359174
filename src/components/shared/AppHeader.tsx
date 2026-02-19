@@ -37,7 +37,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                 alt="OTTOYARD"
                 className="w-[76px] h-[76px] object-contain flex-shrink-0"
               />
-              <div className="flex flex-col items-center min-w-0">
+              <div className="flex flex-col items-center min-w-0 mt-1.5">
                 <span className="text-base font-bold tracking-wide text-foreground truncate drop-shadow-[0_0_8px_rgba(255,255,255,0.15)]">
                   OTTOYARD
                 </span>
