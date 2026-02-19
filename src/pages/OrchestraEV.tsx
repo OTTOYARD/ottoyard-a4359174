@@ -6,7 +6,7 @@ import { EVOverview } from "@/components/orchestra-ev/EVOverview";
 import { EVDepotQ } from "@/components/orchestra-ev/EVDepotQ";
 import { EVServices } from "@/components/orchestra-ev/EVServices";
 import { EVTowing } from "@/components/orchestra-ev/EVTowing";
-import { EVAmenities } from "@/components/orchestra-ev/EVAmenities";
+
 import { EVReports } from "@/components/orchestra-ev/EVReports";
 
 // Mock data
@@ -49,18 +49,17 @@ const OrchestraEV = () => {
       <div className="px-3 pb-3">
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
           <div className="flex justify-center mb-3">
-            <TabsList className="flex overflow-x-auto md:grid md:grid-cols-6 w-full max-w-xl">
+            <TabsList className="flex overflow-x-auto md:grid md:grid-cols-5 w-full max-w-xl">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="depot-q">Depot</TabsTrigger>
               <TabsTrigger value="services">Services</TabsTrigger>
               <TabsTrigger value="towing">OTTOW</TabsTrigger>
-              <TabsTrigger value="amenities">Amenities</TabsTrigger>
               <TabsTrigger value="reports">Reports</TabsTrigger>
             </TabsList>
           </div>
 
           <TabsContent value="overview">
-            <EVOverview subscriber={mockSubscriber} vehicle={mockVehicle} serviceRecords={mockServiceRecords} notifications={mockNotifications} events={mockEvents} predictions={mockMaintenancePredictions} onTabChange={setSelectedTab} />
+            <EVOverview subscriber={mockSubscriber} vehicle={mockVehicle} serviceRecords={mockServiceRecords} notifications={mockNotifications} events={mockEvents} predictions={mockMaintenancePredictions} amenityAvailability={mockAmenityAvailability} amenityReservations={mockAmenityReservations} onTabChange={setSelectedTab} />
           </TabsContent>
 
           <TabsContent value="depot-q">
@@ -73,10 +72,6 @@ const OrchestraEV = () => {
 
           <TabsContent value="towing">
             <EVTowing towRequests={mockTowRequests} />
-          </TabsContent>
-
-          <TabsContent value="amenities">
-            <EVAmenities reservations={mockAmenityReservations} availability={mockAmenityAvailability} />
           </TabsContent>
 
           <TabsContent value="reports">

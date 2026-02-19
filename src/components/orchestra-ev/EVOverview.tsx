@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import {
   Calendar,
   Wrench,
@@ -15,8 +16,10 @@ import {
   Zap,
   MapPin,
   ExternalLink,
+  ChevronDown,
 } from "lucide-react";
 import { EVVehicleHero } from "./EVVehicleHero";
+import { EVAmenities } from "./EVAmenities";
 import type {
   Subscriber,
   SubscriberVehicle,
@@ -24,6 +27,8 @@ import type {
   EVNotification,
   EVEvent,
   MaintenancePrediction,
+  AmenityAvailability,
+  AmenityReservation,
 } from "@/lib/orchestra-ev/types";
 
 interface EVOverviewProps {
@@ -33,6 +38,8 @@ interface EVOverviewProps {
   notifications: EVNotification[];
   events: EVEvent[];
   predictions: MaintenancePrediction[];
+  amenityAvailability: AmenityAvailability;
+  amenityReservations: AmenityReservation[];
   onTabChange: (tab: string) => void;
 }
 
@@ -49,12 +56,23 @@ export const EVOverview: React.FC<EVOverviewProps> = ({
   notifications,
   events,
   predictions,
+  amenityAvailability,
+  amenityReservations,
   onTabChange,
 }) => {
+  const [amenitiesOpen, setAmenitiesOpen] = useState(false);
+  const amenitiesRef = useRef<HTMLDivElement>(null);
   const upcomingServices = serviceRecords.filter(
     (s) => s.status === "scheduled" || s.status === "in_progress"
   );
   const unreadNotifications = notifications.filter((n) => !n.read);
+
+  const handleOpenAmenities = () => {
+    setAmenitiesOpen(true);
+    setTimeout(() => {
+      amenitiesRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 150);
+  };
 
   return (
     <div className="space-y-4">
@@ -115,7 +133,7 @@ export const EVOverview: React.FC<EVOverviewProps> = ({
                 variant="outline"
                 size="sm"
                 className="h-8 text-xs justify-start gap-1.5"
-                onClick={() => onTabChange("amenities")}
+                onClick={handleOpenAmenities}
               >
                 <Target className="h-3.5 w-3.5" />
                 Reserve Amenity
@@ -225,6 +243,30 @@ export const EVOverview: React.FC<EVOverviewProps> = ({
             </Button>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Amenities — Collapsible Tile */}
+      <div ref={amenitiesRef}>
+        <Collapsible open={amenitiesOpen} onOpenChange={setAmenitiesOpen}>
+          <Card className="glass-panel border-border/50">
+            <CollapsibleTrigger asChild>
+              <CardHeader className="pb-2 cursor-pointer select-none">
+                <CardTitle className="text-sm font-semibold flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <Target className="h-4 w-4 text-primary" />
+                    Amenities
+                  </span>
+                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${amenitiesOpen ? "rotate-180" : ""}`} />
+                </CardTitle>
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="pt-0">
+                <EVAmenities availability={amenityAvailability} reservations={amenityReservations} />
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
       </div>
 
       {/* Notifications + Events */}
