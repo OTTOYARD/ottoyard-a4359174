@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
-import { Check, ChevronDown, Car, Truck, Bot } from "lucide-react";
+import { Check, ChevronDown, Car, Truck } from "lucide-react";
 
 interface InterfaceToggleProps {
   children: React.ReactNode;
@@ -10,28 +10,20 @@ interface InterfaceToggleProps {
 
 const interfaces = [
   {
-    id: "fleet-command",
-    label: "Fleet Command",
-    description: "Commercial fleet management",
+    id: "orchestra-av1",
+    label: "OrchestraAV1",
+    description: "Autonomous vehicle management",
     path: "/",
     icon: Truck,
     available: true,
   },
   {
-    id: "orchestra-ev",
-    label: "OrchestraEV",
+    id: "orchestra-ev1",
+    label: "OrchestraEV1",
     description: "Private EV management",
     path: "/orchestra-ev",
     icon: Car,
     available: true,
-  },
-  {
-    id: "orchestra-av",
-    label: "OrchestraAV",
-    description: "Autonomous vehicle solutions",
-    path: "/orchestra-av",
-    icon: Bot,
-    available: false,
   },
 ];
 
@@ -88,7 +80,7 @@ export const InterfaceToggle: React.FC<InterfaceToggleProps> = ({ children }) =>
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className={`text-sm font-medium ${iface.id.startsWith("orchestra") ? "text-orchestra" : ""}`}>
+                    <span className="text-sm font-medium text-orchestra">
                       {iface.label}
                     </span>
                     {!iface.available && (
@@ -115,7 +107,6 @@ export const InterfaceToggle: React.FC<InterfaceToggleProps> = ({ children }) =>
 
 /** Returns the display name for the current interface based on pathname */
 export function getInterfaceName(pathname: string): string {
-  if (pathname.startsWith("/orchestra-ev")) return "OrchestraEV";
-  if (pathname.startsWith("/orchestra-av")) return "OrchestraAV";
-  return "Fleet Command";
+  if (pathname.startsWith("/orchestra-ev")) return "OrchestraEV1";
+  return "OrchestraAV1";
 }

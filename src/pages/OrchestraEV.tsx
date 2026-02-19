@@ -40,7 +40,7 @@ const OrchestraEV = () => {
     <div className="min-h-screen bg-background text-foreground">
       {/* Shared Header */}
       <AppHeader
-        appName="OrchestraEV"
+        appName="OrchestraEV1"
         currentCity={defaultCity}
         onOpenAI={() => setAiAgentOpen(true)}
       />
