@@ -520,7 +520,7 @@ const Index = () => {
   return <div className="min-h-screen bg-background">
       {/* Header - Shared AppHeader with Interface Toggle */}
       <AppHeader
-        appName="Fleet Command"
+        appName="OrchestraAV1"
         currentCity={currentCity}
         onOpenAI={() => setAiAgentOpen(true)}
       />
