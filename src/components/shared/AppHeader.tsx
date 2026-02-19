@@ -42,7 +42,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                 <span className="text-base font-bold tracking-wide text-foreground truncate">
                   OTTOYARD
                 </span>
-                <span className="text-sm font-semibold text-primary leading-tight truncate">
+                <span className={`text-sm font-semibold leading-tight truncate ${appName.startsWith("Orchestra") ? "text-orchestra" : "text-primary"}`}>
                   {appName}
                 </span>
               </div>

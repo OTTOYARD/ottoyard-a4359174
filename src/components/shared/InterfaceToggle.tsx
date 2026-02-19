@@ -88,7 +88,7 @@ export const InterfaceToggle: React.FC<InterfaceToggleProps> = ({ children }) =>
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">
+                    <span className={`text-sm font-medium ${iface.id.startsWith("orchestra") ? "text-orchestra" : ""}`}>
                       {iface.label}
                     </span>
                     {!iface.available && (
