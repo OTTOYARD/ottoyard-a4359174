@@ -82,7 +82,7 @@ export const EVTowing: React.FC<EVTowingProps> = ({ towRequests }) => {
                 Request roadside assistance or tow service to the nearest depot
               </p>
             </div>
-            <div className="flex gap-2 w-full sm:w-auto">
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
               <Button size="sm" className="flex-1 sm:flex-none gap-1.5" onClick={() => setShowActiveTow(true)}>
                 <Navigation className="h-3.5 w-3.5" />
                 Dispatch to My Location

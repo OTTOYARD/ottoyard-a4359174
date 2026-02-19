@@ -27,15 +27,15 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   onOpenAI,
 }) => {
   return (
-    <div className="px-3 pt-3 pb-2 overflow-hidden">
+    <div className="px-3 pt-2 pb-1 overflow-hidden">
       <div className="glass-panel rounded-xl border border-border/50 px-3 py-2 overflow-hidden">
         <div className="flex items-start justify-between gap-2 min-w-0">
           <InterfaceToggle>
-            <div className="flex items-center gap-2.5 cursor-pointer min-w-0">
+            <div className="flex items-center gap-1.5 cursor-pointer min-w-0">
               <img
                 src="/ottoyard-logo-new.png"
                 alt="OTTOYARD"
-                className="w-[60px] h-[60px] object-contain flex-shrink-0"
+                className="w-[48px] h-[48px] object-contain flex-shrink-0"
               />
               <div className="flex flex-col min-w-0">
                 <span className="text-lg font-bold tracking-wide text-foreground truncate drop-shadow-[0_0_8px_rgba(255,255,255,0.15)]">
