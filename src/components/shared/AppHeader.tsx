@@ -35,7 +35,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
               <img
                 src="/ottoyard-logo-new.png"
                 alt="OTTOYARD"
-                className="w-[108px] h-[108px] object-contain flex-shrink-0"
+                className="w-[76px] h-[76px] object-contain flex-shrink-0"
               />
               <div className="flex flex-col min-w-0">
                 <span className="text-lg font-bold tracking-wide text-foreground truncate drop-shadow-[0_0_8px_rgba(255,255,255,0.15)]">
