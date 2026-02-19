@@ -39,7 +39,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                 className="w-[60px] h-[60px] object-contain flex-shrink-0"
               />
               <div className="flex flex-col min-w-0">
-                <span className="text-lg font-bold tracking-wide text-foreground truncate">
+                <span className="text-lg font-bold tracking-wide text-foreground truncate drop-shadow-[0_0_8px_rgba(255,255,255,0.15)]">
                   OTTOYARD
                 </span>
                 <span className={`text-sm font-semibold leading-tight truncate ${appName.startsWith("Orchestra") ? "text-orchestra" : "text-primary"}`}>
