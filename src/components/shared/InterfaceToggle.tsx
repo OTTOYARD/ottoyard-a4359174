@@ -45,9 +45,11 @@ export const InterfaceToggle: React.FC<InterfaceToggleProps> = ({ children }) =>
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button className="flex items-center gap-1 cursor-pointer">
+        <button className="flex items-center gap-1 cursor-pointer group">
           {children}
-          <ChevronDown className="h-3 w-3 opacity-50" />
+          <span className="flex items-center justify-center h-5 w-5 rounded-md bg-orchestra/15 border border-orchestra/30 group-hover:bg-orchestra/25 transition-colors">
+            <ChevronDown className="h-3 w-3 text-orchestra" />
+          </span>
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-72 p-2" align="start">
