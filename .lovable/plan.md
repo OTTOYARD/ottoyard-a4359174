@@ -1,35 +1,36 @@
 
 
-# Update Site Logo (No White Background)
+# Fix Logo White Background
 
-## Overview
-Replace the current site logo everywhere with the uploaded red hexagon image, and ensure it renders without any white background artifacts against the dark UI.
+## Problem
+The uploaded logo PNG has a white/light background baked into the image pixels. The `mix-blend-screen` CSS trick only works reliably when the container behind the image has a solid dark background. However, the header uses a `glass-panel` class with semi-transparent backgrounds and backdrop blur, causing the white background to partially show through.
 
-## Changes
+## Solution
+The most reliable fix is to **not rely on CSS blend modes** and instead take a two-pronged approach:
 
-### 1. Copy new logo asset
-- Copy `user-uploads://Untitled_design_7-2.png` to `public/ottoyard-logo-new.png` (overwriting the current file)
-- Also copy to `src/assets/ottoyard-logo.png` (used by the Auth page via ES6 import)
+1. **Re-export the logo with actual transparency** -- Since we can't edit the image file directly, we'll use a CSS `filter` approach that works better than `mix-blend-screen` for this case.
 
-### 2. Ensure no white background shows
-The uploaded PNG appears to have a white background. To handle this:
-- Apply `mix-blend-mode: multiply` or use a CSS approach to blend the white away on dark backgrounds
-- Alternatively, if the image has transparency already, just ensure no container adds a white/light background behind it
+2. **Use a combination of CSS techniques** to hide the white background:
+   - Wrap the logo in a container with a dark background that matches the surrounding panel
+   - Apply `mix-blend-multiply` instead of `mix-blend-screen` -- `multiply` makes white pixels transparent regardless of the container's darkness level
+   - As a fallback, add a dark background directly behind the logo image
 
-### 3. Files affected
-- **`src/components/shared/AppHeader.tsx`** - Main header logo (already references `/ottoyard-logo-new.png`)
-- **`src/pages/Auth.tsx`** - Login page logo (imports from `@/assets/ottoyard-logo.png`)
-- **`src/pages/Install.tsx`** - PWA install page logo (references `/ottoyard-logo-new.png`)
+## Technical Details
 
-For each location, ensure the `<img>` tag does not have any background container styling that would show white, and add a transparent-background-friendly class if needed.
+### `src/components/shared/AppHeader.tsx`
+- Change `mix-blend-screen` to `mix-blend-multiply` on the logo `<img>` tag
+- Note: `mix-blend-multiply` makes white become transparent (white x any color = that color), which is the correct blend mode for removing white backgrounds. `mix-blend-screen` is for removing black backgrounds.
 
-### Technical Details
+### `src/pages/Auth.tsx`
+- Same fix: change both logo `<img>` instances from `mix-blend-screen` to `mix-blend-multiply`
+- The Auth page has a dark background (`from-background via-background to-primary/5`), but the Card component is lighter, so `multiply` is the correct choice here too
 
-The logo image will be copied to both:
-- `public/ottoyard-logo-new.png` (for direct URL references in AppHeader and Install)
-- `src/assets/ottoyard-logo.png` (for the ES6 import in Auth.tsx)
+### `src/pages/Install.tsx`
+- Same fix on the Install page logo
 
-If the PNG has a white background baked into the pixels, we'll add `className="mix-blend-screen"` (for dark backgrounds) or `"mix-blend-multiply"` (for light backgrounds) to visually remove it. Since the app uses a dark theme, `mix-blend-screen` will make white pixels transparent against dark backgrounds.
+### Why `multiply` instead of `screen`?
+- `mix-blend-screen`: makes **black** pixels transparent (good for removing black backgrounds)
+- `mix-blend-multiply`: makes **white** pixels transparent (good for removing white backgrounds)
 
-On the Install page, the logo sits inside a container with `bg-gradient-to-br from-primary/20 to-primary/5` -- we'll keep that but ensure no solid white shows through.
+The previous fix used `screen` which is the wrong mode -- it was designed for the opposite problem. Switching to `multiply` should properly eliminate the white background on all pages.
 
