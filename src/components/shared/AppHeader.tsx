@@ -38,13 +38,13 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                 className="w-[76px] h-[76px] object-contain flex-shrink-0"
               />
               <div className="flex flex-col min-w-0">
-                <span className="text-lg font-bold tracking-wide text-foreground truncate drop-shadow-[0_0_8px_rgba(255,255,255,0.15)]">
+                <span className="text-sm font-bold tracking-wide text-foreground truncate drop-shadow-[0_0_8px_rgba(255,255,255,0.15)]">
                   OTTOYARD
                 </span>
-                <span className={`text-sm font-semibold leading-tight truncate ${appName.startsWith("Orchestra") ? "text-orchestra" : "text-primary"}`}>
+                <span className={`text-[10px] font-semibold leading-tight truncate ${appName.startsWith("Orchestra") ? "text-orchestra" : "text-primary"}`}>
                   {appName}
                 </span>
-                <div className="mt-0.5 min-w-0">
+                <div className="mt-0.5 min-w-0 scale-[0.7] origin-left">
                   <WeatherButton city={currentCity} />
                 </div>
               </div>
