@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppHeader } from "@/components/shared/AppHeader";
-import { AIAgentPopup } from "@/components/AIAgentPopup";
+import { OttoCommandPanel } from "@/components/OttoCommand";
 import { EVOverview } from "@/components/orchestra-ev/EVOverview";
 import { EVDepotQ } from "@/components/orchestra-ev/EVDepotQ";
 import { EVServices } from "@/components/orchestra-ev/EVServices";
@@ -81,7 +81,7 @@ const OrchestraEV = () => {
       </div>
 
       {/* OttoCommand AI Agent */}
-      <AIAgentPopup
+      <OttoCommandPanel
         open={aiAgentOpen}
         onOpenChange={setAiAgentOpen}
         mode="ev"
