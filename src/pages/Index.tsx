@@ -18,7 +18,7 @@ import VehicleCard from "@/components/VehicleCard";
 import DepotCard from "@/components/DepotCard";
 import MetricsCard from "@/components/MetricsCard";
 import { AddVehiclePopup, TrackVehiclePopup, VehicleDetailsPopup, MaintenancePopup } from "@/components/VehiclePopups";
-import { AIAgentPopup } from "@/components/AIAgentPopup";
+import { OttoCommandPanel } from "@/components/OttoCommand";
 import { CartItem } from "@/components/CartButton";
 import SettingsHub from "@/components/SettingsHub";
 import { IncidentCard } from "@/components/IncidentCard";
@@ -1718,7 +1718,7 @@ const Index = () => {
         <TrackVehiclePopup open={trackVehicleOpen} onOpenChange={setTrackVehicleOpen} vehicle={popupVehicle} />
         <VehicleDetailsPopup open={vehicleDetailsOpen} onOpenChange={setVehicleDetailsOpen} vehicle={popupVehicle} />
         <MaintenancePopup open={maintenanceOpen} onOpenChange={setMaintenanceOpen} vehicle={popupVehicle} depots={depots} onAddToCart={handleAddToCart} />
-          <AIAgentPopup open={aiAgentOpen} onOpenChange={setAiAgentOpen} currentCity={currentCity} vehicles={vehicles} depots={depots} />
+          <OttoCommandPanel open={aiAgentOpen} onOpenChange={setAiAgentOpen} currentCity={currentCity} vehicles={vehicles} depots={depots} />
 
         {/* Due Soon Summary Dialog */}
         <Dialog open={showDueSoonSummary} onOpenChange={setShowDueSoonSummary}>
