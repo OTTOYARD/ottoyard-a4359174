@@ -1,5 +1,4 @@
 import React, { useState, useRef } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
@@ -15,7 +14,6 @@ import {
   CalendarDays,
   Zap,
   MapPin,
-  ExternalLink,
   ChevronDown,
 } from "lucide-react";
 import { EVVehicleHero } from "./EVVehicleHero";
@@ -43,10 +41,10 @@ interface EVOverviewProps {
   onTabChange: (tab: string) => void;
 }
 
-const tierColors: Record<string, string> = {
-  basic: "bg-muted text-muted-foreground border-muted",
-  premium: "bg-warning/15 text-warning border-warning/30",
-  enterprise: "bg-primary/15 text-primary border-primary/30",
+const tierBadgeStyle: Record<string, string> = {
+  basic: "bg-muted/50 text-muted-foreground border-muted-foreground/20",
+  premium: "bg-gradient-to-r from-amber-500/20 to-yellow-500/20 text-amber-400 border-amber-500/30",
+  enterprise: "bg-gradient-to-r from-primary/20 to-primary/10 text-primary border-primary/30",
 };
 
 export const EVOverview: React.FC<EVOverviewProps> = ({
@@ -74,6 +72,13 @@ export const EVOverview: React.FC<EVOverviewProps> = ({
     }, 150);
   };
 
+  const quickActions = [
+    { icon: Wrench, label: "Service", onClick: () => onTabChange("services") },
+    { icon: Truck, label: "OTTOW", onClick: () => onTabChange("towing") },
+    { icon: Target, label: "Amenity", onClick: handleOpenAmenities },
+    { icon: MapPin, label: "Depot", onClick: () => onTabChange("depot-q") },
+  ];
+
   return (
     <div className="space-y-4">
       {/* My Vehicle — Primary / Hero Section */}
@@ -82,90 +87,72 @@ export const EVOverview: React.FC<EVOverviewProps> = ({
       {/* Subscriber Profile + Quick Actions Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Subscriber Card */}
-        <Card className="glass-panel border-border/50">
-          <CardContent className="pt-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                <User className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-foreground">
-                  {subscriber.firstName} {subscriber.lastName}
-                </p>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <Badge variant="outline" className={`text-[10px] ${tierColors[subscriber.membershipTier]}`}>
-                    <Crown className="h-2.5 w-2.5 mr-1" />
-                    {subscriber.membershipTier}
-                  </Badge>
-                  <span className="text-[10px] text-muted-foreground">
-                    Since {new Date(subscriber.memberSince).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
-                  </span>
-                </div>
+        <div className="surface-elevated-luxury rounded-2xl p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 ring-2 ring-primary/20 flex items-center justify-center flex-shrink-0">
+              <User className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <p className="text-base font-semibold text-luxury">
+                {subscriber.firstName} {subscriber.lastName}
+              </p>
+              <div className="flex items-center gap-2 mt-1">
+                <Badge
+                  variant="outline"
+                  className={`text-[10px] capitalize ${tierBadgeStyle[subscriber.membershipTier]} ${
+                    subscriber.membershipTier === "premium" ? "animate-shimmer-luxury-bg" : ""
+                  }`}
+                >
+                  <Crown className="h-3 w-3 mr-1" />
+                  {subscriber.membershipTier}
+                </Badge>
+                <span className="text-label-uppercase">
+                  Since {new Date(subscriber.memberSince).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
+                </span>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Quick Actions */}
-        <Card className="glass-panel border-border/50">
-          <CardContent className="pt-4">
-            <p className="text-xs font-semibold text-muted-foreground mb-2">Quick Actions</p>
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 text-xs justify-start gap-1.5"
-                onClick={() => onTabChange("services")}
-              >
-                <Wrench className="h-3.5 w-3.5" />
-                Schedule Service
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 text-xs justify-start gap-1.5"
-                onClick={() => onTabChange("towing")}
-              >
-                <Truck className="h-3.5 w-3.5" />
-                Request OTTOW
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 text-xs justify-start gap-1.5"
-                onClick={handleOpenAmenities}
-              >
-                <Target className="h-3.5 w-3.5" />
-                Reserve Amenity
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 text-xs justify-start gap-1.5"
-                onClick={() => onTabChange("depot-q")}
-              >
-                <MapPin className="h-3.5 w-3.5" />
-                Track at Depot
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="surface-elevated-luxury rounded-2xl p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-label-uppercase">Quick Actions</span>
+            <div className="h-[1px] flex-1 bg-gradient-to-r from-primary/30 to-transparent" />
+          </div>
+          <div className="grid grid-cols-4 gap-2">
+            {quickActions.map((action) => {
+              const Icon = action.icon;
+              return (
+                <button
+                  key={action.label}
+                  onClick={action.onClick}
+                  className="surface-luxury rounded-xl p-3 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-glow-sm"
+                >
+                  <Icon className="h-5 w-5 text-primary mb-1.5" />
+                  <span className="text-xs font-medium text-foreground">{action.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       {/* Upcoming Services + Predictive Maintenance */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Upcoming Services */}
-        <Card className="glass-panel border-border/50">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
-              <Calendar className="h-4 w-4 text-primary" />
-              Upcoming Services
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
+        <div className="surface-luxury rounded-2xl p-5">
+          <p className="text-sm font-semibold text-luxury flex items-center gap-1.5 mb-3">
+            <Calendar className="h-4 w-4 text-primary" />
+            Upcoming Services
+          </p>
+          <div className="space-y-1">
             {upcomingServices.length > 0 ? (
               upcomingServices.map((svc) => (
-                <div key={svc.id} className="flex items-center justify-between py-1.5 border-b border-border/30 last:border-0">
+                <div
+                  key={svc.id}
+                  className="flex items-center justify-between py-2 hover:bg-muted/20 rounded-lg px-2 -mx-2 transition-colors"
+                >
                   <div>
                     <p className="text-xs font-medium text-foreground capitalize">
                       {svc.type.replace(/_/g, " ")}
@@ -188,26 +175,23 @@ export const EVOverview: React.FC<EVOverviewProps> = ({
             ) : (
               <p className="text-xs text-muted-foreground">No upcoming services scheduled.</p>
             )}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full text-xs text-primary h-7 mt-1"
+            <button
+              className="w-full text-xs text-primary hover:text-primary/80 font-medium h-7 mt-2 flex items-center justify-center gap-1 group transition-colors"
               onClick={() => onTabChange("services")}
             >
-              View All Services →
-            </Button>
-          </CardContent>
-        </Card>
+              View All Services
+              <span className="inline-block transition-transform duration-200 group-hover:translate-x-1">→</span>
+            </button>
+          </div>
+        </div>
 
         {/* Predictive Maintenance Highlights */}
-        <Card className="glass-panel border-border/50">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
-              <Zap className="h-4 w-4 text-primary" />
-              Maintenance Insights
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
+        <div className="surface-luxury rounded-2xl p-5">
+          <p className="text-sm font-semibold text-luxury flex items-center gap-1.5 mb-3">
+            <Zap className="h-4 w-4 text-primary" />
+            Maintenance Insights
+          </p>
+          <div className="space-y-1">
             {predictions.slice(0, 2).map((pred) => {
               const urgencyColor =
                 pred.urgency === "urgent"
@@ -216,7 +200,10 @@ export const EVOverview: React.FC<EVOverviewProps> = ({
                   ? "bg-warning/15 text-warning border-warning/30"
                   : "bg-success/15 text-success border-success/30";
               return (
-                <div key={pred.id} className="flex items-center justify-between py-1.5 border-b border-border/30 last:border-0">
+                <div
+                  key={pred.id}
+                  className="flex items-center justify-between py-2 hover:bg-muted/20 rounded-lg px-2 -mx-2 transition-colors"
+                >
                   <div>
                     <p className="text-xs font-medium text-foreground">{pred.label}</p>
                     <p className="text-[10px] text-muted-foreground">
@@ -233,95 +220,115 @@ export const EVOverview: React.FC<EVOverviewProps> = ({
                 </div>
               );
             })}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full text-xs text-primary h-7 mt-1"
+            <button
+              className="w-full text-xs text-primary hover:text-primary/80 font-medium h-7 mt-2 flex items-center justify-center gap-1 group transition-colors"
               onClick={() => onTabChange("services")}
             >
-              View All Recommendations →
-            </Button>
-          </CardContent>
-        </Card>
+              View All Recommendations
+              <span className="inline-block transition-transform duration-200 group-hover:translate-x-1">→</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Amenities — Collapsible Tile */}
       <div ref={amenitiesRef}>
         <Collapsible open={amenitiesOpen} onOpenChange={setAmenitiesOpen}>
-          <Card className="glass-panel border-border/50">
+          <div className="surface-luxury rounded-2xl overflow-hidden">
             <CollapsibleTrigger asChild>
-              <CardHeader className="pb-2 cursor-pointer select-none">
-                <CardTitle className="text-sm font-semibold flex items-center justify-between">
-                  <span className="flex items-center gap-1.5">
-                    <Target className="h-4 w-4 text-primary" />
-                    Amenities
-                  </span>
-                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${amenitiesOpen ? "rotate-180" : ""}`} />
-                </CardTitle>
-              </CardHeader>
+              <div className="px-5 py-4 cursor-pointer select-none">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="flex items-center gap-1.5">
+                      <Target className="h-4 w-4 text-primary" />
+                      <span className="text-sm font-semibold text-luxury">Amenities</span>
+                    </span>
+                    {!amenitiesOpen && (
+                      <span className="text-[10px] text-muted-foreground ml-1">
+                        Golf · Cowork · Pods
+                      </span>
+                    )}
+                  </div>
+                  <ChevronDown
+                    className={`h-4 w-4 text-muted-foreground transition-transform duration-300 ease-out ${
+                      amenitiesOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </div>
+              </div>
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <CardContent className="pt-0">
+              <div className="px-5 pb-5 pt-0">
                 <EVAmenities availability={amenityAvailability} reservations={amenityReservations} />
-              </CardContent>
+              </div>
             </CollapsibleContent>
-          </Card>
+          </div>
         </Collapsible>
       </div>
 
       {/* Notifications + Events */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Notifications */}
-        <Card className="glass-panel border-border/50">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
-              {unreadNotifications.length > 0 ? (
-                <BellDot className="h-4 w-4 text-primary" />
-              ) : (
-                <Bell className="h-4 w-4 text-primary" />
-              )}
-              Notifications
-              {unreadNotifications.length > 0 && (
-                <Badge variant="destructive" className="text-[10px] h-4 min-w-4 px-1">
-                  {unreadNotifications.length}
-                </Badge>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
+        <div className="surface-luxury rounded-2xl p-5">
+          <p className="text-sm font-semibold text-luxury flex items-center gap-1.5 mb-3">
+            {unreadNotifications.length > 0 ? (
+              <BellDot className="h-4 w-4 text-primary" />
+            ) : (
+              <Bell className="h-4 w-4 text-primary" />
+            )}
+            Notifications
+            {unreadNotifications.length > 0 && (
+              <Badge variant="destructive" className="text-[10px] h-4 min-w-4 px-1">
+                {unreadNotifications.length}
+              </Badge>
+            )}
+          </p>
+          <div className="space-y-1">
             {notifications.map((notif) => (
-              <div key={notif.id} className="flex items-start gap-2 py-1.5 border-b border-border/30 last:border-0">
-                <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${notif.read ? "bg-muted-foreground/30" : "bg-primary"}`} />
+              <div
+                key={notif.id}
+                className="flex items-start gap-2 py-2 hover:bg-muted/20 rounded-lg px-2 -mx-2 transition-colors"
+              >
+                <div
+                  className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${
+                    notif.read ? "bg-muted-foreground/30" : "bg-primary animate-pulse-ring"
+                  }`}
+                />
                 <div>
                   <p className="text-xs text-foreground">{notif.message}</p>
                   <p className="text-[10px] text-muted-foreground">{notif.time}</p>
                 </div>
               </div>
             ))}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Events */}
-        <Card className="glass-panel border-border/50">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
-              <CalendarDays className="h-4 w-4 text-primary" />
-              Upcoming Events
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
+        <div className="surface-luxury rounded-2xl p-5">
+          <p className="text-sm font-semibold text-luxury flex items-center gap-1.5 mb-3">
+            <CalendarDays className="h-4 w-4 text-primary" />
+            Upcoming Events
+          </p>
+          <div className="space-y-2">
             {events.map((evt) => (
-              <div key={evt.id} className="space-y-1 py-1.5 border-b border-border/30 last:border-0">
+              <div
+                key={evt.id}
+                className="py-2 hover:bg-muted/20 rounded-lg px-2 -mx-2 transition-colors space-y-1"
+              >
                 <div className="flex items-center justify-between">
                   <p className="text-xs font-medium text-foreground">{evt.title}</p>
                   {evt.rsvpd ? (
-                    <Badge variant="outline" className="text-[10px] bg-success/15 text-success border-success/30">
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] bg-success/15 text-success border-success/30"
+                      style={{ boxShadow: "0 0 8px hsl(var(--success) / 0.2)" }}
+                    >
                       RSVP'd
                     </Badge>
                   ) : (
-                    <Button variant="outline" size="sm" className="h-5 text-[10px] px-2">
+                    <button className="glass-button rounded-lg text-[10px] px-2.5 py-1 font-medium text-foreground">
                       RSVP
-                    </Button>
+                    </button>
                   )}
                 </div>
                 <p className="text-[10px] text-muted-foreground">
@@ -335,8 +342,8 @@ export const EVOverview: React.FC<EVOverviewProps> = ({
                 <p className="text-[10px] text-muted-foreground">{evt.description}</p>
               </div>
             ))}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );
