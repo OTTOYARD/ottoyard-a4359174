@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
@@ -16,7 +15,6 @@ export default function ResetPassword() {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   useEffect(() => {
-    // Check if user has a valid recovery session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
         toast({
@@ -65,7 +63,6 @@ export default function ResetPassword() {
         duration: 5000,
       });
 
-      // Sign out and redirect to login
       await supabase.auth.signOut();
       navigate("/auth");
     } catch (error: any) {
@@ -80,18 +77,31 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl">Set New Password</CardTitle>
-          <CardDescription>
-            Enter your new password below
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleResetPassword} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="password">New Password</Label>
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Radial glow */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse 50% 50% at 50% 40%, hsl(var(--primary) / 0.06) 0%, transparent 70%)",
+        }}
+      />
+
+      <div className="surface-elevated-luxury rounded-3xl max-w-md w-full overflow-hidden animate-fade-in-scale relative z-10">
+        {/* Top accent line */}
+        <div className="h-[2px] bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+
+        <div className="p-8 space-y-6">
+          <div className="text-center space-y-1">
+            <h1 className="text-2xl font-bold text-luxury">Set New Password</h1>
+            <p className="text-sm text-muted-foreground">
+              Enter your new password below
+            </p>
+          </div>
+
+          <form onSubmit={handleResetPassword} className="space-y-5">
+            <div className="space-y-2 animate-fade-in-up" style={{ animationDelay: "100ms", animationFillMode: "both" }}>
+              <Label htmlFor="password" className="text-label-uppercase">New Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -100,10 +110,11 @@ export default function ResetPassword() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
+                className="glass-input rounded-xl h-11"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirm-password">Confirm New Password</Label>
+            <div className="space-y-2 animate-fade-in-up" style={{ animationDelay: "200ms", animationFillMode: "both" }}>
+              <Label htmlFor="confirm-password" className="text-label-uppercase">Confirm New Password</Label>
               <Input
                 id="confirm-password"
                 type="password"
@@ -112,15 +123,18 @@ export default function ResetPassword() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 minLength={6}
+                className="glass-input rounded-xl h-11"
               />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Update Password
-            </Button>
+            <div className="animate-fade-in-up" style={{ animationDelay: "300ms", animationFillMode: "both" }}>
+              <Button type="submit" className="futuristic-button rounded-xl h-11 w-full text-base font-semibold" disabled={loading}>
+                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Update Password
+              </Button>
+            </div>
           </form>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
