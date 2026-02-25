@@ -276,6 +276,11 @@
     --transition-normal: 200ms ease-out;
     --transition-smooth: 250ms cubic-bezier(0.4, 0, 0.2, 1);
     --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Luxury Design Tokens */
+    --glass-warmth: linear-gradient(135deg, hsl(30 20% 50% / 0.03) 0%, transparent 60%);
+    --font-display: 'Inter', system-ui, sans-serif;
+    --font-body: 'Inter', system-ui, sans-serif;
   }
 
   .dark {
@@ -357,6 +362,20 @@
     pointer-events: none;
     z-index: -1;
   }
+
+  /* Luxury noise texture overlay */
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.015'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: -1;
+    opacity: 0.4;
+  }
 }
 
 @layer components {
@@ -373,6 +392,16 @@
     box-shadow: var(--glass-shadow-subtle),
                 inset 0 1px 0 var(--glass-highlight);
     transition: all var(--transition-smooth);
+    position: relative;
+  }
+
+  .glass-panel::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--glass-warmth);
+    pointer-events: none;
+    border-radius: inherit;
   }
 
   .glass-panel:hover {
@@ -391,6 +420,16 @@
     box-shadow: var(--glass-shadow-subtle),
                 inset 0 1px 0 var(--glass-highlight);
     transition: all var(--transition-smooth);
+    position: relative;
+  }
+
+  .glass-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--glass-warmth);
+    pointer-events: none;
+    border-radius: inherit;
   }
 
   .glass-card:hover {
@@ -398,6 +437,68 @@
     box-shadow: var(--glass-shadow-medium),
                 inset 0 1px 0 var(--glass-highlight-strong);
     transform: translateY(-1px);
+  }
+
+  /* ============================================
+     LUXURY SURFACE COMPONENTS
+     ============================================ */
+
+  /* Luxury Surface - Refined glass with warm glow */
+  .surface-luxury {
+    background: var(--glass-surface);
+    backdrop-filter: blur(var(--glass-blur-lg));
+    -webkit-backdrop-filter: blur(var(--glass-blur-lg));
+    border: 1.5px solid var(--glass-border);
+    box-shadow: var(--glass-shadow-subtle),
+                inset 0 0 40px hsl(30 15% 50% / 0.03),
+                inset 0 1px 0 hsl(0 0% 100% / 0.09);
+    transition: all var(--transition-smooth);
+    position: relative;
+  }
+
+  .surface-luxury::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--glass-warmth);
+    pointer-events: none;
+    border-radius: inherit;
+  }
+
+  .surface-luxury:hover {
+    border-color: var(--glass-border-strong);
+    box-shadow: var(--glass-shadow-medium),
+                inset 0 0 40px hsl(30 15% 50% / 0.04),
+                inset 0 1px 0 hsl(0 0% 100% / 0.12);
+  }
+
+  /* Elevated Luxury Surface - Higher prominence */
+  .surface-elevated-luxury {
+    background: hsl(var(--card) / 0.72);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1.5px solid var(--glass-border);
+    box-shadow: 0 12px 40px hsl(0 0% 0% / 0.3),
+                inset 0 0 40px hsl(30 15% 50% / 0.03),
+                inset 0 1px 0 hsl(0 0% 100% / 0.09);
+    transition: all var(--transition-smooth);
+    position: relative;
+  }
+
+  .surface-elevated-luxury::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--glass-warmth);
+    pointer-events: none;
+    border-radius: inherit;
+  }
+
+  .surface-elevated-luxury:hover {
+    border-color: var(--glass-border-strong);
+    box-shadow: 0 16px 48px hsl(0 0% 0% / 0.35),
+                inset 0 0 40px hsl(30 15% 50% / 0.04),
+                inset 0 1px 0 hsl(0 0% 100% / 0.12);
   }
 
   /* Glass Modal - Higher opacity for readability */
@@ -707,5 +808,83 @@
   
   .focus-ring-primary {
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+
+  /* ============================================
+     LUXURY TYPOGRAPHY UTILITIES
+     ============================================ */
+
+  .text-luxury {
+    letter-spacing: 0.02em;
+    text-shadow: 0 1px 2px hsl(0 0% 0% / 0.3);
+  }
+
+  .text-label-uppercase {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: hsl(var(--muted-foreground));
+  }
+
+  /* ============================================
+     LUXURY ANIMATION KEYFRAMES
+     ============================================ */
+
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fade-in-scale {
+    from {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes shimmer-luxury {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  @keyframes number-tick {
+    from {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes pulse-ring {
+    0% {
+      box-shadow: 0 0 0 0 hsl(var(--primary) / 0.4);
+    }
+    100% {
+      box-shadow: 0 0 0 12px hsl(var(--primary) / 0);
+    }
+  }
+
+  .animate-shimmer-luxury-bg {
+    background-image: linear-gradient(90deg, transparent, hsl(0 0% 100% / 0.04), transparent);
+    background-size: 200% 100%;
+    animation: shimmer-luxury 2.5s linear infinite;
   }
 }
