@@ -16,18 +16,24 @@ export const EVServiceStageTracker: React.FC<EVServiceStageTrackerProps> = ({ st
           return (
             <React.Fragment key={index}>
               <div className="flex flex-col items-center text-center min-w-[80px]">
-                {/* Icon */}
+                {/* Icon with premium container */}
                 {stage.status === "completed" ? (
-                  <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0" />
+                  <div className="bg-success/20 rounded-full p-1 shadow-[0_0_8px_hsl(var(--success)/0.3)]">
+                    <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
+                  </div>
                 ) : stage.status === "in_progress" ? (
-                  <Loader2 className="h-5 w-5 text-primary animate-spin flex-shrink-0" />
+                  <div className="bg-primary/20 rounded-full p-1 animate-pulse-ring">
+                    <Loader2 className="h-4 w-4 text-primary animate-spin flex-shrink-0" />
+                  </div>
                 ) : (
-                  <Circle className="h-5 w-5 text-muted-foreground/40 flex-shrink-0" />
+                  <div className="rounded-full p-1">
+                    <Circle className="h-4 w-4 text-muted-foreground/40 flex-shrink-0" />
+                  </div>
                 )}
                 {/* Label */}
-                <span className={`text-[10px] mt-1 max-w-[80px] leading-tight ${
+                <span className={`text-xs font-medium mt-1.5 max-w-[80px] leading-tight ${
                   stage.status === "completed" ? "text-success" :
-                  stage.status === "in_progress" ? "text-primary font-medium" :
+                  stage.status === "in_progress" ? "text-primary font-semibold" :
                   "text-muted-foreground/50"
                 }`}>
                   {stage.name}
@@ -45,9 +51,15 @@ export const EVServiceStageTracker: React.FC<EVServiceStageTrackerProps> = ({ st
 
               {/* Connector Line */}
               {!isLast && (
-                <div className={`flex-1 h-[2px] mt-2.5 mx-1 rounded-full ${
-                  stage.status === "completed" ? "bg-success" : "bg-border/50"
-                }`} />
+                <div className={`flex-1 h-[3px] mt-3 mx-1 rounded-full ${
+                  stage.status === "completed"
+                    ? "bg-gradient-to-r from-success to-success/60"
+                    : "bg-muted/30"
+                }`}
+                style={stage.status !== "completed" ? {
+                  backgroundImage: "repeating-linear-gradient(90deg, hsl(var(--muted-foreground) / 0.15) 0px, hsl(var(--muted-foreground) / 0.15) 4px, transparent 4px, transparent 8px)"
+                } : undefined}
+                />
               )}
             </React.Fragment>
           );
@@ -62,23 +74,33 @@ export const EVServiceStageTracker: React.FC<EVServiceStageTrackerProps> = ({ st
             <div key={index} className="flex gap-3">
               <div className="flex flex-col items-center">
                 {stage.status === "completed" ? (
-                  <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
+                  <div className="bg-success/20 rounded-full p-1 shadow-[0_0_8px_hsl(var(--success)/0.3)]">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-success flex-shrink-0" />
+                  </div>
                 ) : stage.status === "in_progress" ? (
-                  <Loader2 className="h-4 w-4 text-primary animate-spin flex-shrink-0" />
+                  <div className="bg-primary/20 rounded-full p-1 animate-pulse-ring">
+                    <Loader2 className="h-3.5 w-3.5 text-primary animate-spin flex-shrink-0" />
+                  </div>
                 ) : (
-                  <Circle className="h-4 w-4 text-muted-foreground/40 flex-shrink-0" />
+                  <div className="rounded-full p-1">
+                    <Circle className="h-3.5 w-3.5 text-muted-foreground/40 flex-shrink-0" />
+                  </div>
                 )}
                 {!isLast && (
-                  <div className={`w-[2px] flex-1 my-1 rounded-full ${
-                    stage.status === "completed" ? "bg-success" : "bg-border/50"
-                  }`} />
+                  <div
+                    className={`w-[3px] flex-1 my-1 rounded-full ${
+                      stage.status === "completed"
+                        ? "bg-gradient-to-b from-success to-success/60"
+                        : "bg-muted/30"
+                    }`}
+                  />
                 )}
               </div>
 
               <div className="pb-3">
-                <p className={`text-xs ${
+                <p className={`text-xs font-medium ${
                   stage.status === "completed" ? "text-success" :
-                  stage.status === "in_progress" ? "text-primary font-medium" :
+                  stage.status === "in_progress" ? "text-primary font-semibold" :
                   "text-muted-foreground/50"
                 }`}>
                   {stage.name}
