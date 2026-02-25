@@ -36,9 +36,10 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   // Format app name with separator dot
   const formatAppName = (name: string) => {
     if (name.startsWith("Orchestra")) {
+      const suffix = name.replace("Orchestra", "");
       return (
         <>
-          Orchestra<span className="mx-0.5 opacity-50">•</span>EV1
+          Orchestra<span className="mx-0.5 opacity-50">•</span>{suffix}
         </>
       );
     }
@@ -74,7 +75,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                 </span>
                 {/* Decorative brand line */}
                 <div className="h-[1px] w-12 bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
-                <span className="text-label-uppercase text-orchestra leading-tight truncate">
+                <span className="text-label-uppercase text-orchestra leading-tight truncate text-[9px] md:text-[10px]">
                   {formatAppName(appName)}
                 </span>
                 <div className="mt-0.5 min-w-0 scale-[0.84] origin-center">
@@ -114,11 +115,11 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             {/* Premium OttoCommand button */}
             <Button
               size="sm"
-              className="h-8 px-4 py-2 rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-semibold shadow-[0_4px_12px_hsl(var(--primary)/0.25)] hover:shadow-[0_6px_16px_hsl(var(--primary)/0.35)] transition-all duration-200 hover:-translate-y-0.5"
+              className="h-7 md:h-8 px-2.5 md:px-4 py-1.5 rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-semibold shadow-[0_4px_12px_hsl(var(--primary)/0.25)] hover:shadow-[0_6px_16px_hsl(var(--primary)/0.35)] transition-all duration-200 hover:-translate-y-0.5"
               onClick={onOpenAI}
             >
-              <Sparkles className="h-3.5 w-3.5 mr-1.5" />
-              <span className="text-xs font-semibold">OttoCommand</span>
+              <Sparkles className="h-3 w-3 md:h-3.5 md:w-3.5 mr-1" />
+              <span className="text-[10px] md:text-xs font-semibold">OttoCommand</span>
             </Button>
 
             {/* Online badge with breathing green dot */}

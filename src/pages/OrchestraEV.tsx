@@ -58,21 +58,17 @@ const OrchestraEV = () => {
       <div className="px-3 pb-3">
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
           <div className="flex justify-center mb-3">
-            <div className="surface-luxury rounded-2xl p-1.5 max-w-lg w-full mx-auto">
-              <TabsList className="flex overflow-x-auto scrollbar-hide flex-nowrap md:grid md:grid-cols-5 w-full bg-transparent h-auto p-0 gap-0.5">
-                {tabItems.map((tab) => {
-                  const Icon = tab.icon;
-                  return (
-                    <TabsTrigger
-                      key={tab.value}
-                      value={tab.value}
-                      className="flex-shrink-0 flex items-center justify-center gap-1.5 rounded-xl px-3 md:px-4 py-2.5 text-xs font-medium tracking-wide uppercase text-muted-foreground bg-transparent transition-all duration-300 ease-out hover:bg-muted/30 hover:text-foreground data-[state=active]:bg-primary/15 data-[state=active]:text-primary data-[state=active]:font-semibold data-[state=active]:border data-[state=active]:border-primary/25 data-[state=active]:shadow-[0_0_12px_hsl(var(--primary)/0.1)] relative"
-                    >
-                      <Icon className="h-3.5 w-3.5" />
-                      <span>{tab.label}</span>
-                    </TabsTrigger>
-                  );
-                })}
+            <div className="surface-luxury rounded-2xl p-1 md:p-1.5 max-w-full md:max-w-lg w-full mx-auto">
+              <TabsList className="flex overflow-x-auto scrollbar-hide flex-nowrap md:grid md:grid-cols-5 w-full bg-transparent h-auto p-0">
+                {tabItems.map((tab) => (
+                  <TabsTrigger
+                    key={tab.value}
+                    value={tab.value}
+                    className="flex-shrink-0 flex items-center justify-center rounded-xl px-2 md:px-4 py-2 md:py-2.5 text-[10px] md:text-xs font-medium tracking-wide uppercase text-muted-foreground bg-transparent transition-all duration-300 ease-out hover:bg-muted/30 hover:text-foreground data-[state=active]:bg-primary/15 data-[state=active]:text-primary data-[state=active]:font-semibold data-[state=active]:border data-[state=active]:border-primary/25 data-[state=active]:shadow-[0_0_12px_hsl(var(--primary)/0.1)] relative"
+                  >
+                    {tab.label}
+                  </TabsTrigger>
+                ))}
               </TabsList>
             </div>
           </div>

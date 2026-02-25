@@ -60,7 +60,7 @@ export const EVDepotQ: React.FC<EVDepotQProps> = ({ depotStages, vehicle }) => {
                 variant="outline"
                 className={`text-[10px] mt-1 ${
                   depotStages.depotStatus === "open"
-                    ? "bg-success/15 text-success border-success/30 animate-pulse"
+                    ? "bg-success/15 text-success border-success/30"
                     : "bg-destructive/15 text-destructive border-destructive/30"
                 }`}
               >
@@ -82,7 +82,7 @@ export const EVDepotQ: React.FC<EVDepotQProps> = ({ depotStages, vehicle }) => {
             {etaMinutes !== null && (
               <Badge
                 variant="outline"
-                className="bg-primary/15 text-primary border-primary/30 rounded-full px-4 py-1.5 text-sm font-semibold animate-pulse-ring"
+                className="bg-primary/15 text-primary border-primary/30 rounded-full px-4 py-1.5 text-sm font-semibold"
               >
                 ~<span className="tabular-nums">{etaMinutes}</span> min remaining
               </Badge>
@@ -132,7 +132,7 @@ export const EVDepotQ: React.FC<EVDepotQProps> = ({ depotStages, vehicle }) => {
                           key={stallId}
                           className={`relative rounded-lg p-2.5 text-center text-[10px] font-medium transition-all duration-150 ${
                             isVehicleHere
-                              ? `bg-primary/15 border-2 border-primary/40 animate-float`
+                              ? `bg-primary/15 border-2 border-primary/40`
                               : isOccupied
                               ? "bg-muted/40 rounded-lg opacity-60 border border-border/30"
                               : "surface-luxury border border-border/30 hover:border-primary/20 hover:shadow-glow-sm hover:scale-105 cursor-default"
