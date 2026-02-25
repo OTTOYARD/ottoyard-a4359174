@@ -267,7 +267,7 @@ export const EVTowing: React.FC<EVTowingProps> = ({ towRequests }) => {
                   }}
                 >
                   <div className="absolute inset-[5px] rounded-full bg-card flex flex-col items-center justify-center">
-                    <p className="text-4xl font-bold text-primary text-luxury leading-none">{mockActiveTow.etaMinutes}</p>
+                    <p className="text-4xl font-bold text-primary text-luxury tabular-nums leading-none">{mockActiveTow.etaMinutes}</p>
                     <p className="text-[10px] text-muted-foreground">min</p>
                   </div>
                 </div>
@@ -281,8 +281,8 @@ export const EVTowing: React.FC<EVTowingProps> = ({ towRequests }) => {
                   { label: "Phone", value: mockActiveTow.driverPhone },
                 ].map((row) => (
                   <div key={row.label} className="flex items-center justify-between py-3 border-b border-border/20 text-xs">
-                    <span className="text-muted-foreground">{row.label}</span>
-                    <span className="font-semibold text-foreground">{row.value}</span>
+                    <span className="text-label-uppercase">{row.label}</span>
+                    <span className="font-semibold text-foreground tabular-nums">{row.value}</span>
                   </div>
                 ))}
               </div>
