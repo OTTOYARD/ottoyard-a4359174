@@ -130,12 +130,12 @@ export const EVDepotQ: React.FC<EVDepotQProps> = ({ depotStages, vehicle }) => {
                       return (
                         <div
                           key={stallId}
-                          className={`relative rounded-lg p-2.5 text-center text-[10px] font-medium transition-all duration-200 ${
+                          className={`relative rounded-lg p-2.5 text-center text-[10px] font-medium transition-all duration-150 ${
                             isVehicleHere
-                              ? `bg-primary/15 border-2 border-primary/40 animate-pulse-ring`
+                              ? `bg-primary/15 border-2 border-primary/40 animate-float`
                               : isOccupied
                               ? "bg-muted/40 rounded-lg opacity-60 border border-border/30"
-                              : "surface-luxury border border-border/30 hover:border-primary/20 hover:shadow-glow-sm cursor-default"
+                              : "surface-luxury border border-border/30 hover:border-primary/20 hover:shadow-glow-sm hover:scale-105 cursor-default"
                           }`}
                         >
                           {stallId}

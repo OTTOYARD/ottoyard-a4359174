@@ -194,7 +194,11 @@ export const EVTowing: React.FC<EVTowingProps> = ({ towRequests }) => {
                   const isCurrent = index === mockActiveTow.currentStage;
 
                   return (
-                    <div key={stage} className="flex items-start gap-3">
+                    <div
+                      key={stage}
+                      className="flex items-start gap-3 animate-fade-in-up"
+                      style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'backwards' }}
+                    >
                       <div className="flex flex-col items-center">
                         {isComplete ? (
                           <div className="w-8 h-8 rounded-full bg-success/15 flex items-center justify-center">
