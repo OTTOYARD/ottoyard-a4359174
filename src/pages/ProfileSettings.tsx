@@ -4,8 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
@@ -17,6 +15,7 @@ export default function ProfileSettings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<"profile" | "preferences">("profile");
 
   useEffect(() => {
     loadProfile();
@@ -127,92 +126,153 @@ export default function ProfileSettings() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="min-h-screen bg-background flex items-center justify-center relative">
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: "radial-gradient(ellipse 60% 40% at 50% 20%, hsl(var(--primary) / 0.04) 0%, transparent 70%)" }}
+        />
+        <div className="surface-luxury rounded-2xl p-8 flex flex-col items-center relative">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground mt-3">Loading your profile...</p>
+        </div>
       </div>
     );
   }
 
+  const notifToggles = [
+    {
+      id: "email-notifications",
+      key: "email",
+      label: "Email Notifications",
+      description: "Receive email updates about your account",
+      checked: profile?.preferences?.notification_settings?.email ?? true,
+    },
+    {
+      id: "maintenance-alerts",
+      key: "maintenance_alerts",
+      label: "Maintenance Alerts",
+      description: "Get alerts when maintenance is due",
+      checked: profile?.preferences?.notification_settings?.maintenance_alerts ?? true,
+    },
+    {
+      id: "battery-alerts",
+      key: "low_battery_alerts",
+      label: "Low Battery Alerts",
+      description: "Notify when battery drops below threshold",
+      checked: profile?.preferences?.notification_settings?.low_battery_alerts ?? true,
+    },
+  ];
+
+  const profileFields = [
+    { id: "fullName", name: "fullName", label: "Full Name", defaultValue: profile?.full_name || "", required: true, type: "text" },
+    { id: "username", name: "username", label: "Username", defaultValue: profile?.username || "", required: true, type: "text" },
+    { id: "companyName", name: "companyName", label: "Company Name", defaultValue: profile?.company_name || "", required: false, type: "text" },
+    { id: "phone", name: "phone", label: "Phone", defaultValue: profile?.phone || "", required: false, type: "tel" },
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 p-4">
-      <div className="max-w-4xl mx-auto space-y-4">
-        <Button variant="ghost" onClick={() => navigate("/")} className="mb-4">
-          <ArrowLeft className="mr-2 h-4 w-4" />
+    <div className="min-h-screen bg-background relative">
+      {/* Ambient radial glow */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{ background: "radial-gradient(ellipse 60% 40% at 50% 20%, hsl(var(--primary) / 0.04) 0%, transparent 70%)" }}
+      />
+
+      <div className="relative max-w-2xl mx-auto p-4 space-y-4">
+        {/* Back button */}
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/")}
+          className="glass-button rounded-xl px-4 py-2 gap-2 text-sm font-medium h-auto"
+        >
+          <ArrowLeft className="h-4 w-4" />
           Back to Dashboard
         </Button>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Profile Settings</CardTitle>
-            <CardDescription>Manage your account information and preferences</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="profile">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="profile">Profile</TabsTrigger>
-                <TabsTrigger value="preferences">Preferences</TabsTrigger>
-              </TabsList>
+        {/* Page Header */}
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-luxury">Profile Settings</h1>
+          <p className="text-sm text-muted-foreground mt-1">Manage your account information and preferences</p>
+          <div className="h-[1px] w-20 mx-auto bg-gradient-to-r from-transparent via-primary/30 to-transparent mt-4 mb-6" />
+        </div>
 
-              <TabsContent value="profile" className="space-y-4">
-                <form onSubmit={handleSaveProfile} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="fullName">Full Name</Label>
+        {/* Main Card */}
+        <div className="surface-elevated-luxury rounded-2xl overflow-hidden">
+          {/* Top accent */}
+          <div className="h-[2px] bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+
+          <div className="p-6 space-y-6">
+            {/* Tab Switcher */}
+            <div className="surface-luxury rounded-xl p-1 flex">
+              <button
+                type="button"
+                className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors duration-200 ${
+                  activeTab === "profile"
+                    ? "bg-primary/15 text-primary font-semibold"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+                onClick={() => setActiveTab("profile")}
+              >
+                Profile
+              </button>
+              <button
+                type="button"
+                className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors duration-200 ${
+                  activeTab === "preferences"
+                    ? "bg-primary/15 text-primary font-semibold"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+                onClick={() => setActiveTab("preferences")}
+              >
+                Preferences
+              </button>
+            </div>
+
+            {/* Profile Tab */}
+            {activeTab === "profile" && (
+              <form onSubmit={handleSaveProfile} className="space-y-4">
+                {profileFields.map((field, i) => (
+                  <div
+                    key={field.id}
+                    className="space-y-2 animate-fade-in-up"
+                    style={{ animationDelay: `${i * 100}ms`, animationFillMode: "backwards" }}
+                  >
+                    <Label htmlFor={field.id} className="text-label-uppercase">{field.label}</Label>
                     <Input
-                      id="fullName"
-                      name="fullName"
-                      defaultValue={profile?.full_name || ""}
-                      required
+                      id={field.id}
+                      name={field.name}
+                      type={field.type}
+                      defaultValue={field.defaultValue}
+                      required={field.required}
+                      className="glass-input rounded-xl h-11 focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
                     />
                   </div>
+                ))}
+                <Button
+                  type="submit"
+                  disabled={saving}
+                  className="futuristic-button rounded-xl px-8 py-2.5 text-sm font-semibold"
+                >
+                  {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin drop-shadow-[0_0_6px_hsl(var(--primary))]" /> : null}
+                  Save Changes
+                </Button>
+              </form>
+            )}
 
-                  <div className="space-y-2">
-                    <Label htmlFor="username">Username</Label>
-                    <Input
-                      id="username"
-                      name="username"
-                      defaultValue={profile?.username || ""}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="companyName">Company Name</Label>
-                    <Input
-                      id="companyName"
-                      name="companyName"
-                      defaultValue={profile?.company_name || ""}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone</Label>
-                    <Input
-                      id="phone"
-                      name="phone"
-                      type="tel"
-                      defaultValue={profile?.phone || ""}
-                    />
-                  </div>
-
-                  <Button type="submit" disabled={saving}>
-                    {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                    Save Changes
-                  </Button>
-                </form>
-              </TabsContent>
-
-              <TabsContent value="preferences" className="space-y-6">
+            {/* Preferences Tab */}
+            {activeTab === "preferences" && (
+              <div className="space-y-6">
                 <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Theme</Label>
+                  <div className="space-y-2 animate-fade-in-up" style={{ animationDelay: "0ms", animationFillMode: "backwards" }}>
+                    <Label className="text-label-uppercase">Theme</Label>
                     <Select
                       value={profile?.preferences?.theme || "system"}
                       onValueChange={(value) => handleSavePreferences("theme", value)}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="glass-input rounded-xl h-11">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="glass-elevated rounded-xl">
                         <SelectItem value="light">Light</SelectItem>
                         <SelectItem value="dark">Dark</SelectItem>
                         <SelectItem value="system">System</SelectItem>
@@ -220,79 +280,68 @@ export default function ProfileSettings() {
                     </Select>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>Dashboard Layout</Label>
+                  <div className="space-y-2 animate-fade-in-up" style={{ animationDelay: "100ms", animationFillMode: "backwards" }}>
+                    <Label className="text-label-uppercase">Dashboard Layout</Label>
                     <Select
                       value={profile?.preferences?.dashboard_layout || "default"}
                       onValueChange={(value) => handleSavePreferences("dashboard_layout", value)}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="glass-input rounded-xl h-11">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="glass-elevated rounded-xl">
                         <SelectItem value="default">Default</SelectItem>
                         <SelectItem value="compact">Compact</SelectItem>
                         <SelectItem value="expanded">Expanded</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-
-                  <div className="space-y-4 pt-4 border-t">
-                    <h3 className="text-sm font-medium">Notification Settings</h3>
-                    
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="email-notifications">Email Notifications</Label>
-                      <Switch
-                        id="email-notifications"
-                        checked={profile?.preferences?.notification_settings?.email ?? true}
-                        onCheckedChange={(checked) =>
-                          handleSavePreferences("notification_settings", {
-                            ...profile?.preferences?.notification_settings,
-                            email: checked,
-                          })
-                        }
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="maintenance-alerts">Maintenance Alerts</Label>
-                      <Switch
-                        id="maintenance-alerts"
-                        checked={profile?.preferences?.notification_settings?.maintenance_alerts ?? true}
-                        onCheckedChange={(checked) =>
-                          handleSavePreferences("notification_settings", {
-                            ...profile?.preferences?.notification_settings,
-                            maintenance_alerts: checked,
-                          })
-                        }
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="battery-alerts">Low Battery Alerts</Label>
-                      <Switch
-                        id="battery-alerts"
-                        checked={profile?.preferences?.notification_settings?.low_battery_alerts ?? true}
-                        onCheckedChange={(checked) =>
-                          handleSavePreferences("notification_settings", {
-                            ...profile?.preferences?.notification_settings,
-                            low_battery_alerts: checked,
-                          })
-                        }
-                      />
-                    </div>
-                  </div>
                 </div>
-              </TabsContent>
-            </Tabs>
 
-            <div className="pt-6 border-t mt-6">
-              <Button variant="destructive" onClick={handleSignOut}>
+                {/* Notification Settings */}
+                <div className="space-y-3 pt-4 border-t border-border/20">
+                  <h3 className="text-base font-semibold text-luxury">Notification Settings</h3>
+
+                  {notifToggles.map((toggle, i) => (
+                    <div
+                      key={toggle.id}
+                      className="surface-luxury rounded-xl p-4 flex items-center justify-between animate-fade-in-up"
+                      style={{ animationDelay: `${(i + 2) * 100}ms`, animationFillMode: "backwards" }}
+                    >
+                      <div>
+                        <Label htmlFor={toggle.id} className="text-sm font-medium text-foreground cursor-pointer">
+                          {toggle.label}
+                        </Label>
+                        <p className="text-xs text-muted-foreground mt-0.5">{toggle.description}</p>
+                      </div>
+                      <Switch
+                        id={toggle.id}
+                        checked={toggle.checked}
+                        onCheckedChange={(checked) =>
+                          handleSavePreferences("notification_settings", {
+                            ...profile?.preferences?.notification_settings,
+                            [toggle.key]: checked,
+                          })
+                        }
+                        className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-muted/50 transition-colors duration-200"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Sign Out */}
+            <div className="pt-6 border-t border-border/20">
+              <Button
+                onClick={handleSignOut}
+                className="bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 rounded-xl px-6 py-2.5 text-sm font-semibold transition-all"
+              >
                 Sign Out
               </Button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );
