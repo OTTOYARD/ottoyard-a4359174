@@ -127,7 +127,7 @@ export const EVReports: React.FC<EVReportsProps> = ({ serviceRecords }) => {
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Charging Frequency */}
-        <Card className="surface-luxury rounded-2xl border-border/30">
+        <Card className="surface-luxury rounded-2xl border-border/30 hover:shadow-lg hover:border-border/50 transition-all duration-250">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg font-bold text-luxury flex items-center gap-2">
               <Battery className="h-4 w-4 text-primary" />
@@ -160,7 +160,7 @@ export const EVReports: React.FC<EVReportsProps> = ({ serviceRecords }) => {
         </Card>
 
         {/* Service Costs */}
-        <Card className="surface-luxury rounded-2xl border-border/30">
+        <Card className="surface-luxury rounded-2xl border-border/30 hover:shadow-lg hover:border-border/50 transition-all duration-250">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg font-bold text-luxury flex items-center gap-2">
               <CreditCard className="h-4 w-4 text-primary" />
@@ -205,7 +205,7 @@ export const EVReports: React.FC<EVReportsProps> = ({ serviceRecords }) => {
       </div>
 
       {/* Energy Usage Trend */}
-      <Card className="surface-luxury rounded-2xl border-border/30">
+      <Card className="surface-luxury rounded-2xl border-border/30 hover:shadow-lg hover:border-border/50 transition-all duration-250">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg font-bold text-luxury flex items-center gap-2">
             <Battery className="h-4 w-4 text-primary" />

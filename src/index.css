@@ -887,4 +887,76 @@
     background-size: 200% 100%;
     animation: shimmer-luxury 2.5s linear infinite;
   }
+
+  /* ============================================
+     MICRO-INTERACTION POLISH
+     ============================================ */
+
+  /* Button press feel */
+  button:active,
+  [role="button"]:active {
+    transform: scale(0.97);
+  }
+
+  /* Smooth transitions on core elements */
+  .surface-luxury,
+  .surface-elevated-luxury,
+  .glass-panel,
+  .glass-card,
+  .futuristic-card {
+    transition: transform 250ms cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 250ms ease,
+                border-color 250ms ease;
+  }
+
+  /* Progress bar animations */
+  .progress-bar-animated {
+    transition: width 800ms cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .progress-bar-animated::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, hsl(0 0% 100% / 0.1), transparent);
+    animation: scan 3s linear infinite;
+  }
+
+  /* Tabular numbers for data display */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Selection color */
+  ::selection {
+    background: hsl(var(--primary) / 0.3);
+    color: hsl(var(--foreground));
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.2);
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.3);
+  }
+
+  /* Firefox scrollbar */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.2) transparent;
+  }
 }

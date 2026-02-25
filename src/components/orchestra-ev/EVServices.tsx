@@ -77,7 +77,7 @@ export const EVServices: React.FC<EVServicesProps> = ({ serviceRecords, predicti
             return (
               <div
                 key={pred.id}
-                className={`surface-luxury rounded-xl p-4 space-y-2.5 ${config.border} hover:shadow-md hover:border-l-[4px] transition-all duration-200`}
+                className={`surface-luxury rounded-xl p-4 space-y-2.5 ${config.border} hover:shadow-md hover:border-l-[4px] hover:translate-x-1 transition-all duration-200`}
               >
                 <div className="flex items-start justify-between">
                   <div className="space-y-1.5 flex-1">

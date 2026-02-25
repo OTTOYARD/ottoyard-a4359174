@@ -81,11 +81,13 @@ export const EVOverview: React.FC<EVOverviewProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* My Vehicle — Primary / Hero Section */}
-      <EVVehicleHero vehicle={vehicle} />
+      {/* My Vehicle — Primary / Hero Section — stagger 0ms */}
+      <div className="animate-fade-in-up" style={{ animationDelay: '0ms', animationFillMode: 'backwards' }}>
+        <EVVehicleHero vehicle={vehicle} />
+      </div>
 
       {/* Subscriber Profile + Quick Actions Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in-up" style={{ animationDelay: '100ms', animationFillMode: 'backwards' }}>
         {/* Subscriber Card */}
         <div className="surface-elevated-luxury rounded-2xl p-4">
           <div className="flex items-center gap-3">
@@ -139,7 +141,7 @@ export const EVOverview: React.FC<EVOverviewProps> = ({
       </div>
 
       {/* Upcoming Services + Predictive Maintenance */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in-up" style={{ animationDelay: '200ms', animationFillMode: 'backwards' }}>
         {/* Upcoming Services */}
         <div className="surface-luxury rounded-2xl p-5">
           <p className="text-sm font-semibold text-luxury flex items-center gap-1.5 mb-3">
@@ -232,7 +234,7 @@ export const EVOverview: React.FC<EVOverviewProps> = ({
       </div>
 
       {/* Amenities — Collapsible Tile */}
-      <div ref={amenitiesRef}>
+      <div ref={amenitiesRef} className="animate-fade-in-up" style={{ animationDelay: '300ms', animationFillMode: 'backwards' }}>
         <Collapsible open={amenitiesOpen} onOpenChange={setAmenitiesOpen}>
           <div className="surface-luxury rounded-2xl overflow-hidden">
             <CollapsibleTrigger asChild>
@@ -267,7 +269,7 @@ export const EVOverview: React.FC<EVOverviewProps> = ({
       </div>
 
       {/* Notifications + Events */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in-up" style={{ animationDelay: '400ms', animationFillMode: 'backwards' }}>
         {/* Notifications */}
         <div className="surface-luxury rounded-2xl p-5">
           <p className="text-sm font-semibold text-luxury flex items-center gap-1.5 mb-3">
