@@ -126,12 +126,8 @@ export default function ProfileSettings() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center relative">
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{ background: "radial-gradient(ellipse 60% 40% at 50% 20%, hsl(var(--primary) / 0.04) 0%, transparent 70%)" }}
-        />
-        <div className="surface-luxury rounded-2xl p-8 flex flex-col items-center relative">
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="surface-luxury rounded-2xl p-8 flex flex-col items-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <p className="text-sm text-muted-foreground mt-3">Loading your profile...</p>
         </div>
@@ -171,14 +167,8 @@ export default function ProfileSettings() {
   ];
 
   return (
-    <div className="min-h-screen bg-background relative">
-      {/* Ambient radial glow */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{ background: "radial-gradient(ellipse 60% 40% at 50% 20%, hsl(var(--primary) / 0.04) 0%, transparent 70%)" }}
-      />
-
-      <div className="relative max-w-2xl mx-auto p-4 space-y-4">
+    <div className="min-h-screen bg-background">
+      <div className="max-w-2xl mx-auto p-4 space-y-4">
         {/* Back button */}
         <Button
           variant="ghost"

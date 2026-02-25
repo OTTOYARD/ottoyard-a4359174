@@ -77,17 +77,8 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Radial glow */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background:
-            "radial-gradient(ellipse 50% 50% at 50% 40%, hsl(var(--primary) / 0.06) 0%, transparent 70%)",
-        }}
-      />
-
-      <div className="surface-elevated-luxury rounded-3xl max-w-md w-full overflow-hidden animate-fade-in-scale relative z-10">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="surface-elevated-luxury rounded-3xl max-w-md w-full overflow-hidden animate-fade-in-scale">
         {/* Top accent line */}
         <div className="h-[2px] bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 

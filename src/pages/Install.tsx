@@ -46,12 +46,8 @@ export default function Install() {
 
   if (alreadyInstalled) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-6 relative overflow-hidden">
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{ background: 'radial-gradient(ellipse 50% 50% at 50% 40%, hsl(var(--primary) / 0.06) 0%, transparent 70%)' }}
-        />
-        <div className="surface-elevated-luxury rounded-3xl max-w-md w-full p-8 text-center overflow-hidden animate-fade-in-scale relative z-10 space-y-6">
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <div className="surface-elevated-luxury rounded-3xl max-w-md w-full p-8 text-center overflow-hidden animate-fade-in-scale space-y-6">
           <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-success/20 to-success/5 flex items-center justify-center shadow-[0_0_20px_hsl(var(--success)/0.15)]">
             <CheckCircle2 className="w-10 h-10 text-success" />
           </div>
@@ -71,13 +67,8 @@ export default function Install() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-6 relative overflow-hidden">
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{ background: 'radial-gradient(ellipse 50% 50% at 50% 40%, hsl(var(--primary) / 0.06) 0%, transparent 70%)' }}
-      />
-
-      <div className="surface-elevated-luxury rounded-3xl max-w-md w-full p-8 overflow-hidden animate-fade-in-scale relative z-10 space-y-8">
+    <div className="min-h-screen bg-background flex items-center justify-center p-6">
+      <div className="surface-elevated-luxury rounded-3xl max-w-md w-full p-8 overflow-hidden animate-fade-in-scale space-y-8">
         {/* Header */}
         <div className="text-center space-y-4">
           <div className="w-24 h-24 mx-auto rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border border-primary/20 overflow-hidden shadow-[0_0_20px_hsl(var(--primary)/0.1)]">
