@@ -960,3 +960,8 @@
     scrollbar-color: hsl(var(--muted-foreground) / 0.2) transparent;
   }
 }
+
+@keyframes drift {
+  from { background-position: 0 0; }
+  to { background-position: 200px 200px; }
+}
