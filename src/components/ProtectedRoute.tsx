@@ -12,13 +12,10 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const [authenticated, setAuthenticated] = useState(false);
 
   useEffect(() => {
-    // Check initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      // Check remember me preference
       const rememberMe = localStorage.getItem('rememberMe');
       
       if (session && rememberMe !== 'true') {
-        // User didn't want to be remembered, sign them out
         supabase.auth.signOut();
         setAuthenticated(false);
       } else {
@@ -27,7 +24,6 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
       setLoading(false);
     });
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setAuthenticated(!!session);
       setLoading(false);
@@ -38,8 +34,11 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="surface-luxury rounded-2xl p-8 flex flex-col items-center animate-fade-in-scale">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground mt-3">Loading...</p>
+        </div>
       </div>
     );
   }
