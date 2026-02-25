@@ -37,6 +37,8 @@ const serviceTypeLabels: Record<string, string> = {
   cabin_air_filter: "Cabin Air Filter",
 };
 
+const confidencePct: Record<string, number> = { high: 90, medium: 70, low: 40 };
+
 export const EVServices: React.FC<EVServicesProps> = ({ serviceRecords, predictions }) => {
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [selectedServiceType, setSelectedServiceType] = useState("");
@@ -46,15 +48,15 @@ export const EVServices: React.FC<EVServicesProps> = ({ serviceRecords, predicti
 
   return (
     <div className="space-y-4">
-      {/* Predictive Maintenance — Primary Section */}
-      <Card className="glass-panel border-border/50">
+      {/* Predictive Maintenance */}
+      <Card className="surface-elevated-luxury rounded-2xl border-border/30">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
+            <CardTitle className="text-sm font-semibold text-luxury flex items-center gap-1.5">
               <Zap className="h-4 w-4 text-primary" />
               Predictive Maintenance
             </CardTitle>
-            <Badge variant="outline" className="text-[10px] bg-primary/15 text-primary border-primary/30">
+            <Badge variant="outline" className="text-[10px] bg-primary/15 text-primary border-primary/30 animate-shimmer-luxury-bg">
               AI-Powered
             </Badge>
           </div>
@@ -65,28 +67,38 @@ export const EVServices: React.FC<EVServicesProps> = ({ serviceRecords, predicti
         <CardContent className="space-y-3">
           {predictions.map((pred) => {
             const urgencyConfig = {
-              urgent: { color: "bg-destructive/15 text-destructive border-destructive/30", icon: AlertTriangle },
-              soon: { color: "bg-warning/15 text-warning border-warning/30", icon: Clock },
-              routine: { color: "bg-success/15 text-success border-success/30", icon: CheckCircle2 },
+              urgent: { color: "bg-destructive/15 text-destructive border-destructive/30", border: "border-l-[3px] border-l-destructive/60", icon: AlertTriangle },
+              soon: { color: "bg-warning/15 text-warning border-warning/30", border: "border-l-[3px] border-l-warning/60", icon: Clock },
+              routine: { color: "bg-success/15 text-success border-success/30", border: "border-l-[3px] border-l-success/60", icon: CheckCircle2 },
             };
             const config = urgencyConfig[pred.urgency];
             const UrgencyIcon = config.icon;
 
             return (
-              <div key={pred.id} className="glass-panel rounded-lg border border-border/30 p-3 space-y-2">
+              <div
+                key={pred.id}
+                className={`surface-luxury rounded-xl p-4 space-y-2.5 ${config.border} hover:shadow-md hover:border-l-[4px] transition-all duration-200`}
+              >
                 <div className="flex items-start justify-between">
-                  <div className="space-y-1 flex-1">
+                  <div className="space-y-1.5 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="text-xs font-semibold text-foreground">{pred.label}</p>
-                      <Badge variant="outline" className={`text-[10px] ${config.color}`}>
+                      <Badge variant="outline" className={`text-xs ${config.color}`}>
                         <UrgencyIcon className="h-2.5 w-2.5 mr-1" />
                         {pred.urgency}
                       </Badge>
-                      <span className="text-[10px] text-muted-foreground">
-                        {pred.confidence} confidence
-                      </span>
                     </div>
-                    <p className="text-[10px] text-muted-foreground leading-relaxed">{pred.reasoning}</p>
+                    {/* Confidence bar */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-muted-foreground">{pred.confidence} confidence</span>
+                      <div className="h-1 w-16 rounded-full bg-muted/30 overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-primary transition-all duration-500"
+                          style={{ width: `${confidencePct[pred.confidence] ?? 50}%` }}
+                        />
+                      </div>
+                    </div>
+                    <p className="text-sm leading-relaxed text-muted-foreground">{pred.reasoning}</p>
                     <p className="text-[10px] text-muted-foreground">
                       Suggested by{" "}
                       <span className="text-foreground font-medium">
@@ -100,11 +112,11 @@ export const EVServices: React.FC<EVServicesProps> = ({ serviceRecords, predicti
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm" className="h-7 text-xs gap-1">
+                  <Button size="sm" className="futuristic-button rounded-lg h-8 text-xs gap-1">
                     <CalendarIcon className="h-3 w-3" />
                     Schedule Now
                   </Button>
-                  <Button variant="ghost" size="sm" className="h-7 text-xs">
+                  <Button variant="outline" size="sm" className="glass-button rounded-lg h-8 text-xs">
                     Dismiss
                   </Button>
                 </div>
@@ -117,9 +129,9 @@ export const EVServices: React.FC<EVServicesProps> = ({ serviceRecords, predicti
       {/* Schedule New Service + Add-On Services */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Schedule New Service */}
-        <Card className="glass-panel border-border/50">
+        <Card className="surface-luxury rounded-2xl border-border/30">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
+            <CardTitle className="text-sm font-semibold text-luxury flex items-center gap-1.5">
               <CalendarIcon className="h-4 w-4 text-primary" />
               Schedule Service
             </CardTitle>
@@ -127,20 +139,20 @@ export const EVServices: React.FC<EVServicesProps> = ({ serviceRecords, predicti
           <CardContent className="space-y-3">
             <Dialog open={scheduleOpen} onOpenChange={setScheduleOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline" className="w-full gap-1.5">
-                  <Plus className="h-4 w-4" />
-                  Book a Service
-                </Button>
+                <button className="surface-luxury rounded-xl p-4 w-full border-2 border-dashed border-primary/20 hover:border-primary/40 transition-all duration-200 flex flex-col items-center justify-center gap-2">
+                  <Plus className="h-6 w-6 text-primary" />
+                  <span className="text-xs font-medium text-muted-foreground">Book a Service</span>
+                </button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="glass-modal rounded-2xl">
                 <DialogHeader>
-                  <DialogTitle>Schedule Service</DialogTitle>
+                  <DialogTitle className="text-luxury">Schedule Service</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <label className="text-xs font-medium text-foreground">Service Type</label>
+                    <label className="text-label-uppercase">Service Type</label>
                     <Select value={selectedServiceType} onValueChange={setSelectedServiceType}>
-                      <SelectTrigger>
+                      <SelectTrigger className="glass-input rounded-xl">
                         <SelectValue placeholder="Choose a service..." />
                       </SelectTrigger>
                       <SelectContent>
@@ -154,7 +166,7 @@ export const EVServices: React.FC<EVServicesProps> = ({ serviceRecords, predicti
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-medium text-foreground">Preferred Date</label>
+                    <label className="text-label-uppercase">Preferred Date</label>
                     <Calendar
                       mode="single"
                       selected={selectedDate}
@@ -164,9 +176,9 @@ export const EVServices: React.FC<EVServicesProps> = ({ serviceRecords, predicti
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-medium text-foreground">Depot</label>
+                    <label className="text-label-uppercase">Depot</label>
                     <Select defaultValue="nash-01">
-                      <SelectTrigger>
+                      <SelectTrigger className="glass-input rounded-xl">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -176,41 +188,42 @@ export const EVServices: React.FC<EVServicesProps> = ({ serviceRecords, predicti
                     </Select>
                   </div>
 
-                  <Button className="w-full" onClick={() => setScheduleOpen(false)}>
+                  <Button className="futuristic-button rounded-xl w-full py-3 text-base font-semibold" onClick={() => setScheduleOpen(false)}>
                     Confirm Booking
                   </Button>
                 </div>
               </DialogContent>
             </Dialog>
 
-            <div className="space-y-1.5">
-              <p className="text-[10px] text-muted-foreground font-medium">Popular Services</p>
+            <div className="space-y-1">
+              <p className="text-label-uppercase mb-2">Popular Services</p>
               {["charging", "detailing", "tire_rotation", "full_maintenance"].map((type) => (
-                <Button
+                <button
                   key={type}
-                  variant="ghost"
-                  size="sm"
-                  className="w-full justify-between h-8 text-xs"
+                  className="w-full flex items-center justify-between h-9 text-xs px-2 -mx-0 rounded-lg hover:bg-muted/20 transition-colors group"
                   onClick={() => {
                     setSelectedServiceType(type);
                     setScheduleOpen(true);
                   }}
                 >
-                  {serviceTypeLabels[type]}
-                  <Plus className="h-3 w-3" />
-                </Button>
+                  <span className="text-foreground font-medium">{serviceTypeLabels[type]}</span>
+                  <Plus className="h-3.5 w-3.5 text-muted-foreground group-hover:rotate-90 transition-transform duration-200" />
+                </button>
               ))}
             </div>
           </CardContent>
         </Card>
 
         {/* Add-On Features */}
-        <Card className="glass-panel border-border/50">
+        <Card className="surface-luxury rounded-2xl border-border/30">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
-              <Sparkles className="h-4 w-4 text-primary" />
-              Premium Add-Ons
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-semibold text-luxury flex items-center gap-1.5">
+                <Sparkles className="h-4 w-4 text-primary" />
+                Premium Add-Ons
+              </CardTitle>
+              <span className="text-label-uppercase text-primary/30">PREMIUM</span>
+            </div>
           </CardHeader>
           <CardContent className="space-y-2">
             {[
@@ -219,14 +232,14 @@ export const EVServices: React.FC<EVServicesProps> = ({ serviceRecords, predicti
               { name: "Windshield Treatment", desc: "Hydrophobic rain repellent", price: "$79" },
               { name: "Seasonal Package", desc: "Winterize or summerize your EV", price: "$149" },
             ].map((addon) => (
-              <div key={addon.name} className="flex items-center justify-between py-1.5 border-b border-border/30 last:border-0">
+              <div key={addon.name} className="surface-luxury rounded-xl p-3 flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-foreground">{addon.name}</p>
                   <p className="text-[10px] text-muted-foreground">{addon.desc}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <p className="text-xs font-bold text-foreground">{addon.price}</p>
-                  <Button variant="outline" size="sm" className="h-6 text-[10px] px-2">
+                  <p className="text-base font-bold text-primary">{addon.price}</p>
+                  <Button variant="outline" size="sm" className="glass-button rounded-lg h-7 text-xs font-semibold hover:shadow-glow-sm transition-all">
                     Add
                   </Button>
                 </div>
@@ -237,48 +250,54 @@ export const EVServices: React.FC<EVServicesProps> = ({ serviceRecords, predicti
       </div>
 
       {/* Service History */}
-      <Card className="glass-panel border-border/50">
+      <Card className="surface-luxury rounded-2xl border-border/30">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
+          <CardTitle className="text-sm font-semibold text-luxury flex items-center gap-1.5">
             <History className="h-4 w-4 text-primary" />
             Service History
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-2">
           {completedServices.length > 0 ? (
-            completedServices.map((svc) => (
-              <div key={svc.id} className="flex items-start justify-between py-2 border-b border-border/30 last:border-0">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-success/15 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <CheckCircle2 className="h-4 w-4 text-success" />
+            <div className="relative">
+              {/* Timeline line */}
+              <div className="absolute left-[19px] top-4 bottom-4 w-[2px] bg-border/30" />
+              <div className="space-y-2 relative">
+                {completedServices.map((svc) => (
+                  <div key={svc.id} className="surface-luxury rounded-xl p-4 flex items-start justify-between">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-success/15 flex items-center justify-center flex-shrink-0 shadow-[0_0_8px_hsl(var(--success)/0.15)] relative z-10">
+                        <CheckCircle2 className="h-4 w-4 text-success" />
+                      </div>
+                      <div className="space-y-0.5">
+                        <p className="text-xs font-medium text-foreground capitalize">{svc.type.replace(/_/g, " ")}</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {svc.depotName} •{" "}
+                          {new Date(svc.scheduledAt).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
+                          {svc.technicianName && ` • ${svc.technicianName}`}
+                        </p>
+                        {svc.notes && (
+                          <p className="text-[10px] text-muted-foreground/70 italic">{svc.notes}</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      {svc.cost > 0 ? (
+                        <p className="text-base font-bold text-primary">${svc.cost.toFixed(2)}</p>
+                      ) : (
+                        <Badge variant="outline" className="text-[10px] bg-success/15 text-success border-success/30">
+                          Included
+                        </Badge>
+                      )}
+                    </div>
                   </div>
-                  <div className="space-y-0.5">
-                    <p className="text-xs font-medium text-foreground capitalize">{svc.type.replace(/_/g, " ")}</p>
-                    <p className="text-[10px] text-muted-foreground">
-                      {svc.depotName} •{" "}
-                      {new Date(svc.scheduledAt).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
-                      {svc.technicianName && ` • ${svc.technicianName}`}
-                    </p>
-                    {svc.notes && (
-                      <p className="text-[10px] text-muted-foreground/70 italic">{svc.notes}</p>
-                    )}
-                  </div>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  {svc.cost > 0 ? (
-                    <p className="text-xs font-bold text-foreground">${svc.cost.toFixed(2)}</p>
-                  ) : (
-                    <Badge variant="outline" className="text-[10px]">
-                      Included
-                    </Badge>
-                  )}
-                </div>
+                ))}
               </div>
-            ))
+            </div>
           ) : (
             <p className="text-xs text-muted-foreground">No service history yet.</p>
           )}
