@@ -4,10 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowLeft } from "lucide-react";
 import ottoyardLogo from "@/assets/ottoyard-logo.png";
 
 export default function Auth() {
@@ -155,21 +153,64 @@ export default function Auth() {
     }
   };
 
+  /* ── Shared background ── */
+  const AuthBackground = ({ children }: { children: React.ReactNode }) => (
+    <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
+      {/* Radial spotlight */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{ background: "radial-gradient(ellipse 50% 50% at 50% 40%, hsl(var(--primary) / 0.06) 0%, transparent 70%)" }}
+      />
+      {/* Ambient drift grain */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-[0.02]"
+        style={{
+          backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
+          backgroundSize: "200px 200px",
+          animation: "drift 30s linear infinite",
+        }}
+      />
+      {children}
+    </div>
+  );
+
+  /* ── Shared logo block ── */
+  const LogoBlock = ({ subtitle }: { subtitle?: string }) => (
+    <div className="flex flex-col items-center text-center pb-2">
+      {/* Logo with ambient glow */}
+      <div className="relative mb-3">
+        <div className="absolute inset-0 bg-primary/[0.08] rounded-full blur-2xl" />
+        <img src={ottoyardLogo} alt="OTTOYARD" className="relative w-24 h-24 object-contain" />
+      </div>
+      <p className="text-xl font-bold text-luxury tracking-wider">OTTOYARD</p>
+      {!subtitle && (
+        <>
+          <p className="text-lg font-semibold text-[#617fa5] mt-1 leading-tight">Fleet Command</p>
+          <p className="text-lg font-semibold text-foreground leading-tight">Dashboard</p>
+        </>
+      )}
+      {subtitle && <p className="text-xl font-bold text-luxury mt-1">{subtitle}</p>}
+      <div className="h-[1px] w-16 mx-auto bg-gradient-to-r from-transparent via-primary/30 to-transparent my-3" />
+      <p className="text-sm text-muted-foreground">
+        {subtitle ? "Enter your email to receive a password reset link" : "Sign in to manage your fleet operations"}
+      </p>
+    </div>
+  );
+
+  /* ══════════ Forgot Password ══════════ */
   if (showForgotPassword) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
-        <Card className="w-full max-w-sm">
-        <CardHeader className="flex flex-col items-center text-center pb-4">
-          <img src={ottoyardLogo} alt="OTTOYARD" className="w-32 h-32 object-contain mb-0" />
-          <CardTitle className="text-xl">Reset Password</CardTitle>
-          <CardDescription className="text-sm">
-            Enter your email to receive a password reset link
-          </CardDescription>
-        </CardHeader>
-          <CardContent className="px-4">
-            <form onSubmit={handleForgotPassword} className="space-y-3">
-              <div className="space-y-2">
-                <Label htmlFor="reset-email">Email</Label>
+      <AuthBackground>
+        <div className="surface-elevated-luxury rounded-3xl max-w-sm w-full overflow-hidden animate-fade-in-scale relative">
+          {/* Top accent */}
+          <div className="h-[2px] bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+
+          <div className="p-6 space-y-4">
+            <LogoBlock subtitle="Reset Password" />
+
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              <div className="space-y-2 animate-fade-in-up" style={{ animationDelay: "0ms", animationFillMode: "backwards" }}>
+                <Label htmlFor="reset-email" className="text-label-uppercase">Email</Label>
                 <Input
                   id="reset-email"
                   type="email"
@@ -177,172 +218,171 @@ export default function Auth() {
                   value={resetEmail}
                   onChange={(e) => setResetEmail(e.target.value)}
                   required
+                  className="glass-input rounded-xl h-11 focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
                 />
               </div>
-              <Button type="submit" className="w-full h-9 text-sm" disabled={loading}>
-                {loading ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : null}
+              <Button type="submit" className="futuristic-button rounded-xl h-11 w-full text-base font-semibold" disabled={loading}>
+                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin drop-shadow-[0_0_6px_hsl(var(--primary))]" /> : null}
                 Send Reset Link
               </Button>
               <Button
                 type="button"
                 variant="ghost"
-                className="w-full h-9 text-sm"
+                className="glass-button rounded-lg w-full h-10 text-sm font-medium gap-2"
                 onClick={() => {
                   setShowForgotPassword(false);
                   setResetEmail("");
                 }}
               >
+                <ArrowLeft className="h-3.5 w-3.5" />
                 Back to Sign In
               </Button>
             </form>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </div>
+      </AuthBackground>
     );
   }
 
+  /* ══════════ Main Auth ══════════ */
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader className="flex flex-col items-center text-center pb-4">
-          <img src={ottoyardLogo} alt="OTTOYARD" className="w-32 h-32 object-contain mb-0" />
-          <CardTitle className="text-xl">
-            <span className="text-[#617fa5]">Fleet Command</span> Dashboard
-          </CardTitle>
-          <CardDescription className="text-sm">
-            Sign in to manage your fleet operations
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="px-4">
-          <Tabs value={isSignUp ? "signup" : "signin"} onValueChange={(v) => setIsSignUp(v === "signup")}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="signin">Sign In</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
-            </TabsList>
+    <AuthBackground>
+      <div className="surface-elevated-luxury rounded-3xl max-w-sm w-full overflow-hidden animate-fade-in-scale relative">
+        {/* Top accent line */}
+        <div className="h-[2px] bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
-            <TabsContent value="signin">
-              <form onSubmit={handleEmailAuth} className="space-y-3">
-                <div className="space-y-2">
-                  <Label htmlFor="signin-email">Email</Label>
-                  <Input
-                    id="signin-email"
-                    name="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signin-password">Password</Label>
-                  <Input
-                    id="signin-password"
-                    name="password"
-                    type="password"
-                    required
-                  />
-                </div>
-                <div className="flex items-center space-x-2">
-                  <input
-                    id="remember-me"
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
-                  />
-                  <Label htmlFor="remember-me" className="text-sm font-normal cursor-pointer">
-                    Remember me
-                  </Label>
-                </div>
-                <Button type="submit" className="w-full h-9 text-sm" disabled={loading}>
-                  {loading ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : null}
-                  Sign In
-                </Button>
-                <Button
-                  type="button"
-                  variant="link"
-                  className="w-full text-sm"
-                  onClick={() => setShowForgotPassword(true)}
+        <div className="p-6 space-y-4">
+          <LogoBlock />
+
+          {/* Tab Switcher */}
+          <div className="surface-luxury rounded-xl p-1 flex">
+            <button
+              type="button"
+              className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors duration-200 ${
+                !isSignUp
+                  ? "bg-primary/15 text-primary font-semibold"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              onClick={() => setIsSignUp(false)}
+            >
+              Sign In
+            </button>
+            <button
+              type="button"
+              className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors duration-200 ${
+                isSignUp
+                  ? "bg-primary/15 text-primary font-semibold"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              onClick={() => setIsSignUp(true)}
+            >
+              Sign Up
+            </button>
+          </div>
+
+          {/* Sign In Form */}
+          {!isSignUp && (
+            <form onSubmit={handleEmailAuth} className="space-y-3">
+              <div className="space-y-2">
+                <Label htmlFor="signin-email" className="text-label-uppercase">Email</Label>
+                <Input
+                  id="signin-email"
+                  name="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  required
+                  className="glass-input rounded-xl h-11 focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="signin-password" className="text-label-uppercase">Password</Label>
+                <Input
+                  id="signin-password"
+                  name="password"
+                  type="password"
+                  required
+                  className="glass-input rounded-xl h-11 focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
+                />
+              </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  id="remember-me"
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="h-4 w-4 rounded border-border"
+                  style={{ accentColor: "hsl(var(--primary))" }}
+                />
+                <Label htmlFor="remember-me" className="text-sm text-muted-foreground font-normal cursor-pointer">
+                  Remember me
+                </Label>
+              </div>
+              <Button type="submit" className="futuristic-button rounded-xl h-11 w-full text-base font-semibold" disabled={loading}>
+                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin drop-shadow-[0_0_6px_hsl(var(--primary))]" /> : null}
+                Sign In
+              </Button>
+              <button
+                type="button"
+                className="w-full text-sm text-primary/70 hover:text-primary transition-colors py-1"
+                onClick={() => setShowForgotPassword(true)}
+              >
+                Forgot password?
+              </button>
+            </form>
+          )}
+
+          {/* Sign Up Form */}
+          {isSignUp && (
+            <form onSubmit={handleEmailAuth} className="space-y-3">
+              {[
+                { id: "signup-name", name: "fullName", type: "text", label: "Full Name", placeholder: "John Doe", required: true, delay: 0 },
+                { id: "signup-username", name: "username", type: "text", label: "Username", placeholder: "johndoe", required: true, delay: 100 },
+                { id: "signup-email", name: "email", type: "email", label: "Email", placeholder: "you@example.com", required: true, delay: 200 },
+                { id: "signup-password", name: "password", type: "password", label: "Password", placeholder: "", required: true, delay: 300 },
+                { id: "signup-company", name: "companyName", type: "text", label: "Company Name (Optional)", placeholder: "Acme Inc.", required: false, delay: 400 },
+              ].map((field) => (
+                <div
+                  key={field.id}
+                  className="space-y-2 animate-fade-in-up"
+                  style={{ animationDelay: `${field.delay}ms`, animationFillMode: "backwards" }}
                 >
-                  Forgot password?
-                </Button>
-              </form>
-            </TabsContent>
+                  <Label htmlFor={field.id} className="text-label-uppercase">{field.label}</Label>
+                  <Input
+                    id={field.id}
+                    name={field.name}
+                    type={field.type}
+                    placeholder={field.placeholder}
+                    required={field.required}
+                    className="glass-input rounded-xl h-11 focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
+                  />
+                </div>
+              ))}
+              <Button type="submit" className="futuristic-button rounded-xl h-11 w-full text-base font-semibold" disabled={loading}>
+                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin drop-shadow-[0_0_6px_hsl(var(--primary))]" /> : null}
+                Create Account
+              </Button>
+            </form>
+          )}
 
-            <TabsContent value="signup">
-              <form onSubmit={handleEmailAuth} className="space-y-3">
-                <div className="space-y-2">
-                  <Label htmlFor="signup-name">Full Name</Label>
-                  <Input
-                    id="signup-name"
-                    name="fullName"
-                    type="text"
-                    placeholder="John Doe"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-username">Username</Label>
-                  <Input
-                    id="signup-username"
-                    name="username"
-                    type="text"
-                    placeholder="johndoe"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
-                  <Input
-                    id="signup-email"
-                    name="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-password">Password</Label>
-                  <Input
-                    id="signup-password"
-                    name="password"
-                    type="password"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-company">Company Name (Optional)</Label>
-                  <Input
-                    id="signup-company"
-                    name="companyName"
-                    type="text"
-                    placeholder="Acme Inc."
-                  />
-                </div>
-                <Button type="submit" className="w-full h-9 text-sm" disabled={loading}>
-                  {loading ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : null}
-                  Create Account
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
-
-          <div className="relative my-3">
+          {/* OAuth Divider */}
+          <div className="relative my-1">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
+              <span className="w-full border-t border-border/30" />
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+            <div className="relative flex justify-center">
+              <span className="text-label-uppercase bg-card px-3">Or continue with</span>
             </div>
           </div>
 
+          {/* Google OAuth */}
           <Button
             type="button"
             variant="outline"
-            className="w-full h-9 text-sm"
+            className="glass-button rounded-xl h-11 w-full text-sm font-medium hover:border-primary/20 hover:shadow-glow-sm transition-all"
             onClick={handleGoogleAuth}
             disabled={loading}
           >
-            <svg className="mr-2 h-3.5 w-3.5" viewBox="0 0 24 24">
+            <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
               <path
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                 fill="#4285F4"
@@ -362,8 +402,8 @@ export default function Auth() {
             </svg>
             Google
           </Button>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </div>
+    </AuthBackground>
   );
 }
