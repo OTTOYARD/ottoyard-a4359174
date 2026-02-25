@@ -238,7 +238,7 @@ export const EVServices: React.FC<EVServicesProps> = ({ serviceRecords, predicti
                   <p className="text-[10px] text-muted-foreground">{addon.desc}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <p className="text-base font-bold text-primary">{addon.price}</p>
+                  <p className="text-base font-bold text-primary tabular-nums text-luxury">{addon.price}</p>
                   <Button variant="outline" size="sm" className="glass-button rounded-lg h-7 text-xs font-semibold hover:shadow-glow-sm transition-all">
                     Add
                   </Button>
@@ -287,7 +287,7 @@ export const EVServices: React.FC<EVServicesProps> = ({ serviceRecords, predicti
                     </div>
                     <div className="text-right flex-shrink-0">
                       {svc.cost > 0 ? (
-                        <p className="text-base font-bold text-primary">${svc.cost.toFixed(2)}</p>
+                        <p className="text-base font-bold text-primary tabular-nums text-luxury">${svc.cost.toFixed(2)}</p>
                       ) : (
                         <Badge variant="outline" className="text-[10px] bg-success/15 text-success border-success/30">
                           Included

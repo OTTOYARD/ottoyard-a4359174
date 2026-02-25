@@ -84,7 +84,7 @@ export const EVDepotQ: React.FC<EVDepotQProps> = ({ depotStages, vehicle }) => {
                 variant="outline"
                 className="bg-primary/15 text-primary border-primary/30 rounded-full px-4 py-1.5 text-sm font-semibold animate-pulse-ring"
               >
-                ~{etaMinutes} min remaining
+                ~<span className="tabular-nums">{etaMinutes}</span> min remaining
               </Badge>
             )}
           </div>
@@ -192,7 +192,7 @@ export const EVDepotQ: React.FC<EVDepotQProps> = ({ depotStages, vehicle }) => {
               >
                 {/* Inner mask to create ring */}
                 <div className="absolute inset-[6px] rounded-full bg-card flex flex-col items-center justify-center">
-                  <p className="text-2xl font-bold text-luxury leading-none">{depotStages.currentStall.id}</p>
+                  <p className="text-2xl font-bold text-luxury tabular-nums leading-none">{depotStages.currentStall.id}</p>
                   <p className="text-label-uppercase mt-0.5" style={{ fontSize: "8px" }}>
                     {depotStages.currentStall.subType}
                   </p>
@@ -201,7 +201,7 @@ export const EVDepotQ: React.FC<EVDepotQProps> = ({ depotStages, vehicle }) => {
             </div>
 
             <div className="text-center text-xs text-muted-foreground mb-2">
-              SOC: <span className="text-primary font-semibold">{socPct}%</span>
+              SOC: <span className="text-primary font-semibold tabular-nums text-luxury">{socPct}%</span>
             </div>
 
             <div className="space-y-0">
@@ -213,8 +213,8 @@ export const EVDepotQ: React.FC<EVDepotQProps> = ({ depotStages, vehicle }) => {
                 { label: "Target", value: `${vehicle.chargingPreferencePct}%` },
               ].map((row) => (
                 <div key={row.label} className="flex justify-between py-2.5 border-b border-border/20">
-                  <span className="text-muted-foreground text-xs">{row.label}</span>
-                  <span className="font-semibold text-foreground text-sm">{row.value}</span>
+                  <span className="text-label-uppercase">{row.label}</span>
+                  <span className="font-semibold text-foreground text-sm tabular-nums text-luxury">{row.value}</span>
                 </div>
               ))}
             </div>
