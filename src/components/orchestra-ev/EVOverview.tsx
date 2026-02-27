@@ -18,6 +18,9 @@ import {
 } from "lucide-react";
 import { EVVehicleHero } from "./EVVehicleHero";
 import { EVAmenities } from "./EVAmenities";
+import { VehicleHealthRing } from "@/components/OttoQ/MemberDashboard/VehicleHealthRing";
+import { UpcomingServicePreview } from "@/components/OttoQ/MemberDashboard/UpcomingServicePreview";
+import { VehicleHealthTrend } from "@/components/OttoQ/MemberInsights/VehicleHealthTrend";
 import type {
   Subscriber,
   SubscriberVehicle,
@@ -84,6 +87,15 @@ export const EVOverview: React.FC<EVOverviewProps> = ({
       {/* My Vehicle — Primary / Hero Section — stagger 0ms */}
       <div className="animate-fade-in-up" style={{ animationDelay: '0ms', animationFillMode: 'backwards' }}>
         <EVVehicleHero vehicle={vehicle} />
+      </div>
+
+      {/* Vehicle Health Ring + Health Trend — stagger 50ms */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in-up" style={{ animationDelay: '50ms', animationFillMode: 'backwards' }}>
+        <VehicleHealthRing vehicle={vehicle} onViewServices={() => onTabChange("services")} />
+        <div className="space-y-4">
+          <UpcomingServicePreview services={serviceRecords} onViewAll={() => onTabChange("services")} />
+          <VehicleHealthTrend currentScore={vehicle.healthScore} />
+        </div>
       </div>
 
       {/* Subscriber Profile + Quick Actions Row */}
