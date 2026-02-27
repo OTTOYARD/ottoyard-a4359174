@@ -28,10 +28,16 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.F
   ready: { label: "Ready", color: "bg-success/15 text-success border-success/30", icon: CheckCircle2 },
 };
 
+// 2024 Tesla Model 3 Long Range official paint colors
 const colorMap: Record<string, string> = {
-  "Midnight Silver": "#71797E",
-  "Pearl White": "#F0EDE5",
+  "Ultra White": "#F2F0EC",
   "Solid Black": "#1C1C1C",
+  "Midnight Silver": "#71797E",
+  "Quicksilver": "#C0C0C8",
+  "Deep Blue Metallic": "#1B3A5C",
+  "Midnight Cherry Red": "#6B1624",
+  "Ultra Red": "#A4262C",
+  "Pearl White": "#F0EDE5",
   "Deep Blue": "#1B3A5C",
   "Red Multi-Coat": "#A4262C",
 };
