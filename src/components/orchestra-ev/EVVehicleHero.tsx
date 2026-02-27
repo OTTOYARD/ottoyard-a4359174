@@ -2,8 +2,6 @@ import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { VehicleShowroom3D } from "./VehicleShowroom3D";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { useVehicleRender } from "@/hooks/useVehicleRender";
-import { Sparkles, Loader2 } from "lucide-react";
 import {
   Battery,
   MapPin,
@@ -41,13 +39,7 @@ const colorMap: Record<string, string> = {
 export const EVVehicleHero: React.FC<EVVehicleHeroProps> = ({ vehicle }) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  const { imageUrl, isGenerating, isAIRendered } = useVehicleRender({
-    make: vehicle.make,
-    model: vehicle.model,
-    year: vehicle.year,
-    color: vehicle.color,
-  });
-
+  const vehicleColor = colorMap[vehicle.color] || "#71797E";
   const socPct = Math.round(vehicle.currentSoc * 100);
   const status = statusConfig[vehicle.currentStatus] || statusConfig.at_depot;
   const StatusIcon = status.icon;
@@ -66,14 +58,13 @@ export const EVVehicleHero: React.FC<EVVehicleHeroProps> = ({ vehicle }) => {
   };
 
   const vehicleName = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
-  const dotColor = colorMap[vehicle.color] || "#71797E";
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
       <div className="surface-elevated-luxury rounded-2xl overflow-hidden">
         {/* ===== 3D HERO STAGE ===== */}
         <div className="relative overflow-hidden">
-          <VehicleShowroom3D vehicleStatus={vehicle.currentStatus} soc={vehicle.currentSoc} imageUrl={imageUrl} />
+          <VehicleShowroom3D vehicleStatus={vehicle.currentStatus} soc={vehicle.currentSoc} vehicleColor={vehicleColor} />
 
           {/* Status badge — floating top-right */}
           <div className={`absolute top-4 right-4 z-10 ${isCharging ? "animate-pulse-ring rounded-full" : ""}`}>
@@ -85,24 +76,6 @@ export const EVVehicleHero: React.FC<EVVehicleHeroProps> = ({ vehicle }) => {
               {status.label}
             </Badge>
           </div>
-
-          {/* AI render indicator */}
-          {isGenerating && (
-            <div className="absolute bottom-3 left-4 z-10">
-              <Badge variant="outline" className="backdrop-blur-lg bg-background/60 rounded-full px-3 py-1.5 border border-primary/20 text-xs text-muted-foreground">
-                <Loader2 className="h-3 w-3 mr-1.5 animate-spin text-primary" />
-                Generating HD render…
-              </Badge>
-            </div>
-          )}
-          {isAIRendered && !isGenerating && (
-            <div className="absolute bottom-3 left-4 z-10">
-              <Badge variant="outline" className="backdrop-blur-lg bg-background/60 rounded-full px-3 py-1.5 border border-primary/20 text-xs text-primary/80">
-                <Sparkles className="h-3 w-3 mr-1.5" />
-                AI Rendered
-              </Badge>
-            </div>
-          )}
         </div>
 
         {/* ===== VEHICLE NAME ===== */}
@@ -113,7 +86,7 @@ export const EVVehicleHero: React.FC<EVVehicleHeroProps> = ({ vehicle }) => {
           <div className="flex items-center justify-center gap-2 mt-1.5">
             <span
               className="w-3 h-3 rounded-full inline-block border border-border/30"
-              style={{ backgroundColor: dotColor }}
+              style={{ backgroundColor: vehicleColor }}
             />
             <span className="text-sm text-muted-foreground">{vehicle.color}</span>
           </div>
@@ -138,7 +111,6 @@ export const EVVehicleHero: React.FC<EVVehicleHeroProps> = ({ vehicle }) => {
                   transition: "width 800ms cubic-bezier(0.16, 1, 0.3, 1)",
                 }}
               >
-                {/* Shimmer shine */}
                 <div className="absolute inset-0 animate-shimmer-luxury-bg" />
               </div>
             </div>
@@ -214,17 +186,13 @@ export const EVVehicleHero: React.FC<EVVehicleHeroProps> = ({ vehicle }) => {
               Tire Pressure ({vehicle.tirePressure.unit.toUpperCase()})
             </p>
             <div className="relative flex items-center justify-center">
-              {/* Car silhouette */}
               <div className="relative w-28 h-36">
-                {/* Car body */}
                 <div className="absolute inset-x-3 inset-y-4 border-2 border-muted/30 rounded-lg" />
-                {/* Wheel dots */}
                 <div className="absolute top-6 left-0.5 w-2 h-4 bg-muted/40 rounded-full" />
                 <div className="absolute top-6 right-0.5 w-2 h-4 bg-muted/40 rounded-full" />
                 <div className="absolute bottom-6 left-0.5 w-2 h-4 bg-muted/40 rounded-full" />
                 <div className="absolute bottom-6 right-0.5 w-2 h-4 bg-muted/40 rounded-full" />
 
-                {/* Tire values at corners */}
                 <span className={`absolute -top-1 -left-8 text-sm font-bold tabular-nums ${tirePressureStatus(vehicle.tirePressure.fl)}`}>
                   {vehicle.tirePressure.fl}
                 </span>
@@ -239,7 +207,6 @@ export const EVVehicleHero: React.FC<EVVehicleHeroProps> = ({ vehicle }) => {
                 </span>
               </div>
             </div>
-            {/* Labels */}
             <div className="grid grid-cols-2 gap-2 mt-3 text-center">
               <span className="text-label-uppercase">FL / RL</span>
               <span className="text-label-uppercase">FR / RR</span>
@@ -284,7 +251,7 @@ export const EVVehicleHero: React.FC<EVVehicleHeroProps> = ({ vehicle }) => {
             className="border-l-2 border-primary/40 pl-4 ml-5 mr-5 mb-3 py-3 animate-fade-in-up"
             style={{ animationDelay: "300ms", animationFillMode: "backwards" }}
           >
-            <p className="text-label-uppercase text-primary/60 mb-1.5">AI Insight</p>
+            <p className="text-label-uppercase text-primary/60 mb-1.5">Predictive Insight</p>
             <p className="text-sm leading-relaxed text-muted-foreground italic">
               Based on driving patterns, tire rotation is recommended in approximately 2 weeks.
               Battery degradation is normal at {vehicle.batteryHealthPct}% health after 14 months.
