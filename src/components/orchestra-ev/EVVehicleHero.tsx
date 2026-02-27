@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { VehicleShowroom3D } from "./VehicleShowroom3D";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Battery,
@@ -61,57 +62,9 @@ export const EVVehicleHero: React.FC<EVVehicleHeroProps> = ({ vehicle }) => {
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
       <div className="surface-elevated-luxury rounded-2xl overflow-hidden">
-        {/* ===== HERO STAGE ===== */}
-        <div className="relative h-48 md:h-56 overflow-hidden">
-          {/* Layer 1 — dark gradient floor */}
-          <div className="absolute inset-0 bg-gradient-to-b from-card/0 via-card/50 to-card" />
-
-          {/* Layer 2 — spotlight behind car */}
-          <div
-            className="absolute inset-0"
-            style={{ background: "radial-gradient(ellipse 60% 40% at 50% 60%, hsl(var(--primary) / 0.08) 0%, transparent 70%)" }}
-          />
-
-          {/* Layer 3 — ambient overhead glow */}
-          <div
-            className="absolute inset-0"
-            style={{ background: "radial-gradient(ellipse 80% 30% at 50% 0%, hsl(0 0% 100% / 0.03) 0%, transparent 60%)" }}
-          />
-
-          {/* Layer 6 — floor grid (extremely subtle) */}
-          <div
-            className="absolute bottom-0 left-0 right-0 h-1/2 opacity-30 pointer-events-none"
-            style={{
-              background: "repeating-linear-gradient(90deg, hsl(0 0% 100% / 0.02) 0px, transparent 1px, transparent 40px)",
-              perspective: "600px",
-              transform: "rotateX(60deg)",
-              transformOrigin: "center bottom",
-            }}
-          />
-
-          {/* Layer 4 — the car image */}
-          <img
-            src="/tesla-model-3.png"
-            alt={vehicleName}
-            className="absolute bottom-2 left-1/2 -translate-x-1/2 w-[280px] md:w-[340px] h-auto object-contain z-10"
-            style={{
-              filter: "drop-shadow(0 8px 24px rgba(0,0,0,0.5)) brightness(1.05) contrast(1.05)",
-            }}
-          />
-
-          {/* Layer 5 — reflection */}
-          <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-[280px] md:w-[340px] h-12 overflow-hidden opacity-40 pointer-events-none">
-            <img
-              src="/tesla-model-3.png"
-              alt=""
-              className="w-full h-auto object-contain"
-              style={{
-                transform: "scaleY(-1)",
-                maskImage: "linear-gradient(to bottom, rgba(0,0,0,0.15), transparent)",
-                WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,0.15), transparent)",
-              }}
-            />
-          </div>
+        {/* ===== 3D HERO STAGE ===== */}
+        <div className="relative overflow-hidden">
+          <VehicleShowroom3D vehicleStatus={vehicle.currentStatus} soc={vehicle.currentSoc} />
 
           {/* Status badge — floating top-right */}
           <div className={`absolute top-4 right-4 z-10 ${isCharging ? "animate-pulse-ring rounded-full" : ""}`}>
