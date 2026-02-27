@@ -538,6 +538,362 @@ export type Database = {
           },
         ]
       }
+      ottoq_ps_depot_stalls: {
+        Row: {
+          charger_power_kw: number | null
+          created_at: string
+          current_session_start: string | null
+          current_vehicle_id: string | null
+          depot_id: string
+          estimated_completion: string | null
+          id: string
+          stall_number: number
+          stall_type: Database["public"]["Enums"]["ottoq_stall_type"]
+          status: Database["public"]["Enums"]["ottoq_stall_status"]
+        }
+        Insert: {
+          charger_power_kw?: number | null
+          created_at?: string
+          current_session_start?: string | null
+          current_vehicle_id?: string | null
+          depot_id: string
+          estimated_completion?: string | null
+          id?: string
+          stall_number: number
+          stall_type: Database["public"]["Enums"]["ottoq_stall_type"]
+          status?: Database["public"]["Enums"]["ottoq_stall_status"]
+        }
+        Update: {
+          charger_power_kw?: number | null
+          created_at?: string
+          current_session_start?: string | null
+          current_vehicle_id?: string | null
+          depot_id?: string
+          estimated_completion?: string | null
+          id?: string
+          stall_number?: number
+          stall_type?: Database["public"]["Enums"]["ottoq_stall_type"]
+          status?: Database["public"]["Enums"]["ottoq_stall_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ottoq_ps_depot_stalls_current_vehicle_id_fkey"
+            columns: ["current_vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "ottoq_ps_vehicles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ottoq_ps_depot_stalls_depot_id_fkey"
+            columns: ["depot_id"]
+            isOneToOne: false
+            referencedRelation: "ottoq_ps_depots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ottoq_ps_depots: {
+        Row: {
+          charge_stalls_count: number
+          clean_stalls_count: number
+          created_at: string
+          energy_rate_schedule: Json | null
+          id: string
+          lat: number | null
+          lng: number | null
+          location_address: string | null
+          name: string
+          operating_hours: Json | null
+          service_bays_count: number
+          staging_stalls_count: number
+        }
+        Insert: {
+          charge_stalls_count?: number
+          clean_stalls_count?: number
+          created_at?: string
+          energy_rate_schedule?: Json | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          location_address?: string | null
+          name: string
+          operating_hours?: Json | null
+          service_bays_count?: number
+          staging_stalls_count?: number
+        }
+        Update: {
+          charge_stalls_count?: number
+          clean_stalls_count?: number
+          created_at?: string
+          energy_rate_schedule?: Json | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          location_address?: string | null
+          name?: string
+          operating_hours?: Json | null
+          service_bays_count?: number
+          staging_stalls_count?: number
+        }
+        Relationships: []
+      }
+      ottoq_ps_energy_pricing: {
+        Row: {
+          created_at: string
+          days_applicable: Json | null
+          depot_id: string
+          end_hour: number
+          id: string
+          period_name: string
+          rate_per_kwh: number
+          start_hour: number
+        }
+        Insert: {
+          created_at?: string
+          days_applicable?: Json | null
+          depot_id: string
+          end_hour: number
+          id?: string
+          period_name: string
+          rate_per_kwh: number
+          start_hour: number
+        }
+        Update: {
+          created_at?: string
+          days_applicable?: Json | null
+          depot_id?: string
+          end_hour?: number
+          id?: string
+          period_name?: string
+          rate_per_kwh?: number
+          start_hour?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ottoq_ps_energy_pricing_depot_id_fkey"
+            columns: ["depot_id"]
+            isOneToOne: false
+            referencedRelation: "ottoq_ps_depots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ottoq_ps_member_preferences: {
+        Row: {
+          auto_accept_charges: boolean
+          auto_accept_cleans: boolean
+          calendar_provider: string | null
+          calendar_sync_enabled: boolean
+          commute_miles_estimate: number | null
+          created_at: string
+          home_zip: string | null
+          id: string
+          notification_lead_time_hours: number
+          preferred_charge_times: Json | null
+          preferred_days: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auto_accept_charges?: boolean
+          auto_accept_cleans?: boolean
+          calendar_provider?: string | null
+          calendar_sync_enabled?: boolean
+          commute_miles_estimate?: number | null
+          created_at?: string
+          home_zip?: string | null
+          id?: string
+          notification_lead_time_hours?: number
+          preferred_charge_times?: Json | null
+          preferred_days?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auto_accept_charges?: boolean
+          auto_accept_cleans?: boolean
+          calendar_provider?: string | null
+          calendar_sync_enabled?: boolean
+          commute_miles_estimate?: number | null
+          created_at?: string
+          home_zip?: string | null
+          id?: string
+          notification_lead_time_hours?: number
+          preferred_charge_times?: Json | null
+          preferred_days?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ottoq_ps_scheduled_services: {
+        Row: {
+          actual_end: string | null
+          actual_start: string | null
+          created_at: string
+          id: string
+          notification_sent_at: string | null
+          predicted_need_date: string
+          priority_score: number
+          scheduled_end: string | null
+          scheduled_start: string | null
+          service_type: Database["public"]["Enums"]["ottoq_service_type"]
+          stall_id: string | null
+          status: Database["public"]["Enums"]["ottoq_service_status"]
+          trigger_reason: string | null
+          updated_at: string
+          user_response_at: string | null
+          vehicle_id: string
+        }
+        Insert: {
+          actual_end?: string | null
+          actual_start?: string | null
+          created_at?: string
+          id?: string
+          notification_sent_at?: string | null
+          predicted_need_date: string
+          priority_score?: number
+          scheduled_end?: string | null
+          scheduled_start?: string | null
+          service_type: Database["public"]["Enums"]["ottoq_service_type"]
+          stall_id?: string | null
+          status?: Database["public"]["Enums"]["ottoq_service_status"]
+          trigger_reason?: string | null
+          updated_at?: string
+          user_response_at?: string | null
+          vehicle_id: string
+        }
+        Update: {
+          actual_end?: string | null
+          actual_start?: string | null
+          created_at?: string
+          id?: string
+          notification_sent_at?: string | null
+          predicted_need_date?: string
+          priority_score?: number
+          scheduled_end?: string | null
+          scheduled_start?: string | null
+          service_type?: Database["public"]["Enums"]["ottoq_service_type"]
+          stall_id?: string | null
+          status?: Database["public"]["Enums"]["ottoq_service_status"]
+          trigger_reason?: string | null
+          updated_at?: string
+          user_response_at?: string | null
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ottoq_ps_scheduled_services_stall_id_fkey"
+            columns: ["stall_id"]
+            isOneToOne: false
+            referencedRelation: "ottoq_ps_depot_stalls"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ottoq_ps_scheduled_services_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "ottoq_ps_vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ottoq_ps_service_thresholds: {
+        Row: {
+          created_at: string
+          estimated_duration_minutes: number
+          id: string
+          priority_weight: number
+          service_type: Database["public"]["Enums"]["ottoq_service_type"]
+          threshold_unit: string
+          threshold_value: number
+          trigger_condition: string
+        }
+        Insert: {
+          created_at?: string
+          estimated_duration_minutes: number
+          id?: string
+          priority_weight: number
+          service_type: Database["public"]["Enums"]["ottoq_service_type"]
+          threshold_unit: string
+          threshold_value: number
+          trigger_condition: string
+        }
+        Update: {
+          created_at?: string
+          estimated_duration_minutes?: number
+          id?: string
+          priority_weight?: number
+          service_type?: Database["public"]["Enums"]["ottoq_service_type"]
+          threshold_unit?: string
+          threshold_value?: number
+          trigger_condition?: string
+        }
+        Relationships: []
+      }
+      ottoq_ps_vehicles: {
+        Row: {
+          avg_daily_miles: number | null
+          battery_capacity_kwh: number | null
+          created_at: string
+          current_range_miles: number | null
+          current_soc_percent: number | null
+          id: string
+          last_battery_health_check: string | null
+          last_charge_date: string | null
+          last_detail_date: string | null
+          last_tire_rotation_date: string | null
+          make: string | null
+          model: string | null
+          odometer_miles: number | null
+          owner_id: string | null
+          status: Database["public"]["Enums"]["ottoq_ev_vehicle_status"]
+          updated_at: string
+          vehicle_type: Database["public"]["Enums"]["ottoq_ev_vehicle_type"]
+          year: number | null
+        }
+        Insert: {
+          avg_daily_miles?: number | null
+          battery_capacity_kwh?: number | null
+          created_at?: string
+          current_range_miles?: number | null
+          current_soc_percent?: number | null
+          id?: string
+          last_battery_health_check?: string | null
+          last_charge_date?: string | null
+          last_detail_date?: string | null
+          last_tire_rotation_date?: string | null
+          make?: string | null
+          model?: string | null
+          odometer_miles?: number | null
+          owner_id?: string | null
+          status?: Database["public"]["Enums"]["ottoq_ev_vehicle_status"]
+          updated_at?: string
+          vehicle_type?: Database["public"]["Enums"]["ottoq_ev_vehicle_type"]
+          year?: number | null
+        }
+        Update: {
+          avg_daily_miles?: number | null
+          battery_capacity_kwh?: number | null
+          created_at?: string
+          current_range_miles?: number | null
+          current_soc_percent?: number | null
+          id?: string
+          last_battery_health_check?: string | null
+          last_charge_date?: string | null
+          last_detail_date?: string | null
+          last_tire_rotation_date?: string | null
+          make?: string | null
+          model?: string | null
+          odometer_miles?: number | null
+          owner_id?: string | null
+          status?: Database["public"]["Enums"]["ottoq_ev_vehicle_status"]
+          updated_at?: string
+          vehicle_type?: Database["public"]["Enums"]["ottoq_ev_vehicle_type"]
+          year?: number | null
+        }
+        Relationships: []
+      }
       ottoq_resources: {
         Row: {
           capabilities_jsonb: Json | null
@@ -1282,6 +1638,13 @@ export type Database = {
         | "JOB"
         | "SCHEDULE"
         | "SIMULATOR"
+      ottoq_ev_vehicle_status:
+        | "active"
+        | "in_service"
+        | "charging"
+        | "staged"
+        | "offline"
+      ottoq_ev_vehicle_type: "member_ev" | "autonomous"
       ottoq_job_state:
         | "PENDING"
         | "SCHEDULED"
@@ -1300,6 +1663,28 @@ export type Database = {
         | "CLEAN_DETAIL_STALL"
         | "MAINTENANCE_BAY"
         | "STAGING_STALL"
+      ottoq_service_status:
+        | "predicted"
+        | "notified"
+        | "accepted"
+        | "scheduled"
+        | "in_progress"
+        | "completed"
+        | "cancelled"
+        | "declined"
+      ottoq_service_type:
+        | "charge"
+        | "detail_clean"
+        | "tire_rotation"
+        | "battery_health_check"
+        | "full_service"
+      ottoq_stall_status: "available" | "occupied" | "reserved" | "maintenance"
+      ottoq_stall_type:
+        | "charge_standard"
+        | "charge_fast"
+        | "clean_detail"
+        | "service_bay"
+        | "staging"
       ottoq_vehicle_status:
         | "IDLE"
         | "ENROUTE_DEPOT"
@@ -1442,6 +1827,14 @@ export const Constants = {
         "SCHEDULE",
         "SIMULATOR",
       ],
+      ottoq_ev_vehicle_status: [
+        "active",
+        "in_service",
+        "charging",
+        "staged",
+        "offline",
+      ],
+      ottoq_ev_vehicle_type: ["member_ev", "autonomous"],
       ottoq_job_state: [
         "PENDING",
         "SCHEDULED",
@@ -1462,6 +1855,31 @@ export const Constants = {
         "CLEAN_DETAIL_STALL",
         "MAINTENANCE_BAY",
         "STAGING_STALL",
+      ],
+      ottoq_service_status: [
+        "predicted",
+        "notified",
+        "accepted",
+        "scheduled",
+        "in_progress",
+        "completed",
+        "cancelled",
+        "declined",
+      ],
+      ottoq_service_type: [
+        "charge",
+        "detail_clean",
+        "tire_rotation",
+        "battery_health_check",
+        "full_service",
+      ],
+      ottoq_stall_status: ["available", "occupied", "reserved", "maintenance"],
+      ottoq_stall_type: [
+        "charge_standard",
+        "charge_fast",
+        "clean_detail",
+        "service_bay",
+        "staging",
       ],
       ottoq_vehicle_status: [
         "IDLE",
