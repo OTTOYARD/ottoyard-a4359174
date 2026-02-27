@@ -1,47 +1,39 @@
 
 
-## Plan: High-Fidelity Procedural 2024 Tesla Model 3 Long Range
+## Plan: Load Real Tesla Model 3 GLB into the 3D Showroom
 
-The current `ProceduralSedan` is built from flat boxes — it looks like a Minecraft car. The fix: rebuild it with **Tesla Model 3-specific geometry** using smooth shapes, proper proportions, and signature details.
+### What's happening now
+The current `VehicleShowroom3D.tsx` uses ~400 lines of hand-coded procedural geometry (boxes, torus, extruded shapes) that looks nothing like a real car.
 
-### What Changes
+### What changes
 
-**1. Rewrite `ProceduralSedan` → `TeslaModel3` in `VehicleShowroom3D.tsx`**
+**Rewrite `VehicleShowroom3D.tsx`** — replace the procedural `TeslaModel3` component with a `TeslaModel3GLB` component that loads the real 3D model:
 
-Replace all boxy primitives with a detailed procedural Model 3:
+1. **Load the GLB** using `useGLTF` from `@react-three/drei` pointing at:
+   `https://ycsisvozzgmisboumfqc.supabase.co/storage/v1/object/public/vehicle-renders/Tesla/2023_tesla_model_3_performance.glb`
 
-- **Body**: Use `THREE.Shape` + `ExtrudeGeometry` for a proper side-profile silhouette — the Model 3's distinctive low hood, steeply raked windshield, fastback-style roofline, and short rear deck. Extrude it to the correct body width (~1.85m scaled).
-- **Hood/frunk**: Smooth, low-profile front end with no grille (Tesla signature). Use a scaled `SphereGeometry` segment for the rounded nose.
-- **Greenhouse/cabin**: Build with a separate extruded shape matching the Model 3's panoramic glass roof line — continuous curve from windshield base to rear window trailing edge.
-- **Windshield + rear window**: Use `PlaneGeometry` with proper raked angles (Model 3's windshield is ~28° from vertical, rear glass ~45°), glass `MeshPhysicalMaterial` with high `transmission`.
-- **Full-width taillight bar**: The Model 3's distinctive LED strip across the entire rear — thin emissive red bar mesh.
-- **Headlights**: Sleek, narrow LED headlights wrapping around the front corners.
-- **Aero wheels**: Model 3 LR aero wheel covers — flat disc `CylinderGeometry` with turbine-style spoke cutouts using `THREE.Shape` with holes, plus proper `TorusGeometry` tires with correct aspect ratio.
-- **Flush door handles**: Thin rectangular meshes inset into the body sides.
-- **Side mirrors**: Small angled pods on stalks.
-- **Charging port**: Small detail on the left rear quarter panel.
-- **Underbody**: Flat panel (Model 3's aero belly pan) in dark material.
+2. **Apply dynamic paint color** — traverse the loaded scene's mesh hierarchy, identify body/paint meshes, and replace their materials with `MeshPhysicalMaterial` using the `vehicleColor` prop (clearcoat 1.0, metalness 0.9, roughness 0.15 for automotive paint look).
 
-**Materials**:
-- Body paint: `MeshPhysicalMaterial` — `clearcoat: 1.0`, `clearcoatRoughness: 0.05`, `metalness: 0.9`, `roughness: 0.15`, `envMapIntensity: 1.5` for that deep Tesla paint look.
-- Glass: `MeshPhysicalMaterial` — `transmission: 0.7`, `ior: 1.52`, `thickness: 0.3`, `color: #1a1a2e` for tinted panoramic roof.
-- Chrome/trim: High metalness stainless-look material.
-- Wheels: Matte dark grey aero covers + glossy rim edges.
+3. **Apply glass material** — find window/glass meshes and apply `MeshPhysicalMaterial` with transmission for realistic tinted glass.
 
-**2. Update `EVVehicleHero.tsx`**
+4. **Auto-center and scale** — compute the model's bounding box, center it, and scale it to fit the showroom camera framing. Different GLB models have wildly different scales, so this must be dynamic.
 
-- Hardcode vehicle label to "2024 Tesla Model 3 Long Range" for the display name.
-- Ensure `vehicleColor` mapping stays correct — the Model 3 LR comes in specific Tesla colors.
+5. **Keep all existing scene elements** — `CinematicLightRig`, `ShowroomFloor`, `VolumetricFog`, `AmbientParticles`, `OrbitControls`, `Environment` all stay exactly as they are.
 
-**3. Tune the showroom scene**
+6. **Add loading state** — show `ShowroomFallback` skeleton while the 22.5MB model downloads. Use `useGLTF.preload()` to warm the cache.
 
-- Adjust camera position and FOV to frame the more detailed model properly.
-- Increase `Environment` `environmentIntensity` to 0.5 for stronger reflections on the curved surfaces.
-- Slightly increase canvas height to `h-72 md:h-96` for a more cinematic frame.
+7. **Add error handling** — wrap in an error boundary. If the GLB fails to load (network error, CORS), fall back to a simple placeholder message instead of crashing.
 
-### Technical Approach
+8. **Gentle floating animation** — apply the same subtle `sin()` Y-axis hover to the loaded model group.
 
-Using `THREE.Shape` + `ExtrudeGeometry` is the key technique. You define the car's side-profile as a 2D path (curves matching the Model 3 silhouette), then extrude it to width. This gives smooth, organic body panels instead of boxes. Combined with proper PBR materials and the existing cinematic lighting rig, the result will look like a real-time game engine car display.
+### Technical details
 
-No external assets, no API calls, no GLB files — pure procedural geometry that renders instantly.
+- `useGLTF` from drei handles GLB loading, Draco decompression, and caching automatically
+- The model is 22.5MB — first load may take a few seconds on slower connections, but the browser caches it after that
+- Material detection uses mesh name matching or material type inspection (common patterns: names containing "body", "paint", "glass", "wheel", "tire")
+- The bucket is already public, so no auth headers needed for the storage URL
+- No changes needed to `EVVehicleHero.tsx` — the interface (`vehicleColor`, `vehicleStatus`, `soc`) stays the same
+
+### Files modified
+- `src/components/orchestra-ev/VehicleShowroom3D.tsx` — major rewrite of the vehicle component, all scene/lighting code preserved
 
