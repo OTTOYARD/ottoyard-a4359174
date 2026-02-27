@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { VehicleShowroom3D } from "./VehicleShowroom3D";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useVehicleRender } from "@/hooks/useVehicleRender";
+import { Sparkles, Loader2 } from "lucide-react";
 import {
   Battery,
   MapPin,
@@ -39,6 +41,13 @@ const colorMap: Record<string, string> = {
 export const EVVehicleHero: React.FC<EVVehicleHeroProps> = ({ vehicle }) => {
   const [isOpen, setIsOpen] = useState(false);
 
+  const { imageUrl, isGenerating, isAIRendered } = useVehicleRender({
+    make: vehicle.make,
+    model: vehicle.model,
+    year: vehicle.year,
+    color: vehicle.color,
+  });
+
   const socPct = Math.round(vehicle.currentSoc * 100);
   const status = statusConfig[vehicle.currentStatus] || statusConfig.at_depot;
   const StatusIcon = status.icon;
@@ -64,7 +73,7 @@ export const EVVehicleHero: React.FC<EVVehicleHeroProps> = ({ vehicle }) => {
       <div className="surface-elevated-luxury rounded-2xl overflow-hidden">
         {/* ===== 3D HERO STAGE ===== */}
         <div className="relative overflow-hidden">
-          <VehicleShowroom3D vehicleStatus={vehicle.currentStatus} soc={vehicle.currentSoc} />
+          <VehicleShowroom3D vehicleStatus={vehicle.currentStatus} soc={vehicle.currentSoc} imageUrl={imageUrl} />
 
           {/* Status badge — floating top-right */}
           <div className={`absolute top-4 right-4 z-10 ${isCharging ? "animate-pulse-ring rounded-full" : ""}`}>
@@ -76,6 +85,24 @@ export const EVVehicleHero: React.FC<EVVehicleHeroProps> = ({ vehicle }) => {
               {status.label}
             </Badge>
           </div>
+
+          {/* AI render indicator */}
+          {isGenerating && (
+            <div className="absolute bottom-3 left-4 z-10">
+              <Badge variant="outline" className="backdrop-blur-lg bg-background/60 rounded-full px-3 py-1.5 border border-primary/20 text-xs text-muted-foreground">
+                <Loader2 className="h-3 w-3 mr-1.5 animate-spin text-primary" />
+                Generating HD render…
+              </Badge>
+            </div>
+          )}
+          {isAIRendered && !isGenerating && (
+            <div className="absolute bottom-3 left-4 z-10">
+              <Badge variant="outline" className="backdrop-blur-lg bg-background/60 rounded-full px-3 py-1.5 border border-primary/20 text-xs text-primary/80">
+                <Sparkles className="h-3 w-3 mr-1.5" />
+                AI Rendered
+              </Badge>
+            </div>
+          )}
         </div>
 
         {/* ===== VEHICLE NAME ===== */}
