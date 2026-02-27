@@ -28,7 +28,7 @@ export function useVehicleRender({ make, model, year, color }: UseVehicleRenderP
 
     const safeColor = (color || "default").toLowerCase().replace(/[^a-z0-9]/g, "-");
     const fileName = `${make}-${model}-${year || "latest"}-${safeColor}.png`.toLowerCase();
-    const storagePath = `renders/${fileName}`;
+    const storagePath = `renders/v2/${fileName}`;
 
     // Check cache first
     const checkCacheAndGenerate = async () => {
