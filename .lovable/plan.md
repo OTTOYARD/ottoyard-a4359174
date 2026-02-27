@@ -1,43 +1,57 @@
 
 
-## Plan: Dual-AI 3D Vehicle Render Pipeline (Claude + Gemini)
+## Plan: Real 3D Vehicle Model Showroom
 
-The current prompt asks Gemini for a "photorealistic studio render" which produces a flat photo. The fix: use a **two-stage AI pipeline** — Claude crafts an expert-level 3D rendering prompt, then Gemini generates the image from that prompt. The result: a proper CG/video-game-style 3D vehicle display with transparent background.
+The current code loads a flat 2D image onto a `planeGeometry` — no matter how good the image is, it's still a spinning picture. The fix: load an actual 3D GLTF/GLB car model with proper geometry, PBR materials, and dynamic paint color.
+
+### Approach
+
+Use a free, open-source low-poly sedan GLB model (hosted in the existing `vehicle-renders` Supabase storage bucket), loaded via `useGLTF` from `@react-three/drei`. Apply dynamic `MeshPhysicalMaterial` with clearcoat for realistic automotive paint based on the vehicle's color property. Keep the existing cinematic lighting, particles, and floor — they're solid. Remove all AI image generation from the hero flow.
 
 ### Changes
 
-**1. Update `supabase/functions/generate-vehicle-render/index.ts`**
+**1. Upload a free GLB car model to Supabase storage**
+- Use a CC0/MIT-licensed low-poly sedan model (e.g., from the Kenney asset pack or similar free source)
+- Upload to `vehicle-renders/models/sedan.glb` in the existing bucket
+- Alternatively, reference a publicly hosted CDN model as fallback
 
-Replace the single Gemini call with a two-stage pipeline:
+**2. Rewrite `VehicleShowroom3D.tsx`**
+- Replace `VehicleCard3D` (flat plane + texture) with `Vehicle3D` component:
+  - `useGLTF` to load the GLB model
+  - Traverse all mesh children, apply `MeshPhysicalMaterial` with:
+    - `color` from vehicle color prop (mapped from color names to hex)
+    - `clearcoat: 1.0`, `clearcoatRoughness: 0.1` for automotive paint look
+    - `metalness: 0.9`, `roughness: 0.2` for reflective body panels
+    - `envMapIntensity: 1.0` for proper environment reflections
+  - Gentle floating animation on Y axis (existing)
+- Keep: `CinematicLightRig`, `ShowroomFloor`, `VolumetricFog`, `AmbientParticles`
+- Upgrade `Environment` preset to `"studio"` for better reflections on the 3D model
+- Increase canvas height slightly for better framing
 
-- **Stage 1 — Claude prompt engineering**: Call `google/gemini-2.5-flash` (text-only, fast) to act as a "3D vehicle rendering art director." Give it the vehicle specs (make, model, year, color) and ask it to write the optimal image generation prompt for a video-game-quality 3D render. Instruct it to specify: CG/Unreal Engine style, dramatic rim lighting on pure black background with transparency, three-quarter hero angle, no text/watermarks, floating above reflective surface.
+**3. Update `EVVehicleHero.tsx`**
+- Remove `useVehicleRender` hook import and usage
+- Remove `Sparkles`, `Loader2` imports
+- Remove "AI Rendered" badge (lines 98-105)
+- Remove "Generating HD render..." badge (lines 90-97)
+- Pass `vehicleColor` (hex) to `VehicleShowroom3D` instead of `imageUrl`
+- Add color name → hex mapping (already partially exists as `colorMap`)
 
-- **Stage 2 — Gemini image generation**: Take Claude's crafted prompt and pass it to `google/gemini-2.5-flash-image` to generate the actual image. This produces a much higher quality result because the prompt is expertly constructed.
+**4. Update `VehicleShowroom3D` props**
+- Replace `imageUrl?: string` with `vehicleColor: string` (hex color for paint)
+- Remove dependency on `useVehicleRender` entirely from the hero flow
 
-- **Fallback**: If Stage 1 fails, fall back to a hardcoded high-quality prompt and proceed directly to Stage 2.
+**5. No changes to the edge function** — it stays for other potential uses but is decoupled from the hero
 
-- Update the base prompt style from "photorealistic automotive photography" to **"3D CG render, Unreal Engine 5 quality, video game asset showcase, dramatic volumetric lighting, dark studio environment, hero car display"**.
+### 3D Model Source Strategy
 
-- Add cache-busting version suffix to storage path so existing flat-photo caches don't persist (`v2` suffix).
+Since we can't bundle arbitrary large assets, the plan uses a lightweight approach:
+- Primary: Load a GLB from a public CDN URL (e.g., a free car model from a Three.js community resource)
+- Fallback: If the model fails to load, show a stylized procedural car shape built from basic Three.js primitives (box body + cylinder wheels) — still 3D, still colored, still better than a flat image
+- The procedural fallback ensures the showroom never breaks even without network access to a GLB
 
-**2. No changes to `VehicleShowroom3D.tsx` or `EVVehicleHero.tsx`** — the 3D scene and hook are already wired up correctly. Only the generated image quality changes.
-
-### Edge Function Flow
-
-```text
-Client → useVehicleRender hook
-  → Check storage cache (renders/v2/{make}-{model}-{year}-{color}.png)
-  → Cache miss → invoke generate-vehicle-render
-    → Stage 1: Gemini Flash (text) → crafted 3D prompt
-    → Stage 2: Gemini Flash Image → base64 PNG
-    → Upload to Supabase storage
-    → Return public URL
-```
-
-### Prompt Strategy
-
-Stage 1 system prompt (to Gemini Flash text model):
-> "You are a 3D vehicle rendering art director. Given a vehicle's make, model, year, and color, write the perfect image generation prompt to produce a AAA video-game-quality 3D render. The output must look like a real-time 3D engine screenshot (Unreal Engine 5 / Gran Turismo style). Specify: three-quarter front hero angle, dramatic volumetric rim lighting, pure black background, reflective ground plane, subsurface scattering on paint, no text or UI elements. Return ONLY the prompt text, nothing else."
-
-Stage 2 (Gemini Image) receives the crafted prompt directly.
+### Technical Notes
+- `useGLTF` from drei handles GLTF/GLB loading with caching built in
+- `MeshPhysicalMaterial` with clearcoat is the standard approach for automotive paint in Three.js
+- The model will be ~200-500KB (low-poly), loaded once and cached by the browser
+- Environment map from drei's `Environment` component provides realistic reflections on the 3D geometry
 
