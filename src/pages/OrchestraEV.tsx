@@ -8,7 +8,8 @@ import { EVServices } from "@/components/orchestra-ev/EVServices";
 import { EVTowing } from "@/components/orchestra-ev/EVTowing";
 
 import { EVReports } from "@/components/orchestra-ev/EVReports";
-import { LayoutDashboard, Building2, Wrench, Truck, BarChart3 } from "lucide-react";
+import { AVSimulation } from "@/components/OttoQ/AVSimulation";
+import { LayoutDashboard, Building2, Wrench, Truck, BarChart3, Bot } from "lucide-react";
 
 // Mock data
 import {
@@ -39,6 +40,7 @@ const tabItems = [
   { value: "services", label: "Services", icon: Wrench },
   { value: "towing", label: "OTTOW", icon: Truck },
   { value: "reports", label: "Reports", icon: BarChart3 },
+  { value: "av-command", label: "AV Command", icon: Bot },
 ] as const;
 
 const OrchestraEV = () => {
@@ -59,7 +61,7 @@ const OrchestraEV = () => {
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
           <div className="flex justify-center mb-3">
             <div className="surface-luxury rounded-2xl p-1 md:p-1.5 max-w-full md:max-w-lg w-full mx-auto">
-              <TabsList className="flex overflow-x-auto scrollbar-hide flex-nowrap md:grid md:grid-cols-5 w-full bg-transparent h-auto p-0">
+              <TabsList className="flex overflow-x-auto scrollbar-hide flex-nowrap md:grid md:grid-cols-6 w-full bg-transparent h-auto p-0">
                 {tabItems.map((tab) => (
                   <TabsTrigger
                     key={tab.value}
@@ -91,6 +93,10 @@ const OrchestraEV = () => {
 
           <TabsContent value="reports" className="animate-fade-in-up">
             <EVReports serviceRecords={mockServiceRecords} />
+          </TabsContent>
+
+          <TabsContent value="av-command" className="animate-fade-in-up">
+            <AVSimulation />
           </TabsContent>
         </Tabs>
       </div>
