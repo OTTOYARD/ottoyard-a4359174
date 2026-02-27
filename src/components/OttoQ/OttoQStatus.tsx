@@ -2,30 +2,26 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { OperationsOverview, EnergyDashboard, PredictionPerformance } from "@/components/FleetCommand/OttoQIntelligence";
 import DepotFloorPlan from "@/components/OttoQ/DepotMap/DepotFloorPlan";
-import { AVPipelineView } from "@/components/OttoQ/AVCommand";
 import QueueManager from "@/components/OttoQ/QueueManager";
-import { useAVOrchestrator } from "@/hooks/useAVOrchestrator";
-import { Activity, Zap, Target, Map, Bot, ListOrdered } from "lucide-react";
+import { Activity, Zap, Target, Map, ListOrdered } from "lucide-react";
 
 const subTabs = [
   { value: "operations", label: "Operations", icon: Activity },
   { value: "energy", label: "Energy", icon: Zap },
   { value: "predictions", label: "Predictions", icon: Target },
   { value: "depot-map", label: "Depot Map", icon: Map },
-  { value: "av-command", label: "AV Command", icon: Bot },
   { value: "queue", label: "Queue", icon: ListOrdered },
 ] as const;
 
 export default function OttoQStatus() {
   const [activeTab, setActiveTab] = useState("operations");
-  const av = useAVOrchestrator();
 
   return (
     <div className="space-y-3">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="flex justify-center mb-3">
           <div className="surface-luxury rounded-2xl p-1 md:p-1.5 max-w-full md:max-w-lg w-full mx-auto">
-            <TabsList className="flex overflow-x-auto scrollbar-hide flex-nowrap md:grid md:grid-cols-6 w-full bg-transparent h-auto p-0">
+            <TabsList className="flex overflow-x-auto scrollbar-hide flex-nowrap md:grid md:grid-cols-5 w-full bg-transparent h-auto p-0">
               {subTabs.map((tab) => (
                 <TabsTrigger
                   key={tab.value}
@@ -50,9 +46,6 @@ export default function OttoQStatus() {
         </TabsContent>
         <TabsContent value="depot-map" className="animate-fade-in-up">
           <DepotFloorPlan depotId="demo" />
-        </TabsContent>
-        <TabsContent value="av-command" className="animate-fade-in-up">
-          <AVPipelineView pipelines={av.pipelines} />
         </TabsContent>
         <TabsContent value="queue" className="animate-fade-in-up">
           <QueueManager />
