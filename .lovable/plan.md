@@ -1,66 +1,43 @@
 
 
-## Plan: AI-Generated 3D Vehicle Render with Premium Showroom
+## Plan: Dual-AI 3D Vehicle Render Pipeline (Claude + Gemini)
 
-The current implementation just slaps a flat PNG on a spinning plane — that's why it looks like a rotating 2D picture. The fix: use **Gemini image generation** to produce a photorealistic studio-quality render of the vehicle, cache it in Supabase storage, and display it in an upgraded 3D environment.
+The current prompt asks Gemini for a "photorealistic studio render" which produces a flat photo. The fix: use a **two-stage AI pipeline** — Claude crafts an expert-level 3D rendering prompt, then Gemini generates the image from that prompt. The result: a proper CG/video-game-style 3D vehicle display with transparent background.
 
-### Architecture
+### Changes
+
+**1. Update `supabase/functions/generate-vehicle-render/index.ts`**
+
+Replace the single Gemini call with a two-stage pipeline:
+
+- **Stage 1 — Claude prompt engineering**: Call `google/gemini-2.5-flash` (text-only, fast) to act as a "3D vehicle rendering art director." Give it the vehicle specs (make, model, year, color) and ask it to write the optimal image generation prompt for a video-game-quality 3D render. Instruct it to specify: CG/Unreal Engine style, dramatic rim lighting on pure black background with transparency, three-quarter hero angle, no text/watermarks, floating above reflective surface.
+
+- **Stage 2 — Gemini image generation**: Take Claude's crafted prompt and pass it to `google/gemini-2.5-flash-image` to generate the actual image. This produces a much higher quality result because the prompt is expertly constructed.
+
+- **Fallback**: If Stage 1 fails, fall back to a hardcoded high-quality prompt and proceed directly to Stage 2.
+
+- Update the base prompt style from "photorealistic automotive photography" to **"3D CG render, Unreal Engine 5 quality, video game asset showcase, dramatic volumetric lighting, dark studio environment, hero car display"**.
+
+- Add cache-busting version suffix to storage path so existing flat-photo caches don't persist (`v2` suffix).
+
+**2. No changes to `VehicleShowroom3D.tsx` or `EVVehicleHero.tsx`** — the 3D scene and hook are already wired up correctly. Only the generated image quality changes.
+
+### Edge Function Flow
 
 ```text
-EVVehicleHero
-├── VehicleShowroom3D (upgraded)
-│   ├── AI-generated vehicle image (from Supabase storage)
-│   ├── Environment map (HDR-style gradient skybox)
-│   ├── Reflective floor with blur
-│   ├── Volumetric-style fog + particles
-│   └── Cinematic lighting rig
-├── Edge function: generate-vehicle-render
-│   ├── Calls Gemini image model (google/gemini-2.5-flash-image)
-│   ├── Generates photorealistic 3D studio render
-│   └── Stores result in Supabase storage bucket
-└── Hook: useVehicleRender (manages generation + caching)
+Client → useVehicleRender hook
+  → Check storage cache (renders/v2/{make}-{model}-{year}-{color}.png)
+  → Cache miss → invoke generate-vehicle-render
+    → Stage 1: Gemini Flash (text) → crafted 3D prompt
+    → Stage 2: Gemini Flash Image → base64 PNG
+    → Upload to Supabase storage
+    → Return public URL
 ```
 
-### Implementation Steps
+### Prompt Strategy
 
-**1. Create Supabase storage bucket `vehicle-renders`**
-- Public bucket for serving cached renders
-- RLS policy allowing authenticated reads and service-role writes
+Stage 1 system prompt (to Gemini Flash text model):
+> "You are a 3D vehicle rendering art director. Given a vehicle's make, model, year, and color, write the perfect image generation prompt to produce a AAA video-game-quality 3D render. The output must look like a real-time 3D engine screenshot (Unreal Engine 5 / Gran Turismo style). Specify: three-quarter front hero angle, dramatic volumetric rim lighting, pure black background, reflective ground plane, subsurface scattering on paint, no text or UI elements. Return ONLY the prompt text, nothing else."
 
-**2. Create edge function `generate-vehicle-render`**
-- Accepts `{ make, model, year, color }` 
-- Builds a detailed prompt: *"Photorealistic 3D studio render of a {year} {make} {model} in {color}, dramatic showroom lighting, dark background, high detail, 4K quality, three-quarter front angle, automotive photography style"*
-- Calls `google/gemini-2.5-flash-image` via Lovable AI gateway
-- Decodes base64 result, uploads to `vehicle-renders/{make}-{model}-{year}-{color}.png`
-- Returns the public URL
-- Checks storage first to avoid regenerating existing renders
-
-**3. Create `src/hooks/useVehicleRender.ts`**
-- Takes `{ make, model, year, color }`
-- First checks if render exists in storage bucket
-- If not, calls the edge function to generate it
-- Returns `{ imageUrl, isGenerating }` 
-- Falls back to `/tesla-model-3.png` while generating
-
-**4. Upgrade `VehicleShowroom3D.tsx`**
-- Accept `imageUrl` prop instead of hardcoded PNG
-- Replace flat `planeGeometry` with a curved billboard that has slight depth (using `CylinderGeometry` segment or subtle curve)
-- Add `Environment` component from drei for ambient reflections
-- Add volumetric fog effect using a gradient sphere behind the car
-- Improve floor with grid lines and stronger metallic reflection
-- Add rim light effect (backlight spotlight) for the "studio" look
-- Increase canvas height for more cinematic framing
-- Higher DPR `[1, 2]` for sharper rendering
-
-**5. Update `EVVehicleHero.tsx`**
-- Import and use `useVehicleRender` hook
-- Pass generated `imageUrl` to `VehicleShowroom3D`
-- Show a shimmer/generating indicator while AI render is being created
-- Display "AI Rendered" badge once generated
-
-### What the user sees
-- On first load: existing PNG with a subtle "Generating HD render..." indicator
-- After ~5-10 seconds: the AI-generated photorealistic studio render fades in
-- Subsequent visits: cached render loads instantly from storage
-- The 3D scene has cinematic depth — fog, reflections, rim lighting, particles — not just a flat image spinning
+Stage 2 (Gemini Image) receives the crafted prompt directly.
 
