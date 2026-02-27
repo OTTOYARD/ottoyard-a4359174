@@ -1,57 +1,35 @@
+## Plan: Add OTTO-Q Intelligence as a Tab in OrchestraEV
 
+Rather than keeping Fleet Command OTTO-Q as a separate hidden page, embed it directly into the OrchestraEV interface as a prominent **"OTTO-Q"** tab — right where members and operators already navigate.
 
-## Issues Found & Proposed Fixes
+### What Changes
 
-### 1. "Orchestra AV" shows "EV" instead of "AV"
-**Root cause**: In `AppHeader.tsx` line 38-45, `formatAppName` hardcodes "EV1" regardless of the `appName` prop. When `Index.tsx` passes `"OrchestraAV1"`, it still renders "Orchestra•EV1".
+**1. Add "OTTO-Q" tab to `src/pages/OrchestraEV.tsx**`
 
-**Fix**: Parse the suffix from the `appName` prop dynamically. If name is `"OrchestraAV1"`, extract `"AV1"`; if `"OrchestraEV1"`, extract `"EV1"`.
+- Add a new tab entry `{ value: "otto-q", label: "OTTO-Q", icon: Brain }` to the `tabItems` array (position it after "Services" or as the last tab)
+- Import and render a new `OttoQStatus` component inside the new `TabsContent`
+- Use the `Brain` icon from lucide-react to distinguish it
 
-### 2. Remove icons from OrchestraEV tab tray
-**Location**: `OrchestraEV.tsx` lines 63-72 — each tab renders `<Icon className="h-3.5 w-3.5" />`.
+**2. Create `src/components/OttoQ/OttoQStatus.tsx**` — A unified OTTO-Q hub component
 
-**Fix**: Remove the `<Icon>` element from the tab triggers. Keep the icon data in `tabItems` (no harm), just don't render it.
+- Contains its own internal sub-tabs or segmented view:
+  - **Operations** — renders `OperationsOverview` (utilization gauges, live event stream, KPIs)
+  - **Energy** — renders `EnergyDashboard` (consumption profile, TOU overlay, savings)
+  - **Predictions** — renders `PredictionPerformance` (accuracy, engagement funnel)
+  - **Depot Map** — renders `DepotFloorPlan`
+  - **AV Command** — renders `AVPipelineView` with `useAVOrchestrator`
+  - **Queue** — renders `QueueManager`
+- This consolidates the entire Fleet Command OTTO-Q page content into a single embeddable component
+- Reuses all existing intelligence components — no duplication
 
-### 3. "Orchestra EV" / "Orchestra AV" text too large on mobile
-**Location**: `AppHeader.tsx` line 77 — the interface name label.
+**3. Optionally remove or keep `/fleet-command/otto-q` route**
 
-**Fix**: Add responsive text sizing: `text-[9px] md:text-[10px]` or similar shrink on the label span.
+- Keep the route as a standalone deep-link for admin bookmarks, but the primary access point becomes the OrchestraEV tab
 
-### 4. OttoCommand button too wide, doesn't shrink on mobile
-**Location**: `AppHeader.tsx` lines 115-122 — the button has `px-4`.
+### Result
 
-**Fix**: Reduce padding to `px-2.5 md:px-4`. Reduce text to `text-[10px] md:text-xs`. Reduce icon to `h-3 w-3`. Consider hiding the text on very small screens or just making it tighter.
-
-### 5. Depot section pulsing/bouncing too distracting
-**Locations in `EVDepotQ.tsx`**:
-- Line 63: `animate-pulse` on the "Open" badge
-- Line 85: `animate-pulse-ring` on the ETA badge  
-- Line 135: `animate-float` on the user's stall
-
-**Fix**: Remove `animate-pulse` from the Open badge entirely. Remove `animate-pulse-ring` from the ETA badge. Keep `animate-float` on the user's stall but could reduce it or remove it. Overall: strip all pulsing/bouncing animations from the depot section.
-
-### 6. Tab tray cutoff on mobile
-**Location**: `OrchestraEV.tsx` lines 60-77 — the tab container has `max-w-lg` and `p-1.5`, and the tab triggers have relatively large padding.
-
-**Fix**: Reduce container padding to `p-1`, reduce tab trigger padding to `px-2 py-2` on mobile, reduce text size to `text-[10px]`, and ensure the container fits within the viewport by removing `max-w-lg` or changing to `max-w-full`. Also remove `gap-0.5` or reduce it.
-
----
-
-### Summary of File Changes
-
-**`src/components/shared/AppHeader.tsx`**:
-- Fix `formatAppName` to dynamically extract suffix from `appName` (AV1 vs EV1)
-- Shrink orchestra label text on mobile
-- Reduce OttoCommand button padding and text size on mobile
-
-**`src/pages/OrchestraEV.tsx`**:
-- Remove icon rendering from tab triggers
-- Shrink tab container and trigger sizing for mobile fit
-
-**`src/components/orchestra-ev/EVDepotQ.tsx`**:
-- Remove `animate-pulse` from Open badge
-- Remove `animate-pulse-ring` from ETA badge
-- Remove or significantly reduce `animate-float` on user's stall
-
-No functionality, routing, or data flow changes.
-
+- OTTO-Q Intelligence becomes one tap away from the OrchestraEV dashboard
+- No separate hidden page to discover — it lives where the user already is
+- All 6 sub-views accessible via internal navigation within the tab  
+  
+Make sure to include current otto-q functionality and optimize for efficientcies and reduce redundancies 
