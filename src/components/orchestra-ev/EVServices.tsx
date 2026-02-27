@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Zap,
   Calendar as CalendarIcon,
@@ -20,7 +19,9 @@ import {
   Bot,
   BarChart3,
   List,
+  Brain,
 } from "lucide-react";
+import OttoQStatus from "@/components/OttoQ/OttoQStatus";
 import type { ServiceRecord, MaintenancePrediction } from "@/lib/orchestra-ev/types";
 import { ServiceCalendar } from "@/components/OttoQ/MemberServices/ServiceCalendar";
 import { ServiceTimeline } from "@/components/OttoQ/MemberServices/ServiceTimeline";
@@ -53,6 +54,7 @@ export const EVServices: React.FC<EVServicesProps> = ({ serviceRecords, predicti
   const [selectedServiceType, setSelectedServiceType] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [servicesView, setServicesView] = useState("ottoq");
+  const [deepInsightsOpen, setDeepInsightsOpen] = useState(false);
 
   const completedServices = serviceRecords.filter((s) => s.status === "completed");
 
@@ -87,6 +89,37 @@ export const EVServices: React.FC<EVServicesProps> = ({ serviceRecords, predicti
       {/* OTTO-Q Smart View */}
       {servicesView === "ottoq" && (
         <div className="space-y-4 animate-fade-in-up">
+          {/* Deep Insights Button */}
+          <button
+            onClick={() => setDeepInsightsOpen(true)}
+            className="w-full surface-luxury rounded-2xl border border-primary/20 hover:border-primary/40 p-4 flex items-center gap-3 transition-all duration-300 hover:shadow-[0_0_20px_hsl(var(--primary)/0.1)] group"
+          >
+            <div className="h-10 w-10 rounded-xl bg-primary/15 flex items-center justify-center group-hover:bg-primary/25 transition-colors">
+              <Brain className="h-5 w-5 text-primary" />
+            </div>
+            <div className="flex-1 text-left">
+              <p className="text-sm font-semibold text-foreground">Deep Insights</p>
+              <p className="text-[10px] text-muted-foreground">Operations, energy, predictions & depot intelligence</p>
+            </div>
+            <Badge variant="outline" className="text-[10px] bg-primary/10 text-primary border-primary/25">
+              Live
+            </Badge>
+          </button>
+
+          {/* Deep Insights Dialog */}
+          <Dialog open={deepInsightsOpen} onOpenChange={setDeepInsightsOpen}>
+            <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto p-0">
+              <DialogHeader className="px-6 pt-6 pb-2">
+                <DialogTitle className="flex items-center gap-2 text-lg">
+                  <Brain className="h-5 w-5 text-primary" />
+                  OTTO-Q Deep Insights
+                </DialogTitle>
+              </DialogHeader>
+              <div className="px-6 pb-6">
+                <OttoQStatus />
+              </div>
+            </DialogContent>
+          </Dialog>
           {/* Predictive Maintenance */}
           <Card className="surface-elevated-luxury rounded-2xl border-border/30">
             <CardHeader className="pb-2">

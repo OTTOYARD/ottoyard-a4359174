@@ -55,6 +55,7 @@ import { MonthlyStatements } from './MonthlyStatements';
 import { FleetVehicles } from './FleetVehicles';
 import { AccountOverview } from './AccountOverview';
 import SimulatorControlPanel from './admin/SimulatorControlPanel';
+import { AVSimulation } from '@/components/OttoQ/AVSimulation';
 
 interface SettingsHubProps {
   children: React.ReactNode;
@@ -122,6 +123,66 @@ const defaultProfile: UserProfile = {
     },
   },
 };
+
+function AdminGatedContent() {
+  const [unlocked, setUnlocked] = useState(false);
+  const [password, setPassword] = useState('');
+
+  if (!unlocked) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center text-lg">
+            <Shield className="h-5 w-5 mr-2 text-primary" />
+            Admin Access
+          </CardTitle>
+          <CardDescription>Enter the admin password to unlock simulator controls</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <Input
+            type="password"
+            placeholder="Admin password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && password === 'ottoyard-admin') setUnlocked(true);
+            }}
+          />
+          <Button
+            className="w-full"
+            onClick={() => {
+              if (password === 'ottoyard-admin') {
+                setUnlocked(true);
+              } else {
+                toast.error('Incorrect password');
+              }
+            }}
+          >
+            Unlock
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <SimulatorControlPanel />
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center text-lg">
+            <Bot className="h-5 w-5 mr-2 text-primary" />
+            AV Command Simulator
+          </CardTitle>
+          <CardDescription>Internal AV fleet orchestration simulator</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <AVSimulation />
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
 
 const SettingsHub: React.FC<SettingsHubProps> = ({
   children,
@@ -1046,7 +1107,7 @@ const SettingsHub: React.FC<SettingsHubProps> = ({
 
             {/* Admin Tab */}
             <TabsContent value="admin" className="mt-0 space-y-4">
-              <SimulatorControlPanel />
+              <AdminGatedContent />
             </TabsContent>
           </ScrollArea>
         </Tabs>
