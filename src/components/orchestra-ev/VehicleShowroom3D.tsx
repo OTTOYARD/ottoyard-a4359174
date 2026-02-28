@@ -284,20 +284,21 @@ function CinematicLightRig({ status }: { status: string }) {
 
   useFrame(({ clock }) => {
     const t = clock.elapsedTime;
-    if (keyLightRef.current) keyLightRef.current.intensity = 2.2 + Math.sin(t * 0.4) * 0.2;
-    if (rimLightRef.current) rimLightRef.current.intensity = 1.5 + Math.cos(t * 0.6) * 0.15;
-    if (fillLightRef.current) fillLightRef.current.intensity = 0.7 + Math.sin(t * 0.5 + 1) * 0.1;
+    if (keyLightRef.current) keyLightRef.current.intensity = 3.0 + Math.sin(t * 0.4) * 0.2;
+    if (rimLightRef.current) rimLightRef.current.intensity = 2.2 + Math.cos(t * 0.6) * 0.15;
+    if (fillLightRef.current) fillLightRef.current.intensity = 1.2 + Math.sin(t * 0.5 + 1) * 0.1;
   });
 
   return (
     <>
-      <spotLight ref={keyLightRef} position={[4, 5, 3]} angle={0.4} penumbra={0.8} color="#ffffff" intensity={2.2} castShadow shadow-mapSize-width={2048} shadow-mapSize-height={2048} />
-      <spotLight ref={rimLightRef} position={[-3, 4, -3]} angle={0.5} penumbra={0.9} color={color} intensity={1.5} />
-      <spotLight ref={fillLightRef} position={[-4, 2, 2]} angle={0.6} penumbra={1} color="#e0e0ff" intensity={0.7} />
+      <spotLight ref={keyLightRef} position={[4, 5, 3]} angle={0.4} penumbra={0.8} color="#ffffff" intensity={3.0} castShadow shadow-mapSize-width={2048} shadow-mapSize-height={2048} />
+      <spotLight ref={rimLightRef} position={[-3, 4, -3]} angle={0.5} penumbra={0.9} color={color} intensity={2.2} />
+      <spotLight ref={fillLightRef} position={[-4, 2, 2]} angle={0.6} penumbra={1} color="#e0e0ff" intensity={1.2} />
       <spotLight position={[0, 6, -2]} angle={0.35} penumbra={1} color={color} intensity={0.4} />
       <spotLight position={[2, 1, -4]} angle={0.5} penumbra={0.9} color="#ffffff" intensity={0.5} />
-      <spotLight position={[0, 8, 0]} angle={0.6} penumbra={1} color="#ffffff" intensity={1.5} castShadow />
-      <ambientLight intensity={0.06} color="#e8e8ff" />
+      <spotLight position={[0, 8, 0]} angle={0.6} penumbra={1} color="#ffffff" intensity={2.5} castShadow />
+      <spotLight position={[3, 3, 4]} angle={0.5} penumbra={0.8} color="#ffffff" intensity={1.5} />
+      <ambientLight intensity={0.12} color="#e8e8ff" />
     </>
   );
 }
