@@ -1,39 +1,31 @@
 
 
-## Plan: Load Real Tesla Model 3 GLB into the 3D Showroom
+## Plan: Space-Themed Showroom Backdrop
 
-### What's happening now
-The current `VehicleShowroom3D.tsx` uses ~400 lines of hand-coded procedural geometry (boxes, torus, extruded shapes) that looks nothing like a real car.
+**Goal**: Replace the flat gray void behind the vehicle with an immersive space environment — starfield, subtle nebula glow, and refined lighting — while keeping the vehicle, floor, and animation completely untouched.
 
-### What changes
+### Changes (all in `VehicleShowroom3D.tsx`)
 
-**Rewrite `VehicleShowroom3D.tsx`** — replace the procedural `TeslaModel3` component with a `TeslaModel3GLB` component that loads the real 3D model:
+**1. Add a `Starfield` component** — a large sphere of ~2000 scattered point particles surrounding the scene (radius ~15-20), using tiny white/blue-white dots with slight size variation. Static, no animation. Renders behind everything via `depthWrite={false}`.
 
-1. **Load the GLB** using `useGLTF` from `@react-three/drei` pointing at:
-   `https://ycsisvozzgmisboumfqc.supabase.co/storage/v1/object/public/vehicle-renders/Tesla/2023_tesla_model_3_performance.glb`
+**2. Add a `NebulaDome` component** — 2-3 large, semi-transparent spheres with `BackSide` rendering positioned behind/above the scene, using soft accent-colored gradients (deep purples, blues) with very low opacity (0.03-0.06). Slow, subtle opacity pulsing to simulate nebula shimmer.
 
-2. **Apply dynamic paint color** — traverse the loaded scene's mesh hierarchy, identify body/paint meshes, and replace their materials with `MeshPhysicalMaterial` using the `vehicleColor` prop (clearcoat 1.0, metalness 0.9, roughness 0.15 for automotive paint look).
+**3. Replace the `VolumetricFog` sphere** with a larger, darker nebula cloud that blends into the space backdrop instead of looking like a photoshoot fog machine.
 
-3. **Apply glass material** — find window/glass meshes and apply `MeshPhysicalMaterial` with transmission for realistic tinted glass.
+**4. Update Canvas background** — change from `transparent` to a deep space black (`#030308`) so the starfield reads properly against a dark base.
 
-4. **Auto-center and scale** — compute the model's bounding box, center it, and scale it to fit the showroom camera framing. Different GLB models have wildly different scales, so this must be dynamic.
+**5. Swap Environment preset** — change from `"studio"` to `"night"` for more dramatic, space-appropriate reflections on the car body. Slightly increase `environmentIntensity` to compensate.
 
-5. **Keep all existing scene elements** — `CinematicLightRig`, `ShowroomFloor`, `VolumetricFog`, `AmbientParticles`, `OrbitControls`, `Environment` all stay exactly as they are.
+**6. Reduce ambient light** — drop from `0.12` to `0.06` so the spotlights feel more dramatic against the dark space backdrop, like the car is floating in a void lit by focused beams.
 
-6. **Add loading state** — show `ShowroomFallback` skeleton while the 22.5MB model downloads. Use `useGLTF.preload()` to warm the cache.
+**7. Enhance existing `AmbientParticles`** — no logic changes, but the existing particles will naturally read as space dust against the dark starfield backdrop.
 
-7. **Add error handling** — wrap in an error boundary. If the GLB fails to load (network error, CORS), fall back to a simple placeholder message instead of crashing.
+### What stays exactly the same
+- `TeslaModel3GLB` component (vehicle model, materials, animation)
+- `ShowroomFloor` (reflective floor + accent ring)
+- `OrbitControls` settings
+- All props interface and parent component
 
-8. **Gentle floating animation** — apply the same subtle `sin()` Y-axis hover to the loaded model group.
-
-### Technical details
-
-- `useGLTF` from drei handles GLB loading, Draco decompression, and caching automatically
-- The model is 22.5MB — first load may take a few seconds on slower connections, but the browser caches it after that
-- Material detection uses mesh name matching or material type inspection (common patterns: names containing "body", "paint", "glass", "wheel", "tire")
-- The bucket is already public, so no auth headers needed for the storage URL
-- No changes needed to `EVVehicleHero.tsx` — the interface (`vehicleColor`, `vehicleStatus`, `soc`) stays the same
-
-### Files modified
-- `src/components/orchestra-ev/VehicleShowroom3D.tsx` — major rewrite of the vehicle component, all scene/lighting code preserved
+### File modified
+- `src/components/orchestra-ev/VehicleShowroom3D.tsx`
 
