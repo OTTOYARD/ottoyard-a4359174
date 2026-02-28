@@ -158,6 +158,7 @@ function ShowroomFloor({ accentColor }: { accentColor: string }) {
 
 /* ── Starfield backdrop ── */
 function Starfield({ count = 2000 }: { count?: number }) {
+  const groupRef = useRef<THREE.Group>(null);
   const positions = useMemo(() => {
     const arr = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
@@ -171,17 +172,25 @@ function Starfield({ count = 2000 }: { count?: number }) {
     return arr;
   }, [count]);
 
+  useFrame((_, delta) => {
+    if (groupRef.current) {
+      groupRef.current.rotation.y += delta * 0.02;
+    }
+  });
+
   return (
-    <Points positions={positions} stride={3} frustumCulled={false}>
-      <PointMaterial
-        transparent
-        color="#e8eaff"
-        size={0.035}
-        sizeAttenuation
-        depthWrite={false}
-        opacity={0.8}
-      />
-    </Points>
+    <group ref={groupRef}>
+      <Points positions={positions} stride={3} frustumCulled={false}>
+        <PointMaterial
+          transparent
+          color="#e8eaff"
+          size={0.035}
+          sizeAttenuation
+          depthWrite={false}
+          opacity={0.8}
+        />
+      </Points>
+    </group>
   );
 }
 
