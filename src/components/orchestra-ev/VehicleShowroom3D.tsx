@@ -296,6 +296,7 @@ function CinematicLightRig({ status }: { status: string }) {
       <spotLight ref={fillLightRef} position={[-4, 2, 2]} angle={0.6} penumbra={1} color="#e0e0ff" intensity={0.7} />
       <spotLight position={[0, 6, -2]} angle={0.35} penumbra={1} color={color} intensity={0.4} />
       <spotLight position={[2, 1, -4]} angle={0.5} penumbra={0.9} color="#ffffff" intensity={0.5} />
+      <spotLight position={[0, 8, 0]} angle={0.6} penumbra={1} color="#ffffff" intensity={1.5} castShadow />
       <ambientLight intensity={0.06} color="#e8e8ff" />
     </>
   );
