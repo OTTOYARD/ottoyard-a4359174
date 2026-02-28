@@ -67,7 +67,7 @@ function TeslaModel3GLB({ paintColor }: { paintColor: string }) {
         color: "#0a0a1a",
         metalness: 0.1,
         roughness: 0.05,
-        transmission: 0.65,
+        transmission: 0.8,
         transparent: true,
         opacity: 0.75,
         ior: 1.52,
@@ -307,7 +307,9 @@ function CinematicLightRig({ status }: { status: string }) {
       <spotLight position={[2, 1, -4]} angle={0.5} penumbra={0.9} color="#ffffff" intensity={0.5} />
       <spotLight position={[0, 8, 0]} angle={0.6} penumbra={1} color="#ffffff" intensity={2.5} castShadow />
       <spotLight position={[3, 3, 4]} angle={0.5} penumbra={0.8} color="#ffffff" intensity={1.5} />
-      <ambientLight intensity={0.12} color="#e8e8ff" />
+      <spotLight position={[0, 4, 0]} angle={0.3} penumbra={0.6} color="#ffffff" intensity={3.0} castShadow />
+      <spotLight position={[1, 5, 4]} angle={0.4} penumbra={0.7} color="#ffffff" intensity={2.0} />
+      <ambientLight intensity={0.25} color="#e8e8ff" />
     </>
   );
 }
@@ -376,7 +378,7 @@ export const VehicleShowroom3D: React.FC<VehicleShowroom3DProps> = ({
             <Starfield />
             <NebulaDome accentColor={accentColor} />
             <AmbientParticles count={particleCount} speed={particleSpeed} color={accentColor} />
-            <Environment preset="night" environmentIntensity={0.65} />
+            <Environment preset="night" environmentIntensity={1.0} />
             <OrbitControls
               autoRotate
               autoRotateSpeed={0.35}
