@@ -156,28 +156,83 @@ function ShowroomFloor({ accentColor }: { accentColor: string }) {
   );
 }
 
-/* ── Volumetric fog ── */
-function VolumetricFog({ color }: { color: string }) {
-  const meshRef = useRef<THREE.Mesh>(null);
+/* ── Starfield backdrop ── */
+function Starfield({ count = 2000 }: { count?: number }) {
+  const positions = useMemo(() => {
+    const arr = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+      const r = 15 + Math.random() * 5;
+      arr[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+      arr[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+      arr[i * 3 + 2] = r * Math.cos(phi);
+    }
+    return arr;
+  }, [count]);
+
+  return (
+    <Points positions={positions} stride={3} frustumCulled={false}>
+      <PointMaterial
+        transparent
+        color="#e8eaff"
+        size={0.035}
+        sizeAttenuation
+        depthWrite={false}
+        opacity={0.8}
+      />
+    </Points>
+  );
+}
+
+/* ── Nebula dome ── */
+function NebulaDome({ accentColor }: { accentColor: string }) {
+  const ref1 = useRef<THREE.Mesh>(null);
+  const ref2 = useRef<THREE.Mesh>(null);
 
   useFrame(({ clock }) => {
-    if (meshRef.current) {
-      const mat = meshRef.current.material as THREE.MeshStandardMaterial;
-      mat.opacity = 0.05 + Math.sin(clock.elapsedTime * 0.3) * 0.02;
+    const t = clock.elapsedTime;
+    if (ref1.current) {
+      (ref1.current.material as THREE.MeshStandardMaterial).opacity = 0.04 + Math.sin(t * 0.2) * 0.015;
+    }
+    if (ref2.current) {
+      (ref2.current.material as THREE.MeshStandardMaterial).opacity = 0.03 + Math.cos(t * 0.15 + 1) * 0.01;
     }
   });
 
   return (
-    <mesh ref={meshRef} position={[0, 0.5, -1.5]} scale={[5, 3, 3]}>
-      <sphereGeometry args={[1, 32, 32]} />
-      <meshStandardMaterial
-        color={color}
-        transparent
-        opacity={0.06}
-        side={THREE.BackSide}
-        depthWrite={false}
-      />
-    </mesh>
+    <>
+      <mesh ref={ref1} position={[3, 4, -8]} scale={[8, 6, 6]}>
+        <sphereGeometry args={[1, 24, 24]} />
+        <meshStandardMaterial
+          color="#1a0a2e"
+          transparent
+          opacity={0.04}
+          side={THREE.BackSide}
+          depthWrite={false}
+        />
+      </mesh>
+      <mesh ref={ref2} position={[-4, 3, -6]} scale={[7, 5, 5]}>
+        <sphereGeometry args={[1, 24, 24]} />
+        <meshStandardMaterial
+          color={accentColor}
+          transparent
+          opacity={0.03}
+          side={THREE.BackSide}
+          depthWrite={false}
+        />
+      </mesh>
+      <mesh position={[0, 6, -3]} scale={[10, 4, 8]}>
+        <sphereGeometry args={[1, 24, 24]} />
+        <meshStandardMaterial
+          color="#0a0a2a"
+          transparent
+          opacity={0.05}
+          side={THREE.BackSide}
+          depthWrite={false}
+        />
+      </mesh>
+    </>
   );
 }
 
@@ -241,7 +296,7 @@ function CinematicLightRig({ status }: { status: string }) {
       <spotLight ref={fillLightRef} position={[-4, 2, 2]} angle={0.6} penumbra={1} color="#e0e0ff" intensity={0.7} />
       <spotLight position={[0, 6, -2]} angle={0.35} penumbra={1} color={color} intensity={0.4} />
       <spotLight position={[2, 1, -4]} angle={0.5} penumbra={0.9} color="#ffffff" intensity={0.5} />
-      <ambientLight intensity={0.12} color="#e8e8ff" />
+      <ambientLight intensity={0.06} color="#e8e8ff" />
     </>
   );
 }
@@ -294,7 +349,7 @@ export const VehicleShowroom3D: React.FC<VehicleShowroom3DProps> = ({
         <Suspense fallback={<ShowroomFallback />}>
           <Canvas
             camera={{ position: [3.2, 1.8, 5.5], fov: 32 }}
-            style={{ background: "transparent" }}
+            style={{ background: "#030308" }}
             gl={{
               alpha: true,
               antialias: true,
@@ -307,9 +362,10 @@ export const VehicleShowroom3D: React.FC<VehicleShowroom3DProps> = ({
             <CinematicLightRig status={vehicleStatus} />
             <TeslaModel3GLB paintColor={vehicleColor} />
             <ShowroomFloor accentColor={accentColor} />
-            <VolumetricFog color={accentColor} />
+            <Starfield />
+            <NebulaDome accentColor={accentColor} />
             <AmbientParticles count={particleCount} speed={particleSpeed} color={accentColor} />
-            <Environment preset="studio" environmentIntensity={0.5} />
+            <Environment preset="night" environmentIntensity={0.65} />
             <OrbitControls
               autoRotate
               autoRotateSpeed={0.35}
