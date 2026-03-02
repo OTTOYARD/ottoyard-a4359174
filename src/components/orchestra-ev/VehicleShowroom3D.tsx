@@ -103,6 +103,7 @@ function TeslaModel3GLB({ paintColor }: { paintColor: string }) {
 
     clonedScene.scale.setScalar(scale);
     clonedScene.position.set(-center.x * scale, -box.min.y * scale - 0.5, -center.z * scale);
+    clonedScene.rotation.y = Math.PI;
   }, [clonedScene, paintMat, glassMat]);
 
   // Update paint color reactively
