@@ -8,13 +8,40 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface TelemetryPayload {
-  vehicle_id: string;
-  soc?: number;
-  odometer_km?: number;
-  location?: { lat: number; lon: number };
-  health?: Record<string, any>;
-  ts?: string;
+// UUID v4 regex for validation
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function validateTelemetry(payload: unknown): { valid: true; data: { vehicle_id: string; soc?: number; odometer_km?: number; location?: { lat: number; lon: number }; health?: Record<string, unknown>; ts?: string } } | { valid: false; error: string } {
+  if (!payload || typeof payload !== 'object') return { valid: false, error: 'Invalid JSON payload' };
+  const p = payload as Record<string, unknown>;
+
+  if (typeof p.vehicle_id !== 'string' || !UUID_RE.test(p.vehicle_id)) {
+    return { valid: false, error: 'vehicle_id must be a valid UUID' };
+  }
+  if (p.soc !== undefined) {
+    if (typeof p.soc !== 'number' || p.soc < 0 || p.soc > 1) {
+      return { valid: false, error: 'soc must be a number between 0 and 1' };
+    }
+  }
+  if (p.odometer_km !== undefined) {
+    if (typeof p.odometer_km !== 'number' || !Number.isInteger(p.odometer_km) || p.odometer_km < 0 || p.odometer_km > 10_000_000) {
+      return { valid: false, error: 'odometer_km must be an integer between 0 and 10000000' };
+    }
+  }
+  if (p.location !== undefined) {
+    const loc = p.location as Record<string, unknown>;
+    if (!loc || typeof loc !== 'object' || typeof loc.lat !== 'number' || typeof loc.lon !== 'number' || loc.lat < -90 || loc.lat > 90 || loc.lon < -180 || loc.lon > 180) {
+      return { valid: false, error: 'location must have lat (-90..90) and lon (-180..180)' };
+    }
+  }
+  if (p.health !== undefined && (typeof p.health !== 'object' || p.health === null)) {
+    return { valid: false, error: 'health must be a JSON object' };
+  }
+  if (p.ts !== undefined && typeof p.ts !== 'string') {
+    return { valid: false, error: 'ts must be an ISO timestamp string' };
+  }
+
+  return { valid: true, data: p as any };
 }
 
 Deno.serve(async (req) => {
@@ -28,15 +55,25 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    const payload: TelemetryPayload = await req.json();
-    const { vehicle_id, soc, odometer_km, location, health, ts } = payload;
-
-    if (!vehicle_id) {
-      return new Response(JSON.stringify({ error: 'vehicle_id required' }), {
+    let rawPayload: unknown;
+    try {
+      rawPayload = await req.json();
+    } catch {
+      return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
+    const validation = validateTelemetry(rawPayload);
+    if (!validation.valid) {
+      return new Response(JSON.stringify({ error: validation.error }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const { vehicle_id, soc, odometer_km, location, health, ts } = validation.data;
 
     // Update vehicle telemetry
     const updateData: any = {
@@ -55,7 +92,7 @@ Deno.serve(async (req) => {
 
     if (updateError) {
       console.error('Vehicle update error:', updateError);
-      return new Response(JSON.stringify({ error: updateError.message }), {
+      return new Response(JSON.stringify({ error: 'Failed to update vehicle' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -83,7 +120,6 @@ Deno.serve(async (req) => {
         const threshold = depot.config_jsonb?.charge_threshold_soc || 0.20;
         
         if (soc <= threshold) {
-          // Check if there's already an active/pending charge job
           const { data: existingJob } = await supabase
             .from('ottoq_jobs')
             .select('id')
@@ -93,7 +129,6 @@ Deno.serve(async (req) => {
             .maybeSingle();
 
           if (!existingJob) {
-            // Trigger charge job via scheduler
             const scheduleResponse = await fetch(
               `${Deno.env.get('SUPABASE_URL')}/functions/v1/ottoq-jobs-request`,
               {
@@ -112,7 +147,6 @@ Deno.serve(async (req) => {
 
             if (scheduleResponse.ok) {
               jobTriggered = await scheduleResponse.json();
-              console.log(`Auto-triggered charge job for vehicle ${vehicle_id} at ${soc * 100}% SOC`);
             }
           }
         }
@@ -136,7 +170,7 @@ Deno.serve(async (req) => {
     );
   } catch (error) {
     console.error('Telemetry error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

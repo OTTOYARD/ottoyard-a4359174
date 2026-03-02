@@ -8,12 +8,32 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, idempotency-key',
 };
 
-interface JobRequestPayload {
-  vehicle_id: string;
-  job_type: 'CHARGE' | 'MAINTENANCE' | 'DETAILING' | 'DOWNTIME_PARK';
-  preferred_depot_id?: string;
-  earliest_start_at?: string;
-  metadata?: Record<string, any>;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const VALID_JOB_TYPES = ['CHARGE', 'MAINTENANCE', 'DETAILING', 'DOWNTIME_PARK'] as const;
+
+function validateJobRequest(payload: unknown): { valid: true; data: { vehicle_id: string; job_type: string; preferred_depot_id?: string; earliest_start_at?: string; metadata?: Record<string, unknown> } } | { valid: false; error: string } {
+  if (!payload || typeof payload !== 'object') return { valid: false, error: 'Invalid JSON payload' };
+  const p = payload as Record<string, unknown>;
+
+  if (typeof p.vehicle_id !== 'string' || !UUID_RE.test(p.vehicle_id)) {
+    return { valid: false, error: 'vehicle_id must be a valid UUID' };
+  }
+  if (typeof p.job_type !== 'string' || !(VALID_JOB_TYPES as readonly string[]).includes(p.job_type)) {
+    return { valid: false, error: `job_type must be one of: ${VALID_JOB_TYPES.join(', ')}` };
+  }
+  if (p.preferred_depot_id !== undefined) {
+    if (typeof p.preferred_depot_id !== 'string' || !UUID_RE.test(p.preferred_depot_id)) {
+      return { valid: false, error: 'preferred_depot_id must be a valid UUID' };
+    }
+  }
+  if (p.earliest_start_at !== undefined && typeof p.earliest_start_at !== 'string') {
+    return { valid: false, error: 'earliest_start_at must be an ISO timestamp string' };
+  }
+  if (p.metadata !== undefined && (typeof p.metadata !== 'object' || p.metadata === null)) {
+    return { valid: false, error: 'metadata must be a JSON object' };
+  }
+
+  return { valid: true, data: p as any };
 }
 
 Deno.serve(async (req) => {
@@ -27,19 +47,36 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    const payload: JobRequestPayload = await req.json();
-    const { vehicle_id, job_type, preferred_depot_id, earliest_start_at, metadata } = payload;
-    const idempotencyKey = req.headers.get('idempotency-key');
-
-    if (!vehicle_id || !job_type) {
-      return new Response(JSON.stringify({ error: 'vehicle_id and job_type required' }), {
+    let rawPayload: unknown;
+    try {
+      rawPayload = await req.json();
+    } catch {
+      return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
+    const validation = validateJobRequest(rawPayload);
+    if (!validation.valid) {
+      return new Response(JSON.stringify({ error: validation.error }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const { vehicle_id, job_type, preferred_depot_id, earliest_start_at, metadata } = validation.data;
+    const idempotencyKey = req.headers.get('idempotency-key');
+
     // Check idempotency
     if (idempotencyKey) {
+      if (typeof idempotencyKey !== 'string' || idempotencyKey.length > 255) {
+        return new Response(JSON.stringify({ error: 'idempotency-key must be a string under 255 chars' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
       const { data: existing } = await supabase
         .from('ottoq_jobs')
         .select('*')
@@ -47,7 +84,6 @@ Deno.serve(async (req) => {
         .maybeSingle();
 
       if (existing) {
-        console.log(`Idempotent request: returning existing job ${existing.id}`);
         return new Response(JSON.stringify({ job: existing, idempotent: true }), {
           status: 200,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -105,7 +141,7 @@ Deno.serve(async (req) => {
 
     if (jobError) {
       console.error('Job creation error:', jobError);
-      return new Response(JSON.stringify({ error: jobError.message }), {
+      return new Response(JSON.stringify({ error: 'Failed to create job' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -154,7 +190,7 @@ Deno.serve(async (req) => {
     );
   } catch (error) {
     console.error('Job request error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

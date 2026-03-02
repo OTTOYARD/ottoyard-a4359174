@@ -8,6 +8,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -17,8 +19,8 @@ Deno.serve(async (req) => {
     const url = new URL(req.url);
     const job_id = url.pathname.split('/').pop();
 
-    if (!job_id || job_id === 'ottoq-jobs-cancel') {
-      return new Response(JSON.stringify({ error: 'job_id required in path' }), {
+    if (!job_id || job_id === 'ottoq-jobs-cancel' || !UUID_RE.test(job_id)) {
+      return new Response(JSON.stringify({ error: 'Valid job_id (UUID) required in path' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -65,8 +67,6 @@ Deno.serve(async (req) => {
         .from('ottoq_resources')
         .update({ status: 'AVAILABLE', current_job_id: null })
         .eq('id', job.resource_id);
-
-      console.log(`Freed resource ${job.resource_id} from cancelled job ${job_id}`);
     }
 
     // Log event
@@ -96,7 +96,7 @@ Deno.serve(async (req) => {
     );
   } catch (error) {
     console.error('Job cancel error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
