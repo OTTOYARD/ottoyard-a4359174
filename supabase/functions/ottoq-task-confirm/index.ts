@@ -8,12 +8,33 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface TaskConfirmPayload {
-  job_id: string;
-  resource_id: string;
-  task_key: string;
-  confirmed: boolean;
-  metadata?: Record<string, unknown>;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const MAX_TASK_KEY_LEN = 200;
+
+function validateTaskConfirm(payload: unknown): { valid: true; data: { job_id: string; resource_id: string; task_key: string; confirmed: boolean; metadata?: Record<string, unknown> } } | { valid: false; error: string } {
+  if (!payload || typeof payload !== 'object') return { valid: false, error: 'Invalid JSON payload' };
+  const p = payload as Record<string, unknown>;
+
+  if (typeof p.job_id !== 'string' || !UUID_RE.test(p.job_id)) {
+    return { valid: false, error: 'job_id must be a valid UUID' };
+  }
+  if (typeof p.resource_id !== 'string' || !UUID_RE.test(p.resource_id)) {
+    return { valid: false, error: 'resource_id must be a valid UUID' };
+  }
+  if (typeof p.task_key !== 'string' || p.task_key.length === 0 || p.task_key.length > MAX_TASK_KEY_LEN) {
+    return { valid: false, error: `task_key must be a non-empty string (max ${MAX_TASK_KEY_LEN} chars)` };
+  }
+  if (typeof p.confirmed !== 'boolean') {
+    return { valid: false, error: 'confirmed must be a boolean' };
+  }
+  if (p.metadata !== undefined && (typeof p.metadata !== 'object' || p.metadata === null)) {
+    return { valid: false, error: 'metadata must be a JSON object' };
+  }
+  if (p.metadata !== undefined && JSON.stringify(p.metadata).length > 10_000) {
+    return { valid: false, error: 'metadata exceeds maximum size (10KB)' };
+  }
+
+  return { valid: true, data: p as any };
 }
 
 Deno.serve(async (req) => {
@@ -27,16 +48,25 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    const payload: TaskConfirmPayload = await req.json();
-    const { job_id, resource_id, task_key, confirmed, metadata } = payload;
-
-    // Validate required fields
-    if (!job_id || !resource_id || !task_key) {
-      return new Response(
-        JSON.stringify({ error: 'job_id, resource_id, and task_key are required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    let rawPayload: unknown;
+    try {
+      rawPayload = await req.json();
+    } catch {
+      return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
+
+    const validation = validateTaskConfirm(rawPayload);
+    if (!validation.valid) {
+      return new Response(JSON.stringify({ error: validation.error }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const { job_id, resource_id, task_key, confirmed, metadata } = validation.data;
 
     // Verify job exists and is active
     const { data: job, error: jobError } = await supabase
@@ -60,7 +90,6 @@ Deno.serve(async (req) => {
     }
 
     if (confirmed) {
-      // Upsert confirmation
       const { data: confirmation, error: upsertError } = await supabase
         .from('ottoq_task_confirmations')
         .upsert(
@@ -87,73 +116,44 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Log event
       await supabase.from('ottoq_events').insert({
         entity_type: 'JOB',
         entity_id: job_id,
         event_type: 'TASK_CONFIRMED',
-        payload_jsonb: {
-          task_key,
-          resource_id,
-          confirmed_by: 'manual',
-          metadata,
-        },
+        payload_jsonb: { task_key, resource_id, confirmed_by: 'manual', metadata },
       });
 
-      // Check if this is a deployment confirmation task
       const isDeploymentTask = task_key.includes('deployment') || task_key === 'confirm_exit';
-      
+
       if (isDeploymentTask) {
-        // Complete the job and release the resource
         await supabase
           .from('ottoq_jobs')
-          .update({
-            state: 'COMPLETED',
-            completed_at: new Date().toISOString(),
-          })
+          .update({ state: 'COMPLETED', completed_at: new Date().toISOString() })
           .eq('id', job_id);
 
-        // Release the resource
         await supabase
           .from('ottoq_resources')
-          .update({
-            status: 'AVAILABLE',
-            current_job_id: null,
-          })
+          .update({ status: 'AVAILABLE', current_job_id: null })
           .eq('id', resource_id);
 
-        // Update vehicle status to IDLE (available for ridehail)
         await supabase
           .from('ottoq_vehicles')
-          .update({
-            status: 'IDLE',
-            updated_at: new Date().toISOString(),
-          })
+          .update({ status: 'IDLE', updated_at: new Date().toISOString() })
           .eq('id', job.vehicle_id);
 
-        // Log deployment event
         await supabase.from('ottoq_events').insert({
           entity_type: 'VEHICLE',
           entity_id: job.vehicle_id,
           event_type: 'VEHICLE_DEPLOYED',
-          payload_jsonb: {
-            job_id,
-            resource_id,
-            deployed_at: new Date().toISOString(),
-          },
+          payload_jsonb: { job_id, resource_id, deployed_at: new Date().toISOString() },
         });
       }
 
       return new Response(
-        JSON.stringify({
-          success: true,
-          confirmation,
-          deployed: isDeploymentTask,
-        }),
+        JSON.stringify({ success: true, confirmation, deployed: isDeploymentTask }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     } else {
-      // Remove confirmation (uncheck)
       const { error: deleteError } = await supabase
         .from('ottoq_task_confirmations')
         .delete()
@@ -177,7 +177,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('Task confirm error:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

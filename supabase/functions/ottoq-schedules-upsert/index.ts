@@ -8,11 +8,31 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface SchedulePayload {
-  vehicle_id: string;
-  rule_type: string;
-  rule_jsonb: Record<string, any>;
-  next_due_at?: string;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const MAX_RULE_TYPE_LEN = 100;
+
+function validateSchedulePayload(payload: unknown): { valid: true; data: { vehicle_id: string; rule_type: string; rule_jsonb: Record<string, unknown>; next_due_at?: string } } | { valid: false; error: string } {
+  if (!payload || typeof payload !== 'object') return { valid: false, error: 'Invalid JSON payload' };
+  const p = payload as Record<string, unknown>;
+
+  if (typeof p.vehicle_id !== 'string' || !UUID_RE.test(p.vehicle_id)) {
+    return { valid: false, error: 'vehicle_id must be a valid UUID' };
+  }
+  if (typeof p.rule_type !== 'string' || p.rule_type.length === 0 || p.rule_type.length > MAX_RULE_TYPE_LEN) {
+    return { valid: false, error: `rule_type must be a non-empty string (max ${MAX_RULE_TYPE_LEN} chars)` };
+  }
+  if (!p.rule_jsonb || typeof p.rule_jsonb !== 'object' || Array.isArray(p.rule_jsonb)) {
+    return { valid: false, error: 'rule_jsonb must be a JSON object' };
+  }
+  // Limit rule_jsonb size to prevent oversized payloads
+  if (JSON.stringify(p.rule_jsonb).length > 10_000) {
+    return { valid: false, error: 'rule_jsonb exceeds maximum size (10KB)' };
+  }
+  if (p.next_due_at !== undefined && typeof p.next_due_at !== 'string') {
+    return { valid: false, error: 'next_due_at must be an ISO timestamp string' };
+  }
+
+  return { valid: true, data: p as any };
 }
 
 Deno.serve(async (req) => {
@@ -26,18 +46,25 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    const payload: SchedulePayload = await req.json();
-    const { vehicle_id, rule_type, rule_jsonb, next_due_at } = payload;
-
-    if (!vehicle_id || !rule_type || !rule_jsonb) {
-      return new Response(
-        JSON.stringify({ error: 'vehicle_id, rule_type, and rule_jsonb required' }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
+    let rawPayload: unknown;
+    try {
+      rawPayload = await req.json();
+    } catch {
+      return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
+
+    const validation = validateSchedulePayload(rawPayload);
+    if (!validation.valid) {
+      return new Response(JSON.stringify({ error: validation.error }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const { vehicle_id, rule_type, rule_jsonb, next_due_at } = validation.data;
 
     // Check if schedule exists for this vehicle and rule type
     const { data: existing } = await supabase
@@ -49,7 +76,6 @@ Deno.serve(async (req) => {
 
     let schedule;
     if (existing) {
-      // Update existing
       const { data, error } = await supabase
         .from('ottoq_schedules')
         .update({
@@ -61,16 +87,14 @@ Deno.serve(async (req) => {
         .single();
 
       if (error) {
-        return new Response(JSON.stringify({ error: error.message }), {
+        return new Response(JSON.stringify({ error: 'Failed to update schedule' }), {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
 
       schedule = data;
-      console.log(`Updated schedule ${schedule.id} for vehicle ${vehicle_id}`);
     } else {
-      // Create new
       const { data, error } = await supabase
         .from('ottoq_schedules')
         .insert({
@@ -83,14 +107,13 @@ Deno.serve(async (req) => {
         .single();
 
       if (error) {
-        return new Response(JSON.stringify({ error: error.message }), {
+        return new Response(JSON.stringify({ error: 'Failed to create schedule' }), {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
 
       schedule = data;
-      console.log(`Created schedule ${schedule.id} for vehicle ${vehicle_id}`);
     }
 
     // Log event
@@ -113,7 +136,7 @@ Deno.serve(async (req) => {
     );
   } catch (error) {
     console.error('Schedule upsert error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
