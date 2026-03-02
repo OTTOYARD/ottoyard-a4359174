@@ -185,7 +185,7 @@ function Starfield({ count = 2000 }: { count?: number }) {
         <PointMaterial
           transparent
           color="#e8eaff"
-          size={0.095}
+          size={0.143}
           sizeAttenuation
           depthWrite={false}
           opacity={1.0}
