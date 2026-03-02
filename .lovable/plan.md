@@ -1,14 +1,12 @@
 
 
-## Plan: Front-Facing Initial View
+## Plan: Tighten Mobile Tab Spacing
 
-The camera is at `[3.2, 1.8, 5.5]` which places it behind/to the side of the model. The model's front (hood) faces along one axis in the GLB, and the current camera angle shows the rear first.
+The tab bar on the OrchestraEV page gets cut off on mobile because the container padding and tab trigger padding are too generous. Three changes in `src/pages/OrchestraEV.tsx`:
 
-Two changes needed:
+1. **Reduce wrapper padding**: Change `p-1` to `p-0.5` on the `surface-luxury` container div (line 61)
+2. **Reduce tab trigger padding**: Change `px-2` to `px-1` on mobile for `TabsTrigger` (line 67)
+3. **Tighten letter-spacing**: Change `tracking-wide` to `tracking-normal` on mobile to compress the text
 
-1. **Rotate the model 180°** on the Y-axis in the `useEffect` that positions the `clonedScene`, so the hood faces the camera on load. Add `clonedScene.rotation.y = Math.PI;` after setting position.
-
-2. **No change to OrbitControls** — auto-rotate will continue smoothly from the new front-facing starting orientation.
-
-This is a one-line addition in `TeslaModel3GLB`'s positioning `useEffect` (around line 105).
+All changes are on lines 61 and 67 of `src/pages/OrchestraEV.tsx`.
 
