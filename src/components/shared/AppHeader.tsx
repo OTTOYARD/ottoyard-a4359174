@@ -47,7 +47,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   };
 
   return (
-    <div className="px-3 pt-2 pb-1 overflow-hidden">
+    <div className="px-3 pb-1 overflow-hidden" style={{ paddingTop: 'max(0.5rem, env(safe-area-inset-top, 0.5rem))' }}>
       <div
         className={`surface-luxury rounded-2xl border border-border/50 px-3 py-2 overflow-hidden ${
           showShimmer ? "animate-shimmer-luxury-bg" : ""
