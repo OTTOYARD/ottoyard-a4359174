@@ -1,18 +1,24 @@
 
 
-## Plan: Brighter Stars, Smaller Tabs, Tighter Tray
+## Fix: Add iOS Safe Area Top Padding to AppHeader
 
-Three changes across two files:
+The issue is that the AppHeader's container uses `pt-2` (8px) for top padding, which is not enough to clear the iOS status bar (time, battery, signal icons) in PWA/standalone mode.
 
-### 1. Stars 50% brighter (`VehicleShowroom3D.tsx`, line 188)
-- Increase `size` from `0.095` to `0.143` (0.095 × 1.5)
+### Change
 
-### 2. Shrink tab font by 15% (`OrchestraEV.tsx`, line 67)
-- Mobile: `text-[10px]` → `text-[8.5px]` (round to `text-[8px]`)
-- Desktop: `text-xs` (12px) → `text-[10px]`
+**File: `src/components/shared/AppHeader.tsx`** (line ~37)
 
-### 3. Condense tab tray border closer to words (`OrchestraEV.tsx`, line 61)
-- Change container from `max-w-full md:max-w-lg w-full` to `w-auto` so it shrinks to fit content
-- Remove `mx-auto` width forcing; the `flex justify-center` parent already centers it
-- Reduce padding: `p-0.5 md:p-1.5` → `p-0.5 md:p-1`
+Change the outer wrapper's padding from:
+```
+className="px-3 pt-2 pb-1 overflow-hidden"
+```
+to:
+```
+className="px-3 pb-1 overflow-hidden"
+style={{ paddingTop: 'max(0.5rem, env(safe-area-inset-top, 0.5rem))' }}
+```
+
+This uses `env(safe-area-inset-top)` to dynamically account for the iOS status bar. On devices without a notch/dynamic island it falls back to `0.5rem` (8px). On iOS PWA it pushes the header below the status bar.
+
+### Single file change, no new dependencies.
 
