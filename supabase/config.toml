@@ -114,3 +114,6 @@ verify_jwt = false
 
 [functions.generate-vehicle-render]
 verify_jwt = false
+
+[functions.admin-user-management]
+verify_jwt = false

@@ -11,6 +11,7 @@ import ProfileSettings from "./pages/ProfileSettings";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import Install from "./pages/Install";
+import AdminUsers from "./pages/AdminUsers";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { UpdateBanner } from "./components/UpdateBanner";
 import { useServiceWorker } from "./hooks/useServiceWorker";
@@ -34,6 +35,7 @@ function AppContent() {
           <Route path="/orchestra-ev" element={<ProtectedRoute><OrchestraEV /></ProtectedRoute>} />
           <Route path="/fleet-command/otto-q" element={<ProtectedRoute><FleetCommandOttoQ /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><ProfileSettings /></ProtectedRoute>} />
+          <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
