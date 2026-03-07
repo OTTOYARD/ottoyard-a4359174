@@ -56,6 +56,7 @@ import { FleetVehicles } from './FleetVehicles';
 import { AccountOverview } from './AccountOverview';
 import SimulatorControlPanel from './admin/SimulatorControlPanel';
 import { AVSimulation } from '@/components/OttoQ/AVSimulation';
+import AdminUserManagement from './admin/AdminUserManagement';
 
 interface SettingsHubProps {
   children: React.ReactNode;
@@ -167,6 +168,7 @@ function AdminGatedContent() {
 
   return (
     <div className="space-y-4">
+      <AdminUserManagement />
       <SimulatorControlPanel />
       <Card>
         <CardHeader>

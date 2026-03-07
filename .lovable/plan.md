@@ -1,25 +1,18 @@
 
 
-## Plan: Add User Management Tab Inside Admin Settings
+## Plan: Brighter Stars, Smaller Tabs, Tighter Tray
 
-Add a "User Management" sub-section inside the existing `AdminGatedContent` component in `SettingsHub.tsx`. Once the admin password is entered, a new card will appear alongside the existing Simulator and AV Command panels, showing the user table with search, powered by the existing `admin-user-management` edge function.
+Three changes across two files:
 
-### Changes
+### 1. Stars 50% brighter (`VehicleShowroom3D.tsx`, line 188)
+- Increase `size` from `0.095` to `0.143` (0.095 × 1.5)
 
-**File: `src/components/SettingsHub.tsx`**
+### 2. Shrink tab font by 15% (`OrchestraEV.tsx`, line 67)
+- Mobile: `text-[10px]` → `text-[8.5px]` (round to `text-[8px]`)
+- Desktop: `text-xs` (12px) → `text-[10px]`
 
-1. **Expand `AdminGatedContent`** to include a new `AdminUserManagement` component after the existing simulator cards
-2. The new component will:
-   - Fetch users from the `admin-user-management` edge function (same one already built)
-   - Display a searchable table with columns: Name, Email, Company, Role, Member Since, Last Login
-   - Clicking a row opens the `UserDetailPanel` slide-out (already built) for viewing/editing
-3. Import `UserDetailPanel` and reuse it directly
-4. Add `Users` icon import from lucide-react (already imported in the file)
-
-### What It Looks Like
-- Admin tab → enter password → unlock reveals: Simulator Control, AV Command Simulator, **and now a User Management card** with a full data table and search bar
-- Click any user row → slide-out panel with profile details and edit capability
-
-### No New Files Needed
-Reuses existing `admin-user-management` edge function and `UserDetailPanel` component. All changes are in `SettingsHub.tsx`.
+### 3. Condense tab tray border closer to words (`OrchestraEV.tsx`, line 61)
+- Change container from `max-w-full md:max-w-lg w-full` to `w-auto` so it shrinks to fit content
+- Remove `mx-auto` width forcing; the `flex justify-center` parent already centers it
+- Reduce padding: `p-0.5 md:p-1.5` → `p-0.5 md:p-1`
 
