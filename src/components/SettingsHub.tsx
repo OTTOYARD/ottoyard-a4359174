@@ -168,6 +168,7 @@ function AdminGatedContent() {
 
   return (
     <div className="space-y-4">
+      <AdminUserManagement />
       <SimulatorControlPanel />
       <Card>
         <CardHeader>
