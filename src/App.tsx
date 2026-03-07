@@ -11,6 +11,7 @@ import ProfileSettings from "./pages/ProfileSettings";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import Install from "./pages/Install";
+import AdminUsers from "./pages/AdminUsers";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { UpdateBanner } from "./components/UpdateBanner";
 import { useServiceWorker } from "./hooks/useServiceWorker";
