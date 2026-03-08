@@ -86,10 +86,10 @@ export function OttoResponseMap({
       // Ensure map fills container on initial load
       setTimeout(() => map.current?.resize(), 50);
       
-      // Add traffic heatmap layer
+      // Add traffic heatmap layer with empty initial data
       map.current!.addSource('traffic-heat', {
         type: 'geojson',
-        data: MOCK_TRAFFIC_DATA,
+        data: EMPTY_GEOJSON,
       });
       
       map.current!.addLayer({
