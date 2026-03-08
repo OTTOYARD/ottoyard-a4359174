@@ -19,6 +19,7 @@ interface OttoResponseMapProps {
   onMapStateChange: (state: MapInteractionState) => void;
   zoneConfirmed: boolean;
   onZoneConfirmed: (confirmed: boolean) => void;
+  intelligenceEvents?: EventWithImpact[];
 }
 
 // Mapbox token (same as main MapboxMap)
