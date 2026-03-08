@@ -27,6 +27,7 @@ import { toast } from "sonner";
 import { MessageRenderer } from "@/components/MessageRenderer";
 import { useIncidentsStore } from "@/stores/incidentsStore";
 import { useFleetContext, serializeFleetContext } from "@/hooks/useFleetContext";
+import { useOttoResponseBridge } from "@/hooks/useOttoResponseBridge";
 import { useOttoCommandStore } from "@/stores/ottoCommandStore";
 import { QuickActionsGrid, QuickAction } from "./QuickActions";
 import { OttoCommandContextPanel } from "./OttoCommandContextPanel";
