@@ -1729,6 +1729,187 @@ async function evAccountSummary(args: any, evContext: any) {
   };
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// OTTO-RESPONSE INTELLIGENCE TOOLS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function triggerOttoResponse(args: any) {
+  return {
+    success: true,
+    action: "open_otto_response",
+    eventId: args.event_id || null,
+    autoAnalyze: args.auto_analyze || false,
+    message: "Opening OTTO-Response panel." + (args.event_id ? ` Pre-loading event ${args.event_id}.` : ""),
+  };
+}
+
+async function fleetSafePullover(args: any, supabase: any) {
+  const { city, zone_center_lat, zone_center_lng, radius_miles = 1, reason, urgency = "within_15min" } = args;
+
+  // Count affected vehicles from mock data
+  let affected = mockVehicles.filter(v => v.city === city);
+  
+  // If zone coordinates provided, just use city vehicles (no real geo-filter in mock)
+  const affectedCount = affected.length;
+  const vehicleIds = affected.map(v => v.id);
+
+  // Insert fleet command
+  let commandId = `CMD-${Date.now()}`;
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from("fleet_commands")
+        .insert({
+          command_type: "safe_pullover",
+          status: "pending",
+          city,
+          zone: zone_center_lat ? { center: { lat: zone_center_lat, lng: zone_center_lng }, radius_miles } : null,
+          target_vehicle_ids: vehicleIds,
+          affected_vehicle_count: affectedCount,
+          reason,
+          urgency,
+          issued_by: "ottocommand",
+        })
+        .select("id")
+        .single();
+      if (!error && data) commandId = data.id;
+    } catch (e) {
+      console.error("Error inserting fleet command:", e);
+    }
+  }
+
+  return {
+    success: true,
+    action: "fleet_safe_pullover",
+    commandId,
+    city,
+    affectedVehicles: affectedCount,
+    urgency,
+    reason,
+    message: `Safe pullover command issued for **${affectedCount} vehicles** in **${city}**. Urgency: **${urgency}**. Reason: ${reason}. Note: This is a readiness command — vehicles will initiate safe stop procedures.`,
+  };
+}
+
+async function fleetRecallToDepot(args: any, supabase: any) {
+  const { city, scope = "all", vehicle_ids, target_depot_id, reason } = args;
+
+  let affected = mockVehicles.filter(v => v.city === city);
+
+  if (scope === "low_soc") {
+    affected = affected.filter(v => v.soc < 0.3);
+  } else if (scope === "specific" && vehicle_ids?.length) {
+    affected = affected.filter(v => vehicle_ids.includes(v.id));
+  }
+
+  const affectedCount = affected.length;
+  const vehicleIds = affected.map(v => v.id);
+
+  let commandId = `CMD-${Date.now()}`;
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from("fleet_commands")
+        .insert({
+          command_type: "recall_to_depot",
+          status: "pending",
+          city,
+          target_vehicle_ids: vehicleIds,
+          affected_vehicle_count: affectedCount,
+          reason,
+          urgency: "within_15min",
+          issued_by: "ottocommand",
+          parameters: { scope, target_depot_id },
+        })
+        .select("id")
+        .single();
+      if (!error && data) commandId = data.id;
+    } catch (e) {
+      console.error("Error inserting fleet command:", e);
+    }
+  }
+
+  return {
+    success: true,
+    action: "fleet_recall_to_depot",
+    commandId,
+    city,
+    scope,
+    affectedVehicles: affectedCount,
+    reason,
+    message: `Recall command issued for **${affectedCount} vehicles** in **${city}** (scope: **${scope}**). Vehicles will route to nearest depot. Reason: ${reason}.`,
+  };
+}
+
+async function getIntelligenceSummary(args: any, supabase: any) {
+  const { city, min_severity, include_recommendations = true } = args;
+
+  if (!supabase) {
+    return { success: false, error: "Database not available", message: "Intelligence data requires database connection." };
+  }
+
+  try {
+    let query = supabase
+      .from("intelligence_events")
+      .select("*")
+      .eq("is_active", true)
+      .order("threat_score", { ascending: false })
+      .limit(50);
+
+    if (city) query = query.eq("city", city);
+
+    const severityOrder = ["critical", "high", "medium", "low", "info"];
+    if (min_severity) {
+      const minIdx = severityOrder.indexOf(min_severity);
+      if (minIdx >= 0) {
+        query = query.in("severity", severityOrder.slice(0, minIdx + 1));
+      }
+    }
+
+    const { data: events, error } = await query;
+    if (error) throw error;
+
+    const bySeverity: Record<string, number> = {};
+    const bySource: Record<string, number> = {};
+    for (const e of (events || [])) {
+      bySeverity[e.severity] = (bySeverity[e.severity] || 0) + 1;
+      bySource[e.source] = (bySource[e.source] || 0) + 1;
+    }
+
+    const top5 = (events || []).slice(0, 5).map((e: any) => ({
+      id: e.id,
+      title: e.title,
+      severity: e.severity,
+      threatScore: e.threat_score,
+      city: e.city,
+      source: e.source,
+      vehiclesAffected: e.vehicles_affected,
+      recommendations: include_recommendations ? e.auto_recommendations : undefined,
+    }));
+
+    const total = (events || []).length;
+    const critical = bySeverity["critical"] || 0;
+    const high = bySeverity["high"] || 0;
+
+    return {
+      success: true,
+      action: "intelligence_summary",
+      summary: {
+        totalActive: total,
+        bySeverity,
+        bySource,
+        highestThreatScore: top5[0]?.threatScore || 0,
+      },
+      topThreats: top5,
+      message: total === 0
+        ? `No active intelligence events${city ? ` in ${city}` : ""}. All clear.`
+        : `**${total} active events**${city ? ` in ${city}` : ""}: ${critical} critical, ${high} high. Top threat: **${top5[0]?.title}** (score: ${top5[0]?.threatScore}/100, ${top5[0]?.vehiclesAffected || 0} vehicles affected).`,
+    };
+  } catch (e) {
+    console.error("Error fetching intelligence:", e);
+    return { success: false, error: "Failed to fetch intelligence data", details: String(e) };
+  }
+}
+
 // Main executor
 export async function executeFunction(functionCall: any, supabase: any, fleetContext?: any, evContext?: any) {
   const { name, arguments: rawArgs } = functionCall;
