@@ -216,6 +216,14 @@ export const useIntelligenceStore = create<IntelligenceState>((set, get) => ({
     }
   },
 
+  clearAllEvents: async () => {
+    await supabase
+      .from('intelligence_events')
+      .update({ is_active: false })
+      .eq('is_active', true);
+    set({ events: [] });
+  },
+
   selectEvent: (id) => set({ selectedEventId: id }),
 
   updateConfig: async (updates) => {
