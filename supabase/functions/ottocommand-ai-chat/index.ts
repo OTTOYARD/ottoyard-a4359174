@@ -491,6 +491,9 @@ Response Format:
 • Partners: Waymo (safety-focused), Zoox (bi-directional), Cruise (urban), Aurora (highway)
 • Charging: DC Fast 150-350kW (20-80% in 15-30min), optimal SOC range 20-80%
 
+**Category E: OTTO-RESPONSE INTELLIGENCE**
+Check city-wide threats (get_intelligence_summary), open the advisory panel (trigger_otto_response), issue safe pullover commands (fleet_safe_pullover), or recall vehicles to depots (fleet_recall_to_depot). Use when user asks about threats, weather alerts, traffic incidents, or fleet safety commands.
+
 For OTTOW dispatch, guide users conversationally through vehicle selection. For all queries, match your response depth to the question scope.`;
 
   // Use Claude for all coding and complex analysis queries
