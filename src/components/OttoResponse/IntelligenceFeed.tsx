@@ -17,8 +17,10 @@ import {
   MapPin,
   Plus,
   Settings,
+  Trash2,
 } from 'lucide-react';
 import { useOttoResponseStore } from '@/stores/ottoResponseStore';
+import { useIntelligenceStore } from '@/stores/intelligenceStore';
 import { cn } from '@/lib/utils';
 import type { EventWithImpact, IntelligenceMetrics } from '@/hooks/useIntelligenceData';
 import type { SourceKey, SourceStatus } from '@/stores/intelligenceStore';
