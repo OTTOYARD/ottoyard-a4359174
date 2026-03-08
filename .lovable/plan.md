@@ -1,18 +1,27 @@
 
 
-## Plan: Brighter Stars, Smaller Tabs, Tighter Tray
+## Plan: Add Prominent "Acknowledge All" Button to Notifications Panel
 
-Three changes across two files:
+The panel already has small icon buttons for "mark all read" and "clear all," but they're easy to miss when you have 200+ notifications. The fix is to add a visible, labeled button.
 
-### 1. Stars 50% brighter (`VehicleShowroom3D.tsx`, line 188)
-- Increase `size` from `0.095` to `0.143` (0.095 × 1.5)
+### Changes to `src/components/NotificationsPanel.tsx`
 
-### 2. Shrink tab font by 15% (`OrchestraEV.tsx`, line 67)
-- Mobile: `text-[10px]` → `text-[8.5px]` (round to `text-[8px]`)
-- Desktop: `text-xs` (12px) → `text-[10px]`
+**Add a prominent "Acknowledge All" banner** between the header and the notification list when `unreadCount > 0`. This will be a full-width button styled with primary colors:
 
-### 3. Condense tab tray border closer to words (`OrchestraEV.tsx`, line 61)
-- Change container from `max-w-full md:max-w-lg w-full` to `w-auto` so it shrinks to fit content
-- Remove `mx-auto` width forcing; the `flex justify-center` parent already centers it
-- Reduce padding: `p-0.5 md:p-1.5` → `p-0.5 md:p-1`
+```
+┌─ Notifications ──── [🔊] [✓] [🗑] ─┐
+│                                      │
+│  ┌──────────────────────────────┐    │
+│  │ ✓  Acknowledge All (214)     │    │  ← NEW: full-width button
+│  └──────────────────────────────┘    │
+│                                      │
+│  [notification cards...]             │
+└──────────────────────────────────────┘
+```
+
+- Calls both `markAllAsRead()` and `clearNotifications()` in sequence to reset the counter to 0 and remove all cards
+- Only visible when `unreadCount > 0`
+- Styled as a compact, full-width button with a `Check` icon and the unread count
+
+This is a single-file edit to `src/components/NotificationsPanel.tsx`, inserting ~10 lines between the header div (line 214) and the ScrollArea (line 217).
 
