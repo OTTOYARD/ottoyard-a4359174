@@ -6,9 +6,11 @@ import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, Radio, X } from 'lucide-react';
 import { useOttoResponseStore, TrafficSeverity } from '@/stores/ottoResponseStore';
 import { useOttoResponseData, calculateZoneAnalytics, updateSafeHarborDistances } from '@/hooks/useOttoResponseData';
+import { useIntelligenceData } from '@/hooks/useIntelligenceData';
 import { OttoResponseMap, MapInteractionState } from './OttoResponseMap';
 import { AdvisoryBuilder } from './AdvisoryBuilder';
 import { AdvisoryLog } from './AdvisoryLog';
+import { IntelligenceFeed } from './IntelligenceFeed';
 import { cn } from '@/lib/utils';
 
 interface OttoResponsePanelProps {
@@ -33,26 +35,26 @@ export function OttoResponsePanel({
   const [mapState, setMapState] = useState<MapInteractionState>('collapsed');
   const [zoneConfirmed, setZoneConfirmed] = useState(false);
 
-  // Reset map state when panel opens
+  // Intelligence data
+  const intelligence = useIntelligenceData(externalVehicles, externalDepots);
+
+  // Derive severity from intelligence data instead of random generation
   useEffect(() => {
     if (isPanelOpen) {
       setMapState('collapsed');
       setZoneConfirmed(false);
       
-      // Auto-generate random traffic severity
-      const severities: TrafficSeverity[] = ['Low', 'Medium', 'High'];
-      const weights = [0.2, 0.5, 0.3]; // 20% Low, 50% Medium, 30% High
-      const random = Math.random();
-      let cumulative = 0;
-      for (let i = 0; i < severities.length; i++) {
-        cumulative += weights[i];
-        if (random < cumulative) {
-          setTrafficSeverity(severities[i]);
-          break;
-        }
+      // Derive traffic severity from intelligence events
+      if (intelligence.events.length > 0) {
+        const maxThreat = Math.max(...intelligence.events.map(e => e.threatScore));
+        if (maxThreat >= 60) setTrafficSeverity('High');
+        else if (maxThreat >= 30) setTrafficSeverity('Medium');
+        else setTrafficSeverity('Low');
+      } else {
+        setTrafficSeverity('Low');
       }
     }
-  }, [isPanelOpen, setTrafficSeverity]);
+  }, [isPanelOpen, setTrafficSeverity, intelligence.events.length]);
 
   // Handle reset from AdvisoryBuilder - reset map state too
   const handleMapReset = () => {
@@ -111,7 +113,6 @@ export function OttoResponsePanel({
               <Badge className={`text-[10px] md:text-xs px-1.5 md:px-2.5 ${getSeverityColor(trafficSeverity)}`}>
                 {trafficSeverity}
               </Badge>
-              {/* Close button - positioned inline with badges for all screen sizes */}
               <button
                 onClick={closePanel}
                 className="ml-2 md:ml-3 rounded-md p-1.5 opacity-70 hover:opacity-100 hover:bg-muted/50 transition-all duration-200"
@@ -126,8 +127,16 @@ export function OttoResponsePanel({
         <div className="flex-1 overflow-hidden">
           <Tabs defaultValue="advisory" className="h-full flex flex-col">
             <div className="pt-2 border-b border-border flex flex-col items-center px-2 md:px-3 pb-2 md:pb-3">
-              <TabsList className="grid max-w-[300px] w-full grid-cols-2 h-8 md:h-9">
+              <TabsList className="grid max-w-[400px] w-full grid-cols-3 h-8 md:h-9">
                 <TabsTrigger value="advisory" className="text-xs md:text-sm px-2 md:px-4">Builder</TabsTrigger>
+                <TabsTrigger value="intelligence" className="text-xs md:text-sm px-2 md:px-4 relative">
+                  Intel
+                  {intelligence.metrics.criticalCount > 0 && (
+                    <Badge className="absolute -top-1.5 -right-1.5 h-4 min-w-4 px-1 text-[9px] bg-destructive text-destructive-foreground">
+                      {intelligence.metrics.criticalCount}
+                    </Badge>
+                  )}
+                </TabsTrigger>
                 <TabsTrigger value="log" className="text-xs md:text-sm px-2 md:px-4">Log</TabsTrigger>
               </TabsList>
               <h2 className="text-base md:text-xl font-bold text-center mt-2 md:mt-3">Incident Management</h2>
@@ -136,7 +145,7 @@ export function OttoResponsePanel({
             
             <TabsContent value="advisory" className="flex-1 overflow-hidden m-0 data-[state=active]:flex">
               <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-                {/* Map Section - Dynamic height based on state */}
+                {/* Map Section */}
                 <div className={cn(
                   "border-b md:border-b-0 md:border-r border-border transition-all duration-300 ease-in-out overflow-hidden",
                   mapState === 'expanded' 
@@ -149,10 +158,11 @@ export function OttoResponsePanel({
                     onMapStateChange={setMapState}
                     zoneConfirmed={zoneConfirmed}
                     onZoneConfirmed={setZoneConfirmed}
+                    intelligenceEvents={intelligence.events}
                   />
                 </div>
                 
-                {/* Builder Section - Takes remaining space */}
+                {/* Builder Section */}
                 <div className={cn(
                   "flex-1 overflow-hidden flex flex-col",
                   mapState === 'expanded' ? "md:w-1/2" : "md:flex-1"
@@ -160,6 +170,16 @@ export function OttoResponsePanel({
                   <AdvisoryBuilder safeHarbors={harborsWithDistances} onReset={handleMapReset} />
                 </div>
               </div>
+            </TabsContent>
+
+            <TabsContent value="intelligence" className="flex-1 overflow-hidden m-0 data-[state=active]:flex">
+              <IntelligenceFeed
+                events={intelligence.events}
+                metrics={intelligence.metrics}
+                sourceStatus={intelligence.sourceStatus}
+                isScanning={intelligence.isScanning}
+                triggerScan={intelligence.triggerScan}
+              />
             </TabsContent>
             
             <TabsContent value="log" className="flex-1 overflow-hidden m-0 data-[state=active]:flex">
