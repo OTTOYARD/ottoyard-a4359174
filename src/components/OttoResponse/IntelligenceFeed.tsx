@@ -166,6 +166,16 @@ export function IntelligenceFeed({ events, metrics, sourceStatus, isScanning, tr
             <Button
               size="sm"
               variant="ghost"
+              onClick={clearAllEvents}
+              disabled={isScanning || events.length === 0}
+              className="h-7 px-2 text-xs text-destructive hover:text-destructive"
+            >
+              <Trash2 className="h-3 w-3" />
+              <span className="ml-1 hidden sm:inline">Clear ({events.length})</span>
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
               onClick={() => setConfigOpen(true)}
               className="h-7 w-7 p-0"
             >
