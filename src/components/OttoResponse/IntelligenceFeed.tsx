@@ -158,20 +158,30 @@ export function IntelligenceFeed({ events, metrics, sourceStatus, isScanning, tr
               </div>
             ))}
           </div>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={triggerScan}
-            disabled={isScanning}
-            className="h-7 px-2 text-xs shrink-0"
-          >
-            {isScanning ? (
-              <Loader2 className="h-3 w-3 animate-spin" />
-            ) : (
-              <RefreshCw className="h-3 w-3" />
-            )}
-            <span className="ml-1 hidden sm:inline">Scan</span>
-          </Button>
+          <div className="flex gap-1 shrink-0">
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setConfigOpen(true)}
+              className="h-7 w-7 p-0"
+            >
+              <Settings className="h-3 w-3" />
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={triggerScan}
+              disabled={isScanning}
+              className="h-7 px-2 text-xs"
+            >
+              {isScanning ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <RefreshCw className="h-3 w-3" />
+              )}
+              <span className="ml-1 hidden sm:inline">Scan</span>
+            </Button>
+          </div>
         </div>
 
         {/* Summary metrics */}
