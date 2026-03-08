@@ -170,7 +170,25 @@ export function OttoResponseMap({
       map.current = null;
     };
   }, []);
-  
+
+  // Update heatmap from intelligence events
+  useEffect(() => {
+    if (!map.current || !isMapLoaded || !zoneLayerRef.current) return;
+    
+    const source = map.current.getSource('traffic-heat') as mapboxgl.GeoJSONSource;
+    if (!source) return;
+
+    const features: GeoJSON.Feature[] = (intelligenceEvents ?? [])
+      .filter(e => e.locationLat != null && e.locationLng != null)
+      .map(e => ({
+        type: 'Feature' as const,
+        properties: { intensity: Math.min((e.threatScore || 0) / 100, 1) },
+        geometry: { type: 'Point' as const, coordinates: [e.locationLng!, e.locationLat!] },
+      }));
+
+    source.setData({ type: 'FeatureCollection', features });
+  }, [intelligenceEvents, isMapLoaded]);
+
   // Handle map click for zone drawing
   useEffect(() => {
     if (!map.current || !isMapLoaded) return;
