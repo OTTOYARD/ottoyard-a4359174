@@ -9,6 +9,7 @@ import { Circle, Pentagon, RotateCcw, MapPin, Loader2, CheckCircle2, Pencil } fr
 import { useOttoResponseStore, ZonePoint } from '@/stores/ottoResponseStore';
 import { AdaptedVehicle, isVehicleInZone, isVehicleNearZone } from '@/hooks/useOttoResponseData';
 import { cn } from '@/lib/utils';
+import type { EventWithImpact } from '@/hooks/useIntelligenceData';
 
 export type MapInteractionState = 'collapsed' | 'expanded' | 'confirmed';
 
