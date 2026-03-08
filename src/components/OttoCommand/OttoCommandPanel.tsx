@@ -323,6 +323,23 @@ export const OttoCommandPanel: React.FC<OttoCommandPanelProps> = ({
           }
         }
 
+        // Handle OTTO-Response intelligence actions
+        if (data.action === "open_otto_response" || data.action_block?.action === "open_otto_response") {
+          bridge.handleToolResult(data.action_block?.details || data);
+        }
+        if (data.action === "fleet_safe_pullover" || data.action_block?.action === "fleet_safe_pullover") {
+          const d = data.action_block?.details || data;
+          toast.success(`Safe pullover issued: ${d.affectedVehicles || 0} vehicles in ${d.city || "unknown"}`, {
+            description: d.reason || "Fleet safety command",
+          });
+        }
+        if (data.action === "fleet_recall_to_depot" || data.action_block?.action === "fleet_recall_to_depot") {
+          const d = data.action_block?.details || data;
+          toast.success(`Recall issued: ${d.affectedVehicles || 0} vehicles in ${d.city || "unknown"}`, {
+            description: `Scope: ${d.scope || "all"} — ${d.reason || ""}`,
+          });
+        }
+
         // Fallback content
         if (!content.trim()) {
           if (data.action_block || data.function_calls?.length) {
