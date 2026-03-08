@@ -88,6 +88,7 @@ export function IntelligenceFeed({ events, metrics, sourceStatus, isScanning, tr
   const [cityFilter, setCityFilter] = useState<string>('all');
   const [severityFilter, setSeverityFilter] = useState<string>('all');
   const [sourceFilter, setSourceFilter] = useState<string>('all');
+  const [configOpen, setConfigOpen] = useState(false);
 
   const {
     setDrawnZone,
