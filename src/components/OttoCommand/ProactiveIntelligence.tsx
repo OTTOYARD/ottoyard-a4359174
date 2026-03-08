@@ -3,7 +3,7 @@
 // Integrates with the OttoCommand store to drive proactive suggestions
 
 import React, { useEffect, useRef } from "react";
-import {
+import { useIntelligenceStore } from "@/stores/intelligenceStore";
   AlertTriangle,
   BatteryWarning,
   Wrench,
