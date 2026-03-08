@@ -315,7 +315,7 @@ export function AdvisoryBuilder({ safeHarbors, onReset }: AdvisoryBuilderProps) 
   };
   
   // Handle submit
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const advisory = createAdvisory();
     submitAdvisory(advisory.id);
     setShowSubmitDialog(false);
@@ -323,7 +323,49 @@ export function AdvisoryBuilder({ safeHarbors, onReset }: AdvisoryBuilderProps) 
     setAIDraftText(null);
     setPredictiveScenario(null);
     onReset?.(); // Reset map state too
-    toast.success(`Advisory ${advisory.id} submitted`);
+
+    // Advisory-to-Command pipeline: create fleet command if actionable recommendations
+    const hasActionable = recommendations.pauseDispatches || recommendations.avoidZoneRouting || recommendations.safeHarborStaging || recommendations.waveBasedRecovery;
+    let commandCreated = false;
+
+    if (hasActionable) {
+      try {
+        const commandType = recommendations.pauseDispatches ? 'pause_operations' : 'route_adjustment';
+        const city = drawnZone?.center
+          ? 'Nashville' // Default; could geo-reverse in future
+          : 'Nashville';
+
+        await supabase.from('fleet_commands').insert({
+          command_type: commandType,
+          city,
+          zone: drawnZone as any,
+          affected_vehicle_count: vehiclesInside + vehiclesNear,
+          reason: oemNotes || `Advisory ${advisory.id}: ${trafficSeverity} severity incident`,
+          urgency: trafficSeverity === 'High' ? 'immediate' : 'within_15min',
+          issued_by: 'otto_response',
+          linked_advisory_id: advisory.id,
+          parameters: {
+            recommendations: {
+              pauseDispatches: recommendations.pauseDispatches,
+              avoidZoneRouting: recommendations.avoidZoneRouting,
+              safeHarborStaging: recommendations.safeHarborStaging,
+              waveBasedRecovery: recommendations.waveBasedRecovery,
+              keepClearCorridors: recommendations.keepClearCorridors,
+            },
+            selectedSafeHarbors: selectedSafeHarbors.map((h) => h.name),
+          } as any,
+        });
+        commandCreated = true;
+      } catch (err) {
+        console.error('Fleet command insert failed:', err);
+      }
+    }
+
+    toast.success(
+      commandCreated
+        ? `Advisory ${advisory.id} submitted + fleet command issued`
+        : `Advisory ${advisory.id} submitted`
+    );
   };
   
   const getSeverityColor = (severity: string) => {

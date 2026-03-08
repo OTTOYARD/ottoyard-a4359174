@@ -15,6 +15,7 @@ import {
   RefreshCw,
   MapPin,
   Plus,
+  Settings,
 } from 'lucide-react';
 import { useOttoResponseStore } from '@/stores/ottoResponseStore';
 import { cn } from '@/lib/utils';
