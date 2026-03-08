@@ -67,7 +67,7 @@ export const useFleetCommandStore = create<FleetCommandState>((set, get) => ({
   createCommand: async (cmd) => {
     const { data, error } = await supabase
       .from('fleet_commands')
-      .insert(cmd)
+      .insert([cmd] as any)
       .select()
       .single();
 
