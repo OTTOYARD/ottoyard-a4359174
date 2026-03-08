@@ -150,6 +150,7 @@ interface IntelligenceState {
   fetchEvents: () => Promise<void>;
   fetchConfig: () => Promise<void>;
   triggerScan: () => Promise<void>;
+  clearAllEvents: () => Promise<void>;
   selectEvent: (id: string | null) => void;
   updateConfig: (updates: Partial<Record<string, any>>) => Promise<void>;
   subscribeToRealtime: () => () => void;
