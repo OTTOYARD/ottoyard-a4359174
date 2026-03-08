@@ -36,7 +36,8 @@ export function OttoResponseMap({
   mapState, 
   onMapStateChange, 
   zoneConfirmed, 
-  onZoneConfirmed 
+  onZoneConfirmed,
+  intelligenceEvents 
 }: OttoResponseMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
