@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { useOttoResponseStore, SafeHarbor, TrafficSeverity } from '@/stores/ottoResponseStore';
 import { getPolygonAreaSqMiles } from '@/hooks/useOttoResponseData';
+import { useIntelligenceStore, SourceKey } from '@/stores/intelligenceStore';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
