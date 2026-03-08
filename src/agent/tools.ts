@@ -726,7 +726,8 @@ export const ToolCategories = {
   incident_triage: ["triage_incidents", "quick_dispatch_ottow", "escalate_incident", "query_incidents"],
   analytics: ["generate_fleet_snapshot", "compare_metrics", "detect_anomalies", "utilization_report"],
   scheduling: ["schedule_vehicle", "optimize_schedule", "bulk_schedule"],
-  general: ["explain_concept", "search_knowledge_base"]
+  general: ["explain_concept", "search_knowledge_base"],
+  otto_response: ["trigger_otto_response", "fleet_safe_pullover", "fleet_recall_to_depot", "get_intelligence_summary"]
 } as const;
 
 // ═══════════════════════════════════════════════════════════════════════════════

@@ -1804,6 +1804,16 @@ export async function executeFunction(functionCall: any, supabase: any, fleetCon
     case 'ev_account_summary':
       return await evAccountSummary(parsedArgs, evContext);
 
+    // OTTO-RESPONSE INTELLIGENCE TOOLS
+    case 'trigger_otto_response':
+      return triggerOttoResponse(parsedArgs);
+    case 'fleet_safe_pullover':
+      return await fleetSafePullover(parsedArgs, supabase);
+    case 'fleet_recall_to_depot':
+      return await fleetRecallToDepot(parsedArgs, supabase);
+    case 'get_intelligence_summary':
+      return await getIntelligenceSummary(parsedArgs, supabase);
+
     default:
       return {
         success: false,
