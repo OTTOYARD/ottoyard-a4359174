@@ -207,6 +207,7 @@ export const OttoCommandPanel: React.FC<OttoCommandPanelProps> = ({
   // Fleet context (real-time from Supabase)
   const fleetContext = useFleetContext();
   const incidents = useIncidentsStore((state) => state.incidents);
+  const bridge = useOttoResponseBridge();
 
   // OttoCommand store
   const store = useOttoCommandStore();
