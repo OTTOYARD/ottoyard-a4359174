@@ -9,11 +9,8 @@ import { useOttoResponseStore } from "@/stores/ottoResponseStore";
 export function useOttoResponseBridge() {
   const events = useIntelligenceStore((s) => s.events);
   const pushAlert = useOttoCommandStore((s) => s.pushAlert);
-  const setIsOpen = useOttoResponseStore((s) => s.setIsOpen);
-  const setDrawnZone = useOttoResponseStore((s) => s.setDrawnZone);
-  const setTrafficSeverity = useOttoResponseStore((s) => s.setTrafficSeverity);
-  const setOemNotes = useOttoResponseStore((s) => s.setOemNotes);
-  const setAutoRecommendations = useOttoResponseStore((s) => s.setAutoRecommendations);
+  const { setDrawnZone, setTrafficSeverity, setOemNotes, setRecommendation } = useOttoResponseStore();
+  const openPanel = useOttoResponseStore((s) => s.openPanel);
 
   const seenEventIds = useRef<Set<string>>(new Set());
 
@@ -41,6 +38,7 @@ export function useOttoResponseBridge() {
     (event: IntelligenceEvent) => {
       if (event.locationLat && event.locationLng) {
         setDrawnZone({
+          type: "radius",
           center: { lat: event.locationLat, lng: event.locationLng },
           radiusMiles: event.radiusMiles || 2,
         });
@@ -54,17 +52,21 @@ export function useOttoResponseBridge() {
           : "Low";
       setTrafficSeverity(severity as any);
 
+      // Apply recommendations via individual setRecommendation calls
       if (event.autoRecommendations?.length) {
-        setAutoRecommendations(event.autoRecommendations);
+        for (const rec of event.autoRecommendations) {
+          if (rec === "pauseDispatches") setRecommendation("pauseDispatches", true);
+          if (rec === "avoidZoneRouting") setRecommendation("avoidZoneRouting", true);
+        }
       }
 
       setOemNotes(
         `[Intelligence Event] ${event.title}\nSource: ${event.source}\nCity: ${event.city || "N/A"}\nThreat Score: ${event.threatScore}/100\n${event.description || ""}`
       );
 
-      setIsOpen(true);
+      openPanel();
     },
-    [setDrawnZone, setTrafficSeverity, setAutoRecommendations, setOemNotes, setIsOpen]
+    [setDrawnZone, setTrafficSeverity, setRecommendation, setOemNotes, openPanel]
   );
 
   // Handle OttoCommand tool results that reference O-R
@@ -72,16 +74,17 @@ export function useOttoResponseBridge() {
     (result: any) => {
       if (result?.action === "open_otto_response") {
         if (result.eventId) {
-          const event = events.find((e) => e.id === result.eventId);
+          const currentEvents = useIntelligenceStore.getState().events;
+          const event = currentEvents.find((e) => e.id === result.eventId);
           if (event) {
             openFromEvent(event);
             return;
           }
         }
-        setIsOpen(true);
+        openPanel();
       }
     },
-    [events, openFromEvent, setIsOpen]
+    [openFromEvent, openPanel]
   );
 
   return { openFromEvent, handleToolResult };
