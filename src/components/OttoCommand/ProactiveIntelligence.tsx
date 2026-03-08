@@ -4,6 +4,7 @@
 
 import React, { useEffect, useRef } from "react";
 import { useIntelligenceStore } from "@/stores/intelligenceStore";
+import {
   AlertTriangle,
   BatteryWarning,
   Wrench,
