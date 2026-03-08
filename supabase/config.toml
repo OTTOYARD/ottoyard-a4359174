@@ -117,3 +117,15 @@ verify_jwt = false
 
 [functions.admin-user-management]
 verify_jwt = false
+
+[functions.intelligence-weather]
+verify_jwt = false
+
+[functions.intelligence-traffic]
+verify_jwt = false
+
+[functions.intelligence-news]
+verify_jwt = false
+
+[functions.intelligence-scanner]
+verify_jwt = false
