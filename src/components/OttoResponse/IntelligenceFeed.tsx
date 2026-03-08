@@ -100,6 +100,8 @@ export function IntelligenceFeed({ events, metrics, sourceStatus, isScanning, tr
     updateZoneAnalytics,
   } = useOttoResponseStore();
 
+  const clearAllEvents = useIntelligenceStore((s) => s.clearAllEvents);
+
   const filteredEvents = useMemo(() => {
     return events.filter((e) => {
       if (cityFilter !== 'all' && e.city !== cityFilter) return false;
