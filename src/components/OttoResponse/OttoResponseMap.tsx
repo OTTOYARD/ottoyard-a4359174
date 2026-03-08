@@ -25,23 +25,10 @@ interface OttoResponseMapProps {
 // Mapbox token (same as main MapboxMap)
 const MAPBOX_TOKEN = 'pk.eyJ1Ijoib3R0b3lhcmQiLCJhIjoiY21lZWY5cjduMGtsdzJpb2wxNWpweGg4NCJ9.NfsLzQ2-o8wEHOfRrPO5WQ';
 
-// Traffic density mock zones for heatmap
-const MOCK_TRAFFIC_DATA: GeoJSON.FeatureCollection = {
+// Empty initial data - will be populated by intelligence events
+const EMPTY_GEOJSON: GeoJSON.FeatureCollection = {
   type: 'FeatureCollection',
-  features: [
-    { type: 'Feature', properties: { intensity: 0.9 }, geometry: { type: 'Point', coordinates: [-86.78, 36.16] } },
-    { type: 'Feature', properties: { intensity: 0.7 }, geometry: { type: 'Point', coordinates: [-86.75, 36.18] } },
-    { type: 'Feature', properties: { intensity: 0.4 }, geometry: { type: 'Point', coordinates: [-86.82, 36.14] } },
-    { type: 'Feature', properties: { intensity: 0.6 }, geometry: { type: 'Point', coordinates: [-86.80, 36.20] } },
-    { type: 'Feature', properties: { intensity: 0.8 }, geometry: { type: 'Point', coordinates: [-86.77, 36.17] } },
-    { type: 'Feature', properties: { intensity: 0.5 }, geometry: { type: 'Point', coordinates: [-86.79, 36.15] } },
-    // Austin area
-    { type: 'Feature', properties: { intensity: 0.85 }, geometry: { type: 'Point', coordinates: [-97.74, 30.27] } },
-    { type: 'Feature', properties: { intensity: 0.65 }, geometry: { type: 'Point', coordinates: [-97.72, 30.29] } },
-    // LA area
-    { type: 'Feature', properties: { intensity: 0.75 }, geometry: { type: 'Point', coordinates: [-118.24, 34.05] } },
-    { type: 'Feature', properties: { intensity: 0.55 }, geometry: { type: 'Point', coordinates: [-118.28, 34.07] } },
-  ],
+  features: [],
 };
 
 export function OttoResponseMap({ 
