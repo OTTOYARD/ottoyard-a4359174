@@ -212,6 +212,21 @@ export const NotificationsPanel: React.FC = () => {
             )}
           </div>
         </div>
+
+        {/* Acknowledge All banner */}
+        {unreadCount > 0 && (
+          <div className="px-3 py-2 border-b border-border/50">
+            <Button
+              variant="default"
+              size="sm"
+              className="w-full"
+              onClick={() => { markAllAsRead(); clearNotifications(); }}
+            >
+              <Check className="h-4 w-4 mr-2" />
+              Acknowledge All ({unreadCount})
+            </Button>
+          </div>
+        )}
         
         {/* Notifications List */}
         <ScrollArea className="h-[400px]">
