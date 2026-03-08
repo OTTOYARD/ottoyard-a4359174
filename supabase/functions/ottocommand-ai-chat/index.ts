@@ -491,6 +491,9 @@ Response Format:
 • Partners: Waymo (safety-focused), Zoox (bi-directional), Cruise (urban), Aurora (highway)
 • Charging: DC Fast 150-350kW (20-80% in 15-30min), optimal SOC range 20-80%
 
+**Category E: OTTO-RESPONSE INTELLIGENCE**
+Check city-wide threats (get_intelligence_summary), open the advisory panel (trigger_otto_response), issue safe pullover commands (fleet_safe_pullover), or recall vehicles to depots (fleet_recall_to_depot). Use when user asks about threats, weather alerts, traffic incidents, or fleet safety commands.
+
 For OTTOW dispatch, guide users conversationally through vehicle selection. For all queries, match your response depth to the question scope.`;
 
   // Use Claude for all coding and complex analysis queries
@@ -760,6 +763,65 @@ For OTTOW dispatch, guide users conversationally through vehicle selection. For 
               topic: { type: "string", description: "Topic to explain (e.g., 'L4 autonomy', 'SOC', 'OTTO-Q')" },
             },
             required: ["topic"],
+          },
+        },
+        // ─────────────────────────────────────────────────────────────────────────────
+        // OTTO-RESPONSE INTELLIGENCE TOOLS
+        // ─────────────────────────────────────────────────────────────────────────────
+        {
+          name: "trigger_otto_response",
+          description: "Open the OTTO-Response advisory panel, optionally pre-loaded with a specific intelligence event.",
+          input_schema: {
+            type: "object",
+            properties: {
+              event_id: { type: "string", description: "Intelligence event ID to pre-load" },
+              auto_analyze: { type: "boolean", description: "Automatically run threat analysis on open" },
+            },
+            required: [],
+          },
+        },
+        {
+          name: "fleet_safe_pullover",
+          description: "Issue a safe pullover command to all vehicles in a specified zone. Use when severe weather, emergency, or critical threat requires vehicles to stop.",
+          input_schema: {
+            type: "object",
+            properties: {
+              city: { type: "string", description: "City to issue command in" },
+              zone_center_lat: { type: "number", description: "Zone center latitude" },
+              zone_center_lng: { type: "number", description: "Zone center longitude" },
+              radius_miles: { type: "number", description: "Zone radius in miles (default: 1)" },
+              reason: { type: "string", description: "Reason for safe pullover" },
+              urgency: { type: "string", enum: ["immediate", "within_5min", "within_15min"], description: "Urgency level" },
+            },
+            required: ["city", "reason"],
+          },
+        },
+        {
+          name: "fleet_recall_to_depot",
+          description: "Recall vehicles to nearest depot. Can target all vehicles, low-SOC vehicles, or specific IDs.",
+          input_schema: {
+            type: "object",
+            properties: {
+              city: { type: "string", description: "City to issue recall in" },
+              scope: { type: "string", enum: ["all", "zone", "low_soc", "specific"], description: "Which vehicles to recall" },
+              vehicle_ids: { type: "array", items: { type: "string" }, description: "Specific vehicle IDs" },
+              target_depot_id: { type: "string", description: "Target depot ID" },
+              reason: { type: "string", description: "Reason for recall" },
+            },
+            required: ["city", "reason"],
+          },
+        },
+        {
+          name: "get_intelligence_summary",
+          description: "Get current intelligence summary showing all active threats across fleet cities. Use for threat assessment before issuing fleet commands.",
+          input_schema: {
+            type: "object",
+            properties: {
+              city: { type: "string", description: "Filter by city" },
+              min_severity: { type: "string", enum: ["critical", "high", "medium", "low"], description: "Minimum severity to include" },
+              include_recommendations: { type: "boolean", description: "Include auto-recommendations (default: true)" },
+            },
+            required: [],
           },
         },
       ];

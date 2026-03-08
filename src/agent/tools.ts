@@ -637,6 +637,70 @@ export const Tools = {
       },
       required: ["query"]
     }
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // CATEGORY 8: OTTO-RESPONSE INTELLIGENCE (4 tools)
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  trigger_otto_response: {
+    name: "trigger_otto_response",
+    description: "Open the OTTO-Response advisory panel, optionally pre-loaded with a specific intelligence event.",
+    input: {
+      type: "object",
+      properties: {
+        event_id: { type: "string", description: "Intelligence event ID to pre-load" },
+        auto_analyze: { type: "boolean", description: "Automatically run threat analysis on open" }
+      },
+      required: []
+    }
+  },
+
+  fleet_safe_pullover: {
+    name: "fleet_safe_pullover",
+    description: "Issue a safe pullover command to all vehicles in a specified zone.",
+    input: {
+      type: "object",
+      properties: {
+        city: { type: "string", description: "City to issue command in" },
+        zone_center_lat: { type: "number", description: "Zone center latitude" },
+        zone_center_lng: { type: "number", description: "Zone center longitude" },
+        radius_miles: { type: "number", description: "Zone radius in miles (default: 1)" },
+        reason: { type: "string", description: "Reason for safe pullover" },
+        urgency: { type: "string", enum: ["immediate", "within_5min", "within_15min"], description: "Urgency level" }
+      },
+      required: ["city", "reason"]
+    }
+  },
+
+  fleet_recall_to_depot: {
+    name: "fleet_recall_to_depot",
+    description: "Recall vehicles to nearest depot. Can target all vehicles, low-SOC vehicles, or specific IDs.",
+    input: {
+      type: "object",
+      properties: {
+        city: { type: "string", description: "City to issue recall in" },
+        scope: { type: "string", enum: ["all", "zone", "low_soc", "specific"], description: "Which vehicles to recall" },
+        vehicle_ids: { type: "array", items: { type: "string" }, description: "Specific vehicle IDs (when scope=specific)" },
+        target_depot_id: { type: "string", description: "Target depot ID" },
+        reason: { type: "string", description: "Reason for recall" }
+      },
+      required: ["city", "reason"]
+    }
+  },
+
+  get_intelligence_summary: {
+    name: "get_intelligence_summary",
+    description: "Get current intelligence summary showing all active threats across fleet cities.",
+    input: {
+      type: "object",
+      properties: {
+        city: { type: "string", description: "Filter by city" },
+        min_severity: { type: "string", enum: ["critical", "high", "medium", "low"], description: "Minimum severity to include" },
+        include_recommendations: { type: "boolean", description: "Include auto-recommendations (default: true)" }
+      },
+      required: []
+    }
   }
 } as const;
 
@@ -662,7 +726,8 @@ export const ToolCategories = {
   incident_triage: ["triage_incidents", "quick_dispatch_ottow", "escalate_incident", "query_incidents"],
   analytics: ["generate_fleet_snapshot", "compare_metrics", "detect_anomalies", "utilization_report"],
   scheduling: ["schedule_vehicle", "optimize_schedule", "bulk_schedule"],
-  general: ["explain_concept", "search_knowledge_base"]
+  general: ["explain_concept", "search_knowledge_base"],
+  otto_response: ["trigger_otto_response", "fleet_safe_pullover", "fleet_recall_to_depot", "get_intelligence_summary"]
 } as const;
 
 // ═══════════════════════════════════════════════════════════════════════════════

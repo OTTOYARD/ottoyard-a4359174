@@ -3,6 +3,7 @@
 // Integrates with the OttoCommand store to drive proactive suggestions
 
 import React, { useEffect, useRef } from "react";
+import { useIntelligenceStore } from "@/stores/intelligenceStore";
 import {
   AlertTriangle,
   BatteryWarning,
@@ -309,6 +310,25 @@ export const ProactiveIntelligence: React.FC<ProactiveIntelligenceProps> = ({
       mode === "ev"
         ? generateEVAlerts(evVehicle)
         : generateFleetAlerts(fleetMetrics, depotMetrics, incidentMetrics);
+
+    // Add intelligence threat alerts (AV mode only)
+    if (mode === "av") {
+      const intelligenceEvents = useIntelligenceStore.getState().events;
+      const highThreatEvents = intelligenceEvents
+        .filter((e) => e.threatScore >= 60)
+        .slice(0, 2); // Limit to top 2
+
+      for (const event of highThreatEvents) {
+        newAlerts.push({
+          severity: event.severity === "critical" ? "critical" : "high",
+          title: event.title,
+          message: `${event.city || "Unknown"} — Threat score ${event.threatScore}/100. ${event.vehiclesAffected} vehicles affected.`,
+          suggestedAction: "View intelligence",
+          suggestedPrompt: `Get the intelligence summary for ${event.city || "all cities"} and show me the '${event.title}' threat details with recommended actions`,
+          source: "incident",
+        });
+      }
+    }
 
     // Simple content hash to avoid re-pushing identical alerts
     const hash = JSON.stringify(newAlerts.map((a) => a.title).sort());

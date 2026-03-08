@@ -27,6 +27,7 @@ import { toast } from "sonner";
 import { MessageRenderer } from "@/components/MessageRenderer";
 import { useIncidentsStore } from "@/stores/incidentsStore";
 import { useFleetContext, serializeFleetContext } from "@/hooks/useFleetContext";
+import { useOttoResponseBridge } from "@/hooks/useOttoResponseBridge";
 import { useOttoCommandStore } from "@/stores/ottoCommandStore";
 import { QuickActionsGrid, QuickAction } from "./QuickActions";
 import { OttoCommandContextPanel } from "./OttoCommandContextPanel";
@@ -206,6 +207,7 @@ export const OttoCommandPanel: React.FC<OttoCommandPanelProps> = ({
   // Fleet context (real-time from Supabase)
   const fleetContext = useFleetContext();
   const incidents = useIncidentsStore((state) => state.incidents);
+  const bridge = useOttoResponseBridge();
 
   // OttoCommand store
   const store = useOttoCommandStore();
@@ -319,6 +321,23 @@ export const OttoCommandPanel: React.FC<OttoCommandPanelProps> = ({
               description: `Vehicle ${details.vehicleId} in ${details.city}`,
             });
           }
+        }
+
+        // Handle OTTO-Response intelligence actions
+        if (data.action === "open_otto_response" || data.action_block?.action === "open_otto_response") {
+          bridge.handleToolResult(data.action_block?.details || data);
+        }
+        if (data.action === "fleet_safe_pullover" || data.action_block?.action === "fleet_safe_pullover") {
+          const d = data.action_block?.details || data;
+          toast.success(`Safe pullover issued: ${d.affectedVehicles || 0} vehicles in ${d.city || "unknown"}`, {
+            description: d.reason || "Fleet safety command",
+          });
+        }
+        if (data.action === "fleet_recall_to_depot" || data.action_block?.action === "fleet_recall_to_depot") {
+          const d = data.action_block?.details || data;
+          toast.success(`Recall issued: ${d.affectedVehicles || 0} vehicles in ${d.city || "unknown"}`, {
+            description: `Scope: ${d.scope || "all"} — ${d.reason || ""}`,
+          });
         }
 
         // Fallback content

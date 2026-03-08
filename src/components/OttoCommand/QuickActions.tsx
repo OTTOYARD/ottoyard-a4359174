@@ -14,6 +14,7 @@ import {
   CalendarDays,
   ListOrdered,
   Receipt,
+  Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -87,6 +88,20 @@ export const quickActions: QuickAction[] = [
     icon: MapPin,
     description: "Check depot availability",
     prompt: "Show depot resource availability across all locations. Include charging stalls, maintenance bays, and current utilization.",
+  },
+  {
+    id: "intelligence-scan",
+    label: "Threat Scan",
+    icon: Eye,
+    description: "Check active threats & intelligence",
+    prompt: "Run a threat intelligence scan. Show me all active threats, weather alerts, and traffic incidents across our fleet cities with threat scores and recommended actions.",
+  },
+  {
+    id: "fleet-safe-pullover",
+    label: "Safe Pullover",
+    icon: AlertTriangle,
+    description: "Emergency fleet safe pullover",
+    prompt: "I need to assess whether a safe pullover is warranted. Show me the current threat intelligence summary and recommend whether to issue a safe pullover command.",
   },
 ];
 
