@@ -343,25 +343,8 @@ export function AdvisoryBuilder({ safeHarbors, onReset }: AdvisoryBuilderProps) 
                 </Button>
               </div>
               
-              {/* Data Source Indicators */}
-              <div className="mt-2.5 flex flex-wrap gap-1.5">
-                <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted/80 border border-border/50">
-                  <div className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-                  <span className="text-[9px] md:text-[10px] text-muted-foreground">Traffic Feeds</span>
-                </div>
-                <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted/80 border border-border/50">
-                  <div className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-                  <span className="text-[9px] md:text-[10px] text-muted-foreground">Emergency Services</span>
-                </div>
-                <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted/80 border border-border/50">
-                  <div className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-                  <span className="text-[9px] md:text-[10px] text-muted-foreground">Weather Alerts</span>
-                </div>
-                <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted/80 border border-border/50">
-                  <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50" />
-                  <span className="text-[9px] md:text-[10px] text-muted-foreground/70">News Reports</span>
-                </div>
-              </div>
+              {/* Data Source Indicators - driven by real sourceStatus */}
+              <DataSourceIndicators />
               
               {predictiveScenario && (
                 <div className="mt-2 p-2 bg-primary/5 rounded-md border border-primary/20">
