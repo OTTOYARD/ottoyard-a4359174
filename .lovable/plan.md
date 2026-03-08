@@ -1,21 +1,18 @@
 
 
-## Plan: Add "Clear All" Button to Intelligence Feed
+## Plan: Brighter Stars, Smaller Tabs, Tighter Tray
 
-### What
-Add a "Clear All" button in the Intelligence Feed header (next to the Scan button) that marks all intelligence events as inactive in Supabase, then refreshes the local store so new queued items are visible.
+Three changes across two files:
 
-### Changes
+### 1. Stars 50% brighter (`VehicleShowroom3D.tsx`, line 188)
+- Increase `size` from `0.095` to `0.143` (0.095 × 1.5)
 
-**1. `src/stores/intelligenceStore.ts`** — Add a `clearAllEvents` action:
-- Update all `is_active = true` rows in `intelligence_events` to `is_active = false` via Supabase
-- Clear the local `events` array in the store
-- Add to the interface and implementation
+### 2. Shrink tab font by 15% (`OrchestraEV.tsx`, line 67)
+- Mobile: `text-[10px]` → `text-[8.5px]` (round to `text-[8px]`)
+- Desktop: `text-xs` (12px) → `text-[10px]`
 
-**2. `src/components/OttoResponse/IntelligenceFeed.tsx`** — Add the button:
-- Import `Trash2` from lucide-react and `useIntelligenceStore`
-- Add a "Clear All" button next to the Settings gear and Scan button in the header actions area (line ~161)
-- Button calls `clearAllEvents()` from the intelligence store
-- Disabled when no events exist or when scanning
-- Shows event count as confirmation (e.g., "Clear All (12)")
+### 3. Condense tab tray border closer to words (`OrchestraEV.tsx`, line 61)
+- Change container from `max-w-full md:max-w-lg w-full` to `w-auto` so it shrinks to fit content
+- Remove `mx-auto` width forcing; the `flex justify-center` parent already centers it
+- Reduce padding: `p-0.5 md:p-1.5` → `p-0.5 md:p-1`
 

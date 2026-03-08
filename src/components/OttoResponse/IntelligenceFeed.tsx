@@ -17,8 +17,10 @@ import {
   MapPin,
   Plus,
   Settings,
+  Trash2,
 } from 'lucide-react';
 import { useOttoResponseStore } from '@/stores/ottoResponseStore';
+import { useIntelligenceStore } from '@/stores/intelligenceStore';
 import { cn } from '@/lib/utils';
 import type { EventWithImpact, IntelligenceMetrics } from '@/hooks/useIntelligenceData';
 import type { SourceKey, SourceStatus } from '@/stores/intelligenceStore';
@@ -98,6 +100,8 @@ export function IntelligenceFeed({ events, metrics, sourceStatus, isScanning, tr
     updateZoneAnalytics,
   } = useOttoResponseStore();
 
+  const clearAllEvents = useIntelligenceStore((s) => s.clearAllEvents);
+
   const filteredEvents = useMemo(() => {
     return events.filter((e) => {
       if (cityFilter !== 'all' && e.city !== cityFilter) return false;
@@ -159,6 +163,16 @@ export function IntelligenceFeed({ events, metrics, sourceStatus, isScanning, tr
             ))}
           </div>
           <div className="flex gap-1 shrink-0">
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={clearAllEvents}
+              disabled={isScanning || events.length === 0}
+              className="h-7 px-2 text-xs text-destructive hover:text-destructive"
+            >
+              <Trash2 className="h-3 w-3" />
+              <span className="ml-1 hidden sm:inline">Clear ({events.length})</span>
+            </Button>
             <Button
               size="sm"
               variant="ghost"
