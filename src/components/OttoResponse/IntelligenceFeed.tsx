@@ -327,6 +327,7 @@ export function IntelligenceFeed({ events, metrics, sourceStatus, isScanning, tr
           })}
         </div>
       </ScrollArea>
+      <ScannerConfig open={configOpen} onOpenChange={setConfigOpen} />
     </div>
   );
 }
