@@ -9,6 +9,7 @@ import { Circle, Pentagon, RotateCcw, MapPin, Loader2, CheckCircle2, Pencil } fr
 import { useOttoResponseStore, ZonePoint } from '@/stores/ottoResponseStore';
 import { AdaptedVehicle, isVehicleInZone, isVehicleNearZone } from '@/hooks/useOttoResponseData';
 import { cn } from '@/lib/utils';
+import type { EventWithImpact } from '@/hooks/useIntelligenceData';
 
 export type MapInteractionState = 'collapsed' | 'expanded' | 'confirmed';
 
@@ -18,28 +19,16 @@ interface OttoResponseMapProps {
   onMapStateChange: (state: MapInteractionState) => void;
   zoneConfirmed: boolean;
   onZoneConfirmed: (confirmed: boolean) => void;
+  intelligenceEvents?: EventWithImpact[];
 }
 
 // Mapbox token (same as main MapboxMap)
 const MAPBOX_TOKEN = 'pk.eyJ1Ijoib3R0b3lhcmQiLCJhIjoiY21lZWY5cjduMGtsdzJpb2wxNWpweGg4NCJ9.NfsLzQ2-o8wEHOfRrPO5WQ';
 
-// Traffic density mock zones for heatmap
-const MOCK_TRAFFIC_DATA: GeoJSON.FeatureCollection = {
+// Empty initial data - will be populated by intelligence events
+const EMPTY_GEOJSON: GeoJSON.FeatureCollection = {
   type: 'FeatureCollection',
-  features: [
-    { type: 'Feature', properties: { intensity: 0.9 }, geometry: { type: 'Point', coordinates: [-86.78, 36.16] } },
-    { type: 'Feature', properties: { intensity: 0.7 }, geometry: { type: 'Point', coordinates: [-86.75, 36.18] } },
-    { type: 'Feature', properties: { intensity: 0.4 }, geometry: { type: 'Point', coordinates: [-86.82, 36.14] } },
-    { type: 'Feature', properties: { intensity: 0.6 }, geometry: { type: 'Point', coordinates: [-86.80, 36.20] } },
-    { type: 'Feature', properties: { intensity: 0.8 }, geometry: { type: 'Point', coordinates: [-86.77, 36.17] } },
-    { type: 'Feature', properties: { intensity: 0.5 }, geometry: { type: 'Point', coordinates: [-86.79, 36.15] } },
-    // Austin area
-    { type: 'Feature', properties: { intensity: 0.85 }, geometry: { type: 'Point', coordinates: [-97.74, 30.27] } },
-    { type: 'Feature', properties: { intensity: 0.65 }, geometry: { type: 'Point', coordinates: [-97.72, 30.29] } },
-    // LA area
-    { type: 'Feature', properties: { intensity: 0.75 }, geometry: { type: 'Point', coordinates: [-118.24, 34.05] } },
-    { type: 'Feature', properties: { intensity: 0.55 }, geometry: { type: 'Point', coordinates: [-118.28, 34.07] } },
-  ],
+  features: [],
 };
 
 export function OttoResponseMap({ 
@@ -47,7 +36,8 @@ export function OttoResponseMap({
   mapState, 
   onMapStateChange, 
   zoneConfirmed, 
-  onZoneConfirmed 
+  onZoneConfirmed,
+  intelligenceEvents 
 }: OttoResponseMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
@@ -96,10 +86,10 @@ export function OttoResponseMap({
       // Ensure map fills container on initial load
       setTimeout(() => map.current?.resize(), 50);
       
-      // Add traffic heatmap layer
+      // Add traffic heatmap layer with empty initial data
       map.current!.addSource('traffic-heat', {
         type: 'geojson',
-        data: MOCK_TRAFFIC_DATA,
+        data: EMPTY_GEOJSON,
       });
       
       map.current!.addLayer({
@@ -180,7 +170,25 @@ export function OttoResponseMap({
       map.current = null;
     };
   }, []);
-  
+
+  // Update heatmap from intelligence events
+  useEffect(() => {
+    if (!map.current || !isMapLoaded || !zoneLayerRef.current) return;
+    
+    const source = map.current.getSource('traffic-heat') as mapboxgl.GeoJSONSource;
+    if (!source) return;
+
+    const features: GeoJSON.Feature[] = (intelligenceEvents ?? [])
+      .filter(e => e.locationLat != null && e.locationLng != null)
+      .map(e => ({
+        type: 'Feature' as const,
+        properties: { intensity: Math.min((e.threatScore || 0) / 100, 1) },
+        geometry: { type: 'Point' as const, coordinates: [e.locationLng!, e.locationLat!] },
+      }));
+
+    source.setData({ type: 'FeatureCollection', features });
+  }, [intelligenceEvents, isMapLoaded]);
+
   // Handle map click for zone drawing
   useEffect(() => {
     if (!map.current || !isMapLoaded) return;

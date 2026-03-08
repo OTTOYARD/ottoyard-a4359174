@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { useOttoResponseStore, SafeHarbor, TrafficSeverity } from '@/stores/ottoResponseStore';
 import { getPolygonAreaSqMiles } from '@/hooks/useOttoResponseData';
+import { useIntelligenceStore, SourceKey } from '@/stores/intelligenceStore';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -49,6 +50,37 @@ interface PredictiveScenario {
   recommendations: string[];
   suggestedSafeHarbors: string[];
   oemNotes: string;
+}
+
+function DataSourceIndicators() {
+  const sourceStatus = useIntelligenceStore((s) => s.sourceStatus);
+  const sources: { key: SourceKey; label: string }[] = [
+    { key: 'traffic', label: 'Traffic Feeds' },
+    { key: 'emergency', label: 'Emergency Services' },
+    { key: 'weather', label: 'Weather Alerts' },
+    { key: 'news', label: 'News Reports' },
+  ];
+
+  const getColor = (status: string) => {
+    switch (status) {
+      case 'connected': return 'bg-success animate-pulse';
+      case 'scanning': return 'bg-primary animate-spin';
+      case 'error': return 'bg-destructive';
+      case 'disabled': return 'bg-muted-foreground/30';
+      default: return 'bg-muted-foreground/50';
+    }
+  };
+
+  return (
+    <div className="mt-2.5 flex flex-wrap gap-1.5">
+      {sources.map(({ key, label }) => (
+        <div key={key} className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted/80 border border-border/50">
+          <div className={cn('h-1.5 w-1.5 rounded-full', getColor(sourceStatus[key]))} />
+          <span className="text-[9px] md:text-[10px] text-muted-foreground">{label}</span>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 export function AdvisoryBuilder({ safeHarbors, onReset }: AdvisoryBuilderProps) {
@@ -342,25 +374,8 @@ export function AdvisoryBuilder({ safeHarbors, onReset }: AdvisoryBuilderProps) 
                 </Button>
               </div>
               
-              {/* Data Source Indicators */}
-              <div className="mt-2.5 flex flex-wrap gap-1.5">
-                <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted/80 border border-border/50">
-                  <div className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-                  <span className="text-[9px] md:text-[10px] text-muted-foreground">Traffic Feeds</span>
-                </div>
-                <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted/80 border border-border/50">
-                  <div className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-                  <span className="text-[9px] md:text-[10px] text-muted-foreground">Emergency Services</span>
-                </div>
-                <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted/80 border border-border/50">
-                  <div className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-                  <span className="text-[9px] md:text-[10px] text-muted-foreground">Weather Alerts</span>
-                </div>
-                <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted/80 border border-border/50">
-                  <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50" />
-                  <span className="text-[9px] md:text-[10px] text-muted-foreground/70">News Reports</span>
-                </div>
-              </div>
+              {/* Data Source Indicators - driven by real sourceStatus */}
+              <DataSourceIndicators />
               
               {predictiveScenario && (
                 <div className="mt-2 p-2 bg-primary/5 rounded-md border border-primary/20">

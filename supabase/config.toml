@@ -129,3 +129,6 @@ verify_jwt = false
 
 [functions.intelligence-scanner]
 verify_jwt = false
+
+[functions.intelligence-threat-engine]
+verify_jwt = false
