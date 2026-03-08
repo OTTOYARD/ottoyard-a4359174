@@ -169,6 +169,149 @@ export type Database = {
           },
         ]
       }
+      fleet_commands: {
+        Row: {
+          acknowledged_at: string | null
+          affected_vehicle_count: number | null
+          city: string
+          command_type: string
+          completed_at: string | null
+          id: string
+          issued_at: string | null
+          issued_by: string | null
+          linked_advisory_id: string | null
+          linked_event_id: string | null
+          parameters: Json | null
+          reason: string
+          result: Json | null
+          status: string | null
+          target_vehicle_ids: Json | null
+          urgency: string | null
+          zone: Json | null
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          affected_vehicle_count?: number | null
+          city: string
+          command_type: string
+          completed_at?: string | null
+          id?: string
+          issued_at?: string | null
+          issued_by?: string | null
+          linked_advisory_id?: string | null
+          linked_event_id?: string | null
+          parameters?: Json | null
+          reason: string
+          result?: Json | null
+          status?: string | null
+          target_vehicle_ids?: Json | null
+          urgency?: string | null
+          zone?: Json | null
+        }
+        Update: {
+          acknowledged_at?: string | null
+          affected_vehicle_count?: number | null
+          city?: string
+          command_type?: string
+          completed_at?: string | null
+          id?: string
+          issued_at?: string | null
+          issued_by?: string | null
+          linked_advisory_id?: string | null
+          linked_event_id?: string | null
+          parameters?: Json | null
+          reason?: string
+          result?: Json | null
+          status?: string | null
+          target_vehicle_ids?: Json | null
+          urgency?: string | null
+          zone?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fleet_commands_linked_event_id_fkey"
+            columns: ["linked_event_id"]
+            isOneToOne: false
+            referencedRelation: "intelligence_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      intelligence_events: {
+        Row: {
+          auto_recommendations: Json | null
+          city: string | null
+          created_at: string | null
+          description: string | null
+          event_type: string
+          expires_at: string | null
+          geojson: Json | null
+          id: string
+          is_active: boolean | null
+          location_lat: number | null
+          location_lng: number | null
+          radius_miles: number | null
+          raw_data: Json | null
+          severity: string | null
+          source: string
+          source_id: string | null
+          starts_at: string | null
+          threat_score: number | null
+          title: string
+          updated_at: string | null
+          vehicles_affected: number | null
+          vehicles_nearby: number | null
+        }
+        Insert: {
+          auto_recommendations?: Json | null
+          city?: string | null
+          created_at?: string | null
+          description?: string | null
+          event_type: string
+          expires_at?: string | null
+          geojson?: Json | null
+          id?: string
+          is_active?: boolean | null
+          location_lat?: number | null
+          location_lng?: number | null
+          radius_miles?: number | null
+          raw_data?: Json | null
+          severity?: string | null
+          source: string
+          source_id?: string | null
+          starts_at?: string | null
+          threat_score?: number | null
+          title: string
+          updated_at?: string | null
+          vehicles_affected?: number | null
+          vehicles_nearby?: number | null
+        }
+        Update: {
+          auto_recommendations?: Json | null
+          city?: string | null
+          created_at?: string | null
+          description?: string | null
+          event_type?: string
+          expires_at?: string | null
+          geojson?: Json | null
+          id?: string
+          is_active?: boolean | null
+          location_lat?: number | null
+          location_lng?: number | null
+          radius_miles?: number | null
+          raw_data?: Json | null
+          severity?: string | null
+          source?: string
+          source_id?: string | null
+          starts_at?: string | null
+          threat_score?: number | null
+          title?: string
+          updated_at?: string | null
+          vehicles_affected?: number | null
+          vehicles_nearby?: number | null
+        }
+        Relationships: []
+      }
       invoices: {
         Row: {
           amount: number
@@ -1295,6 +1438,90 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      scanner_config: {
+        Row: {
+          auto_expire_hours: number | null
+          cities: string[] | null
+          emergency_enabled: boolean | null
+          emergency_interval_minutes: number | null
+          emergency_last_error: string | null
+          emergency_last_scan_at: string | null
+          emergency_last_status: string | null
+          id: string
+          news_enabled: boolean | null
+          news_interval_minutes: number | null
+          news_last_error: string | null
+          news_last_scan_at: string | null
+          news_last_status: string | null
+          threat_score_threshold: number | null
+          traffic_enabled: boolean | null
+          traffic_interval_minutes: number | null
+          traffic_last_error: string | null
+          traffic_last_scan_at: string | null
+          traffic_last_status: string | null
+          updated_at: string | null
+          weather_enabled: boolean | null
+          weather_interval_minutes: number | null
+          weather_last_error: string | null
+          weather_last_scan_at: string | null
+          weather_last_status: string | null
+        }
+        Insert: {
+          auto_expire_hours?: number | null
+          cities?: string[] | null
+          emergency_enabled?: boolean | null
+          emergency_interval_minutes?: number | null
+          emergency_last_error?: string | null
+          emergency_last_scan_at?: string | null
+          emergency_last_status?: string | null
+          id?: string
+          news_enabled?: boolean | null
+          news_interval_minutes?: number | null
+          news_last_error?: string | null
+          news_last_scan_at?: string | null
+          news_last_status?: string | null
+          threat_score_threshold?: number | null
+          traffic_enabled?: boolean | null
+          traffic_interval_minutes?: number | null
+          traffic_last_error?: string | null
+          traffic_last_scan_at?: string | null
+          traffic_last_status?: string | null
+          updated_at?: string | null
+          weather_enabled?: boolean | null
+          weather_interval_minutes?: number | null
+          weather_last_error?: string | null
+          weather_last_scan_at?: string | null
+          weather_last_status?: string | null
+        }
+        Update: {
+          auto_expire_hours?: number | null
+          cities?: string[] | null
+          emergency_enabled?: boolean | null
+          emergency_interval_minutes?: number | null
+          emergency_last_error?: string | null
+          emergency_last_scan_at?: string | null
+          emergency_last_status?: string | null
+          id?: string
+          news_enabled?: boolean | null
+          news_interval_minutes?: number | null
+          news_last_error?: string | null
+          news_last_scan_at?: string | null
+          news_last_status?: string | null
+          threat_score_threshold?: number | null
+          traffic_enabled?: boolean | null
+          traffic_interval_minutes?: number | null
+          traffic_last_error?: string | null
+          traffic_last_scan_at?: string | null
+          traffic_last_status?: string | null
+          updated_at?: string | null
+          weather_enabled?: boolean | null
+          weather_interval_minutes?: number | null
+          weather_last_error?: string | null
+          weather_last_scan_at?: string | null
+          weather_last_status?: string | null
+        }
+        Relationships: []
       }
       service_orders: {
         Row: {
