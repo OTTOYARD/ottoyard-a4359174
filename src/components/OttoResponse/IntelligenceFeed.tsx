@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { ScannerConfig } from './ScannerConfig';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,7 @@ import {
   RefreshCw,
   MapPin,
   Plus,
+  Settings,
 } from 'lucide-react';
 import { useOttoResponseStore } from '@/stores/ottoResponseStore';
 import { cn } from '@/lib/utils';
@@ -86,6 +88,7 @@ export function IntelligenceFeed({ events, metrics, sourceStatus, isScanning, tr
   const [cityFilter, setCityFilter] = useState<string>('all');
   const [severityFilter, setSeverityFilter] = useState<string>('all');
   const [sourceFilter, setSourceFilter] = useState<string>('all');
+  const [configOpen, setConfigOpen] = useState(false);
 
   const {
     setDrawnZone,
@@ -155,20 +158,30 @@ export function IntelligenceFeed({ events, metrics, sourceStatus, isScanning, tr
               </div>
             ))}
           </div>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={triggerScan}
-            disabled={isScanning}
-            className="h-7 px-2 text-xs shrink-0"
-          >
-            {isScanning ? (
-              <Loader2 className="h-3 w-3 animate-spin" />
-            ) : (
-              <RefreshCw className="h-3 w-3" />
-            )}
-            <span className="ml-1 hidden sm:inline">Scan</span>
-          </Button>
+          <div className="flex gap-1 shrink-0">
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setConfigOpen(true)}
+              className="h-7 w-7 p-0"
+            >
+              <Settings className="h-3 w-3" />
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={triggerScan}
+              disabled={isScanning}
+              className="h-7 px-2 text-xs"
+            >
+              {isScanning ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <RefreshCw className="h-3 w-3" />
+              )}
+              <span className="ml-1 hidden sm:inline">Scan</span>
+            </Button>
+          </div>
         </div>
 
         {/* Summary metrics */}
@@ -314,6 +327,7 @@ export function IntelligenceFeed({ events, metrics, sourceStatus, isScanning, tr
           })}
         </div>
       </ScrollArea>
+      <ScannerConfig open={configOpen} onOpenChange={setConfigOpen} />
     </div>
   );
 }
