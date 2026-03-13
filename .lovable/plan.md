@@ -1,17 +1,18 @@
 
 
-## Fix: Blue Border Overlapping Active Tab Highlight
+## Plan: Brighter Stars, Smaller Tabs, Tighter Tray
 
-The issue is that the `TabsList` base component applies `border-2 border-blue-500/50` with only `p-px md:p-0.5` internal padding. The active tab's red border/background sits flush against the blue border, causing visual overlap.
+Three changes across two files:
 
-### Root Cause
-In `src/components/ui/tabs.tsx` (line 15), the default `TabsList` has tight padding (`p-px md:p-0.5`) combined with a `border-2` blue border. The OrchestraEV page overrides `p-0` on the TabsList (line 62), making it even tighter.
+### 1. Stars 50% brighter (`VehicleShowroom3D.tsx`, line 188)
+- Increase `size` from `0.095` to `0.143` (0.095 × 1.5)
 
-### Fix
-In `src/pages/OrchestraEV.tsx` line 62, change the TabsList override to include `p-1 md:p-1.5` instead of `p-0`. This adds internal spacing between the blue border and the tab triggers, preventing the red active-state highlight from touching the blue border.
+### 2. Shrink tab font by 15% (`OrchestraEV.tsx`, line 67)
+- Mobile: `text-[10px]` → `text-[8.5px]` (round to `text-[8px]`)
+- Desktop: `text-xs` (12px) → `text-[10px]`
 
-**Single change in `src/pages/OrchestraEV.tsx` line 62:**
-- Change `h-auto p-0` → `h-auto p-1 md:p-1.5`
-
-This gives the active tab's red border breathing room inside the blue-bordered container.
+### 3. Condense tab tray border closer to words (`OrchestraEV.tsx`, line 61)
+- Change container from `max-w-full md:max-w-lg w-full` to `w-auto` so it shrinks to fit content
+- Remove `mx-auto` width forcing; the `flex justify-center` parent already centers it
+- Reduce padding: `p-0.5 md:p-1.5` → `p-0.5 md:p-1`
 
