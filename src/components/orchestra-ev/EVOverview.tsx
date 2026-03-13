@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import {
-  Calendar,
+  
   Wrench,
   Truck,
   Target,
@@ -152,54 +152,8 @@ export const EVOverview: React.FC<EVOverviewProps> = ({
         </div>
       </div>
 
-      {/* Upcoming Services + Predictive Maintenance */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in-up" style={{ animationDelay: '200ms', animationFillMode: 'backwards' }}>
-        {/* Upcoming Services */}
-        <div className="surface-luxury rounded-2xl p-5">
-          <p className="text-sm font-semibold text-luxury flex items-center gap-1.5 mb-3">
-            <Calendar className="h-4 w-4 text-primary" />
-            Upcoming Services
-          </p>
-          <div className="space-y-1">
-            {upcomingServices.length > 0 ? (
-              upcomingServices.map((svc) => (
-                <div
-                  key={svc.id}
-                  className="flex items-center justify-between py-2 hover:bg-muted/20 rounded-lg px-2 -mx-2 transition-colors"
-                >
-                  <div>
-                    <p className="text-xs font-medium text-foreground capitalize">
-                      {svc.type.replace(/_/g, " ")}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground">
-                      {svc.depotName} •{" "}
-                      {new Date(svc.scheduledAt).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        hour: "numeric",
-                        minute: "2-digit",
-                      })}
-                    </p>
-                  </div>
-                  <Badge variant="outline" className="text-[10px]">
-                    {svc.status === "in_progress" ? "In Progress" : "Scheduled"}
-                  </Badge>
-                </div>
-              ))
-            ) : (
-              <p className="text-xs text-muted-foreground">No upcoming services scheduled.</p>
-            )}
-            <button
-              className="w-full text-xs text-primary hover:text-primary/80 font-medium h-7 mt-2 flex items-center justify-center gap-1 group transition-colors"
-              onClick={() => onTabChange("services")}
-            >
-              View All Services
-              <span className="inline-block transition-transform duration-200 group-hover:translate-x-1">→</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Predictive Maintenance Highlights */}
+      {/* Predictive Maintenance Highlights */}
+      <div className="animate-fade-in-up" style={{ animationDelay: '200ms', animationFillMode: 'backwards' }}>
         <div className="surface-luxury rounded-2xl p-5">
           <p className="text-sm font-semibold text-luxury flex items-center gap-1.5 mb-3">
             <Zap className="h-4 w-4 text-primary" />
