@@ -157,6 +157,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
         transition: box-shadow 0.2s, filter 0.2s;
         pointer-events: auto;
         position: relative;
+        animation: pulse-marker 2s ease-in-out infinite;
       `;
 
       // Add hover effect
