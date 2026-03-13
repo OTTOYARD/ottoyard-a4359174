@@ -58,12 +58,73 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/satellite-streets-v12',
-      center: city?.coordinates || [-122.4194, 37.7749], // Default to San Francisco
-      zoom: 13,
+      center: city?.coordinates || [-122.4194, 37.7749],
+      zoom: 14,
+      pitch: 50,
+      bearing: -15,
+      antialias: true,
     });
 
     // Add navigation controls
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+    // Enable 3D features on load
+    map.current.on('style.load', () => {
+      const m = map.current!;
+
+      // 3D Terrain
+      m.addSource('mapbox-dem', {
+        type: 'raster-dem',
+        url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
+        tileSize: 512,
+        maxzoom: 14,
+      });
+      m.setTerrain({ source: 'mapbox-dem', exaggeration: 1.5 });
+
+      // Atmospheric sky layer
+      m.addLayer({
+        id: 'sky',
+        type: 'sky',
+        paint: {
+          'sky-type': 'atmosphere',
+          'sky-atmosphere-sun': [0.0, 0.0],
+          'sky-atmosphere-sun-intensity': 15,
+        },
+      });
+
+      // Dark atmospheric fog
+      m.setFog({
+        color: 'rgb(15, 15, 20)',
+        'high-color': 'rgb(36, 36, 50)',
+        'horizon-blend': 0.08,
+        'star-intensity': 0.12,
+        'space-color': 'rgb(10, 10, 15)',
+      });
+
+      // 3D Building extrusions
+      const layers = m.getStyle().layers;
+      const labelLayerId = layers?.find(
+        (layer) => layer.type === 'symbol' && layer.layout?.['text-field']
+      )?.id;
+
+      m.addLayer(
+        {
+          id: '3d-buildings',
+          source: 'composite',
+          'source-layer': 'building',
+          filter: ['==', 'extrude', 'true'],
+          type: 'fill-extrusion',
+          minzoom: 12,
+          paint: {
+            'fill-extrusion-color': '#1a1a2e',
+            'fill-extrusion-height': ['interpolate', ['linear'], ['zoom'], 12, 0, 12.5, ['get', 'height']],
+            'fill-extrusion-base': ['interpolate', ['linear'], ['zoom'], 12, 0, 12.5, ['get', 'min_height']],
+            'fill-extrusion-opacity': 0.7,
+          },
+        },
+        labelLayerId
+      );
+    });
   };
 
   const updateMarkers = () => {
@@ -96,6 +157,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
         transition: box-shadow 0.2s, filter 0.2s;
         pointer-events: auto;
         position: relative;
+        animation: pulse-marker 2s ease-in-out infinite;
       `;
 
       // Add hover effect
@@ -302,10 +364,17 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
     }
   }, [vehicles, depots]);
 
-  // Update map center when city changes
+  // Fly to city with cinematic transition
   useEffect(() => {
     if (map.current && city?.coordinates) {
-      map.current.setCenter(city.coordinates);
+      map.current.flyTo({
+        center: city.coordinates,
+        zoom: 14,
+        pitch: 50,
+        bearing: -15,
+        duration: 2500,
+        essential: true,
+      });
     }
   }, [city]);
 

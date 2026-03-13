@@ -70,3 +70,8 @@ html, body {
   position: relative;
   z-index: 1 !important;
 }
+
+@keyframes pulse-marker {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.15); opacity: 0.85; }
+}
