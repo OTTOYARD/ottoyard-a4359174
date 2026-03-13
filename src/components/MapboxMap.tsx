@@ -364,10 +364,17 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ vehicles, depots, city, onVehicle
     }
   }, [vehicles, depots]);
 
-  // Update map center when city changes
+  // Fly to city with cinematic transition
   useEffect(() => {
     if (map.current && city?.coordinates) {
-      map.current.setCenter(city.coordinates);
+      map.current.flyTo({
+        center: city.coordinates,
+        zoom: 14,
+        pitch: 50,
+        bearing: -15,
+        duration: 2500,
+        essential: true,
+      });
     }
   }, [city]);
 
