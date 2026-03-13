@@ -1,15 +1,18 @@
 
 
-## Plan: Reduce Active Tab Highlight Size
+## Plan: Brighter Stars, Smaller Tabs, Tighter Tray
 
-The active tab trigger has generous padding (`py-2 md:py-2.5`) and a large border-radius (`rounded-xl`), making the highlighted area feel oversized.
+Three changes across two files:
 
-### Change
+### 1. Stars 50% brighter (`VehicleShowroom3D.tsx`, line 188)
+- Increase `size` from `0.095` to `0.143` (0.095 × 1.5)
 
-**`src/pages/OrchestraEV.tsx` (line 67)** — Reduce the active tab's vertical padding and border-radius on the `TabsTrigger`:
+### 2. Shrink tab font by 15% (`OrchestraEV.tsx`, line 67)
+- Mobile: `text-[10px]` → `text-[8.5px]` (round to `text-[8px]`)
+- Desktop: `text-xs` (12px) → `text-[10px]`
 
-- `py-2 md:py-2.5` → `py-1 md:py-1.5`
-- `rounded-xl` → `rounded-lg`
-
-This shrinks only the tab pill (the red-highlighted active area) without affecting the outer tray container.
+### 3. Condense tab tray border closer to words (`OrchestraEV.tsx`, line 61)
+- Change container from `max-w-full md:max-w-lg w-full` to `w-auto` so it shrinks to fit content
+- Remove `mx-auto` width forcing; the `flex justify-center` parent already centers it
+- Reduce padding: `p-0.5 md:p-1.5` → `p-0.5 md:p-1`
 
