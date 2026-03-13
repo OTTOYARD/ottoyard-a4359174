@@ -59,7 +59,7 @@ const OrchestraEV = () => {
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
           <div className="flex justify-center mb-3">
             <div className="surface-luxury rounded-2xl p-1 md:p-1.5 w-auto">
-              <TabsList className="flex overflow-x-auto scrollbar-hide flex-nowrap md:grid md:grid-cols-5 w-full bg-transparent h-auto p-0">
+              <TabsList className="flex overflow-x-auto scrollbar-hide flex-nowrap md:grid md:grid-cols-5 w-full bg-transparent h-auto p-1 md:p-1.5">
                 {tabItems.map((tab) => (
                   <TabsTrigger
                     key={tab.value}
