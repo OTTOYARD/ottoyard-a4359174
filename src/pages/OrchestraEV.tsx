@@ -64,7 +64,7 @@ const OrchestraEV = () => {
                   <TabsTrigger
                     key={tab.value}
                     value={tab.value}
-                    className="flex-shrink-0 flex items-center justify-center rounded-lg px-1 md:px-3 py-1 md:py-1.5 text-[8px] md:text-[10px] font-medium tracking-normal md:tracking-wide uppercase text-muted-foreground bg-transparent transition-all duration-300 ease-out hover:bg-muted/30 hover:text-foreground data-[state=active]:bg-primary/15 data-[state=active]:text-primary data-[state=active]:font-semibold data-[state=active]:border data-[state=active]:border-primary/25 data-[state=active]:shadow-[0_0_12px_hsl(var(--primary)/0.1)] relative"
+                    className="flex-shrink-0 flex items-center justify-center rounded-lg px-1 md:px-3 py-1 md:py-1.5 text-[8px] md:text-[10px] font-medium tracking-normal md:tracking-wide uppercase text-muted-foreground bg-transparent transition-all duration-300 ease-out hover:bg-muted/30 hover:text-foreground data-[state=active]:bg-primary/15 data-[state=active]:text-primary-foreground data-[state=active]:font-semibold data-[state=active]:border data-[state=active]:border-primary/25 data-[state=active]:shadow-[0_0_12px_hsl(var(--primary)/0.1)] relative"
                   >
                     {tab.label}
                   </TabsTrigger>
