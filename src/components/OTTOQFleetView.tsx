@@ -746,22 +746,15 @@ export const OTTOQFleetView = ({ selectedCityName, highlightedVehicleId, onAddTo
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="grid grid-cols-2 gap-2 mt-3">
+                        <div className="mt-3">
                           <Button
                             variant="outline"
                             size="sm"
+                            className="w-full"
                             onClick={() => handleHealthClick(vehicle)}
                           >
                             <Heart className="w-4 h-4 mr-2" />
                             Health
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleScheduleClick(vehicle)}
-                          >
-                            <Calendar className="w-4 h-4 mr-2" />
-                            Schedule
                           </Button>
                         </div>
                       </CardContent>

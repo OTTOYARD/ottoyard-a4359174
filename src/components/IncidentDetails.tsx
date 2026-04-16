@@ -1,16 +1,9 @@
-import { useState, useEffect } from "react";
 import { Incident } from "@/data/incidents-mock";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Copy, Save } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useIncidentsStore } from "@/stores/incidentsStore";
 import { OEMVehicleIcon } from "@/components/OEMVehicleIcon";
 
 interface IncidentDetailsProps {
@@ -43,41 +36,22 @@ function formatETA(seconds: number | null): string {
   return `${mins}m ${secs}s`;
 }
 
+const incidentTypeLabels: Record<string, string> = {
+  collision: "Collision",
+  malfunction: "Malfunction",
+  interior: "Interior",
+  vandalism: "Vandalism",
+};
+
+const incidentTypeColors: Record<string, string> = {
+  collision: "bg-destructive/15 text-destructive border-destructive/30",
+  malfunction: "bg-warning/15 text-warning border-warning/30",
+  interior: "bg-primary/15 text-primary border-primary/30",
+  vandalism: "bg-orange-500/15 text-orange-500 border-orange-500/30",
+};
+
 export function IncidentDetails({ incident }: IncidentDetailsProps) {
   const { toast } = useToast();
-  const updateIncidentReport = useIncidentsStore((state) => state.updateIncidentReport);
-  const markIncidentClosed = useIncidentsStore((state) => state.markIncidentClosed);
-  
-  const [reportType, setReportType] = useState(incident.type);
-  const [reportSummary, setReportSummary] = useState(incident.report.shortSummary);
-  const [reportComments, setReportComments] = useState(incident.report.comments);
-  
-  useEffect(() => {
-    setReportType(incident.type);
-    setReportSummary(incident.report.shortSummary);
-    setReportComments(incident.report.comments);
-  }, [incident.incidentId]);
-  
-  const handleSaveReport = () => {
-    updateIncidentReport(incident.incidentId, {
-      shortSummary: reportSummary,
-      comments: reportComments,
-    });
-    toast({
-      title: "Report saved",
-      description: "Incident report has been updated.",
-    });
-  };
-  
-  const handleMarkClosed = () => {
-    if (incident.status === "At Depot") {
-      markIncidentClosed(incident.incidentId);
-      toast({
-        title: "Incident closed",
-        description: `Incident ${incident.incidentId} has been marked as closed.`,
-      });
-    }
-  };
   
   const handleCopyLocation = () => {
     navigator.clipboard.writeText(`${incident.location.lat}, ${incident.location.lon}`);
@@ -118,7 +92,7 @@ export function IncidentDetails({ incident }: IncidentDetailsProps) {
         </CardHeader>
       </Card>
       
-      {/* Timeline - Simplified for mobile */}
+      {/* Timeline */}
       <Card>
         <CardHeader className="p-3 md:p-6">
           <CardTitle className="text-xs md:text-base">Timeline</CardTitle>
@@ -183,89 +157,63 @@ export function IncidentDetails({ incident }: IncidentDetailsProps) {
         </Card>
       )}
       
-      {/* Report Card - Simplified for mobile */}
+      {/* Incident Report — Read-Only */}
       <Card>
         <CardHeader className="p-3 md:p-6">
           <CardTitle className="text-xs md:text-base">Incident Report</CardTitle>
         </CardHeader>
-        <CardContent className="p-3 md:p-6 pt-0 md:pt-0 space-y-2 md:space-y-4">
-          <div className="grid grid-cols-2 gap-2 md:gap-4">
+        <CardContent className="p-3 md:p-6 pt-0 md:pt-0">
+          <div className="rounded-lg bg-muted/30 border border-border/50 p-3 md:p-4 space-y-3 md:space-y-4">
+            <div className="grid grid-cols-2 gap-3 md:gap-4">
+              <div>
+                <span className="text-[9px] md:text-xs text-muted-foreground">Incident #</span>
+                <p className="text-[10px] md:text-sm font-semibold mt-0.5">{incident.incidentId}</p>
+              </div>
+              <div>
+                <span className="text-[9px] md:text-xs text-muted-foreground">Date/Time</span>
+                <p className="text-[10px] md:text-sm font-medium mt-0.5">{formatTimestamp(incident.timestamps.reportedAt)}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 md:gap-4">
+              <div>
+                <span className="text-[9px] md:text-xs text-muted-foreground">Vehicle</span>
+                <p className="text-[10px] md:text-sm font-medium mt-0.5">{incident.vehicleId}</p>
+              </div>
+              <div>
+                <span className="text-[9px] md:text-xs text-muted-foreground">Type</span>
+                <div className="mt-0.5">
+                  <Badge variant="outline" className={`text-[9px] md:text-xs ${incidentTypeColors[incident.type] || ''}`}>
+                    {incidentTypeLabels[incident.type] || incident.type}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+
             <div>
-              <Label className="text-[9px] md:text-xs">Incident #</Label>
-              <Input value={incident.incidentId} disabled className="mt-1 h-7 md:h-10 text-[10px] md:text-sm" />
+              <span className="text-[9px] md:text-xs text-muted-foreground">Summary</span>
+              <p className="text-[10px] md:text-sm mt-0.5">{incident.report.shortSummary}</p>
             </div>
-            <div>
-              <Label className="text-[9px] md:text-xs">Time</Label>
-              <Input value={formatTimestamp(incident.timestamps.reportedAt)} disabled className="mt-1 h-7 md:h-10 text-[10px] md:text-sm" />
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-2 md:gap-4">
-            <div>
-              <Label className="text-[9px] md:text-xs">Vehicle ID</Label>
-              <Input value={incident.vehicleId} disabled className="mt-1 h-7 md:h-10 text-[10px] md:text-sm" />
-            </div>
-            <div>
-              <Label className="text-[9px] md:text-xs">Type</Label>
-              <Select value={reportType} onValueChange={(val) => setReportType(val as any)}>
-                <SelectTrigger className="mt-1 h-7 md:h-10 text-[10px] md:text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="collision">Collision</SelectItem>
-                  <SelectItem value="malfunction">Malfunction</SelectItem>
-                  <SelectItem value="interior">Interior</SelectItem>
-                  <SelectItem value="vandalism">Vandalism</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <div>
-            <Label className="text-[9px] md:text-xs">Summary</Label>
-            <Input
-              value={reportSummary}
-              onChange={(e) => setReportSummary(e.target.value)}
-              className="mt-1 h-7 md:h-10 text-[10px] md:text-sm"
-            />
-          </div>
-          
-          <div className="hidden md:block">
-            <Label className="text-xs">Comments</Label>
-            <Textarea
-              value={reportComments}
-              onChange={(e) => setReportComments(e.target.value)}
-              rows={4}
-              className="mt-1"
-              placeholder="Add detailed notes..."
-            />
-          </div>
-          
-          <div>
-            <Label className="text-[9px] md:text-xs">Location</Label>
-            <div className="flex gap-1 md:gap-2 mt-1">
-              <Input value={incident.location.addr} disabled className="h-7 md:h-10 text-[10px] md:text-sm" />
-              <Button variant="outline" size="icon" onClick={handleCopyLocation} className="h-7 w-7 md:h-10 md:w-10">
-                <Copy className="w-3 h-3 md:w-4 md:h-4" />
-              </Button>
-            </div>
-            <p className="text-[9px] md:text-xs text-muted-foreground mt-0.5 md:mt-1">
-              {incident.location.lat.toFixed(4)}, {incident.location.lon.toFixed(4)}
-            </p>
-          </div>
-          
-          <Separator className="my-2 md:my-4" />
-          
-          <div className="flex gap-2">
-            <Button onClick={handleSaveReport} className="flex-1 h-7 md:h-10 text-[10px] md:text-sm">
-              <Save className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
-              Save
-            </Button>
-            {incident.status === "At Depot" && (
-              <Button onClick={handleMarkClosed} variant="outline" className="flex-1 h-7 md:h-10 text-[10px] md:text-sm">
-                Close
-              </Button>
+
+            {incident.report.comments && (
+              <div>
+                <span className="text-[9px] md:text-xs text-muted-foreground">Comments</span>
+                <p className="text-[10px] md:text-sm mt-0.5">{incident.report.comments}</p>
+              </div>
             )}
+
+            <div>
+              <span className="text-[9px] md:text-xs text-muted-foreground">Location</span>
+              <div className="flex items-center gap-1 md:gap-2 mt-0.5">
+                <p className="text-[10px] md:text-sm">{incident.location.addr}</p>
+                <Button variant="ghost" size="icon" onClick={handleCopyLocation} className="h-5 w-5 md:h-7 md:w-7 shrink-0">
+                  <Copy className="w-3 h-3" />
+                </Button>
+              </div>
+              <p className="text-[9px] md:text-xs text-muted-foreground mt-0.5">
+                {incident.location.lat.toFixed(4)}° N, {incident.location.lon.toFixed(4)}° W
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>

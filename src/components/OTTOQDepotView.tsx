@@ -13,7 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Building2, Zap, RefreshCw, Battery, Wrench, Sparkles, ChevronDown, ParkingCircle } from "lucide-react";
 import { toast } from "sonner";
 import { EnergyAnalyticsCard } from "./EnergyAnalyticsCard";
-import { StallTaskPanel } from "./depot";
+
 
 interface Resource {
   id: string;
@@ -385,18 +385,14 @@ export const OTTOQDepotView = ({ selectedCityName, highlightedDepotId }: OTTOQDe
                                 <AccordionContent>
                                   <CardContent className="pt-0">
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                                      {displayedResources.map((resource) => (
+                                       {displayedResources.map((resource) => (
                                         <div
                                           key={`${resource.type}-${resource.index}`}
                                           className={`p-3 rounded-lg border transition-all ${getResourceColor(
                                             resource.status
-                                          )} ${
-                                            (resource.status === "OCCUPIED" || resource.status === "BUSY" || resource.status === "RESERVED")
-                                              ? "pulse-border"
-                                              : ""
-                                          }`}
+                                          )}`}
                                         >
-                                          <div className="flex items-center justify-between gap-2 mb-2">
+                                          <div className="flex items-center justify-between gap-2">
                                             <span className="font-medium text-xs">
                                               {resource.type === "CHARGE_STALL"
                                                 ? `Stall ${resource.index}`
@@ -406,34 +402,29 @@ export const OTTOQDepotView = ({ selectedCityName, highlightedDepotId }: OTTOQDe
                                             </span>
                                             <span className="flex-shrink-0">{getResourceIcon(resource.type)}</span>
                                           </div>
-                                           <div className="text-[10px] leading-tight">
-                                             {resource.status === "AVAILABLE" ? (
-                                               <span className="text-success font-medium">
-                                                 Available
-                                               </span>
-                                             ) : resource.status === "OUT_OF_SERVICE" ? (
-                                               <span className="text-destructive font-medium">
-                                                 Out of Service
-                                               </span>
-                                             ) : (
-                                               <div className="space-y-0.5">
-                                                 <div className="font-medium break-words">
-                                                   {resource.label}
-                                                 </div>
-                                               </div>
-                                             )}
-                                           </div>
-                                           {(resource.status === "OCCUPIED" || resource.status === "BUSY" || resource.status === "RESERVED") && resource.job_id && (
-                                             <StallTaskPanel
-                                               resourceId={resource.id}
-                                               resourceType={resource.type}
-                                               resourceIndex={resource.index}
-                                               jobId={resource.job_id}
-                                               vehicleId={resource.vehicle_id}
-                                               depotId={selectedDepot}
-                                               onTaskUpdate={() => fetchDepotResources(selectedDepot)}
-                                             />
-                                           )}
+                                          <div className="text-[10px] leading-tight mt-1">
+                                            {resource.status === "AVAILABLE" ? (
+                                              <div className="flex items-center gap-1.5">
+                                                <span className="h-1.5 w-1.5 rounded-full bg-success" />
+                                                <span className="text-success font-medium">Available</span>
+                                              </div>
+                                            ) : resource.status === "OUT_OF_SERVICE" ? (
+                                              <div className="flex items-center gap-1.5">
+                                                <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
+                                                <span className="text-destructive font-medium">Out of Service</span>
+                                              </div>
+                                            ) : (
+                                              <div className="space-y-0.5">
+                                                <div className="flex items-center gap-1.5">
+                                                  <span className="h-1.5 w-1.5 rounded-full bg-warning" />
+                                                  <span className="text-warning font-medium">Occupied</span>
+                                                </div>
+                                                <div className="font-medium break-words text-muted-foreground pl-3">
+                                                  {resource.label}
+                                                </div>
+                                              </div>
+                                            )}
+                                          </div>
                                         </div>
                                       ))}
                                     </div>
