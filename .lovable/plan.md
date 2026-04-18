@@ -1,18 +1,14 @@
 
+Move the two overlay cards (`FleetSummaryOverlay` and `OttoQIntelligenceCard`) out of the map's absolute-positioned overlay layer and render them as standalone tiles in a grid below the Mapbox map.
 
-## Plan: Brighter Stars, Smaller Tabs, Tighter Tray
+### Change
 
-Three changes across two files:
+**`src/pages/Index.tsx`** (Overview tab):
+- Remove the `absolute top-4 left-4` and `absolute top-4 right-4` (or bottom-left on mobile) wrappers around the two overlay components.
+- Render them in a 2-column responsive grid (`grid-cols-1 md:grid-cols-2 gap-4`) directly below the `MapboxMap` container.
+- Keep map height as-is; tiles flow naturally beneath.
 
-### 1. Stars 50% brighter (`VehicleShowroom3D.tsx`, line 188)
-- Increase `size` from `0.095` to `0.143` (0.095 × 1.5)
-
-### 2. Shrink tab font by 15% (`OrchestraEV.tsx`, line 67)
-- Mobile: `text-[10px]` → `text-[8.5px]` (round to `text-[8px]`)
-- Desktop: `text-xs` (12px) → `text-[10px]`
-
-### 3. Condense tab tray border closer to words (`OrchestraEV.tsx`, line 61)
-- Change container from `max-w-full md:max-w-lg w-full` to `w-auto` so it shrinks to fit content
-- Remove `mx-auto` width forcing; the `flex justify-center` parent already centers it
-- Reduce padding: `p-0.5 md:p-1.5` → `p-0.5 md:p-1`
-
+### Result
+- Map renders cleanly without overlay clutter
+- Fleet Status and OTTO-Q Intelligence become full-width readable tiles
+- Stacks vertically on mobile, side-by-side on desktop
