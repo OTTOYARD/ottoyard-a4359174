@@ -43,6 +43,15 @@ import { AppHeader } from "@/components/shared/AppHeader";
 import { useOTTOQRealtime } from "@/hooks/useOTTOQRealtime";
 import { computeVehicleStatusCounts, computeDepotTotals, occupancyRatePct } from "@/lib/ottoq/ottoqClient";
 import type { UiVehicle, UiDepot } from "@/lib/ottoq/ottoqTypes";
+import { FleetSummaryOverlay } from "@/components/overview/fleet-summary-overlay";
+import { OttoQIntelligenceCard } from "@/components/overview/otto-q-intelligence-card";
+import {
+  EnergyEfficiencyChart,
+  FleetStatusPie,
+  DailyEnergyGeneration,
+  VehicleBatteryLevels,
+} from "@/components/analytics/strategic-analytics-charts";
+import { ottoQFetch } from "@/lib/otto-q-api";
 
 // Incidents Tab Component
 const allStatuses: IncidentStatus[] = ["Reported", "Dispatched", "Secured", "At Depot", "Closed"];
