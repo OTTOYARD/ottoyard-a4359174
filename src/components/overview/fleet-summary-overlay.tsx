@@ -76,10 +76,10 @@ export function FleetSummaryOverlay() {
         </div>
         <div className="flex h-1.5 rounded-full overflow-hidden bg-muted/40">
           <SocSegment value={soc_distribution.critical} total={totals.vehicles} className="bg-destructive" />
-          <SocSegment value={soc_distribution.low} total={totals.vehicles} className="bg-orange-500" />
-          <SocSegment value={soc_distribution.medium} total={totals.vehicles} className="bg-yellow-500" />
+          <SocSegment value={soc_distribution.low} total={totals.vehicles} className="bg-warning" />
+          <SocSegment value={soc_distribution.medium} total={totals.vehicles} className="bg-primary/70" />
           <SocSegment value={soc_distribution.high} total={totals.vehicles} className="bg-success" />
-          <SocSegment value={soc_distribution.full} total={totals.vehicles} className="bg-emerald-500" />
+          <SocSegment value={soc_distribution.full} total={totals.vehicles} className="bg-success/70" />
         </div>
         <div className="flex justify-between text-[9px] text-muted-foreground mt-1 tabular-nums">
           <span>{soc_distribution.critical} crit</span>
