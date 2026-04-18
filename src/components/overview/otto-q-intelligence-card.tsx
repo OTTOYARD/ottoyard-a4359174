@@ -46,9 +46,6 @@ export function OttoQIntelligenceCard() {
           </div>
           <div>
             <CardTitle className="text-base">OTTO-Q Intelligence</CardTitle>
-            <div className="text-[11px] text-muted-foreground mt-0.5">
-              Fleet-wide AI Brain
-            </div>
           </div>
         </div>
         {accuracyPct !== null ? (
@@ -111,18 +108,6 @@ export function OttoQIntelligenceCard() {
           </div>
         )}
 
-        {/* CTA footer */}
-        <div className="border-t border-border/40 pt-2 flex items-center justify-between text-[11px] mt-auto">
-          <span className="text-muted-foreground">View full AI Brain</span>
-          <a
-            href="https://field-ops.ottoyard.app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary hover:underline font-medium"
-          >
-            Open Field Ops →
-          </a>
-        </div>
       </CardContent>
     </Card>
   );
