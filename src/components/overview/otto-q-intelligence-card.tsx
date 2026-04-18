@@ -1,5 +1,5 @@
 import { useAIFleetSummary } from "@/hooks/use-otto-q-strategic";
-import { Card } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Brain,
@@ -15,13 +15,18 @@ export function OttoQIntelligenceCard() {
 
   if (isLoading) {
     return (
-      <Card className="p-3 w-[320px] surface-luxury border-border/50 animate-pulse">
-        <div className="h-4 w-32 bg-muted rounded mb-3" />
-        <div className="grid grid-cols-3 gap-2">
-          <div className="h-10 bg-muted rounded" />
-          <div className="h-10 bg-muted rounded" />
-          <div className="h-10 bg-muted rounded" />
-        </div>
+      <Card className="w-full h-full animate-pulse">
+        <CardHeader className="p-4 pb-2">
+          <div className="h-4 w-32 bg-muted rounded" />
+        </CardHeader>
+        <CardContent className="p-4 pt-0 space-y-2">
+          <div className="grid grid-cols-3 gap-2">
+            <div className="h-12 bg-muted rounded" />
+            <div className="h-12 bg-muted rounded" />
+            <div className="h-12 bg-muted rounded" />
+          </div>
+          <div className="h-16 bg-muted rounded" />
+        </CardContent>
       </Card>
     );
   }
@@ -33,24 +38,25 @@ export function OttoQIntelligenceCard() {
     model_accuracy.overall !== null ? Math.round(model_accuracy.overall * 100) : null;
 
   return (
-    <Card className="p-3 w-[320px] max-w-[90vw] surface-luxury border-border/50 backdrop-blur-md bg-card/85">
-      {/* Header */}
-      <div className="flex items-start justify-between mb-3">
+    <Card className="w-full h-full flex flex-col">
+      <CardHeader className="p-4 pb-3 flex flex-row items-start justify-between space-y-0">
         <div className="flex items-center gap-2">
           <div className="p-1.5 rounded bg-primary/10 text-primary">
             <Brain className="h-4 w-4" />
           </div>
           <div>
-            <div className="text-sm font-semibold leading-tight">OTTO-Q Intelligence</div>
-            <div className="text-[10px] text-muted-foreground">Fleet-wide AI Brain</div>
+            <CardTitle className="text-base">OTTO-Q Intelligence</CardTitle>
+            <div className="text-[11px] text-muted-foreground mt-0.5">
+              Fleet-wide AI Brain
+            </div>
           </div>
         </div>
         {accuracyPct !== null ? (
           <div className="text-right">
-            <div className="text-[9px] uppercase tracking-wider text-muted-foreground">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
               Accuracy
             </div>
-            <div className="text-base font-bold tabular-nums leading-tight text-primary">
+            <div className="text-lg font-bold tabular-nums leading-tight text-primary">
               {accuracyPct}%
             </div>
             <div className="text-[9px] text-muted-foreground">7d weighted</div>
@@ -58,64 +64,66 @@ export function OttoQIntelligenceCard() {
         ) : (
           <Badge variant="outline" className="text-[9px]">Warming up</Badge>
         )}
-      </div>
+      </CardHeader>
 
-      {/* Active risks strip */}
-      <div className="grid grid-cols-3 gap-1.5 mb-3">
-        <RiskChip label="Critical" count={active_risks.critical} color="red" />
-        <RiskChip label="Warning" count={active_risks.warning} color="amber" />
-        <RiskChip label="Info" count={active_risks.info} color="slate" />
-      </div>
-
-      {/* Autonomous actions today */}
-      <div className="mb-3">
-        <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">
-          Autonomous Actions (24h)
+      <CardContent className="p-4 pt-0 flex-1 flex flex-col gap-3">
+        {/* Active risks strip */}
+        <div className="grid grid-cols-3 gap-2">
+          <RiskChip label="Critical" count={active_risks.critical} color="red" />
+          <RiskChip label="Warning" count={active_risks.warning} color="amber" />
+          <RiskChip label="Info" count={active_risks.info} color="slate" />
         </div>
-        <div className="grid grid-cols-4 gap-1.5">
-          <ActionStat icon={<CheckCircle2 className="h-3 w-3 text-success" />} label="Done" value={autonomous_actions_today.executed} />
-          <ActionStat icon={<Clock className="h-3 w-3 text-primary" />} label="Pending" value={autonomous_actions_today.pending} />
-          <ActionStat icon={<XCircle className="h-3 w-3 text-destructive" />} label="Failed" value={autonomous_actions_today.failed} />
-          <ActionStat icon={<RotateCcw className="h-3 w-3 text-warning" />} label="Reverted" value={autonomous_actions_today.rolled_back} />
-        </div>
-      </div>
 
-      {/* Recent actions */}
-      {recent_actions.length > 0 && (
-        <div className="mb-2">
+        {/* Autonomous actions today */}
+        <div>
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">
-            Recent Decisions
+            Autonomous Actions (24h)
           </div>
-          <div className="space-y-1">
-            {recent_actions.slice(0, 3).map((a) => (
-              <div key={a.id} className="flex items-start gap-1.5 text-[10px]">
-                <ActionStatusDot status={a.status} />
-                <div className="min-w-0 flex-1">
-                  <div className="truncate font-medium text-foreground/90">
-                    {a.summary || formatAction(a.action_type)}
-                  </div>
-                  <div className="text-muted-foreground text-[9px]">
-                    {formatAction(a.action_type)} · {timeAgo(a.created_at)}
+          <div className="grid grid-cols-4 gap-2">
+            <ActionStat icon={<CheckCircle2 className="h-3 w-3 text-success" />} label="Done" value={autonomous_actions_today.executed} />
+            <ActionStat icon={<Clock className="h-3 w-3 text-primary" />} label="Pending" value={autonomous_actions_today.pending} />
+            <ActionStat icon={<XCircle className="h-3 w-3 text-destructive" />} label="Failed" value={autonomous_actions_today.failed} />
+            <ActionStat icon={<RotateCcw className="h-3 w-3 text-warning" />} label="Reverted" value={autonomous_actions_today.rolled_back} />
+          </div>
+        </div>
+
+        {/* Recent actions */}
+        {recent_actions.length > 0 && (
+          <div>
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">
+              Recent Decisions
+            </div>
+            <div className="space-y-1">
+              {recent_actions.slice(0, 3).map((a) => (
+                <div key={a.id} className="flex items-start gap-1.5 text-[11px]">
+                  <ActionStatusDot status={a.status} />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate font-medium text-foreground/90">
+                      {a.summary || formatAction(a.action_type)}
+                    </div>
+                    <div className="text-muted-foreground text-[10px]">
+                      {formatAction(a.action_type)} · {timeAgo(a.created_at)}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* CTA footer */}
-      <div className="border-t border-border/40 pt-2 flex items-center justify-between text-[10px]">
-        <span className="text-muted-foreground">View full AI Brain</span>
-        <a
-          href="https://field-ops.ottoyard.app"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-primary hover:underline font-medium"
-        >
-          Open Field Ops →
-        </a>
-      </div>
+        {/* CTA footer */}
+        <div className="border-t border-border/40 pt-2 flex items-center justify-between text-[11px] mt-auto">
+          <span className="text-muted-foreground">View full AI Brain</span>
+          <a
+            href="https://field-ops.ottoyard.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline font-medium"
+          >
+            Open Field Ops →
+          </a>
+        </div>
+      </CardContent>
     </Card>
   );
 }
@@ -135,7 +143,7 @@ function RiskChip({
     slate: "bg-muted/40 text-muted-foreground border-border/40",
   };
   return (
-    <div className={cn("rounded border px-2 py-1.5 text-center", colorMap[color])}>
+    <div className={cn("rounded border px-2 py-2 text-center", colorMap[color])}>
       <div className="text-base font-bold tabular-nums leading-tight">{count}</div>
       <div className="text-[9px] uppercase tracking-wider opacity-80">{label}</div>
     </div>
@@ -152,7 +160,7 @@ function ActionStat({
   value: number;
 }) {
   return (
-    <div className="rounded border border-border/40 px-1.5 py-1 text-center">
+    <div className="rounded border border-border/40 px-1.5 py-1.5 text-center">
       <div className="flex items-center justify-center gap-1">
         {icon}
         <span className="text-xs font-semibold tabular-nums">{value}</span>
