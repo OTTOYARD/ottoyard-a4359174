@@ -43,6 +43,15 @@ import { AppHeader } from "@/components/shared/AppHeader";
 import { useOTTOQRealtime } from "@/hooks/useOTTOQRealtime";
 import { computeVehicleStatusCounts, computeDepotTotals, occupancyRatePct } from "@/lib/ottoq/ottoqClient";
 import type { UiVehicle, UiDepot } from "@/lib/ottoq/ottoqTypes";
+import { FleetSummaryOverlay } from "@/components/overview/fleet-summary-overlay";
+import { OttoQIntelligenceCard } from "@/components/overview/otto-q-intelligence-card";
+import {
+  EnergyEfficiencyChart,
+  FleetStatusPie,
+  DailyEnergyGeneration,
+  VehicleBatteryLevels,
+} from "@/components/analytics/strategic-analytics-charts";
+import { ottoQFetch } from "@/lib/otto-q-api";
 
 // Incidents Tab Component
 const allStatuses: IncidentStatus[] = ["Reported", "Dispatched", "Secured", "At Depot", "Closed"];
@@ -554,7 +563,7 @@ const Index = () => {
                     </div>
                   </CardHeader>
                   <CardContent className="pt-2">
-                    <div className="h-[500px] scanning-line">
+                    <div className="relative h-[500px] scanning-line">
                       <MapboxMap vehicles={vehicles} depots={depots} city={currentCity} onVehicleClick={vehicleId => {
                     setSelectedTab('fleet');
                     setHighlightedVehicleId(vehicleId);
@@ -613,9 +622,24 @@ const Index = () => {
                       }
                     }, 300);
                   }} />
+                      <div className="pointer-events-none absolute top-3 left-3 z-10">
+                        <div className="pointer-events-auto">
+                          <FleetSummaryOverlay />
+                        </div>
+                      </div>
+                      <div className="pointer-events-none absolute top-3 right-3 z-10 hidden md:block">
+                        <div className="pointer-events-auto">
+                          <OttoQIntelligenceCard />
+                        </div>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Mobile: show OTTO-Q Intelligence below map (overlay hidden on small screens) */}
+                <div className="md:hidden">
+                  <OttoQIntelligenceCard />
+                </div>
 
                 {/* Quick Glance Section */}
                 <div className="space-y-4">
@@ -1327,383 +1351,10 @@ const Index = () => {
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="shadow-fleet-md">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle>Energy Efficiency Trends</CardTitle>
-                    <div className="flex space-x-1 md:flex-row flex-col md:space-x-1 md:space-y-0 space-y-1 space-x-0">
-                      <Button size="sm" variant={chartPeriod === 'week' ? 'default' : 'outline'} onClick={() => setChartPeriod('week')} className="md:min-w-0 min-w-16 text-xs md:text-sm px-2 py-1 md:px-3 md:py-2">
-                        Week
-                      </Button>
-                      <Button size="sm" variant={chartPeriod === 'month' ? 'default' : 'outline'} onClick={() => setChartPeriod('month')} className="md:min-w-0 min-w-16 text-xs md:text-sm px-2 py-1 md:px-3 md:py-2">
-                        Month
-                      </Button>
-                      <Button size="sm" variant={chartPeriod === 'year' ? 'default' : 'outline'} onClick={() => setChartPeriod('year')} className="md:min-w-0 min-w-16 text-xs md:text-sm px-2 py-1 md:px-3 md:py-2">
-                        Year
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-64">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={chartPeriod === 'week' ? [{
-                      period: 'Mon',
-                      efficiency: 93
-                    }, {
-                      period: 'Tue',
-                      efficiency: 94
-                    }, {
-                      period: 'Wed',
-                      efficiency: 92
-                    }, {
-                      period: 'Thu',
-                      efficiency: 95
-                    }, {
-                      period: 'Fri',
-                      efficiency: 94
-                    }, {
-                      period: 'Sat',
-                      efficiency: 93
-                    }, {
-                      period: 'Sun',
-                      efficiency: 91
-                    }] : chartPeriod === 'month' ? [{
-                      period: 'Jan',
-                      efficiency: 88
-                    }, {
-                      period: 'Feb',
-                      efficiency: 89
-                    }, {
-                      period: 'Mar',
-                      efficiency: 91
-                    }, {
-                      period: 'Apr',
-                      efficiency: 93
-                    }, {
-                      period: 'May',
-                      efficiency: 92
-                    }, {
-                      period: 'Jun',
-                      efficiency: 94
-                    }, {
-                      period: 'Jul',
-                      efficiency: 95
-                    }, {
-                      period: 'Aug',
-                      efficiency: 94
-                    }] : [{
-                      period: '2020',
-                      efficiency: 82
-                    }, {
-                      period: '2021',
-                      efficiency: 85
-                    }, {
-                      period: '2022',
-                      efficiency: 89
-                    }, {
-                      period: '2023',
-                      efficiency: 92
-                    }, {
-                      period: '2024',
-                      efficiency: 94
-                    }]}>
-                        <defs>
-                          <linearGradient id="efficiencyGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.8} />
-                            <stop offset="50%" stopColor="hsl(var(--destructive))" stopOpacity={0.6} />
-                            <stop offset="100%" stopColor="hsl(var(--destructive))" stopOpacity={0.2} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="period" axisLine={true} tickLine={true} tick={{
-                        fontSize: 12
-                      }} />
-                         <YAxis domain={[80, 100]} label={{
-                        value: 'Efficiency (%)',
-                        angle: -90,
-                        position: 'insideLeft',
-                        textAnchor: 'middle',
-                        style: {
-                          textAnchor: 'middle'
-                        }
-                      }} axisLine={true} tickLine={true} tick={{
-                        fontSize: 12,
-                        textAnchor: 'end'
-                      }} />
-                         <Tooltip formatter={value => [`${value}%`, 'Efficiency']} labelFormatter={label => `Period: ${label}`} contentStyle={{
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
-                        boxShadow: '0 4px 12px hsl(var(--muted) / 0.15)',
-                        padding: '8px 12px',
-                        fontSize: '12px',
-                        fontWeight: '500'
-                      }} labelStyle={{
-                        color: 'hsl(var(--foreground))',
-                        marginBottom: '4px'
-                      }} />
-                        <Legend />
-                        <Area type="monotone" dataKey="efficiency" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#efficiencyGradient)" name="Fleet Efficiency" />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card className="shadow-fleet-md">
-                <CardHeader>
-                  <CardTitle>{currentCity.name} Fleet Status ({vehicles.length} vehicles)</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-64">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                         <Pie data={(() => {
-                        // Use actual vehicle data if available, otherwise use diverse mock data
-                        const activeCount = vehicles.filter(v => v.status === 'active').length;
-                        const chargingCount = vehicles.filter(v => v.status === 'charging').length;
-                        const maintenanceCount = vehicles.filter(v => v.status === 'maintenance').length;
-                        const idleCount = vehicles.filter(v => v.status === 'idle').length;
-                        const total = activeCount + chargingCount + maintenanceCount + idleCount;
-
-                        // If no real data, use well-distributed mock data
-                        if (total === 0) {
-                          return [{
-                            name: 'Active',
-                            value: 22,
-                            fill: 'hsl(var(--success))'
-                          }, {
-                            name: 'Charging',
-                            value: 15,
-                            fill: 'hsl(var(--primary))'
-                          }, {
-                            name: 'Maintenance',
-                            value: 6,
-                            fill: 'hsl(var(--warning))'
-                          }, {
-                            name: 'Idle',
-                            value: 7,
-                            fill: 'hsl(142 76% 36%)'
-                          }];
-                        }
-                        return [{
-                          name: 'Active',
-                          value: activeCount,
-                          fill: 'hsl(var(--success))'
-                        }, {
-                          name: 'Charging',
-                          value: chargingCount,
-                          fill: 'hsl(var(--primary))'
-                        }, {
-                          name: 'Maintenance',
-                          value: maintenanceCount,
-                          fill: 'hsl(var(--warning))'
-                        }, {
-                          name: 'Idle',
-                          value: idleCount,
-                          fill: 'hsl(142 76% 36%)'
-                        }];
-                      })()} cx="50%" cy="50%" labelLine={true} label={({
-                        name,
-                        percent
-                      }) => `${name} ${(percent * 100).toFixed(0)}%`} outerRadius={70} innerRadius={30} paddingAngle={2} dataKey="value" />
-                        <Tooltip formatter={(value, name) => [`${value} vehicles`, name]} contentStyle={{
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
-                        boxShadow: '0 4px 12px hsl(var(--muted) / 0.15)',
-                        padding: '8px 12px',
-                        fontSize: '12px',
-                        fontWeight: '500'
-                      }} />
-                        <Legend verticalAlign="bottom" height={36} formatter={(value, entry: any) => <span style={{
-                        color: 'hsl(var(--foreground))',
-                        fontSize: '11px'
-                      }}>
-                              {value}: {entry.payload.value}
-                            </span>} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="shadow-fleet-md">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle>Daily Energy Generation</CardTitle>
-                    <div className="flex space-x-1 md:flex-row flex-col md:space-x-1 md:space-y-0 space-y-1 space-x-0">
-                      <Button size="sm" variant={chartPeriod === 'week' ? 'default' : 'outline'} onClick={() => setChartPeriod('week')} className="md:min-w-0 min-w-16 text-xs md:text-sm px-2 py-1 md:px-3 md:py-2">
-                        Week
-                      </Button>
-                      <Button size="sm" variant={chartPeriod === 'month' ? 'default' : 'outline'} onClick={() => setChartPeriod('month')} className="md:min-w-0 min-w-16 text-xs md:text-sm px-2 py-1 md:px-3 md:py-2">
-                        Month
-                      </Button>
-                      <Button size="sm" variant={chartPeriod === 'year' ? 'default' : 'outline'} onClick={() => setChartPeriod('year')} className="md:min-w-0 min-w-16 text-xs md:text-sm px-2 py-1 md:px-3 md:py-2">
-                        Year
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-64">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={chartPeriod === 'week' ? [{
-                      period: 'Mon',
-                      generated: 2.8,
-                      returned: 1.2
-                    }, {
-                      period: 'Tue',
-                      generated: 3.2,
-                      returned: 1.4
-                    }, {
-                      period: 'Wed',
-                      generated: 2.9,
-                      returned: 1.1
-                    }, {
-                      period: 'Thu',
-                      generated: 3.5,
-                      returned: 1.6
-                    }, {
-                      period: 'Fri',
-                      generated: 3.1,
-                      returned: 1.3
-                    }, {
-                      period: 'Sat',
-                      generated: 2.6,
-                      returned: 1.0
-                    }, {
-                      period: 'Sun',
-                      generated: 2.4,
-                      returned: 0.9
-                    }] : chartPeriod === 'month' ? [{
-                      period: 'W1',
-                      generated: 20.2,
-                      returned: 8.7
-                    }, {
-                      period: 'W2',
-                      generated: 22.1,
-                      returned: 9.4
-                    }, {
-                      period: 'W3',
-                      generated: 21.8,
-                      returned: 9.1
-                    }, {
-                      period: 'W4',
-                      generated: 23.5,
-                      returned: 10.2
-                    }] : [{
-                      period: 'Q1',
-                      generated: 265,
-                      returned: 115
-                    }, {
-                      period: 'Q2',
-                      generated: 278,
-                      returned: 122
-                    }, {
-                      period: 'Q3',
-                      generated: 295,
-                      returned: 131
-                    }, {
-                      period: 'Q4',
-                      generated: 312,
-                      returned: 140
-                    }]}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="period" axisLine={true} tickLine={true} tick={{
-                        fontSize: 12
-                      }} />
-                         <YAxis label={{
-                        value: 'Energy (MWh)',
-                        angle: -90,
-                        position: 'insideLeft',
-                        textAnchor: 'middle',
-                        style: {
-                          textAnchor: 'middle'
-                        }
-                      }} axisLine={true} tickLine={true} tick={{
-                        fontSize: 12,
-                        textAnchor: 'end'
-                      }} />
-                         <Tooltip formatter={(value, name) => [`${value} MWh`, name === 'generated' ? 'Generated' : 'Returned to Grid']} labelFormatter={label => `Period: ${label}`} contentStyle={{
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
-                        boxShadow: '0 4px 12px hsl(var(--muted) / 0.15)',
-                        padding: '8px 12px',
-                        fontSize: '12px',
-                        fontWeight: '500'
-                      }} labelStyle={{
-                        color: 'hsl(var(--foreground))',
-                        marginBottom: '4px'
-                      }} />
-                        <Legend />
-                        <Area type="monotone" dataKey="generated" stackId="1" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.6} name="Energy Generated" />
-                        <Area type="monotone" dataKey="returned" stackId="2" stroke="hsl(var(--success))" fill="hsl(var(--success))" fillOpacity={0.6} name="Returned to Grid" />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="shadow-fleet-md">
-                <CardHeader>
-                  <CardTitle>Vehicle Battery Levels</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-64">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={[{
-                      range: '0-20%',
-                      count: vehicles.filter(v => v.battery <= 20).length
-                    }, {
-                      range: '21-40%',
-                      count: vehicles.filter(v => v.battery > 20 && v.battery <= 40).length
-                    }, {
-                      range: '41-60%',
-                      count: vehicles.filter(v => v.battery > 40 && v.battery <= 60).length
-                    }, {
-                      range: '61-80%',
-                      count: vehicles.filter(v => v.battery > 60 && v.battery <= 80).length
-                    }, {
-                      range: '81-100%',
-                      count: vehicles.filter(v => v.battery > 80).length
-                    }]}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="range" axisLine={true} tickLine={true} tick={{
-                        fontSize: 12
-                      }} />
-                         <YAxis label={{
-                        value: 'Number of Vehicles',
-                        angle: -90,
-                        position: 'insideLeft',
-                        textAnchor: 'middle',
-                        style: {
-                          textAnchor: 'middle'
-                        }
-                      }} axisLine={true} tickLine={true} tick={{
-                        fontSize: 12,
-                        textAnchor: 'end'
-                      }} />
-                         <Tooltip formatter={value => [`${value} vehicles`, 'Count']} labelFormatter={label => `Battery Range: ${label}`} contentStyle={{
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
-                        boxShadow: '0 4px 12px hsl(var(--muted) / 0.15)',
-                        padding: '8px 12px',
-                        fontSize: '12px',
-                        fontWeight: '500'
-                      }} labelStyle={{
-                        color: 'hsl(var(--foreground))',
-                        marginBottom: '4px'
-                      }} />
-                        <Bar dataKey="count" fill="hsl(var(--primary))" name="Vehicles" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
+              <EnergyEfficiencyChart />
+              <FleetStatusPie />
+              <DailyEnergyGeneration />
+              <VehicleBatteryLevels />
             </div>
           </TabsContent>
 
