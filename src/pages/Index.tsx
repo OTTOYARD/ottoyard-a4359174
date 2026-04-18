@@ -563,7 +563,7 @@ const Index = () => {
                     </div>
                   </CardHeader>
                   <CardContent className="pt-2">
-                    <div className="h-[500px] scanning-line">
+                    <div className="relative h-[500px] scanning-line">
                       <MapboxMap vehicles={vehicles} depots={depots} city={currentCity} onVehicleClick={vehicleId => {
                     setSelectedTab('fleet');
                     setHighlightedVehicleId(vehicleId);
@@ -622,9 +622,24 @@ const Index = () => {
                       }
                     }, 300);
                   }} />
+                      <div className="pointer-events-none absolute top-3 left-3 z-10">
+                        <div className="pointer-events-auto">
+                          <FleetSummaryOverlay />
+                        </div>
+                      </div>
+                      <div className="pointer-events-none absolute top-3 right-3 z-10 hidden md:block">
+                        <div className="pointer-events-auto">
+                          <OttoQIntelligenceCard />
+                        </div>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Mobile: show OTTO-Q Intelligence below map (overlay hidden on small screens) */}
+                <div className="md:hidden">
+                  <OttoQIntelligenceCard />
+                </div>
 
                 {/* Quick Glance Section */}
                 <div className="space-y-4">
