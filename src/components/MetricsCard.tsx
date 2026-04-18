@@ -27,7 +27,7 @@ const MetricsCard = ({
   
   return (
     <Card 
-      className={`min-h-32 futuristic-card hover-neon transition-all duration-300 ease-out hover-scale ${
+      className={`h-32 futuristic-card hover-neon transition-all duration-300 ease-out hover-scale ${
         onClick ? 'cursor-pointer hover:ring-2 hover:ring-primary/30 hover:bg-gradient-to-br hover:from-card hover:to-primary/5 active:scale-95 hover:shadow-neon active:shadow-intense scanning-line' : ''
       }`}
       onClick={onClick}
