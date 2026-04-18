@@ -46,9 +46,6 @@ export function OttoQIntelligenceCard() {
           </div>
           <div>
             <CardTitle className="text-base">OTTO-Q Intelligence</CardTitle>
-            <div className="text-[11px] text-muted-foreground mt-0.5">
-              Fleet-wide AI Brain
-            </div>
           </div>
         </div>
         {accuracyPct !== null ? (
