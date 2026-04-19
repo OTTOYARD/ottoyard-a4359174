@@ -3,7 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Brain, AlertTriangle, TrendingUp, Mic, FileText, Wrench, Activity, Zap, CheckCircle2, Clock } from 'lucide-react';
+import { Brain, AlertTriangle, TrendingUp, Mic, FileText, Wrench, Activity, Zap, CheckCircle2, Clock, GitBranch } from 'lucide-react';
+import { ProgressionAnalyticsSubtab } from './ProgressionAnalyticsSubtab';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -237,10 +238,14 @@ const AIDashboard: React.FC = () => {
 
       {/* AI Insights Tabs */}
       <Tabs defaultValue="insights" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="insights">AI Insights</TabsTrigger>
           <TabsTrigger value="alerts">Smart Alerts</TabsTrigger>
           <TabsTrigger value="maintenance">Predictive Maintenance</TabsTrigger>
+          <TabsTrigger value="progression">
+            <GitBranch className="h-3.5 w-3.5 mr-1" />
+            Progression
+          </TabsTrigger>
           <TabsTrigger value="voice">Voice Commands</TabsTrigger>
         </TabsList>
 
@@ -365,6 +370,10 @@ const AIDashboard: React.FC = () => {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="progression" className="space-y-4">
+          <ProgressionAnalyticsSubtab />
         </TabsContent>
 
         <TabsContent value="voice" className="space-y-4">
