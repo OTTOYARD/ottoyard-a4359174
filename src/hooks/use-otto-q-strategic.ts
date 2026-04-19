@@ -4,7 +4,20 @@ import {
   FleetSummary,
   AIFleetSummary,
   EnergyHistory,
+  ScheduleIntelligence,
 } from "@/lib/otto-q-api";
+
+export function useScheduleIntelligence(horizon: "12h" | "24h" | "48h" = "24h") {
+  return useQuery<ScheduleIntelligence>({
+    queryKey: ["otto-q", "schedule-intelligence", horizon],
+    queryFn: () =>
+      ottoQFetch<ScheduleIntelligence>(
+        `/fleet/schedule-intelligence?horizon=${horizon}`
+      ),
+    refetchInterval: 45_000,
+    staleTime: 20_000,
+  });
+}
 
 export function useFleetSummary() {
   return useQuery<FleetSummary>({
