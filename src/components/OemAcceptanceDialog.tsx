@@ -99,7 +99,16 @@ export function OemAcceptanceDialog({ gate, open, onOpenChange }: OemAcceptanceD
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>OEM Acceptance — Final Redeploy</DialogTitle>
+          <DialogTitle className="flex items-center gap-2 flex-wrap">
+            <span>OEM Acceptance — Final Redeploy</span>
+            <Badge
+              variant="outline"
+              className="h-5 px-1.5 text-[10px] font-medium border-primary/30 bg-primary/5 text-primary"
+              title="Action restricted to OEM Admin role in production"
+            >
+              OEM Admin
+            </Badge>
+          </DialogTitle>
           <DialogDescription>
             {gate.vehicle_external_ref ?? gate.vehicle_id?.slice(0, 8)}
             {gate.vehicle_oem && ` · ${gate.vehicle_oem}`}

@@ -763,14 +763,21 @@ export const OTTOQFleetView = ({ selectedCityName, highlightedVehicleId, onAddTo
                           <Button
                             variant="outline"
                             size="sm"
-                            className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                            className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive gap-1.5"
                             onClick={() => {
                               setFlagVehicle(vehicle);
                               setFlagDialogOpen(true);
                             }}
+                            title="OEM Admin only — sequester vehicle for inspection"
                           >
-                            <Flag className="w-4 h-4 mr-1.5" />
+                            <Flag className="w-4 h-4" />
                             Flag
+                            <Badge
+                              variant="outline"
+                              className="ml-0.5 h-4 px-1 text-[9px] font-medium border-destructive/30 bg-destructive/5 text-destructive"
+                            >
+                              OEM Admin
+                            </Badge>
                           </Button>
                         </div>
                       </CardContent>
