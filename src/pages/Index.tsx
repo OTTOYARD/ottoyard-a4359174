@@ -33,6 +33,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Filter, RefreshCw } from "lucide-react";
 import { IncidentStatus } from "@/data/incidents-mock";
 import { OTTOQFleetView } from "@/components/OTTOQFleetView";
+import { FleetSchedulingTile } from "@/components/fleet/fleet-scheduling-tile";
 import { OTTOQDepotView } from "@/components/OTTOQDepotView";
 import { NotificationsPanel } from "@/components/NotificationsPanel";
 import { OttoResponseButton, OttoResponsePanel } from "@/components/OttoResponse";
@@ -1273,6 +1274,7 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="fleet" className="space-y-6">
+            <FleetSchedulingTile />
             <OTTOQFleetView selectedCityName={selectedCityForOTTOQ} highlightedVehicleId={highlightedVehicleId} onAddToCart={handleAddToCart} />
           </TabsContent>
 

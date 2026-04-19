@@ -137,3 +137,123 @@ export interface EnergyHistory {
   };
   timestamp: string;
 }
+
+// --- Schedule Intelligence (P3c) ---
+
+export type RiskLevel = "none" | "low" | "medium" | "high";
+export type SchedulingCategory =
+  | "timing"
+  | "load_balancing"
+  | "energy_policy"
+  | "capacity"
+  | "health"
+  | "notification"
+  | "other";
+
+export interface ScheduleIntelligenceWave {
+  id: string;
+  depot_id: string;
+  depot_name: string | null;
+  wave_code: string;
+  scheduled_date: string;
+  arrival_window_start: string;
+  arrival_window_end: string;
+  departure_window_start: string | null;
+  departure_window_end: string | null;
+  vehicle_count: number;
+  status: "planned" | "arriving" | "in_progress" | "completed" | "cancelled";
+  risk_score: number;
+  risk_level: RiskLevel;
+  risk_factors: string[];
+  ai_recommendation_count: number;
+  ai_recommendations: Array<{
+    id: string;
+    prediction_type: string;
+    title: string;
+    confidence: number;
+  }>;
+}
+
+export interface PendingOptimization {
+  id: string;
+  depot_id: string;
+  depot_name: string | null;
+  vehicle_id: string | null;
+  vehicle_display_name: string | null;
+  fleet_operator_name: string | null;
+  prediction_type: string;
+  category: SchedulingCategory;
+  title: string;
+  description: string;
+  recommendation: any;
+  confidence: number;
+  priority_score: number;
+  risk_factors: string[];
+  created_at: string;
+  expires_at: string | null;
+}
+
+export interface AppliedOptimization {
+  id: string;
+  depot_id: string;
+  depot_name: string | null;
+  prediction_id: string | null;
+  action_type: string;
+  category: string;
+  summary: string;
+  confidence: number;
+  approval_method:
+    | "auto_threshold"
+    | "human_approved"
+    | "claude_reasoning"
+    | "cron_triggered";
+  risk_factors: string[];
+  estimated_impact: string | null;
+  estimated_savings_kwh: number | null;
+  estimated_savings_usd: number | null;
+  status:
+    | "pending"
+    | "executing"
+    | "completed"
+    | "failed"
+    | "rolled_back"
+    | "skipped";
+  duration_ms: number | null;
+  created_at: string;
+  completed_at: string | null;
+}
+
+export interface DemandForecastPoint {
+  time: string;
+  predicted_demand_kw: number;
+  predicted_solar_kw: number;
+  predicted_rate_per_kwh: number | null;
+  source: "prediction" | "historical_pattern";
+  confidence: number;
+}
+
+export interface ScheduleIntelligence {
+  window: { start: string; end: string; hours: number };
+  waves: ScheduleIntelligenceWave[];
+  pending_optimizations: PendingOptimization[];
+  applied_optimizations_24h: AppliedOptimization[];
+  demand_forecast: DemandForecastPoint[];
+  summary: {
+    waves_count: number;
+    pending_count: number;
+    applied_count_24h: number;
+    avg_risk_score: number;
+    estimated_savings_kwh_24h: number;
+    estimated_savings_usd_24h: number;
+    high_risk_waves: number;
+    medium_risk_waves: number;
+  };
+  engine_status: {
+    last_snapshot_at: string | null;
+    last_prediction_at: string | null;
+    last_action_at: string | null;
+    snapshot_age_min: number | null;
+    healthy: boolean;
+    depots_tracked: number;
+  };
+}
