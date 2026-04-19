@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { Battery, Zap, Wrench, MapPin, Activity, RefreshCw, Car, Calendar, Heart, Download, Clock, ChevronDown, CheckCircle2, AlertTriangle, Sparkles } from "lucide-react";
+import { Battery, Zap, Wrench, MapPin, Activity, RefreshCw, Car, Calendar, Heart, Download, Clock, ChevronDown, ChevronUp, CheckCircle2, AlertTriangle, Sparkles, Flag, History } from "lucide-react";
 import { toast } from "sonner";
 import { OTTOQScheduleDialog } from "./OTTOQScheduleDialog";
 import { VehicleHealthCard } from "./VehicleHealthCard";
@@ -17,6 +17,9 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { OEMVehicleIcon } from "@/components/OEMVehicleIcon";
 import { MaintenancePanel } from "./MaintenancePanel";
+import { OemMidFlowFlagDialog } from "./OemMidFlowFlagDialog";
+import { VisitReportCard } from "./VisitReportCard";
+import { useVehicleVisitHistory } from "@/hooks/use-orchestra-progression";
 import { 
   predictiveMaintenanceData, 
   upcomingMaintenance, 
@@ -82,6 +85,8 @@ export const OTTOQFleetView = ({ selectedCityName, highlightedVehicleId, onAddTo
   const [manualScheduleOpen, setManualScheduleOpen] = useState(false);
   const [upcomingServicesOpen, setUpcomingServicesOpen] = useState(false);
   const [manualVehicleId, setManualVehicleId] = useState<string>("");
+  const [flagDialogOpen, setFlagDialogOpen] = useState(false);
+  const [flagVehicle, setFlagVehicle] = useState<Vehicle | null>(null);
   const { loading: healthLoading, healthData, fetchHealthScore } = useVehicleHealth();
 
   useEffect(() => {
