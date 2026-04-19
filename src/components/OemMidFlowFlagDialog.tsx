@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -89,9 +90,16 @@ export function OemMidFlowFlagDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 flex-wrap">
             <Flag className="w-4 h-4 text-destructive" />
-            Flag Vehicle for Inspection
+            <span>Flag Vehicle for Inspection</span>
+            <Badge
+              variant="outline"
+              className="h-5 px-1.5 text-[10px] font-medium border-destructive/30 bg-destructive/5 text-destructive"
+              title="Action restricted to OEM Admin role in production"
+            >
+              OEM Admin
+            </Badge>
           </DialogTitle>
           <DialogDescription>{vehicleLabel}</DialogDescription>
         </DialogHeader>
