@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { Battery, Zap, Wrench, MapPin, Activity, RefreshCw, Car, Calendar, Heart, Download, Clock, ChevronDown, CheckCircle2, AlertTriangle, Sparkles } from "lucide-react";
+import { Battery, Zap, Wrench, MapPin, Activity, RefreshCw, Car, Calendar, Heart, Download, Clock, ChevronDown, ChevronUp, CheckCircle2, AlertTriangle, Sparkles, Flag, History } from "lucide-react";
 import { toast } from "sonner";
 import { OTTOQScheduleDialog } from "./OTTOQScheduleDialog";
 import { VehicleHealthCard } from "./VehicleHealthCard";
@@ -17,6 +17,9 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { OEMVehicleIcon } from "@/components/OEMVehicleIcon";
 import { MaintenancePanel } from "./MaintenancePanel";
+import { OemMidFlowFlagDialog } from "./OemMidFlowFlagDialog";
+import { VisitReportCard } from "./VisitReportCard";
+import { useVehicleVisitHistory } from "@/hooks/use-orchestra-progression";
 import { 
   predictiveMaintenanceData, 
   upcomingMaintenance, 
@@ -82,6 +85,8 @@ export const OTTOQFleetView = ({ selectedCityName, highlightedVehicleId, onAddTo
   const [manualScheduleOpen, setManualScheduleOpen] = useState(false);
   const [upcomingServicesOpen, setUpcomingServicesOpen] = useState(false);
   const [manualVehicleId, setManualVehicleId] = useState<string>("");
+  const [flagDialogOpen, setFlagDialogOpen] = useState(false);
+  const [flagVehicle, setFlagVehicle] = useState<Vehicle | null>(null);
   const { loading: healthLoading, healthData, fetchHealthScore } = useVehicleHealth();
 
   useEffect(() => {
@@ -746,15 +751,26 @@ export const OTTOQFleetView = ({ selectedCityName, highlightedVehicleId, onAddTo
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="mt-3">
+                        <div className="mt-3 grid grid-cols-2 gap-2">
                           <Button
                             variant="outline"
                             size="sm"
-                            className="w-full"
                             onClick={() => handleHealthClick(vehicle)}
                           >
-                            <Heart className="w-4 h-4 mr-2" />
+                            <Heart className="w-4 h-4 mr-1.5" />
                             Health
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                            onClick={() => {
+                              setFlagVehicle(vehicle);
+                              setFlagDialogOpen(true);
+                            }}
+                          >
+                            <Flag className="w-4 h-4 mr-1.5" />
+                            Flag
                           </Button>
                         </div>
                       </CardContent>
@@ -799,48 +815,149 @@ export const OTTOQFleetView = ({ selectedCityName, highlightedVehicleId, onAddTo
               <div className="flex items-center justify-center py-12">
                 <RefreshCw className="w-8 h-8 animate-spin text-primary" />
               </div>
-            ) : healthData?.health_score ? (
-              <div className="space-y-4 pb-4">
-                <VehicleHealthCard
-                  overallScore={healthData.health_score.overall_score}
-                  status={healthData.health_score.status}
-                  components={healthData.health_score.components}
-                  alerts={healthData.health_score.alerts}
-                />
-                
-                {/* Cost Projections */}
-                {healthData.cost_projections && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-base">Cost Projections</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Total Estimated Cost:</span>
-                        <span className="font-medium">${healthData.cost_projections.total_estimated_cost}</span>
-                      </div>
-                      {healthData.cost_projections.breakdown && (
-                        <div className="space-y-1 mt-3">
-                          <p className="text-xs text-muted-foreground font-medium">Breakdown:</p>
-                          {Object.entries(healthData.cost_projections.breakdown).map(([key, value]) => (
-                            <div key={key} className="flex justify-between text-xs pl-3">
-                              <span className="text-muted-foreground">{key}:</span>
-                              <span>${value as number}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
             ) : (
-              <p className="text-center text-muted-foreground py-8">
-                No health data available
-              </p>
+              <Tabs defaultValue="health" className="space-y-4 pb-4">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="health">
+                    <Heart className="w-3.5 h-3.5 mr-1.5" />
+                    Health
+                  </TabsTrigger>
+                  <TabsTrigger value="visits">
+                    <History className="w-3.5 h-3.5 mr-1.5" />
+                    Visit History
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="health" className="space-y-4">
+                  {healthData?.health_score ? (
+                    <>
+                      <VehicleHealthCard
+                        overallScore={healthData.health_score.overall_score}
+                        status={healthData.health_score.status}
+                        components={healthData.health_score.components}
+                        alerts={healthData.health_score.alerts}
+                      />
+                      {healthData.cost_projections && (
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="text-base">Cost Projections</CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-2 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Total Estimated Cost:</span>
+                              <span className="font-medium">${healthData.cost_projections.total_estimated_cost}</span>
+                            </div>
+                            {healthData.cost_projections.breakdown && (
+                              <div className="space-y-1 mt-3">
+                                <p className="text-xs text-muted-foreground font-medium">Breakdown:</p>
+                                {Object.entries(healthData.cost_projections.breakdown).map(([key, value]) => (
+                                  <div key={key} className="flex justify-between text-xs pl-3">
+                                    <span className="text-muted-foreground">{key}:</span>
+                                    <span>${value as number}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-center text-muted-foreground py-8">No health data available</p>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="visits">
+                  <VisitHistoryPanel vehicleId={selectedVehicle?.id ?? null} />
+                </TabsContent>
+              </Tabs>
             )}
           </DialogContent>
         </Dialog>
+
+        {/* OEM Mid-Flow Flag Dialog */}
+        <OemMidFlowFlagDialog
+          vehicleId={flagVehicle?.id ?? null}
+          vehicleLabel={flagVehicle ? `${flagVehicle.external_ref ?? flagVehicle.id.slice(0, 8)}${flagVehicle.oem ? ` · ${flagVehicle.oem}` : ""}` : ""}
+          open={flagDialogOpen}
+          onOpenChange={setFlagDialogOpen}
+        />
+    </div>
+  );
+};
+
+// Visit history sub-panel (rendered inside Health dialog tab)
+const VisitHistoryPanel = ({ vehicleId }: { vehicleId: string | null }) => {
+  const { data, isLoading } = useVehicleVisitHistory(vehicleId, 20);
+  const [expanded, setExpanded] = useState<string | null>(null);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <RefreshCw className="w-6 h-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+  if (!data || data.count === 0) {
+    return (
+      <p className="text-center text-muted-foreground py-8 text-sm">
+        No visits completed yet for this vehicle.
+      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      {data.reports.map((r) => {
+        const isOpen = expanded === r.id;
+        const start = new Date(r.visit_started_at);
+        const dur = r.actual_duration_min ?? r.planned_duration_min;
+        const openAbnormality = r.abnormalities.some((a) => !a.resolved_at);
+        return (
+          <div key={r.id} className="border border-border/50 rounded-md">
+            <button
+              type="button"
+              onClick={() => setExpanded(isOpen ? null : r.id)}
+              className="w-full flex items-center justify-between gap-2 p-3 text-left hover:bg-muted/30 transition-colors"
+            >
+              <div className="min-w-0">
+                <p className="text-sm font-medium">
+                  {start.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })} ·{" "}
+                  {start.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
+                  {dur !== null && ` (${dur} min)`}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {r.actual_sequence.length} services · {r.overrides_applied.length} overrides ·{" "}
+                  {r.oem_interactions.length} OEM ·{" "}
+                  {r.audit_trail_complete ? (
+                    <span className="text-success">✓ audit complete</span>
+                  ) : (
+                    <span className="text-warning">in progress</span>
+                  )}
+                </p>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {r.deviation_count > 0 && (
+                    <Badge variant="outline" className="bg-warning/10 text-warning border-warning/30 text-[10px]">
+                      ⚠ {r.deviation_count} deviation{r.deviation_count !== 1 ? "s" : ""}
+                    </Badge>
+                  )}
+                  {openAbnormality && (
+                    <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/30 text-[10px]">
+                      ⚑ open abnormality
+                    </Badge>
+                  )}
+                </div>
+              </div>
+              {isOpen ? <ChevronUp className="w-4 h-4 flex-shrink-0" /> : <ChevronDown className="w-4 h-4 flex-shrink-0" />}
+            </button>
+            {isOpen && (
+              <div className="border-t border-border/50 p-3">
+                <VisitReportCard report={r} />
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 };
