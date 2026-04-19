@@ -1273,6 +1273,7 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="fleet" className="space-y-6">
+            <FleetSchedulingTile />
             <OTTOQFleetView selectedCityName={selectedCityForOTTOQ} highlightedVehicleId={highlightedVehicleId} onAddToCart={handleAddToCart} />
           </TabsContent>
 
