@@ -1,10 +1,73 @@
-import { useState, useEffect, useMemo } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { ottoqInvoke } from "@/lib/otto-q-api";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Zap, Droplets, Wrench, ParkingSquare, AlertTriangle } from "lucide-react";
 import type { StallRecord } from "@/services/ottoq-resource-manager";
+import type { StallType, StallStatus } from "@/types/ottoq";
+
+const DEFAULT_DEPOT_ID = "11111111-1111-1111-1111-111111111111";
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// otto-q-core depot-resources payload shape (subset we consume)
+interface OttoqResource {
+  id: string;
+  stall_code: string | null;
+  name: string | null;
+  kind: string | null;
+  type: string | null;
+  status: string | null;
+  connector_type: string | null;
+  zone: string | null;
+  covered: boolean | null;
+  occupant_vehicle_id: string | null;
+  occupant: unknown;
+}
+
+// Map otto-q-core resource.kind -> the floor-plan StallType vocab the render keys off.
+function mapKindToStallType(kind: string | null, connector: string | null): StallType {
+  const k = (kind || "").toLowerCase();
+  if (k.includes("wash") || k.includes("detail") || k.includes("clean")) return "clean_detail";
+  if (k.includes("service") || k.includes("maint")) return "service_bay";
+  if (k.includes("stag") || k.includes("park") || k.includes("await")) return "staging";
+  if (k.includes("charg") || k.includes("dcfc") || k.includes("l2") || k.includes("stall")) {
+    const c = (connector || "").toLowerCase();
+    const isFast = k.includes("dcfc") || k.includes("fast") || c.includes("ccs") || c.includes("nacs") || c.includes("dc");
+    return isFast ? "charge_fast" : "charge_standard";
+  }
+  return "staging";
+}
+
+// Map otto-q-core resource.status -> floor-plan StallStatus vocab.
+function mapStatusToStallStatus(status: string | null, occupantId: string | null): StallStatus {
+  const s = (status || "").toLowerCase();
+  if (s.includes("maint") || s.includes("out_of_service") || s.includes("offline") || s.includes("fault")) return "maintenance";
+  if (s.includes("reserv")) return "reserved";
+  if (s.includes("occup") || s.includes("busy") || s.includes("charg") || s.includes("in_use") || occupantId) return "occupied";
+  return "available";
+}
+
+function numberFromCode(code: string | null, fallback: number): number {
+  if (!code) return fallback;
+  const m = String(code).match(/(\d+)/);
+  return m ? Number(m[1]) : fallback;
+}
+
+function mapResourcesToStalls(resources: OttoqResource[], depotId: string): StallRecord[] {
+  return resources.map((r, i) => ({
+    id: r.id,
+    depot_id: depotId,
+    stall_number: numberFromCode(r.stall_code ?? r.name, i + 1),
+    stall_type: mapKindToStallType(r.kind, r.connector_type),
+    status: mapStatusToStallStatus(r.status, r.occupant_vehicle_id),
+    current_vehicle_id: r.occupant_vehicle_id ?? null,
+    charger_power_kw: null,
+    current_session_start: null,
+    estimated_completion: null,
+  }));
+}
 
 const STATUS_COLORS: Record<string, string> = {
   available: "#00D4AA",
@@ -34,32 +97,25 @@ interface Props {
 }
 
 export default function DepotFloorPlan({ depotId }: Props) {
-  const [stalls, setStalls] = useState<StallRecord[]>([]);
-  const [loading, setLoading] = useState(true);
+  // The shared otto-q-core brain has one real depot; if a non-UUID placeholder
+  // (e.g. "demo") is passed, fall back to the default depot id.
+  const resolvedDepotId = UUID_RE.test(depotId) ? depotId : DEFAULT_DEPOT_ID;
 
-  useEffect(() => {
-    (async () => {
-      const { data } = await supabase
-        .from("ottoq_ps_depot_stalls")
-        .select("*")
-        .eq("depot_id", depotId)
-        .order("stall_number", { ascending: true });
-      if (data) setStalls(data as unknown as StallRecord[]);
-      setLoading(false);
-    })();
-
-    const channel = supabase
-      .channel("depot-stalls-live")
-      .on("postgres_changes", { event: "*", schema: "public", table: "ottoq_ps_depot_stalls", filter: `depot_id=eq.${depotId}` }, (payload) => {
-        setStalls((prev) => {
-          const updated = payload.new as StallRecord;
-          return prev.map((s) => (s.id === updated.id ? updated : s));
-        });
-      })
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
-  }, [depotId]);
+  const { data: stalls = [], isLoading: loading } = useQuery({
+    queryKey: ["depotFloorPlan", "resources", resolvedDepotId],
+    queryFn: async () => {
+      const resp = await ottoqInvoke<{ resources?: OttoqResource[] }>(
+        "ottoq-depot-resources",
+        { depot_id: resolvedDepotId }
+      );
+      const resources = resp?.resources ?? [];
+      return mapResourcesToStalls(resources, resolvedDepotId).sort(
+        (a, b) => a.stall_number - b.stall_number
+      );
+    },
+    refetchInterval: 15000,
+    staleTime: 10000,
+  });
 
   const sections = useMemo(() => {
     const charge = stalls.filter((s) => s.stall_type === "charge_standard" || s.stall_type === "charge_fast");

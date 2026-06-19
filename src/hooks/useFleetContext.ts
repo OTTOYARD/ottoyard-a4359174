@@ -1,6 +1,24 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { ottoQFetch, ottoqInvoke } from "@/lib/otto-q-api";
 import { useIncidentsStore } from "@/stores/incidentsStore";
+
+// Map an otto-q-core vehicle_state to the legacy uppercase status vocab that the
+// fleet metric computations below already key off (IN_SERVICE / AT_DEPOT / IDLE /
+// MAINTENANCE / ENROUTE_DEPOT).
+function mapStateToLegacyStatus(state: string): string {
+  const s = (state || "").toLowerCase();
+  if (s.startsWith("charging")) return "AT_DEPOT";
+  if (s.includes("wash_bay") || s.includes("detail_bay") || s.includes("service_bay")) return "MAINTENANCE";
+  if (s.includes("en_route")) return "ENROUTE_DEPOT";
+  if (s === "deployed" || s === "departed") return "IN_SERVICE";
+  if (
+    s === "staged_awaiting_service" ||
+    s === "arrived_at_gate" ||
+    s === "awaiting_departure"
+  )
+    return "AT_DEPOT";
+  return "IDLE";
+}
 
 export interface VehicleSummary {
   id: string;
@@ -92,155 +110,89 @@ export interface FleetContext {
 export function useFleetContext(): FleetContext {
   const incidents = useIncidentsStore((state) => state.incidents);
 
-  // Fetch vehicles with city info
+  // Fetch vehicles from the shared otto-q-core brain (same fleet OTTO-PULSE sees)
   const { data: vehiclesData, isLoading: vehiclesLoading, error: vehiclesError } = useQuery({
     queryKey: ["fleetContext", "vehicles"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("ottoq_vehicles")
-        .select(`
-          id,
-          oem,
-          plate,
-          soc,
-          status,
-          city_id,
-          odometer_km,
-          health_jsonb,
-          last_telemetry_at,
-          ottoq_cities!inner(id, name, tz)
-        `)
-        .order("updated_at", { ascending: false });
-
-      if (error) throw error;
-      return data || [];
+      const resp = await ottoqInvoke<{ vehicles?: any[] }>("ottoq-fleet-vehicles", { limit: 500 });
+      return resp?.vehicles ?? [];
     },
     staleTime: 30000, // 30 seconds
     refetchInterval: 60000, // Refetch every minute
   });
 
-  // Fetch depots with resources
+  // Fetch depot aggregates from the shared brain fleet summary
   const { data: depotsData, isLoading: depotsLoading, error: depotsError } = useQuery({
     queryKey: ["fleetContext", "depots"],
     queryFn: async () => {
-      const { data: depots, error: depotsError } = await supabase
-        .from("ottoq_depots")
-        .select(`
-          id,
-          name,
-          city_id,
-          config_jsonb,
-          ottoq_cities!inner(id, name)
-        `);
+      const summary = await ottoQFetch<{ depots?: any[] }>("/fleet/summary");
+      const depots = summary?.depots ?? [];
 
-      if (depotsError) throw depotsError;
-
-      // Fetch resources grouped by depot
-      const { data: resources, error: resourcesError } = await supabase
-        .from("ottoq_resources")
-        .select("depot_id, resource_type, status");
-
-      if (resourcesError) throw resourcesError;
-
-      // Fetch active/pending jobs
-      const { data: jobs, error: jobsError } = await supabase
-        .from("ottoq_jobs")
-        .select("depot_id, state")
-        .in("state", ["PENDING", "SCHEDULED", "ACTIVE"]);
-
-      if (jobsError) throw jobsError;
-
-      // Aggregate resources per depot
-      return (depots || []).map((depot: any) => {
-        const depotResources = (resources || []).filter((r: any) => r.depot_id === depot.id);
-        const depotJobs = (jobs || []).filter((j: any) => j.depot_id === depot.id);
-
-        const chargeStalls = depotResources.filter((r: any) => r.resource_type === "CHARGE_STALL");
-        const detailStalls = depotResources.filter((r: any) => r.resource_type === "CLEAN_DETAIL_STALL");
-        const maintBays = depotResources.filter((r: any) => r.resource_type === "MAINTENANCE_BAY");
-
-        return {
-          id: depot.id,
-          name: depot.name,
-          cityId: depot.city_id,
-          cityName: depot.ottoq_cities?.name || "Unknown",
-          totalChargeStalls: chargeStalls.length,
-          availableChargeStalls: chargeStalls.filter((r: any) => r.status === "AVAILABLE").length,
-          totalDetailStalls: detailStalls.length,
-          availableDetailStalls: detailStalls.filter((r: any) => r.status === "AVAILABLE").length,
-          totalMaintenanceBays: maintBays.length,
-          availableMaintenanceBays: maintBays.filter((r: any) => r.status === "AVAILABLE").length,
-          activeJobs: depotJobs.filter((j: any) => j.state === "ACTIVE").length,
-          pendingJobs: depotJobs.filter((j: any) => ["PENDING", "SCHEDULED"].includes(j.state)).length,
-        };
-      });
-    },
-    staleTime: 30000,
-    refetchInterval: 60000,
-  });
-
-  // Fetch active jobs
-  const { data: jobsData, isLoading: jobsLoading, error: jobsError } = useQuery({
-    queryKey: ["fleetContext", "jobs"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("ottoq_jobs")
-        .select(`
-          id,
-          vehicle_id,
-          depot_id,
-          job_type,
-          state,
-          scheduled_start_at,
-          eta_seconds,
-          ottoq_depots!inner(name)
-        `)
-        .in("state", ["PENDING", "SCHEDULED", "ACTIVE"])
-        .order("created_at", { ascending: false })
-        .limit(100);
-
-      if (error) throw error;
-      return (data || []).map((job: any) => ({
-        id: job.id,
-        vehicleId: job.vehicle_id,
-        depotId: job.depot_id,
-        depotName: job.ottoq_depots?.name || "Unknown",
-        jobType: job.job_type,
-        state: job.state,
-        scheduledStartAt: job.scheduled_start_at,
-        etaSeconds: job.eta_seconds,
+      // /fleet/summary gives per-depot stall + job aggregates already. The legacy
+      // shape distinguished charge / detail / maintenance stalls, which the summary
+      // does not break out — map total/available stalls onto charge stalls (the
+      // primary capacity) and leave detail/maintenance at 0 (no breakdown available).
+      return depots.map((d: any): DepotSummary => ({
+        id: d.id,
+        name: d.name,
+        cityId: d.city || "",
+        cityName: d.city || "Unknown",
+        totalChargeStalls: d.stalls_total ?? 0,
+        availableChargeStalls: d.stalls_available ?? Math.max(0, (d.stalls_total ?? 0) - (d.stalls_occupied ?? 0)),
+        totalDetailStalls: 0,
+        availableDetailStalls: 0,
+        totalMaintenanceBays: 0,
+        availableMaintenanceBays: 0,
+        activeJobs: d.in_service ?? 0,
+        pendingJobs: 0,
       }));
     },
     staleTime: 30000,
     refetchInterval: 60000,
   });
 
-  // Fetch cities
-  const { data: citiesData } = useQuery({
-    queryKey: ["fleetContext", "cities"],
+  // Fetch active jobs from the shared brain
+  const { data: jobsData, isLoading: jobsLoading, error: jobsError } = useQuery({
+    queryKey: ["fleetContext", "jobs"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("ottoq_cities")
-        .select("id, name, tz");
-      if (error) throw error;
-      return data || [];
+      const resp = await ottoqInvoke<{ jobs?: any[] }>("ottoq-jobs-active", { limit: 100 });
+      return (resp?.jobs ?? []).map((job: any): JobSummary => ({
+        id: job.id,
+        vehicleId: job.vehicle_id,
+        depotId: job.stall_id ?? "",
+        depotName: job.stall_code || "Depot",
+        jobType: job.service || "",
+        state: String(job.status || "").toUpperCase(),
+        scheduledStartAt: job.scheduled_start ?? null,
+        etaSeconds: null,
+      }));
     },
-    staleTime: 300000, // 5 minutes
+    staleTime: 30000,
+    refetchInterval: 60000,
   });
 
   // Transform vehicles
   const vehicles: VehicleSummary[] = (vehiclesData || []).map((v: any) => ({
-    id: v.id,
-    oem: v.oem,
-    plate: v.plate,
-    soc: v.soc,
-    status: v.status,
-    cityId: v.city_id,
-    cityName: v.ottoq_cities?.name || "Unknown",
-    odometerKm: v.odometer_km,
-    healthScore: v.health_jsonb?.overall_score ?? v.health_jsonb?.score ?? 100,
-    lastTelemetryAt: v.last_telemetry_at,
+    id: String(v.id),
+    oem: v.oem || "",
+    plate: v.plate ?? null,
+    soc: (Number(v.soc) || 0) / 100, // otto-q-core soc is 0-100 int; context uses 0-1
+    status: mapStateToLegacyStatus(v.state),
+    cityId: v.city || "",
+    cityName: v.city || "Unknown",
+    odometerKm: 0,
+    healthScore: 100,
+    lastTelemetryAt: v.soc_updated_at ?? null,
   }));
+
+  // Derive the cities list from the vehicle/depot payloads (no cities table on otto-q-core)
+  const citiesData = Array.from(
+    new Set(
+      (vehiclesData || [])
+        .map((v: any) => String(v.city || ""))
+        .filter(Boolean)
+    )
+  ).map((name) => ({ id: name as string, name: name as string, tz: "" }));
 
   // Calculate fleet metrics
   const fleetMetrics: FleetMetrics = {

@@ -9,10 +9,37 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { supabase } from "@/integrations/supabase/client";
+import { ottoQFetch, ottoqInvoke } from "@/lib/otto-q-api";
 import { Building2, Zap, RefreshCw, Battery, Wrench, Sparkles, ChevronDown, ParkingCircle } from "lucide-react";
 import { toast } from "sonner";
 import { EnergyAnalyticsCard } from "./EnergyAnalyticsCard";
+
+const DEFAULT_DEPOT_ID = "11111111-1111-1111-1111-111111111111";
+
+// Map otto-q-core resource.kind -> the legacy uppercase resource "type"
+// the grouping/render keys off.
+function mapKindToType(kind: string | null, connector: string | null): string {
+  const k = (kind || "").toLowerCase();
+  if (k.includes("wash") || k.includes("detail") || k.includes("clean")) return "CLEAN_DETAIL_STALL";
+  if (k.includes("service") || k.includes("maint")) return "MAINTENANCE_BAY";
+  if (k.includes("stag") || k.includes("park") || k.includes("await")) return "STAGING_STALL";
+  return "CHARGE_STALL";
+}
+
+// Map otto-q-core resource.status -> legacy uppercase status vocab.
+function mapStatusToLegacy(status: string | null, occupantId: string | null): string {
+  const s = (status || "").toLowerCase();
+  if (s.includes("maint") || s.includes("out_of_service") || s.includes("offline") || s.includes("fault")) return "OUT_OF_SERVICE";
+  if (s.includes("reserv")) return "RESERVED";
+  if (s.includes("occup") || s.includes("busy") || s.includes("charg") || s.includes("in_use") || occupantId) return "OCCUPIED";
+  return "AVAILABLE";
+}
+
+function indexFromCode(code: string | null, fallback: number): number {
+  if (!code) return fallback;
+  const m = String(code).match(/(\d+)/);
+  return m ? Number(m[1]) : fallback;
+}
 
 
 interface Resource {
@@ -71,36 +98,19 @@ export const OTTOQDepotView = ({ selectedCityName, highlightedDepotId }: OTTOQDe
   const [refreshing, setRefreshing] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<{ [key: string]: boolean }>({});
 
+  // Sync to the parent dashboard's city prop. selectedCity holds the city name.
   useEffect(() => {
-    fetchCities();
-  }, []);
-
-  useEffect(() => {
-    if (selectedCityName && cities.length > 0) {
-      // Try exact match first, then case-insensitive partial match
-      let city = cities.find(c => c.name === selectedCityName);
-      if (!city) {
-        city = cities.find(c => 
-          c.name.toLowerCase().includes(selectedCityName.toLowerCase()) ||
-          selectedCityName.toLowerCase().includes(c.name.toLowerCase())
-        );
-      }
-      if (city) {
-        console.log('OTTO-Q DepotView: Syncing to city:', city.name, 'from prop:', selectedCityName);
-        setSelectedCity(city.id);
-      } else {
-        console.warn('OTTO-Q DepotView: No matching city found for:', selectedCityName, 'Available cities:', cities.map(c => c.name));
-      }
+    if (selectedCityName) {
+      setSelectedCity(selectedCityName);
     }
-  }, [selectedCityName, cities]);
+  }, [selectedCityName]);
 
+  // Load depots from the shared brain fleet summary, grouped by the selected city.
   useEffect(() => {
-    if (selectedCity) {
-      // Clear depot selection and resources when city changes
-      setSelectedDepot("");
-      setDepotResources(null);
-      fetchDepotsForCity(selectedCity);
-    }
+    // Clear depot selection and resources when city changes
+    setSelectedDepot("");
+    setDepotResources(null);
+    fetchDepotsForCity(selectedCity);
   }, [selectedCity]);
 
   useEffect(() => {
@@ -109,53 +119,86 @@ export const OTTOQDepotView = ({ selectedCityName, highlightedDepotId }: OTTOQDe
     }
   }, [selectedDepot]);
 
-  const fetchCities = async () => {
-    const { data, error } = await supabase
-      .from("ottoq_cities")
-      .select("*")
-      .order("name");
+  const fetchDepotsForCity = async (cityName: string) => {
+    try {
+      const summary: any = await ottoQFetch("/fleet/summary");
+      const allDepots: any[] = summary?.depots ?? [];
 
-    if (error) {
-      toast.error("Failed to load cities");
-      return;
-    }
+      // Build the city dropdown list from the summary's depots
+      const cityNames = Array.from(
+        new Set(allDepots.map((d) => String(d.city || "")).filter(Boolean))
+      ).sort();
+      setCities(cityNames.map((n) => ({ id: n, name: n, tz: "" })));
 
-    setCities(data || []);
-    if (data && data.length > 0) {
-      setSelectedCity(data[0].id);
-    }
-  };
+      const cityDepots = allDepots.filter(
+        (d) => !cityName || String(d.city || "").toLowerCase() === cityName.toLowerCase()
+      );
+      const mapped: Depot[] = cityDepots.map((d) => ({
+        id: d.id,
+        name: d.name,
+        city_id: d.city || "",
+        address: d.state || null,
+      }));
 
-  const fetchDepotsForCity = async (cityId: string) => {
-    // Only fetch Mini and Max depots for the city
-    const { data, error } = await supabase
-      .from("ottoq_depots")
-      .select("*")
-      .eq("city_id", cityId)
-      .or('name.ilike.%Mini%,name.ilike.%Max%')
-      .order("name");
-
-    if (error) {
+      setDepots(mapped);
+      if (mapped.length > 0) {
+        setSelectedDepot(mapped[0].id);
+      }
+    } catch (error) {
+      console.error("Error fetching depots:", error);
       toast.error("Failed to load depots");
-      return;
-    }
-
-    setDepots(data || []);
-    if (data && data.length > 0) {
-      setSelectedDepot(data[0].id);
     }
   };
 
   const fetchDepotResources = async (depotId: string) => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke(
-        `ottoq-depots-resources/${depotId}`,
-        { method: "GET" }
-      );
+      const resp: any = await ottoqInvoke("ottoq-depot-resources", {
+        depot_id: depotId || DEFAULT_DEPOT_ID,
+      });
+      const rawResources: any[] = resp?.resources ?? [];
+      const resources: Resource[] = rawResources.map((r, i) => {
+        const occupantId: string | null = r.occupant_vehicle_id ?? null;
+        const occupantLabel: string =
+          (r.occupant && (r.occupant.display_name || r.occupant.vin)) ||
+          occupantId ||
+          "Occupied";
+        return {
+          id: r.id,
+          type: mapKindToType(r.kind, r.connector_type),
+          index: indexFromCode(r.stall_code ?? r.name, i + 1),
+          status: mapStatusToLegacy(r.status, occupantId),
+          label: occupantLabel,
+          job_id: occupantId,
+          vehicle_id: occupantId ?? undefined,
+        };
+      });
 
-      if (error) throw error;
-      setDepotResources(data);
+      // otto-q-core depot-resources has no energy series; derive a lightweight
+      // placeholder from resource occupancy so EnergyAnalyticsCard renders.
+      const occupied = resources.filter(
+        (r) => r.status === "OCCUPIED" || r.status === "RESERVED"
+      ).length;
+      const energyConsumed = occupied * 120;
+      const energyRegenerated = Math.round(energyConsumed * 0.18);
+      const energyAnalytics: EnergyAnalytics = {
+        energyConsumed,
+        energyRegenerated,
+        efficiency: energyConsumed > 0 ? Math.round((energyRegenerated / energyConsumed) * 100) : 0,
+        peakDemand: occupied * 75,
+        carbonOffset: Math.round(energyRegenerated * 0.4),
+      };
+
+      const depot = resp?.depot ?? {};
+      setDepotResources({
+        depot_id: depot.id || depotId,
+        depot_name: depot.name || "",
+        city: depot.city || "",
+        branding: "",
+        resources,
+        energyAnalytics,
+        updated_at: new Date().toISOString(),
+      });
     } catch (error) {
       console.error("Error fetching depot resources:", error);
       toast.error("Failed to load depot resources");
@@ -167,18 +210,9 @@ export const OTTOQDepotView = ({ selectedCityName, highlightedDepotId }: OTTOQDe
   const handleRefresh = async () => {
     if (selectedDepot) {
       setRefreshing(true);
-      // Reset mock data by calling the API with reset flag
-      try {
-        await supabase.functions.invoke("ottoq-depots-resources", {
-          body: { depot_id: selectedDepot, reset: true },
-          method: "POST",
-        });
-      } catch {
-        // Ignore reset errors, just refresh
-      }
       await fetchDepotResources(selectedDepot);
       setRefreshing(false);
-      toast.success("Depot data reset and refreshed");
+      toast.success("Depot data refreshed");
     }
   };
 

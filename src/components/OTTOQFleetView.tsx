@@ -6,7 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { supabase } from "@/integrations/supabase/client";
+import { ottoqInvoke } from "@/lib/otto-q-api";
 import { Battery, Zap, Wrench, MapPin, Activity, RefreshCw, Car, Calendar, Heart, Download, Clock, ChevronDown, ChevronUp, CheckCircle2, AlertTriangle, Sparkles, Flag, History } from "lucide-react";
 import { toast } from "sonner";
 import { OTTOQScheduleDialog } from "./OTTOQScheduleDialog";
@@ -89,28 +89,16 @@ export const OTTOQFleetView = ({ selectedCityName, highlightedVehicleId, onAddTo
   const [flagVehicle, setFlagVehicle] = useState<Vehicle | null>(null);
   const { loading: healthLoading, healthData, fetchHealthScore } = useVehicleHealth();
 
+  // Sync the selected city to the prop coming from the parent dashboard.
+  // The shared otto-q-core brain is queried by city NAME (no cities table),
+  // so selectedCity now holds the city name string (still a string for the
+  // sibling MaintenancePanel / OTTOQScheduleDialog cityId props).
   useEffect(() => {
-    fetchCities();
-  }, []);
-
-  useEffect(() => {
-    if (selectedCityName && cities.length > 0) {
-      // Try exact match first, then case-insensitive partial match
-      let city = cities.find(c => c.name === selectedCityName);
-      if (!city) {
-        city = cities.find(c => 
-          c.name.toLowerCase().includes(selectedCityName.toLowerCase()) ||
-          selectedCityName.toLowerCase().includes(c.name.toLowerCase())
-        );
-      }
-      if (city) {
-        console.log('OTTO-Q FleetView: Syncing to city:', city.name, 'from prop:', selectedCityName);
-        setSelectedCity(city.id);
-      } else {
-        console.warn('OTTO-Q FleetView: No matching city found for:', selectedCityName, 'Available cities:', cities.map(c => c.name));
-      }
-    }
-  }, [selectedCityName, cities]);
+    const name = selectedCityName || "Nashville";
+    const display = { id: name, name, tz: "" };
+    setCities([display]);
+    setSelectedCity(name);
+  }, [selectedCityName]);
 
   useEffect(() => {
     if (selectedCity) {
@@ -118,76 +106,77 @@ export const OTTOQFleetView = ({ selectedCityName, highlightedVehicleId, onAddTo
     }
   }, [selectedCity]);
 
-  const fetchCities = async () => {
-    const { data, error } = await supabase
-      .from("ottoq_cities")
-      .select("*")
-      .order("name");
+  // Map an otto-q-core vehicle_state to the legacy status vocab the card render
+  // keys off ("IDLE" => Available badge; otherwise a humanized label) and, when
+  // the vehicle is at the depot, synthesize a minimal assignment so the richer
+  // card body (Location / Time Remaining) still renders.
+  const mapOttoqVehicle = (v: any): Vehicle => {
+    const state = String(v.state || "").toLowerCase();
+    const atDepot =
+      state.startsWith("charging") ||
+      state.includes("wash_bay") ||
+      state.includes("detail_bay") ||
+      state.includes("service_bay") ||
+      state === "staged_awaiting_service" ||
+      state === "arrived_at_gate" ||
+      state === "awaiting_departure";
+    const enRoute = state.includes("en_route");
 
-    if (error) {
-      toast.error("Failed to load cities");
-      return;
+    let status = "IDLE";
+    let assignment: Vehicle["assignment"] = undefined;
+
+    if (state.startsWith("charging")) {
+      status = "CHARGING";
+      assignment = {
+        job_id: v.id,
+        job_type: "CHARGE",
+        state: "ACTIVE",
+        depot: { id: v.depot_id || "", name: v.depot_name || "Depot", address: v.city || "" },
+      };
+    } else if (state.includes("wash_bay") || state.includes("detail_bay") || state.includes("service_bay")) {
+      status = "MAINTENANCE";
+      assignment = {
+        job_id: v.id,
+        job_type: "MAINTENANCE",
+        state: "ACTIVE",
+        depot: { id: v.depot_id || "", name: v.depot_name || "Depot", address: v.city || "" },
+      };
+    } else if (enRoute) {
+      status = "ENROUTE_DEPOT";
+      assignment = {
+        job_id: v.id,
+        job_type: "CHARGE",
+        state: "SCHEDULED",
+        depot: { id: v.depot_id || "", name: v.depot_name || "Depot", address: v.city || "" },
+      };
+    } else if (atDepot) {
+      status = "IDLE";
+    } else {
+      // deployed / departed / offline / out_of_service etc. -> show raw label
+      status = state ? state.replace(/_/g, " ").toUpperCase() : "IDLE";
     }
 
-    setCities(data || []);
-    if (data && data.length > 0) {
-      setSelectedCity(data[0].id);
-    }
+    return {
+      id: String(v.id),
+      external_ref: v.display_name || String(v.id).slice(0, 8),
+      oem: v.oem || "",
+      vin: v.vin ?? null,
+      plate: v.plate ?? null,
+      soc: (Number(v.soc) || 0) / 100, // otto-q-core soc is 0-100 int; card expects 0-1
+      odometer_km: 0,
+      status,
+      last_telemetry_at: v.soc_updated_at ?? null,
+      city: v.city || selectedCityName || "Unknown",
+      assignment,
+    };
   };
 
-  const fetchVehiclesForCity = async (cityId: string) => {
+  const fetchVehiclesForCity = async (cityName: string) => {
     setLoading(true);
     try {
-      // Fetch with random ordering to show mix of OEMs
-      const { data: vehiclesData, error } = await supabase.rpc('get_random_vehicles_for_city', {
-        p_city_id: cityId,
-        p_limit: 50
-      });
-
-      if (error) throw error;
-
-      // Fetch status for each vehicle with cache busting
-      const vehiclesWithStatus = await Promise.all(
-        (vehiclesData || []).map(async (v) => {
-          try {
-            const { data: statusData } = await supabase.functions.invoke(
-              `ottoq-vehicles-status/${v.id}?t=${Date.now()}`,
-              { method: "GET" }
-            );
-
-            return {
-              id: v.id,
-              external_ref: v.external_ref,
-              oem: v.oem,
-              vin: v.vin,
-              plate: v.plate,
-              soc: v.soc,
-              odometer_km: v.odometer_km,
-              status: v.status,
-              last_telemetry_at: v.last_telemetry_at,
-              city: v.city_name || "Unknown",
-              assignment: statusData?.assignment || null,
-            };
-          } catch (err) {
-            return {
-              id: v.id,
-              external_ref: v.external_ref,
-              oem: v.oem,
-              vin: v.vin,
-              plate: v.plate,
-              soc: v.soc,
-              odometer_km: v.odometer_km,
-              status: v.status,
-              last_telemetry_at: v.last_telemetry_at,
-              city: v.city_name || "Unknown",
-              assignment: null,
-            };
-          }
-        })
-      );
-
-      // Already limited to 50 from the function
-      setVehicles(vehiclesWithStatus);
+      const resp: any = await ottoqInvoke("ottoq-fleet-vehicles", { city: cityName, limit: 50 });
+      const vehiclesData: any[] = resp?.vehicles ?? [];
+      setVehicles(vehiclesData.map(mapOttoqVehicle));
     } catch (error) {
       console.error("Error fetching vehicles:", error);
       toast.error("Failed to load vehicles");
