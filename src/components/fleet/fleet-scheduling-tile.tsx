@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { useScheduleIntelligence } from "@/hooks/use-otto-q-strategic";
+import { useScheduleIntelligence, useReoptimizeDepot } from "@/hooks/use-otto-q-strategic";
 import { Card } from "@/components/ui/card";
+import { toast } from "sonner";
 import { SchedulingTimeline } from "./scheduling-timeline";
 import {
   Brain,
@@ -11,6 +12,8 @@ import {
   DollarSign,
   Activity,
   TrendingUp,
+  Sparkles,
+  Loader2,
 } from "lucide-react";
 import type {
   PendingOptimization,
@@ -22,6 +25,7 @@ export function FleetSchedulingTile() {
   const [horizon, setHorizon] = useState<"12h" | "24h" | "48h">("24h");
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   const { data, isLoading } = useScheduleIntelligence(horizon);
+  const reopt = useReoptimizeDepot();
 
   if (isLoading || !data) {
     return (
@@ -67,21 +71,44 @@ export function FleetSchedulingTile() {
           </div>
         </div>
 
-        {/* Horizon selector */}
-        <div className="flex items-center gap-1 rounded-md border border-border/40 bg-muted/20 p-0.5 self-start">
-          {(["12h", "24h", "48h"] as const).map((h) => (
-            <button
-              key={h}
-              onClick={() => setHorizon(h)}
-              className={`px-3 py-1 text-xs font-medium rounded transition ${
-                horizon === h
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-muted"
-              }`}
-            >
-              {h}
-            </button>
-          ))}
+        {/* Actions */}
+        <div className="flex items-center gap-2 self-start">
+          <button
+            onClick={() =>
+              reopt.mutate(undefined, {
+                onSuccess: (r) =>
+                  toast.success("Depot re-optimized", {
+                    description: `${r?.summary?.vehicles_planned ?? 0} vehicles · ${r?.summary?.charge_assigned ?? 0} charge (${r?.summary?.charge_source ?? "-"}) · ${r?.summary?.tasks_awaiting_resource ?? 0} awaiting`,
+                  }),
+                onError: (e) => toast.error("Re-optimize failed", { description: e.message }),
+              })
+            }
+            disabled={reopt.isPending}
+            title="Run OTTO-Q depot-wide re-optimization (cuOpt + energy cap + safety shield)"
+            className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md border border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 transition disabled:opacity-50"
+          >
+            {reopt.isPending ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Sparkles className="h-3.5 w-3.5" />
+            )}
+            Re-optimize
+          </button>
+          <div className="flex items-center gap-1 rounded-md border border-border/40 bg-muted/20 p-0.5">
+            {(["12h", "24h", "48h"] as const).map((h) => (
+              <button
+                key={h}
+                onClick={() => setHorizon(h)}
+                className={`px-3 py-1 text-xs font-medium rounded transition ${
+                  horizon === h
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-muted"
+                }`}
+              >
+                {h}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

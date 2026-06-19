@@ -1,6 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   ottoQFetch,
+  ottoqInvoke,
   FleetSummary,
   AIFleetSummary,
   EnergyHistory,
@@ -47,5 +48,33 @@ export function useEnergyHistory(
     queryKey: ["otto-q", "energy-history", range, depotId || "all"],
     queryFn: () => ottoQFetch<EnergyHistory>(`/energy/history?${qs}`),
     staleTime: 5 * 60 * 1000,
+  });
+}
+
+export interface OrchestrateTickResult {
+  depot?: string;
+  energy?: { tariff?: string; max_concurrent_dcfc?: number; billing_peak_kw?: number };
+  summary?: {
+    vehicles_planned?: number;
+    charge_assigned?: number;
+    charge_source?: string;
+    tasks_awaiting_resource?: number;
+  };
+}
+
+// Triggers OTTO-Q's depot-wide re-optimizer (cuOpt assignment + energy cap + 52-rule shield).
+// Defaults to the primary depot if no depotId is given.
+export function useReoptimizeDepot(depotId?: string) {
+  const qc = useQueryClient();
+  return useMutation<OrchestrateTickResult, Error, void>({
+    mutationFn: () =>
+      ottoqInvoke<OrchestrateTickResult>("ottoq-orchestrate-tick", {
+        depot_id: depotId,
+        submit: true,
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["otto-q", "schedule-intelligence"] });
+      qc.invalidateQueries({ queryKey: ["otto-q", "fleet-summary"] });
+    },
   });
 }
