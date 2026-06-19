@@ -53,7 +53,7 @@ import {
   DailyEnergyGeneration,
   VehicleBatteryLevels,
 } from "@/components/analytics/strategic-analytics-charts";
-import { ottoQFetch } from "@/lib/otto-q-api";
+import { ottoQFetch, ottoqInvoke } from "@/lib/otto-q-api";
 
 // Incidents Tab Component
 const allStatuses: IncidentStatus[] = ["Reported", "Dispatched", "Secured", "At Depot", "Closed"];
@@ -355,128 +355,61 @@ const Index = () => {
       };
 
       // Get city ID
-      const {
-        data: cityData,
-        error: cityError
-      } = await supabase.from("ottoq_cities").select("id, name").eq("name", cityName).maybeSingle();
-      if (cityError) throw cityError;
-      if (!cityData) {
-        console.warn(`City ${cityName} not found in database`);
-        setVehicles([]);
-        setDepots([]);
-        return;
-      }
+      // Vehicles from the shared OTTO-Q brain (otto-q-core) — same fleet OTTO-PULSE sees
+      const vehResp: any = await ottoqInvoke("ottoq-fleet-vehicles", { city: cityName, limit: 100 });
+      const vehiclesData: any[] = vehResp?.vehicles ?? [];
 
-      // Fetch vehicles for this city
-      const {
-        data: vehiclesData,
-        error: vehiclesError
-      } = await supabase.rpc('get_random_vehicles_for_city', {
-        p_city_id: cityData.id,
-        p_limit: 50
-      });
-      if (vehiclesError) throw vehiclesError;
-
-      // Transform vehicles to match the format expected by Overview with city-specific locations
-      const transformedVehicles = (vehiclesData || []).map((v: any, index: number) => {
-        const vehicleLat = cityCenter.lat + (Math.random() - 0.5) * 0.15;
-        const vehicleLng = cityCenter.lng + (Math.random() - 0.5) * 0.20;
-
-        // Map database status to chart-friendly status
-        const mapStatus = (dbStatus: string): string => {
-          const statusUpper = dbStatus.toUpperCase();
-          switch (statusUpper) {
-            case 'ON_TRIP':
-            case 'IN_SERVICE':
-              return 'active';
-            case 'AT_DEPOT':
-            case 'ENROUTE_DEPOT':
-              // Use SOC to determine if charging - low battery = charging
-              return v.soc < 0.5 ? 'charging' : 'idle';
-            case 'IDLE':
-              // Randomly assign some idle vehicles to maintenance for demo diversity
-              return index % 8 === 0 ? 'maintenance' : 'idle';
-            default:
-              return 'idle';
-          }
-        };
-        const mappedStatus = mapStatus(v.status);
+      // Map OTTO-Q vehicle_state -> chart-friendly status
+      const mapStatus = (state: string): string => {
+        const s = (state || "").toLowerCase();
+        if (s.includes("charging")) return "charging";
+        if (s.includes("wash_bay") || s.includes("detail_bay") || s.includes("service_bay")) return "maintenance";
+        if (s === "deployed" || s === "departed" || s.includes("en_route")) return "active";
+        return "idle";
+      };
+      const transformedVehicles = vehiclesData.map((v: any, index: number) => {
+        const mappedStatus = mapStatus(v.state);
         return {
-          id: v.external_ref?.split(' ')[1] || v.id.slice(0, 5),
-          name: v.external_ref || v.id.slice(0, 8),
+          id: v.display_name ? String(v.display_name).split("-").slice(-1)[0] : String(v.id).slice(0, 5),
+          name: v.display_name || String(v.id).slice(0, 8),
           status: mappedStatus,
-          battery: Math.round(v.soc * 100),
+          battery: Math.round(Number(v.soc) || 0),
           location: {
-            lat: vehicleLat,
-            lng: vehicleLng
+            lat: cityCenter.lat + (Math.random() - 0.5) * 0.15,
+            lng: cityCenter.lng + (Math.random() - 0.5) * 0.20
           },
           route: ['Downtown Route', 'Express Line', 'Airport Shuttle', 'City Loop', 'Suburban Connect'][index % 5],
           chargingTime: mappedStatus === 'charging' ? `${Math.floor(Math.random() * 3) + 1}h ${Math.floor(Math.random() * 60)}m` : 'N/A',
-          nextMaintenance: mappedStatus === 'maintenance' ? 'In Progress' : `2025-${Math.random() < 0.5 ? '11' : '12'}-${Math.floor(Math.random() * 28) + 1}`,
+          nextMaintenance: mappedStatus === 'maintenance' ? 'In Progress' : '—',
           city: cityName
         };
       });
-      console.log(`Loaded ${transformedVehicles.length} vehicles for ${cityName}`);
+      console.log(`Loaded ${transformedVehicles.length} OTTO-Q vehicles for ${cityName}`);
       setVehicles(transformedVehicles);
 
-      // Fetch depots for this city
-      const {
-        data: depotsData,
-        error: depotsError
-      } = await supabase.from("ottoq_depots").select("id, name, address, lat, lon, config_jsonb").eq("city_id", cityData.id);
-      if (depotsError) throw depotsError;
-
-      // Fetch resources for each depot to calculate stalls - ensure we always have valid depot locations
-      const depotsWithResources = await Promise.all((depotsData || []).map(async (depot: any, index: number) => {
-        const {
-          data: resourcesData
-        } = await supabase.from("ottoq_resources").select("status").eq("depot_id", depot.id);
-        const totalStalls = resourcesData?.length || 12;
-        const occupiedStalls = resourcesData?.filter((r: any) => r.status === 'BUSY' || r.status === 'RESERVED').length || 0;
-        const availableStalls = Math.max(0, totalStalls - occupiedStalls);
-
-        // Ensure every depot has valid coordinates - place strategically around city
-        const depotOffsets = [{
-          lat: 0.02,
-          lng: 0.03
-        },
-        // North
-        {
-          lat: -0.02,
-          lng: -0.03
-        },
-        // South
-        {
-          lat: 0.01,
-          lng: -0.04
-        },
-        // West
-        {
-          lat: -0.01,
-          lng: 0.04
-        } // East
-        ];
+      // Depots from the shared brain fleet summary (same depots OTTO-PULSE sees)
+      const summary: any = await ottoQFetch("/fleet/summary");
+      const allDepots: any[] = summary?.depots ?? [];
+      const cityDepots = allDepots.filter((d: any) => !cityName || String(d.city || "").toLowerCase() === cityName.toLowerCase());
+      const depotOffsets = [{ lat: 0.02, lng: 0.03 }, { lat: -0.02, lng: -0.03 }, { lat: 0.01, lng: -0.04 }, { lat: -0.01, lng: 0.04 }];
+      const depotsWithResources = cityDepots.map((depot: any, index: number) => {
         const offset = depotOffsets[index % depotOffsets.length];
+        const totalStalls = depot.stalls_total ?? 0;
+        const availableStalls = depot.stalls_available ?? Math.max(0, totalStalls - (depot.stalls_occupied ?? 0));
         return {
           id: depot.id,
           name: depot.name,
-          location: {
-            lat: depot.lat && typeof depot.lat === 'number' ? depot.lat : cityCenter.lat + offset.lat,
-            lng: depot.lon && typeof depot.lon === 'number' ? depot.lon : cityCenter.lng + offset.lng
-          },
+          location: { lat: cityCenter.lat + offset.lat, lng: cityCenter.lng + offset.lng },
           energyGenerated: Math.floor(1500 + Math.random() * 1000),
           energyReturned: Math.floor(800 + Math.random() * 600),
-          vehiclesCharging: occupiedStalls,
+          vehiclesCharging: depot.charging ?? depot.stalls_occupied ?? 0,
           totalStalls,
           availableStalls,
           status: availableStalls > 2 ? 'optimal' : availableStalls > 0 ? 'busy' : 'full',
           city: cityName
         };
-      }));
-      console.log(`Loaded ${depotsWithResources.length} depots for ${cityName}:`, depotsWithResources.map(d => ({
-        name: d.name,
-        location: d.location
-      })));
+      });
+      console.log(`Loaded ${depotsWithResources.length} OTTO-Q depots for ${cityName}`);
       setDepots(depotsWithResources);
     } catch (error) {
       console.error("Error fetching city data:", error);
