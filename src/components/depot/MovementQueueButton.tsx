@@ -9,7 +9,7 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { ArrowRight, Zap, Sparkles, Wrench, ParkingCircle, Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { ottoqInvoke } from "@/lib/otto-q-api";
 import { toast } from "sonner";
 
 interface MovementQueueButtonProps {
@@ -43,19 +43,20 @@ export function MovementQueueButton({
 
     setLoading(true);
     try {
-      const { error } = await supabase.functions.invoke("ottoq-queue-movement", {
-        body: {
-          vehicle_id: vehicleId,
-          current_resource_id: currentResourceId,
-          target_resource_type: targetType,
-          target_depot_id: depotId,
-        },
+      // Owner movement REQUEST into the shared OTTO-Q brain (ottoq-jobs-request on otto-q-core).
+      // The vehicle is on-site, so requeue triggers a depot re-optimization to place it; OTTO-Q
+      // sequences and the technician (OTTO-PULSE) confirms/executes the actual move (final say).
+      const data: any = await ottoqInvoke("ottoq-jobs-request", {
+        vehicle_id: vehicleId,
+        job_type: targetType,
+        preferred_depot_id: depotId,
+        requested_by: "fleet_manager",
+        requeue: true,
+        metadata: { requested_via: "orchestra_depot_movement", from_resource_id: currentResourceId },
       });
 
-      if (error) throw error;
-
       const targetLabel = MOVEMENT_OPTIONS.find((o) => o.value === targetType)?.label || targetType;
-      toast.success(`Vehicle queued for ${targetLabel}`);
+      toast.success(data?.message || `Vehicle queued for ${targetLabel}`);
       onQueued?.();
     } catch (error) {
       console.error("Failed to queue movement:", error);
