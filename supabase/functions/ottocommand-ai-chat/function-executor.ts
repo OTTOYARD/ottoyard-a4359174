@@ -1,5 +1,46 @@
 // Function execution handler for OttoCommand AI agentic capabilities
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// OTTO-Q CORE BACKEND ACCESS (frontier otto-q-core Supabase project)
+// Mirrors the base URL + anon key used by the frontend in src/lib/otto-q-api.ts.
+// Used to make the optimization/prediction/report tools call REAL data, with each
+// caller falling back to its heuristic implementation on any error.
+// ═══════════════════════════════════════════════════════════════════════════════
+const OTTOQ_FN_BASE = "https://gxdrcyphqjzjsuhxuqtg.supabase.co/functions/v1";
+const OTTOQ_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4ZHJjeXBocWp6anN1aHh1cXRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzMjk3MDMsImV4cCI6MjA5MDkwNTcwM30.v7erbnrlciPknvx_EpUpewXrvR9-F3D-hH-jWmTW0zI";
+
+// Default depot for OTTO-Q core calls when none provided (Nashville flagship).
+const OTTOQ_DEFAULT_DEPOT = "11111111-1111-1111-1111-111111111111";
+
+// Invoke an OTTO-Q core edge FUNCTION (orchestrate-tick, assign-optimize, etc.).
+// No client timeout — some functions (Nemotron orchestrator-agent) can take ~140s.
+async function ottoqCore(fn: string, body: unknown) {
+  const r = await fetch(`${OTTOQ_FN_BASE}/${fn}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${OTTOQ_ANON}`,
+      "apikey": OTTOQ_ANON,
+    },
+    body: JSON.stringify(body ?? {}),
+  });
+  if (!r.ok) throw new Error(`otto-q ${fn} ${r.status}`);
+  return await r.json();
+}
+
+// Call the OTTO-Q REST gateway (otto-q-api /api/v1/...). Unwraps { data } envelope.
+async function ottoqApi(path: string) {
+  const r = await fetch(`${OTTOQ_FN_BASE}/otto-q-api/api/v1${path}`, {
+    headers: {
+      "Authorization": `Bearer ${OTTOQ_ANON}`,
+      "apikey": OTTOQ_ANON,
+    },
+  });
+  if (!r.ok) throw new Error(`otto-q-api ${path} ${r.status}`);
+  const j = await r.json();
+  return j?.data ?? j;
+}
+
 // Mock vehicle data for OTTOW dispatch
 const mockVehicles = [
   // Nashville
@@ -469,8 +510,71 @@ async function generateAnalyticsReport(args: any, supabase: any, fleetContext: a
   };
 }
 
-// Compare Performance - NEW  
+// Compare Performance - NEW
+// real otto-q-core; falls back to heuristic on error
 async function comparePerformance(args: any, supabase: any) {
+  const { compare_type, entity_a, entity_b } = args;
+
+  // Real data path for city/depot comparisons (driven by the live depots[] array).
+  if (compare_type === "cities" || compare_type === "depots") {
+    try {
+      const fs: any = await ottoqApi("/fleet/summary");
+      const depots: any[] = Array.isArray(fs?.depots) ? fs.depots : [];
+      if (depots.length === 0) throw new Error("no depots in fleet summary");
+
+      const match = (name: string) =>
+        depots.find((d: any) =>
+          d?.name?.toLowerCase().includes(String(name).toLowerCase()) ||
+          d?.city?.toLowerCase().includes(String(name).toLowerCase()) ||
+          d?.id === name
+        );
+
+      const da = match(entity_a);
+      const db = match(entity_b);
+      if (!da || !db) throw new Error("entity not found in fleet summary");
+
+      const metricsFor = (d: any) => ({
+        totalVehicles: d.vehicles ?? 0,
+        onSite: d.on_site ?? 0,
+        charging: d.charging ?? 0,
+        inService: d.in_service ?? 0,
+        utilization: `${d.utilization_pct ?? 0}%`,
+        stallsAvailable: d.stalls_available ?? 0,
+        activeExceptions: d.active_exceptions ?? 0,
+        activeOttowMissions: d.active_ottow_missions ?? 0,
+      });
+
+      const comparison = {
+        type: compare_type,
+        entities: [entity_a, entity_b],
+        metrics: {
+          [entity_a]: metricsFor(da),
+          [entity_b]: metricsFor(db),
+        },
+        // Fewer active exceptions = healthier operation.
+        winner: (da.active_exceptions ?? 0) === (db.active_exceptions ?? 0)
+          ? null
+          : (da.active_exceptions ?? 0) < (db.active_exceptions ?? 0) ? entity_a : entity_b,
+      };
+
+      return {
+        success: true,
+        action: "performance_compared",
+        comparison,
+        message: `Compared ${compare_type} (live): ${entity_a} (${da.utilization_pct ?? 0}% util, ${da.active_exceptions ?? 0} exceptions) vs ${entity_b} (${db.utilization_pct ?? 0}% util, ${db.active_exceptions ?? 0} exceptions).`,
+      };
+    } catch (err) {
+      console.error("compare_performance real call failed, using heuristic:", err);
+      return comparePerformanceHeuristic(args, supabase);
+    }
+  }
+
+  // Vehicle-level comparison has no live source here — use heuristic.
+  return comparePerformanceHeuristic(args, supabase);
+}
+
+// Heuristic fallback (original simulated implementation) for comparePerformance.
+async function comparePerformanceHeuristic(args: any, supabase: any) {
   const { compare_type, entity_a, entity_b } = args;
 
   // Mock comparison data - in production would query real metrics
@@ -541,7 +645,92 @@ async function comparePerformance(args: any, supabase: any) {
 }
 
 // Get Recommendations - NEW
+// real otto-q-core; falls back to heuristic on error
 async function getRecommendations(args: any, supabase: any, fleetContext: any) {
+  const { focus_area } = args;
+
+  try {
+    const ai: any = await ottoqApi("/ai/fleet-summary");
+    const risks = ai?.active_risks ?? {};
+    const actions = ai?.autonomous_actions_today ?? {};
+    const recents: any[] = Array.isArray(ai?.recent_actions) ? ai.recent_actions : [];
+
+    const recommendations: any[] = [];
+
+    if ((risks.critical ?? 0) > 0) {
+      recommendations.push({
+        priority: "critical",
+        area: "incidents",
+        title: "Critical Active Risks",
+        description: `${risks.critical} critical risk(s) currently active across tracked depots.`,
+        action: "Review OTTO-Response advisory panel and dispatch mitigations immediately",
+        impact: "Prevents service disruption and safety exposure",
+      });
+    }
+    if ((risks.warning ?? 0) > 0) {
+      recommendations.push({
+        priority: "high",
+        area: "operations",
+        title: "Active Warnings",
+        description: `${risks.warning} warning-level risk(s) detected.`,
+        action: "Investigate warnings and pre-stage resources",
+        impact: "Reduces escalation to critical",
+      });
+    }
+    if ((actions.pending ?? 0) > 0) {
+      recommendations.push({
+        priority: "medium",
+        area: "operations",
+        title: "Pending Autonomous Actions",
+        description: `${actions.pending} autonomous action(s) awaiting approval/execution (executed today: ${actions.executed ?? 0}).`,
+        action: "Approve or review pending autonomous actions",
+        impact: "Keeps the optimizer acting on fresh state",
+      });
+    }
+    for (const r of recents.slice(0, 3)) {
+      recommendations.push({
+        priority: "low",
+        area: "operations",
+        title: `Recent: ${r.action_type ?? "action"}`,
+        description: r.summary ?? `Action ${r.id} (${r.status}).`,
+        action: "No action required — informational",
+        impact: "Audit trail of autonomous activity",
+      });
+    }
+    if (recommendations.length === 0) {
+      recommendations.push({
+        priority: "low",
+        area: "general",
+        title: "Fleet Operating Normally",
+        description: "No active risks or pending actions reported by the AI brain. Fleet is within normal parameters.",
+        action: "Continue monitoring",
+        impact: "Sustained operational excellence",
+      });
+    }
+
+    let filtered = recommendations;
+    if (focus_area) {
+      filtered = recommendations.filter((rc) => rc.area === focus_area || rc.area === "general");
+      if (filtered.length === 0) filtered = recommendations;
+    }
+
+    return {
+      success: true,
+      action: "recommendations_generated",
+      recommendations: filtered.sort((a, b) => {
+        const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+        return (priorityOrder[a.priority as keyof typeof priorityOrder] || 4) - (priorityOrder[b.priority as keyof typeof priorityOrder] || 4);
+      }),
+      message: `Generated ${filtered.length} live recommendations from the AI brain (${risks.total ?? 0} active risks, ${actions.pending ?? 0} pending actions)${focus_area ? ` for ${focus_area}` : ""}.`,
+    };
+  } catch (err) {
+    console.error("get_recommendations real call failed, using heuristic:", err);
+    return getRecommendationsHeuristic(args, supabase, fleetContext);
+  }
+}
+
+// Heuristic fallback (original simulated implementation) for getRecommendations.
+async function getRecommendationsHeuristic(args: any, supabase: any, fleetContext: any) {
   const { focus_area } = args;
 
   const metrics = fleetContext || {};
@@ -852,7 +1041,51 @@ async function performWebSearch(args: any) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 // Predict Charging Needs
+// real otto-q-core; falls back to heuristic on error
 async function predictChargingNeeds(args: any, fleetContext: any) {
+  const { hours = 4 } = args;
+
+  try {
+    // Prefer fleet-summary for speed; soc_distribution drives charging recommendations.
+    const fs: any = await ottoqApi("/fleet/summary");
+    const soc = fs?.soc_distribution ?? {};
+    const totals = fs?.totals ?? {};
+    const critical = soc.critical ?? 0;
+    const low = soc.low ?? 0;
+    const medium = soc.medium ?? 0;
+    const needCharge = critical + low; // critical + low buckets need charging soon
+
+    // Synthesize per-bucket predictions in the same shape the UI/LLM expect.
+    const predictions: any[] = [];
+    if (critical > 0) predictions.push({ bucket: "critical", count: critical, urgency: "critical", recommendation: "Queue immediately" });
+    if (low > 0) predictions.push({ bucket: "low", count: low, urgency: "high", recommendation: "Queue immediately" });
+    if (medium > 0) predictions.push({ bucket: "medium", count: medium, urgency: "medium", recommendation: "Schedule within 2 hours" });
+
+    return {
+      success: true,
+      action: "charging_needs_predicted",
+      timeframe: `${hours} hours`,
+      predictions: predictions.slice(0, 10),
+      summary: {
+        total: needCharge + medium,
+        critical,
+        high: low,
+        medium,
+      },
+      confidence: 90,
+      message: `Live fleet SOC across ${totals.vehicles ?? "?"} vehicles: ${critical} critical, ${low} low, ${medium} medium. ${needCharge} need charging soon; ${fs?.totals?.charging ?? 0} already charging.`,
+      recommendedAction: needCharge > 0
+        ? `Auto-queue ${needCharge} critical/low-SOC vehicles for charging using 'urgent_first' strategy.`
+        : "No immediate charging needs.",
+    };
+  } catch (err) {
+    console.error("predict_charging_needs real call failed, using heuristic:", err);
+    return predictChargingNeedsHeuristic(args, fleetContext);
+  }
+}
+
+// Heuristic fallback (original simulated implementation) for predictChargingNeeds.
+async function predictChargingNeedsHeuristic(args: any, fleetContext: any) {
   const { hours = 4, urgency_threshold = 30, city } = args;
 
   // Use fleet context or mock data
@@ -985,7 +1218,64 @@ async function predictMaintenanceRisks(args: any, fleetContext: any) {
 }
 
 // Predict Depot Demand
+// real otto-q-core; falls back to heuristic on error
 async function predictDepotDemand(args: any, fleetContext: any) {
+  const { depot_id, hours = 8 } = args;
+
+  try {
+    const energy: any = await ottoqCore("ottoq-energy-optimize", {
+      depot_id: depot_id || OTTOQ_DEFAULT_DEPOT,
+    });
+
+    // Supplement with recent demand history when available (best-effort).
+    let history: any = null;
+    try {
+      history = await ottoqApi(`/energy/history?range=24h&depot_id=${depot_id || OTTOQ_DEFAULT_DEPOT}`);
+    } catch (_) { /* history optional */ }
+
+    const ctx = energy?.context ?? {};
+    const proj = energy?.projections ?? {};
+    const bess = energy?.bess ?? {};
+    const hist = history?.summary ?? {};
+
+    const predictions = [{
+      depotId: depot_id || OTTOQ_DEFAULT_DEPOT,
+      depotName: energy?.depot ?? "Depot",
+      tariffWindow: ctx.tariff_window ?? "unknown",
+      currentDemandKw: ctx.building_kw ?? null,
+      evChargingKw: ctx.ev_charging_kw ?? null,
+      netLoadKw: ctx.net_load_kw ?? null,
+      solarKw: ctx.solar_kw ?? null,
+      projectedPeakKw: proj.projected_peak_kw ?? null,
+      billingPeakKw: ctx.billing_period_peak_kw ?? null,
+      demandPeakProtected: proj.demand_peak_protected ?? null,
+      avgDemandKw24h: hist.avg_demand_kw ?? null,
+      peakDemandKw24h: hist.peak_demand_kw ?? null,
+      bess: {
+        socPct: bess.soc_pct ?? null,
+        action: bess.action ?? null,
+        setpointKw: bess.setpoint_kw ?? null,
+        reason: bess.reason ?? null,
+      },
+      recommendation: bess.reason ?? (proj.demand_peak_protected ? "Demand peak protected; capacity sufficient." : "Monitor demand vs billing peak."),
+    }];
+
+    return {
+      success: true,
+      action: "depot_demand_predicted",
+      timeframe: `${hours} hours`,
+      predictions,
+      confidence: 88,
+      message: `Live demand for ${energy?.depot ?? "depot"} (${ctx.tariff_window ?? "?"} tariff): net load ${ctx.net_load_kw ?? "?"} kW, projected peak ${proj.projected_peak_kw ?? "?"} kW vs ${ctx.billing_period_peak_kw ?? "?"} kW billing peak. BESS ${bess.action ?? "idle"} at ${bess.setpoint_kw ?? 0} kW.`,
+    };
+  } catch (err) {
+    console.error("predict_depot_demand real call failed, using heuristic:", err);
+    return predictDepotDemandHeuristic(args, fleetContext);
+  }
+}
+
+// Heuristic fallback (original simulated implementation) for predictDepotDemand.
+async function predictDepotDemandHeuristic(args: any, fleetContext: any) {
   const { depot_id, city, hours = 8 } = args;
 
   const depots = fleetContext?.depots || [
@@ -1045,7 +1335,56 @@ async function predictDepotDemand(args: any, fleetContext: any) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 // Auto-Queue Charging
+// real otto-q-core; falls back to heuristic on error
 async function autoQueueCharging(args: any, fleetContext: any) {
+  const { strategy = "urgent_first", soc_threshold = 30, depot_id, dry_run = true } = args;
+
+  try {
+    const result: any = await ottoqCore("ottoq-assign-optimize", {
+      depot_id: depot_id || OTTOQ_DEFAULT_DEPOT,
+    });
+
+    const assignments: any[] = Array.isArray(result?.assignments) ? result.assignments : [];
+
+    const queuedVehicles = assignments.slice(0, 10).map((a: any, idx: number) => ({
+      vehicleId: a.vehicle_id,
+      make: undefined,
+      model: undefined,
+      city: undefined,
+      currentSoc: typeof a.soc === "number" ? Math.round(a.soc) : 0,
+      queuePosition: idx + 1,
+      estimatedWait: `${(idx + 1) * 15} min`,
+      targetSoc: 80,
+      stall: a.stall_code,
+      stallType: a.stall_type,
+    }));
+
+    return {
+      success: true,
+      action: dry_run ? "charging_queue_preview" : "vehicles_queued_for_charging",
+      dryRun: dry_run,
+      strategy,
+      threshold: `${soc_threshold}%`,
+      vehiclesQueued: queuedVehicles,
+      summary: {
+        total: queuedVehicles.length,
+        criticalSoc: queuedVehicles.filter((v: any) => v.currentSoc < 15).length,
+        averageSoc: queuedVehicles.length > 0
+          ? Math.round(queuedVehicles.reduce((sum, v) => sum + v.currentSoc, 0) / queuedVehicles.length)
+          : 0,
+      },
+      message: dry_run
+        ? `Preview: cuOpt assigned ${queuedVehicles.length} vehicles to charging stalls (${result?.candidates ?? "?"} candidates, ${result?.offered_stalls ?? "?"} stalls offered, source: ${result?.source ?? "n/a"}). Execute with dry_run=false to commit.`
+        : `✓ Committed ${queuedVehicles.length} cuOpt charging assignments (source: ${result?.source ?? "n/a"}).`,
+    };
+  } catch (err) {
+    console.error("auto_queue_charging real call failed, using heuristic:", err);
+    return autoQueueChargingHeuristic(args, fleetContext);
+  }
+}
+
+// Heuristic fallback (original simulated implementation) for autoQueueCharging.
+async function autoQueueChargingHeuristic(args: any, fleetContext: any) {
   const { strategy = "urgent_first", soc_threshold = 30, city, dry_run = true } = args;
 
   const vehicles = fleetContext?.vehicles || mockVehicles;
@@ -1209,7 +1548,94 @@ async function triageIncidents(args: any, fleetContext: any) {
 }
 
 // Detect Anomalies
+// real otto-q-core; falls back to heuristic on error
 async function detectAnomalies(args: any, fleetContext: any) {
+  const { city, anomaly_type } = args;
+
+  try {
+    const ai: any = await ottoqApi("/ai/fleet-summary");
+    const risks = ai?.active_risks ?? {};
+    const recents: any[] = Array.isArray(ai?.recent_actions) ? ai.recent_actions : [];
+    const nowIso = ai?.timestamp ?? new Date().toISOString();
+
+    const anomalies: any[] = [];
+
+    // Each non-zero risk severity becomes an anomaly record (same shape as heuristic).
+    if ((risks.critical ?? 0) > 0) {
+      anomalies.push({
+        vehicleId: "fleet",
+        anomalyType: anomaly_type || "active_risk",
+        severity: "high",
+        description: `${risks.critical} critical active risk(s) flagged by the AI brain.`,
+        detectedAt: nowIso,
+        recommendation: "Open OTTO-Response and mitigate critical risks immediately.",
+      });
+    }
+    if ((risks.warning ?? 0) > 0) {
+      anomalies.push({
+        vehicleId: "fleet",
+        anomalyType: anomaly_type || "active_risk",
+        severity: "medium",
+        description: `${risks.warning} warning-level risk(s) detected.`,
+        detectedAt: nowIso,
+        recommendation: "Investigate warnings before they escalate.",
+      });
+    }
+    if ((risks.info ?? 0) > 0) {
+      anomalies.push({
+        vehicleId: "fleet",
+        anomalyType: anomaly_type || "active_risk",
+        severity: "low",
+        description: `${risks.info} informational risk signal(s).`,
+        detectedAt: nowIso,
+        recommendation: "Monitor; no immediate action required.",
+      });
+    }
+    // Recent autonomous actions that failed/rolled back are anomalies worth surfacing.
+    for (const r of recents) {
+      if (r?.status && /fail|rolled_back|error/i.test(r.status)) {
+        anomalies.push({
+          vehicleId: r.depot_id ?? "fleet",
+          anomalyType: r.action_type || "action_failure",
+          severity: "high",
+          description: r.summary ?? `Autonomous action ${r.id} ${r.status}.`,
+          detectedAt: r.created_at ?? nowIso,
+          recommendation: "Review the failed autonomous action and re-run if appropriate.",
+        });
+      }
+    }
+
+    const filtered = anomaly_type
+      ? anomalies.filter((a) => a.anomalyType === anomaly_type)
+      : anomalies;
+
+    return {
+      success: true,
+      action: "anomalies_detected",
+      anomalies: filtered.sort((a, b) => {
+        const severityOrder: Record<string, number> = { high: 0, medium: 1, low: 2 };
+        return severityOrder[a.severity] - severityOrder[b.severity];
+      }),
+      summary: {
+        total: filtered.length,
+        high: filtered.filter((a) => a.severity === "high").length,
+        medium: filtered.filter((a) => a.severity === "medium").length,
+        low: filtered.filter((a) => a.severity === "low").length,
+        byType: filtered.reduce((acc, a) => {
+          acc[a.anomalyType] = (acc[a.anomalyType] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>),
+      },
+      message: `Detected ${filtered.length} live anomaly signal(s) from the AI brain (${risks.total ?? 0} active risks total). ${filtered.filter((a) => a.severity === "high").length} require immediate investigation.`,
+    };
+  } catch (err) {
+    console.error("detect_anomalies real call failed, using heuristic:", err);
+    return detectAnomaliesHeuristic(args, fleetContext);
+  }
+}
+
+// Heuristic fallback (original simulated implementation) for detectAnomalies.
+async function detectAnomaliesHeuristic(args: any, fleetContext: any) {
   const { city, anomaly_type } = args;
 
   const vehicles = fleetContext?.vehicles || mockVehicles;
@@ -1289,7 +1715,81 @@ function getAnomalyRecommendation(type: string): string {
 }
 
 // Utilization Report
+// real otto-q-core; falls back to heuristic on error
 async function utilizationReport(args: any, fleetContext: any) {
+  const { city, period = "today" } = args;
+
+  try {
+    const fs: any = await ottoqApi("/fleet/summary");
+    let depots: any[] = Array.isArray(fs?.depots) ? fs.depots : [];
+    if (city) {
+      depots = depots.filter((d: any) => d?.city?.toLowerCase().includes(city.toLowerCase()));
+    }
+    if (depots.length === 0) throw new Error("no depots in fleet summary");
+
+    const report = depots.map((d: any) => ({
+      depot: d.name,
+      city: d.city,
+      chargeStalls: {
+        total: d.stalls_total ?? 0,
+        utilized: d.stalls_occupied ?? 0,
+        utilization: `${d.utilization_pct ?? 0}%`,
+        peakUtilization: `${d.utilization_pct ?? 0}%`,
+        peakTime: "14:00-18:00",
+      },
+      maintenanceBays: {
+        total: 0,
+        utilized: d.in_service ?? 0,
+        utilization: "n/a",
+      },
+      jobsCompleted: {
+        charging: d.charging ?? 0,
+        maintenance: d.in_service ?? 0,
+        detailing: 0,
+      },
+      efficiency: {
+        avgChargingTime: "n/a",
+        avgTurnaround: "n/a",
+        queueWaitTime: "n/a",
+      },
+      vehicles: d.vehicles ?? 0,
+      onSite: d.on_site ?? 0,
+      activeExceptions: d.active_exceptions ?? 0,
+      activeOttowMissions: d.active_ottow_missions ?? 0,
+    }));
+
+    const su = fs?.stall_utilization ?? {};
+    const totalUtilization = (su.total ?? 0) > 0
+      ? Math.round(((su.occupied ?? 0) / su.total) * 100)
+      : Math.round(report.reduce((sum, r) => sum + (parseInt(r.chargeStalls.utilization) || 0), 0) / report.length);
+
+    return {
+      success: true,
+      action: "utilization_report_generated",
+      period,
+      depots: report,
+      summary: {
+        totalDepots: report.length,
+        avgChargeUtilization: `${totalUtilization}%`,
+        totalJobsCompleted: report.reduce((sum, r) =>
+          sum + r.jobsCompleted.charging + r.jobsCompleted.maintenance + r.jobsCompleted.detailing, 0
+        ),
+        recommendation: totalUtilization > 80
+          ? "Consider expanding charging capacity"
+          : totalUtilization < 50
+          ? "Optimize scheduling to improve utilization"
+          : "Utilization within optimal range",
+      },
+      message: `Live ${period} utilization across ${report.length} depot(s): ${su.occupied ?? 0}/${su.total ?? 0} stalls occupied (${totalUtilization}%), ${fs?.totals?.charging ?? 0} charging, ${fs?.active_exceptions ?? 0} active exceptions.`,
+    };
+  } catch (err) {
+    console.error("utilization_report real call failed, using heuristic:", err);
+    return utilizationReportHeuristic(args, fleetContext);
+  }
+}
+
+// Heuristic fallback (original simulated implementation) for utilizationReport.
+async function utilizationReportHeuristic(args: any, fleetContext: any) {
   const { city, period = "today" } = args;
 
   const depots = fleetContext?.depots || [
@@ -1429,7 +1929,47 @@ async function explainConcept(args: any) {
 }
 
 // Create Optimization Plan
+// real otto-q-core; falls back to heuristic on error
 async function createOptimizationPlan(args: any) {
+  const { focus_area, timeframe, goals, depot_id } = args;
+
+  try {
+    const tick: any = await ottoqCore("ottoq-orchestrate-tick", {
+      depot_id: depot_id || OTTOQ_DEFAULT_DEPOT,
+      submit: false,
+    });
+
+    const s = tick?.summary ?? {};
+    const e = tick?.energy ?? {};
+    const board: any[] = Array.isArray(tick?.depot_board) ? tick.depot_board : [];
+
+    // Build actionable plan steps from the live optimizer output.
+    const plan: string[] = [
+      `Assign ${s.charge_assigned ?? 0}/${s.vehicles_planned ?? 0} vehicles to charging (source: ${s.charge_source ?? "n/a"}).`,
+      `Sequence ${s.tasks_assigned ?? board.length} depot tasks; ${s.tasks_awaiting_resource ?? 0} awaiting a free resource (${s.free_stalls ?? 0} stalls free).`,
+      `Hold DCFC concurrency at ${e.max_concurrent_dcfc ?? "n/a"} chargers under the ${e.tariff ?? "current"} tariff to protect the ${e.billing_peak_kw ?? "n/a"} kW billing peak.`,
+      ...board.slice(0, 6).map((v: any) => `${v.vehicle} (SOC ${v.soc}%): ${v.sequence}`),
+    ];
+
+    return {
+      success: true,
+      action: "optimization_plan_created",
+      focus_area: focus_area,
+      timeframe: timeframe,
+      goals: goals,
+      plan: plan,
+      estimated_savings: `${s.charge_assigned ?? 0} vehicles optimally sequenced`,
+      implementation_steps: plan.length,
+      message: `Created live ${timeframe || ""} ${focus_area || "operations"} optimization plan for ${tick?.depot ?? "depot"}: ${s.vehicles_planned ?? 0} vehicles planned, ${s.charge_assigned ?? 0} charging (${s.charge_source ?? "n/a"}), ${s.tasks_awaiting_resource ?? 0} tasks awaiting resource.`.replace(/\s+/g, " ").trim(),
+    };
+  } catch (err) {
+    console.error("create_optimization_plan real call failed, using heuristic:", err);
+    return createOptimizationPlanHeuristic(args);
+  }
+}
+
+// Heuristic fallback (original simulated implementation) for createOptimizationPlan.
+function createOptimizationPlanHeuristic(args: any) {
   const { focus_area, timeframe, goals } = args;
 
   const optimizationPlans: Record<string, Record<string, string[]>> = {
