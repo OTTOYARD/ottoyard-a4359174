@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { supabase } from "@/integrations/supabase/client";
+import { ottoqInvoke, ottoQFetch } from "@/lib/otto-q-api";
 import { toast } from "sonner";
 import { Loader2, Calendar, MapPin, Wrench } from "lucide-react";
 
@@ -65,17 +65,21 @@ export const OTTOQScheduleDialog = ({
   const fetchDepots = async () => {
     setFetchingDepots(true);
     try {
-      const { data, error } = await supabase
-        .from("ottoq_depots")
-        .select("id, name, address")
-        .eq("city_id", cityId)
-        .order("name");
-
-      if (error) throw error;
-
-      setDepots(data || []);
-      if (data && data.length > 0) {
-        setSelectedDepot(data[0].id);
+      // Depots from the shared OTTO-Q brain fleet summary (the same depots OTTO-PULSE
+      // and the depot views see) — no longer the legacy ycsisvozz ottoq_depots table.
+      const summary: any = await ottoQFetch("/fleet/summary");
+      const all: any[] = summary?.depots ?? [];
+      const byCity = all.filter(
+        (d: any) => !cityId || String(d.city || "").toLowerCase() === String(cityId).toLowerCase()
+      );
+      const list = (byCity.length ? byCity : all).map((d: any) => ({
+        id: d.id,
+        name: d.name,
+        address: d.city || d.address || "",
+      }));
+      setDepots(list);
+      if (list.length > 0) {
+        setSelectedDepot(list[0].id);
       }
     } catch (error) {
       console.error("Error fetching depots:", error);
@@ -109,26 +113,21 @@ export const OTTOQScheduleDialog = ({
       }
       // ASAP = no earliest_start_at (immediate)
 
-      const { data, error } = await supabase.functions.invoke(
-        "ottoq-jobs-request",
-        {
-          body: {
-            vehicle_id: vehicle.id,
-            job_type: jobType,
-            preferred_depot_id: selectedDepot,
-            earliest_start_at,
-            metadata: {
-              requested_via: "fleet_ui",
-              timing_preference: timing,
-            },
-          },
-        }
-      );
-
-      if (error) throw error;
+      // Owner REQUEST into the shared OTTO-Q brain (ottoq-jobs-request on otto-q-core):
+      // ensures the schedule + service task, dispatches the vehicle inbound, and OTTO-Q
+      // returns the coded sequence. The technician (OTTO-PULSE) confirms/executes on arrival.
+      const data: any = await ottoqInvoke("ottoq-jobs-request", {
+        vehicle_id: vehicle.id,
+        job_type: jobType,
+        preferred_depot_id: selectedDepot,
+        earliest_start_at,
+        requested_by: "fleet_manager",
+        metadata: { requested_via: "orchestra_fleet_ui", timing_preference: timing },
+      });
 
       toast.success(
-        `Job scheduled for ${vehicle.external_ref || vehicle.id.slice(0, 8)}`
+        data?.message ||
+          `Requested ${jobType.toLowerCase()} for ${vehicle.external_ref || vehicle.id.slice(0, 8)}`
       );
       onOpenChange(false);
       onSuccess?.();
