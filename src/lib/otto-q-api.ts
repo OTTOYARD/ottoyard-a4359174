@@ -30,6 +30,25 @@ export async function ottoQFetch<T = unknown>(
   return (json?.data ?? json) as T;
 }
 
+// Direct invoke of an OTTO-Q edge FUNCTION on otto-q-core (not the otto-q-api REST gateway).
+// Used for the frontier functions (orchestrate-tick, amend, cleaning-cadence, …) that aren't
+// exposed under /api/v1. Reuses the otto-q-core base URL + anon key above (correct project).
+const OTTOQ_FN_BASE = OTTOQ_BASE.replace(/\/otto-q-api\/api\/v1\/?$/, "");
+
+export async function ottoqInvoke<T = unknown>(fn: string, body?: unknown): Promise<T> {
+  const res = await fetch(`${OTTOQ_FN_BASE}/${fn}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${OTTOQ_KEY}`,
+      apikey: OTTOQ_KEY,
+    },
+    body: JSON.stringify(body ?? {}),
+  });
+  if (!res.ok) throw new Error(`OTTO-Q ${fn} ${res.status}: ${await res.text()}`);
+  return (await res.json()) as T;
+}
+
 // --- Type definitions ---
 
 export interface FleetSummaryDepot {
