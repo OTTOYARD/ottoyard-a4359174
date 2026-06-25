@@ -27,6 +27,7 @@ import { toast } from "sonner";
 import { MessageRenderer } from "@/components/MessageRenderer";
 import { useIncidentsStore } from "@/stores/incidentsStore";
 import { useFleetContext, serializeFleetContext } from "@/hooks/useFleetContext";
+import { ottoqInvoke } from "@/lib/otto-q-api";
 import { useOttoResponseBridge } from "@/hooks/useOttoResponseBridge";
 import { useOttoCommandStore } from "@/stores/ottoCommandStore";
 import { QuickActionsGrid, QuickAction } from "./QuickActions";
@@ -269,39 +270,23 @@ export const OttoCommandPanel: React.FC<OttoCommandPanelProps> = ({
           .getConversationHistory(10)
           .map((m) => ({ role: m.role, content: m.content }));
 
-        const { data, error } = await supabase.functions.invoke("ottocommand-ai-chat", {
-          body: {
+        // AV/ops chat now runs on the FRONTIER brain (otto-q-core `ottoq-ottocommand` v4) — role-scoped
+        // (manager), and self-sufficient: its tools read live OTTO-Q state and drive the real frontier
+        // controls (energy dial, look-ahead, self-improve). EV concierge stays on its legacy function.
+        let data: any;
+        if (mode === "ev") {
+          const res = await supabase.functions.invoke("ottocommand-ai-chat", {
+            body: { message: text, mode: "ev", conversationHistory, currentCity, vehicles, depots, evContext },
+          });
+          if (res.error) throw res.error;
+          data = res.data;
+        } else {
+          data = await ottoqInvoke("ottoq-ottocommand", {
             message: text,
-            mode: mode === "ev" ? "ev" : "ops",
-            conversationHistory,
-            currentCity,
-            vehicles,
-            depots,
-            evContext: mode === "ev" ? evContext : undefined,
-            fleetContext:
-              mode === "av"
-                ? {
-                    serialized: fleetDataContext,
-                    metrics: {
-                      fleet: fleetContext.fleetMetrics,
-                      depot: fleetContext.depotMetrics,
-                      incidents: fleetContext.incidentMetrics,
-                    },
-                    cities: fleetContext.cities,
-                    incidents: incidents.map((i) => ({
-                      id: i.incidentId,
-                      type: i.type,
-                      status: i.status,
-                      city: i.city,
-                      vehicleId: i.vehicleId,
-                      summary: i.summary,
-                    })),
-                  }
-                : undefined,
-          },
-        });
-
-        if (error) throw error;
+            role: "manager",
+            history: conversationHistory,
+          });
+        }
 
         // Extract content
         let content = data.content || data.reply || data.message || "";
