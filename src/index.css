@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -106,31 +108,32 @@
 
 @layer base {
   :root {
-    /* Core Colors - PRESERVED FROM ORIGINAL */
-    --background: 0 0% 8%;
-    --foreground: 0 0% 95%;
+    /* OTTOYARD brand tokens (website brand guide): obsidian base #06070A, OTTOYARD red #C8102E,
+       near-white ink #E7EAF0. Red is a SIGNAL — accents stay neutral. HSL for shadcn. */
+    --background: 222 24% 3%;        /* #06070A */
+    --foreground: 223 22% 92%;       /* #E7EAF0 */
 
-    --card: 0 0% 12%;
-    --card-foreground: 0 0% 95%;
+    --card: 222 15% 8%;              /* #111317 */
+    --card-foreground: 223 22% 92%;
 
-    --popover: 0 0% 12%;
-    --popover-foreground: 0 0% 95%;
+    --popover: 222 15% 8%;
+    --popover-foreground: 223 22% 92%;
 
-    --primary: 0 85% 60%;
+    --primary: 350 85% 42%;          /* #C8102E OTTOYARD red */
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 0 85% 55%;
+    --primary-hover: 350 85% 38%;
 
-    --secondary: 0 0% 18%;
-    --secondary-foreground: 0 0% 95%;
+    --secondary: 222 13% 13%;
+    --secondary-foreground: 222 8% 64%;
 
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 60%;
+    --muted: 222 13% 13%;
+    --muted-foreground: 222 7% 57%;  /* #8A8F99 */
 
-    --accent: 0 85% 60%;
-    --accent-foreground: 0 0% 100%;
-    --accent-hover: 0 85% 55%;
+    --accent: 222 13% 13%;           /* neutral — red used sparingly */
+    --accent-foreground: 223 22% 92%;
+    --accent-hover: 222 13% 16%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 353 80% 54%;      /* #E8293F red-hot */
     --destructive-foreground: 0 0% 100%;
 
     --warning: 45 93% 47%;
@@ -139,21 +142,21 @@
     --success: 142 76% 36%;
     --success-foreground: 0 0% 100%;
 
-    --border: 0 0% 20%;
-    --input: 0 0% 18%;
-    --ring: 0 85% 60%;
+    --border: 222 12% 15%;
+    --input: 222 12% 15%;
+    --ring: 350 85% 42%;
 
     --radius: 0.75rem;
 
     /* Sidebar Colors */
-    --sidebar-background: 0 0% 8%;
-    --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 0 85% 60%;
+    --sidebar-background: 222 24% 3%;
+    --sidebar-foreground: 222 8% 64%;
+    --sidebar-primary: 350 85% 42%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 15%;
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 0 0% 20%;
-    --sidebar-ring: 0 85% 60%;
+    --sidebar-accent: 222 13% 13%;
+    --sidebar-accent-foreground: 223 22% 92%;
+    --sidebar-border: 222 12% 15%;
+    --sidebar-ring: 350 85% 42%;
 
     /* Energy Indicators */
     --energy-high: 142 76% 36%;
@@ -279,23 +282,25 @@
 
     /* Luxury Design Tokens */
     --glass-warmth: linear-gradient(135deg, hsl(30 20% 50% / 0.03) 0%, transparent 60%);
-    --font-display: 'Inter', system-ui, sans-serif;
-    --font-body: 'Inter', system-ui, sans-serif;
+    --font-display: 'Chakra Petch', system-ui, sans-serif;
+    --font-body: 'Inter Tight', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
   }
 
   .dark {
-    --background: 215 25% 11%;
-    --foreground: 215 16% 97%;
+    /* neutralized to OTTOYARD brand (was a blue theme) */
+    --background: 222 24% 3%;
+    --foreground: 223 22% 92%;
 
-    --card: 215 25% 16%;
-    --card-foreground: 215 16% 97%;
+    --card: 222 15% 8%;
+    --card-foreground: 223 22% 92%;
 
-    --popover: 215 25% 16%;
-    --popover-foreground: 215 16% 97%;
+    --popover: 222 15% 8%;
+    --popover-foreground: 223 22% 92%;
 
-    --primary: 217 91% 60%;
-    --primary-foreground: 215 25% 11%;
-    --primary-hover: 217 91% 65%;
+    --primary: 350 85% 42%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 350 85% 38%;
 
     --secondary: 215 25% 27%;
     --secondary-foreground: 215 16% 97%;
@@ -958,6 +963,16 @@
   * {
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--muted-foreground) / 0.2) transparent;
+  }
+}
+
+/* OTTOYARD typography — Inter Tight body, Chakra Petch display, JetBrains Mono for data */
+@layer base {
+  body {
+    font-family: 'Inter Tight', system-ui, -apple-system, sans-serif;
+  }
+  h1, h2, h3, h4, .font-display {
+    font-family: 'Chakra Petch', system-ui, sans-serif;
   }
 }
 
