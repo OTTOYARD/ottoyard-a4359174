@@ -48,6 +48,7 @@ import type { UiVehicle, UiDepot } from "@/lib/ottoq/ottoqTypes";
 import { FleetSummaryOverlay } from "@/components/overview/fleet-summary-overlay";
 import { OttoQIntelligenceCard } from "@/components/overview/otto-q-intelligence-card";
 import { OttoQEnergyControl } from "@/components/OttoQEnergyControl";
+import { OttoQSelfImprovement } from "@/components/OttoQSelfImprovement";
 import {
   EnergyEfficiencyChart,
   FleetStatusPie,
@@ -568,8 +569,11 @@ const Index = () => {
                   <OttoQIntelligenceCard />
                 </div>
 
-                {/* OTTO-Q frontier energy control — peak-shave dial + live confidence */}
-                <OttoQEnergyControl />
+                {/* OTTO-Q frontier controls — peak-shave dial + self-improvement log */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+                  <OttoQEnergyControl />
+                  <OttoQSelfImprovement />
+                </div>
 
                 {/* Quick Glance Section */}
                 <div className="space-y-4">
