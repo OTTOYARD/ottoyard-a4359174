@@ -56,6 +56,7 @@ import {
   VehicleBatteryLevels,
 } from "@/components/analytics/strategic-analytics-charts";
 import { ottoQFetch, ottoqInvoke } from "@/lib/otto-q-api";
+import { useEnergyHistory } from "@/hooks/use-otto-q-strategic";
 
 // Incidents Tab Component
 const allStatuses: IncidentStatus[] = ["Reported", "Dispatched", "Secured", "At Depot", "Closed"];
@@ -381,7 +382,7 @@ const Index = () => {
             lng: cityCenter.lng + (Math.random() - 0.5) * 0.20
           },
           route: ['Downtown Route', 'Express Line', 'Airport Shuttle', 'City Loop', 'Suburban Connect'][index % 5],
-          chargingTime: mappedStatus === 'charging' ? `${Math.floor(Math.random() * 3) + 1}h ${Math.floor(Math.random() * 60)}m` : 'N/A',
+          chargingTime: mappedStatus === 'charging' ? 'Charging' : 'N/A',
           nextMaintenance: mappedStatus === 'maintenance' ? 'In Progress' : '—',
           city: cityName
         };
@@ -402,8 +403,8 @@ const Index = () => {
           id: depot.id,
           name: depot.name,
           location: { lat: cityCenter.lat + offset.lat, lng: cityCenter.lng + offset.lng },
-          energyGenerated: Math.floor(1500 + Math.random() * 1000),
-          energyReturned: Math.floor(800 + Math.random() * 600),
+          energyGenerated: 0, // fleet energy comes from the real 24h history summary, not per-depot synthetics
+          energyReturned: 0,
           vehiclesCharging: depot.charging ?? depot.stalls_occupied ?? 0,
           totalStalls,
           availableStalls,
@@ -456,8 +457,11 @@ const Index = () => {
   const maintenanceVehicles = statusCounts.maintenance;
   
   const depotTotals = computeDepotTotals(depots as UiDepot[]);
-  const totalEnergyGenerated = depotTotals.energyGenerated;
-  const totalEnergyReturned = depotTotals.energyReturned;
+  // Real fleet energy from otto-q-core's 24h history (flagship depot): cumulative solar
+  // generated + battery throughput, in kWh. No synthetic per-depot figures.
+  const { data: flagshipEnergy } = useEnergyHistory("24h", "11111111-1111-1111-1111-111111111111");
+  const totalEnergyGenerated = flagshipEnergy?.summary?.total_solar_kwh ?? 0;
+  const totalEnergyReturned = flagshipEnergy?.summary?.total_bess_kwh ?? 0;
   const totalStalls = depotTotals.totalStalls;
   const availableStalls = depotTotals.availableStalls;
   const occupancyRate = occupancyRatePct(totalStalls, availableStalls);
@@ -636,7 +640,7 @@ const Index = () => {
                     </div>
                     
                     <div className="relative">
-                      <MetricsCard title="Energy & Grid" value={`${(totalEnergyGenerated / 1000).toFixed(1)} MWh`} change={`+${Math.round(totalEnergyReturned / totalEnergyGenerated * 100)}%`} trend="up" icon={Zap} secondaryValue={`${(totalEnergyReturned / 1000).toFixed(1)} MWh returned`} secondaryLabel="Grid Return" onClick={() => setSelectedQuickGlanceTile(selectedQuickGlanceTile === 'energy' ? null : 'energy')} />
+                      <MetricsCard title="Energy & Grid" value={`${(totalEnergyGenerated / 1000).toFixed(1)} MWh`} change={totalEnergyGenerated > 0 ? `${Math.round(totalEnergyReturned / totalEnergyGenerated * 100)}% via battery` : '—'} trend="up" icon={Zap} secondaryValue={`${(totalEnergyReturned / 1000).toFixed(1)} MWh battery`} secondaryLabel="Battery throughput (24h)" onClick={() => setSelectedQuickGlanceTile(selectedQuickGlanceTile === 'energy' ? null : 'energy')} />
                       {selectedQuickGlanceTile === 'energy' && <div className="absolute top-full left-0 right-0 mt-2 p-4 bg-card border border-border rounded-lg shadow-lg z-10 animate-fade-in" onClick={() => setSelectedQuickGlanceTile(null)}>
                           <h4 className="font-semibold mb-3">Energy Management</h4>
                           
@@ -710,7 +714,7 @@ const Index = () => {
                     </div>
                     
                     <div className="relative">
-                      <MetricsCard title="Fleet Efficiency" value={`${Math.round(85 + occupancyRate * 0.15)}%`} change={`+${Math.round(Math.random() * 5)}%`} trend="up" icon={Activity} onClick={() => setSelectedQuickGlanceTile(selectedQuickGlanceTile === 'efficiency' ? null : 'efficiency')} />
+                      <MetricsCard title="Stall Utilization" value={`${occupancyRate}%`} change={`${chargingVehicles} charging`} trend="up" icon={Activity} onClick={() => setSelectedQuickGlanceTile(selectedQuickGlanceTile === 'efficiency' ? null : 'efficiency')} />
                       {selectedQuickGlanceTile === 'efficiency' && <div className="absolute top-full left-0 right-0 mt-2 p-4 bg-card border border-border rounded-lg shadow-lg z-10 animate-fade-in" onClick={() => setSelectedQuickGlanceTile(null)}>
                           <h4 className="font-semibold mb-3">Performance Metrics</h4>
                           
@@ -890,7 +894,7 @@ const Index = () => {
                               <div className="space-y-2 text-sm">
                                 <p><span className="font-medium">Location:</span> {vehicle.location.lat.toFixed(4)}, {vehicle.location.lng.toFixed(4)}</p>
                                 <p><span className="font-medium">Last Service:</span> 2024-07-15</p>
-                                <p><span className="font-medium">Total Miles:</span> {Math.floor(Math.random() * 50000 + 10000)} mi</p>
+                                <p><span className="font-medium">Total Miles:</span> —</p>
                                 <div className="flex gap-2 mt-3">
                                   <Button size="sm" variant="outline" onClick={() => setSelectedTab('fleet')}>
                                     View Details in Fleet
@@ -965,7 +969,7 @@ const Index = () => {
                             <div className="space-y-2 text-sm">
                               <p><span className="font-medium">Location:</span> {vehicle.location.lat.toFixed(4)}, {vehicle.location.lng.toFixed(4)}</p>
                               <p><span className="font-medium">Last Service:</span> 2024-07-15</p>
-                              <p><span className="font-medium">Total Miles:</span> {Math.floor(Math.random() * 50000 + 10000)} mi</p>
+                              <p><span className="font-medium">Total Miles:</span> —</p>
                               <div className="flex gap-2 mt-3">
                                 <Button size="sm" variant="outline">Schedule Maintenance</Button>
                                 <Button size="sm" variant="outline">Schedule Detailing</Button>
