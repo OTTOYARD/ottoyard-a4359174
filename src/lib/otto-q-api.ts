@@ -49,6 +49,29 @@ export async function ottoqInvoke<T = unknown>(fn: string, body?: unknown): Prom
   return (await res.json()) as T;
 }
 
+// otto-q-core root (PostgREST RPC + table reads), derived from the same base + anon key.
+const OTTOQ_ROOT = OTTOQ_FN_BASE.replace(/\/functions\/v1$/, "");
+
+// Call a SQL function on otto-q-core via PostgREST RPC (the frontier control fns).
+export async function ottoqRpc<T = unknown>(fn: string, args?: Record<string, unknown>): Promise<T> {
+  const res = await fetch(`${OTTOQ_ROOT}/rest/v1/rpc/${fn}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${OTTOQ_KEY}`, apikey: OTTOQ_KEY },
+    body: JSON.stringify(args ?? {}),
+  });
+  if (!res.ok) throw new Error(`OTTO-Q rpc ${fn} ${res.status}: ${await res.text()}`);
+  return (await res.json()) as T;
+}
+
+// Read a table on otto-q-core via PostgREST (e.g. ottoq_cil_adoptions, ottoq_policy_params).
+export async function ottoqTable<T = unknown>(table: string, query: string): Promise<T> {
+  const res = await fetch(`${OTTOQ_ROOT}/rest/v1/${table}?${query}`, {
+    headers: { Authorization: `Bearer ${OTTOQ_KEY}`, apikey: OTTOQ_KEY },
+  });
+  if (!res.ok) throw new Error(`OTTO-Q table ${table} ${res.status}: ${await res.text()}`);
+  return (await res.json()) as T;
+}
+
 // --- Type definitions ---
 
 export interface FleetSummaryDepot {
